@@ -1,10 +1,7 @@
 <h1><a id="top" href="#top">Slack-Clone Design</a></h1>
 
 # TODO:
-- upload wireframes
-- services diagram
 - review graphql schema
-    - graphql schema enums -> Int, definitions 
 - decompose how API service will work in terms of components prior to resolver execution - query analysis middleware? user-centric authorization?
 - think about API service resolver efficiency - will resolvers be able to make efficient queries?
 - think about all web services in terms of ASP.NET components
@@ -29,7 +26,7 @@
         <a href="#database-schema">Database Schema (Database Service)</a>
         <ul>
             <li><a href="#database-entities">Entities</a></li>
-            <li><a href="#database-mask-defs">Bit Mask/Enum Definitions</a></li>
+            <li><a href="#mask-defs">Bit Mask/Enum Definitions</a></li>
             <li><a href="#database-preloaded-rows">Preloaded Rows</a></li>
         </ul>
     </li>
@@ -67,6 +64,7 @@
 </ul>
 
 <h4>Services</h4>
+<img src="./services-diagram.png" width="850" />
 <ul>
     <li>Identity Service - authenticates users and issues resource access tokens</li>
     <li>WebClient Service - serves bundled, code-split React UI</li>
@@ -115,9 +113,11 @@
         </ul>
     </li>
 </ul>
-###### Useful dev dependencies
-- [Prettier](https://prettier.io/)
-- [pretter-plugin-tailwindcss](https://tailwindcss.com/blog/automatic-class-sorting-with-prettier)
+<h5>Useful dev dependencies</h5>
+<ul>
+<li><a href="https://prettier.io/">prettier</a></li>
+<li><a href="https://tailwindcss.com/blog/automatic-class-sorting-with-prettier">prettier-plugin-tailwindcss</a></li>
+</ul>
 
 
 <hr>
@@ -165,7 +165,6 @@ The Identity Service exposes the following endpoints:
 | Authorize | /authorize | For requesting tokens or authorization codes via browser, typically involving user authentication. See https://docs.duendesoftware.com/identityserver/v6/reference/endpoints/authorize/ for required request parameters. |
 | Token | /connect/token | For programmatically requesting tokens. See https://docs.duendesoftware.com/identityserver/v6/reference/endpoints/token/ for required request parameters. |
 | UserInfo | /connect/userinfo | For retrieving claims about a user. Request must contain a valid access token. |
-| Introspection | /connect/introspect | For validating reference tokens, requires authentication of the client via a shared secret |
 | Revocation | /connect/revocation | For revoking access and refresh tokens, requires authentication of the client via a shared secret. See https://docs.duendesoftware.com/identityserver/v6/reference/endpoints/revocation/ for required request parameters. |
 | End Session | /connect/endsession | For triggering single sign-out on all devices a user is logged into the application with. See https://docs.duendesoftware.com/identityserver/v6/reference/endpoints/end_session/ for required request parameters. |
 | Login | /login | Users get redirected here by the WebClient service if they are not logged in. Users authenticate by filling out the form on this page and are then redirected back to the appropriate WebClient Service endpoint. |
@@ -189,7 +188,7 @@ The WebClient Service exposes the following endpoints:
 
 | Name | Path | Notes |
 |----|-----|---|
-|Workspaces|/workspaces|Displays the workspaces page of the React app. Root path (/) defaults to this page. If user not logged in, they will be redirected to the login page hosted by the Identity Service, which includes a link to a registration page. If they login successfully, they will be redirected here. __Auth guarded__. |
+|Workspaces|/workspaces|Displays the workspaces page of the React app. Root path (/) defaults to this page. If user not logged in, they will be redirected to the login page hosted by the Identity Service, which includes a link to a registration page. Users redirected here after successful login. __Auth guarded__. |
 |Workspace channel|/workspace/\<workspace-id\>/channel/\<channel-name\>|Displays the workspace page for a specific workspace with a specific channel's content displayed in the view pane of the workspace page UI. When an authenticated user selects a workspace to view from the workspaces page, they will be redirected to /workspace/\<workspace-id\>/channel/general. __Auth guarded__.  |
 |Workspace unreads|/workspace/\<workspace-id\>/unread|Displays the workspace page for a specific workspace with content unread by the user in the view pane.  __Auth guarded__. |
 |Workspace threads|/workspace/\<workspace-id\>/channel/\<channel-name\>/threads|Displays the thread content for a specific channel within a specific workspace in the view pane. __Auth guarded__. |
@@ -203,7 +202,7 @@ The WebClient Service exposes the following endpoints:
 |Workspace search results|/workspace/\<workspace-id\>/search/\<search-type\>|Displays results of searching a workspace for messages, files, channels, or people with a search string in the view pane. __Auth guarded__. |
 |User account|/account/\<user-id\>|Displays the profile and preferences page of a user for viewing and editing. __Auth guarded__. |
 |Workspace administration|/workspace/admin/\<workspace-id\>|Displays the page for handling workspace administration, only accessible to people with the relevant permissions. __Auth guarded__. |
-|Login|/auth/login|Session management endpoint that triggers login interaction with the Identity Service. This endpoint is called by the frontend javascript to tell the WebClient service to start the authentication process for it, which results in a redirect to the /login endpoint of the Identity Service and other flows depending on the user login result.|
+|Login|/auth/login|Session management endpoint that triggers login interaction with the Identity Service. Auth guarded routes redirect to this endpoint on sessionless access attempt. This endpoint is called by the frontend javascript to tell the WebClient service to start the authentication process for it, which results in a user-agent redirect to the /login endpoint of the Identity Service and other flows depending on the user login result.|
 |Logout|/auth/logout|Session management endpoint that triggers logout interaction with the Identity Service and associated redirects.|
 |User|/auth/user|Session management endpoint that is used to check if a user has an active session and/or fetch profile and session data about the user.|
 |API|/api/graphql|Proxy endpoint for the API service.|
@@ -215,7 +214,7 @@ The API Service is a GraphQL server that exposes a single endpoint, __/graphql__
 
 There are many two-way/cyclical 'edges' in the schema that could lead to infinite query cycles, and in general GraphQL allows clients to request large amounts of information with highly nested queries. This makes the API Service vulnerable to DoS attacks, which must be mitigated. <a href="https://graphql-dotnet.github.io/docs/getting-started/malicious-queries/">GraphQL .NET</a> provides query analysis configuration that can be used to avoid executing malicious queries which I will use in this project.
 
-The API Service will also be responsible for performing a large amount of user authorization by checking the database and other data stores for administrative permissions and membership statuses prior to query execution.
+The API Service will also be responsible for performing a large amount of user authorization by checking the database and other data stores for permissions prior to query execution.
 
 <h3><a id="realtime-service" href="#realtime-service">Realtime Service</a><a href="#services" style="padding-left:7px;font-size:1.2rem;color:grey;">▴</a></h3>
 
@@ -223,7 +222,7 @@ The Realtime Service is responsible for handling all realtime functionality, inc
 
 Hubs represent the platform clients and the Realtime Service communicate with each other with. Clients and the Realtime Service can call named methods on each other, and clients can subscribe to Realtime Service events. These events and methods live in Hubs. This project will start out with two hubs: NotificationHub and MessageHub. 
 
-A Connection is a persistent duplex connection (usually on top of WebSockets but SignalR provides other options) between a piece of client software and the Realtime Service over which they call each others methods and use server events. A user may have multiple clients connected to the Realtime Service on its behalf, and SignalR handles most of the complexity associated with operations such as ensuring a message sent by a user on one client shows up on all their other open clients, or closing all client connections associated with a user when that user logs out on one of its clients. Each Connection can can be associated with one of each Hub type.
+A Connection is a persistent duplex connection (usually on top of WebSockets but SignalR provides other options) between a piece of client software (such as a web browser) and the Realtime Service over which they call each others methods and use server events. A user may have multiple clients connected to the Realtime Service on its behalf, and SignalR handles most of the complexity associated with operations such as ensuring a message sent by a user on one client shows up on all their other open clients, or closing all client connections associated with a user when that user logs out on one of its clients. Each Connection can can be associated with one of each Hub type.
 
 Groups represent groups of Connections between clients and the Realtime Service. In SignalR servers groups can be created, destroyed, and have members added and removed. Each workspace channel and direct message conversation for which there is at least one active member online that is signed into that workspace will correspond to an active Group instance in the Realtime Service.
 
@@ -276,361 +275,361 @@ The Persistence Service is a PostgreSQL database that receives queries from Enti
 </ul>
 
 <span><b><a id="db-entity-channel" href="#db-entity-channel">channel</a></b><a href="#database-entities" style="padding-left:7px;font-size:1.2rem;color:grey;">▴</a></span>
-id uuid PRIMARY KEY DEFAULT gen_random_uuid()
-allow_threads boolean DEFAULT true
-avatar_id uuid REFERENCES file (id) DEFAULT 1 ON DELETE SET DEFAULT
-<a href="#database-allowed-channel-posters-mask-def">***</a>allowed_channel_posters_mask integer DEFAULT 1
-created_at timestamp DEFAULT now 
-created_by uuid REFERENCES user (id) ON DELETE SET NULL
-description varchar(120) NOT NULL
-name varchar(40) NOT NULL
-num_members integer DEFAULT 1
-private boolean DEFAULT false
-topic varchar(40) NOT NULL
-workspace_id uuid NOT NULL REFERENCES workspace (id) ON DELETE CASCADE
-___UNIQUE__ (name, workspace_id)_
-___INDEX__ ON private_
+<br>id uuid PRIMARY KEY DEFAULT gen_random_uuid()<br>
+allow_threads boolean DEFAULT true<br>
+avatar_id uuid REFERENCES file (id) DEFAULT 1 ON DELETE SET DEFAULT<br>
+<a href="#allowed-channel-posters-mask-def">***</a>allowed_channel_posters_mask integer DEFAULT 1<br>
+created_at timestamp DEFAULT now <br>
+created_by uuid REFERENCES user (id) ON DELETE SET NULL<br>
+description varchar(120) NOT NULL<br>
+name varchar(40) NOT NULL<br>
+num_members integer DEFAULT 1<br>
+private boolean DEFAULT false<br>
+topic varchar(40) NOT NULL<br>
+workspace_id uuid NOT NULL REFERENCES workspace (id) ON DELETE CASCADE<br>
+___UNIQUE__ (name, workspace_id)_<br>
+___INDEX__ ON private_<br>
 ___INDEX__ ON workspace_id_
 
 <span><b><a id="db-entity-channel-invite" href="#db-entity-channel-invite">channel_invite</a></b> <a href="#database-entities" style="padding-left:7px;font-size:1.2rem;color:grey">▴</a></span>
-id uuid PRIMARY KEY DEFAULT gen_random_uuid()
-admin_id uuid NOT NULL REFERENCES user (id) ON DELETE CASCADE
-channel_id uuid NOT NULL REFERENCES channel (id) ON DELETE CASCADE
-<a href="#database-channel-invite-status-mask-def">***</a>channel_invite_status integer DEFAULT 1
-created_at timestamp DEFAULT now
-user_id uuid NOT NULL REFERENCES user (id) ON DELETE CASCADE
-workspace_id uuid NOT NULL REFERENCES workspace (id) ON DELETE CASCADE
-___INDEX__ ON created_at_
-___INDEX__ ON status_
-___INDEX__ ON (user_id, workspace_id)_
+<br>id uuid PRIMARY KEY DEFAULT gen_random_uuid()<br>
+admin_id uuid NOT NULL REFERENCES user (id) ON DELETE CASCADE<br>
+channel_id uuid NOT NULL REFERENCES channel (id) ON DELETE CASCADE<br>
+<a href="#database-channel-invite-status-mask-def">***</a>channel_invite_status integer DEFAULT 1<br>
+created_at timestamp DEFAULT now<br>
+user_id uuid NOT NULL REFERENCES user (id) ON DELETE CASCADE<br>
+workspace_id uuid NOT NULL REFERENCES workspace (id) ON DELETE CASCADE<br>
+___INDEX__ ON created_at_<br>
+___INDEX__ ON status_<br>
+___INDEX__ ON (user_id, workspace_id)_<br>
 
 <span><b><a id="db-entity-channel-member" href="#db-entity-channel-member">channel_member</a></b> <a href="#database-entities" style="padding-left:7px;font-size:1.2rem;color:grey;">▴</a></span>
-id uuid PRIMARY KEY DEFAULT gen_random_uuid()
-admin boolean DEFAULT false
-channel_id uuid NOT NULL REFERENCES channel (id) ON DELETE CASCADE
-enable_notifs boolean DEFAULT true
-last_viewed_at timestamp
-starred boolean DEFAULT false
-user_id uuid NOT NULL REFERENCES user (id) ON DELETE CASCADE
-___UNIQUE__ (channel_id, user_id)_
-___INDEX__ ON channel_id_
-___INDEX__ ON user_id_
+<br>id uuid PRIMARY KEY DEFAULT gen_random_uuid()<br>
+admin boolean DEFAULT false<br>
+channel_id uuid NOT NULL REFERENCES channel (id) ON DELETE CASCADE<br>
+enable_notifs boolean DEFAULT true<br>
+last_viewed_at timestamp<br>
+starred boolean DEFAULT false<br>
+user_id uuid NOT NULL REFERENCES user (id) ON DELETE CASCADE<br>
+___UNIQUE__ (channel_id, user_id)_<br>
+___INDEX__ ON channel_id_<br>
+___INDEX__ ON user_id_<br>
 
 <span><b><a id="db-entity-channel-message" href="#db-entity-channel-message">channel_message</a></b> <a href="#database-entities" style="padding-left:7px;font-size:1.2rem;color:grey;">▴</a></span>
-id uuid PRIMARY KEY DEFAULT gen_random_uuid()
-channel_id uuid NOT NULL REFERENCES channel (id) ON DELETE CASCADE
-content varchar(2000) NOT NULL
-created_at timestamp DEFAULT now
-deleted boolean DEFAULT false
-draft boolean DEFAULT true
-last_edit timestamp
-later_flag_id uuid REFERENCES channel_message_later_flag (id) ON DELETE SET NULL
-sent_at timestamp
-user_id uuid NOT NULL REFERENCES user (id)
-___INDEX__ ON channel_id_
-___INDEX__ ON deleted_
-___INDEX__ ON draft_
-___INDEX__ ON later_flag_id_
-___INDEX__ ON sent_at_
-___INDEX__ ON user_id_
+<br>id uuid PRIMARY KEY DEFAULT gen_random_uuid()<br>
+channel_id uuid NOT NULL REFERENCES channel (id) ON DELETE CASCADE<br>
+content varchar(2000) NOT NULL<br>
+created_at timestamp DEFAULT now<br>
+deleted boolean DEFAULT false<br>
+draft boolean DEFAULT true<br>
+last_edit timestamp<br>
+later_flag_id uuid REFERENCES channel_message_later_flag (id) ON DELETE SET NULL<br>
+sent_at timestamp<br>
+user_id uuid NOT NULL REFERENCES user (id)<br>
+___INDEX__ ON channel_id_<br>
+___INDEX__ ON deleted_<br>
+___INDEX__ ON draft_<br>
+___INDEX__ ON later_flag_id_<br>
+___INDEX__ ON sent_at_<br>
+___INDEX__ ON user_id_<br>
 
 <span><b><a id="db-entity-channel-message-later-flag" href="#db-entity-channel-message-later-flag">channel_message_later_flag</a></b> <a href="#database-entities" style="padding-left:7px;font-size:1.2rem;color:grey">▴</a></span>
-id uuid PRIMARY KEY DEFAULT gen_random_uuid()
-channel_id uuid NOT NULL REFERENCES channel (id) ON DELETE CASCADE
-<a href="#database-channel-later-flag-status-mask-def">***</a>channel_later_flag_status integer DEFAULT 1
-channel_message_id uuid REFERENCES channel_message (id) ON DELETE CASCADE
-user_id uuid NOT NULL REFERENCES user (id) ON DELETE CASCADE
-workspace_id uuid NOT NULL REFERENCES workspace (id) ON DELETE CASCADE
-___UNIQUE__ (channel_message_id, user_id)_
-___INDEX__ ON (workspace_id, user_id)_
+<br>id uuid PRIMARY KEY DEFAULT gen_random_uuid()<br>
+channel_id uuid NOT NULL REFERENCES channel (id) ON DELETE CASCADE<br>
+<a href="#database-channel-later-flag-status-mask-def">***</a>channel_later_flag_status integer DEFAULT 1<br>
+channel_message_id uuid REFERENCES channel_message (id) ON DELETE CASCADE<br>
+user_id uuid NOT NULL REFERENCES user (id) ON DELETE CASCADE<br>
+workspace_id uuid NOT NULL REFERENCES workspace (id) ON DELETE CASCADE<br>
+___UNIQUE__ (channel_message_id, user_id)_<br>
+___INDEX__ ON (workspace_id, user_id)_<br>
 
 <span><b><a id="db-entity-channel-message-mention" href="#db-entity-channel-message-mention">channel_message_mention</a></b> <a href="#database-entities" style="padding-left:7px;font-size:1.2rem;color:grey">▴</a></span>
-id uuid PRIMARY KEY DEFAULT gen_random_uuid()
-channel_message_id uuid NOT NULL REFERENCES channel_message (id) ON DELETE CASCADE
-created_at timestamp DEFAULT now
-mentioned_id uuid REFERENCES user (id) ON DELETE SET NULL
-mentioner_id uuid NOT NULL REFERENCES user (id) ON DELETE CASCADE
-___UNIQUE__ (channel_message_id, mentioned_id, mentioner_id)_
-___INDEX__ ON created_at_
-___INDEX__ ON mentioned_id_
+<br>id uuid PRIMARY KEY DEFAULT gen_random_uuid()<br>
+channel_message_id uuid NOT NULL REFERENCES channel_message (id) ON DELETE CASCADE<br>
+created_at timestamp DEFAULT now<br>
+mentioned_id uuid REFERENCES user (id) ON DELETE SET NULL<br>
+mentioner_id uuid NOT NULL REFERENCES user (id) ON DELETE CASCADE<br>
+___UNIQUE__ (channel_message_id, mentioned_id, mentioner_id)_<br>
+___INDEX__ ON created_at_<br>
+___INDEX__ ON mentioned_id_<br>
 
 <span><b><a id="db-entity-channel-message-notification" href="#db-entity-channel-message-notification">channel_message_notification</a></b> <a href="#database-entities" style="padding-left:7px;font-size:1.2rem;color:grey">▴</a></span>
-id uuid PRIMARY KEY DEFAULT gen_random_uuid()
-channel_message_id uuid NOT NULL REFERENCES channel_message (id) ON DELETE CASCADE
-<a href="#database-channel-message-notif-type-mask-def">***</a>channel_message_notif_type integer NOT NULL
-created_at timestamp DEFAULT now
-seen boolean DEFAULT false
-user_id uuid NOT NULL REFERENCES user (id) ON DELETE CASCADE
-___UNIQUE__ (channel_message_id, user_id)_
-___INDEX__ ON created_at_
-___INDEX__ ON user_id_
+<br>id uuid PRIMARY KEY DEFAULT gen_random_uuid()<br>
+channel_message_id uuid NOT NULL REFERENCES channel_message (id) ON DELETE CASCADE<br>
+<a href="#database-channel-message-notif-type-mask-def">***</a>channel_message_notif_type integer NOT NULL<br>
+created_at timestamp DEFAULT now<br>
+seen boolean DEFAULT false<br>
+user_id uuid NOT NULL REFERENCES user (id) ON DELETE CASCADE<br>
+___UNIQUE__ (channel_message_id, user_id)_<br>
+___INDEX__ ON created_at_<br>
+___INDEX__ ON user_id_<br>
 
 <span><b><a id="db-entity-channel-message-reaction" href="#db-entity-channel-message-reaction">channel_message_reaction</a></b> <a href="#database-entities" style="padding-left:7px;font-size:1.2rem;color:grey">▴</a></span>
-id uuid PRIMARY KEY DEFAULT gen_random_uuid()
-channel_message_id uuid NOT NULL REFERENCES channel_message (id) ON DELETE CASCADE
-created_at timestamp DEFAULT now
-emoji varchar(1) NOT NULL
-user_id uuid NOT NULL REFERENCES user (id) ON DELETE CASCADE
-___UNIQUE__ (channel_message_id, user_id)_
-___INDEX__ ON channel_message_id_
-___INDEX__ ON created_at_
-___INDEX__ ON user_id_
+<br>id uuid PRIMARY KEY DEFAULT gen_random_uuid()<br>
+channel_message_id uuid NOT NULL REFERENCES channel_message (id) ON DELETE CASCADE<br>
+created_at timestamp DEFAULT now<br>
+emoji varchar(1) NOT NULL<br>
+user_id uuid NOT NULL REFERENCES user (id) ON DELETE CASCADE<br>
+___UNIQUE__ (channel_message_id, user_id)_<br>
+___INDEX__ ON channel_message_id_<br>
+___INDEX__ ON created_at_<br>
+___INDEX__ ON user_id_<br>
 
 <span><b><a id="db-entity-channel-message-reply" href="#db-entity-channel-message-reply">channel_message_reply</a></b> <a href="#database-entities" style="padding-left:7px;font-size:1.2rem;color:grey">▴</a></span>
-id uuid PRIMARY KEY DEFAULT gen_random_uuid()
-message_id uuid UNIQUE NOT NULL REFERENCES channel_message (id) ON DELETE CASCADE
-replied_to_id uuid REFERENCES user (id) ON DELETE SET NULL
-replier_id uuid NOT NULL REFERENCES user (id) ON DELETE CASCADE
-reply_to_message_id uuid REFERENCES channel_message (id) ON DELETE SET NULL
-thread_id uuid NOT NULL REFERENCES thread (id) ON DELETE CASCADE
-___INDEX__ ON replied_to_id_
-___INDEX__ ON thread_id_
+<br>id uuid PRIMARY KEY DEFAULT gen_random_uuid()<br>
+message_id uuid UNIQUE NOT NULL REFERENCES channel_message (id) ON DELETE CASCADE<br>
+replied_to_id uuid REFERENCES user (id) ON DELETE SET NULL<br>
+replier_id uuid NOT NULL REFERENCES user (id) ON DELETE CASCADE<br>
+reply_to_message_id uuid REFERENCES channel_message (id) ON DELETE SET NULL<br>
+thread_id uuid NOT NULL REFERENCES thread (id) ON DELETE CASCADE<br>
+___INDEX__ ON replied_to_id_<br>
+___INDEX__ ON thread_id_<br>
 
 <span><b><a id="db-entity-direct-message" href="#db-entity-direct-message">direct_message</a></b> <a href="#database-entities" style="padding-left:7px;font-size:1.2rem;color:grey">▴</a></span>
-id uuid PRIMARY KEY DEFAULT gen_random_uuid()
-content varchar(2000) NOT NULL
-created_at timestamp DEFAULT now
-deleted boolean DEFAULT false
-direct_message_group_id uuid NOT NULL REFERENCES direct_message_group (id) ON DELETE CASCADE
-draft boolean DEFAULT true
-last_edit timestamp
-later_flag_id uuid REFERENCES direct_message_later_flag (id) ON DELETE SET NULL
-sent_at timestamp
-user_id uuid REFERENCES user (id) ON DELETE SET NULL
-___INDEX__ ON direct_message_group_id_
-___INDEX__ ON deleted_
-___INDEX__ ON draft_
-___INDEX__ ON later_flag_id_
-___INDEX__ ON sent_at_
-___INDEX__ ON user_id_
+<br>id uuid PRIMARY KEY DEFAULT gen_random_uuid()<br>
+content varchar(2000) NOT NULL<br>
+created_at timestamp DEFAULT now<br>
+deleted boolean DEFAULT false<br>
+direct_message_group_id uuid NOT NULL REFERENCES direct_message_group (id) ON DELETE CASCADE<br>
+draft boolean DEFAULT true<br>
+last_edit timestamp<br>
+later_flag_id uuid REFERENCES direct_message_later_flag (id) ON DELETE SET NULL<br>
+sent_at timestamp<br>
+user_id uuid REFERENCES user (id) ON DELETE SET NULL<br>
+___INDEX__ ON direct_message_group_id_<br>
+___INDEX__ ON deleted_<br>
+___INDEX__ ON draft_<br>
+___INDEX__ ON later_flag_id_<br>
+___INDEX__ ON sent_at_<br>
+___INDEX__ ON user_id_<br>
 
 <span><b><a id="db-entity-direct-message-group" href="#db-entity-direct-message-group">direct_message_group</a></b> <a href="#database-entities" style="padding-left:7px;font-size:1.2rem;color:grey">▴</a></span>
-id uuid PRIMARY KEY DEFAULT gen_random_uuid()
-created_at timestamp DEFAULT now
-size integer DEFAULT 2
-workspace_id uuid NOT NULL REFERENCES workspace (id) ON DELETE CASCADE
-___INDEX__ ON last_message_at_
-___INDEX__ ON workspace_id_
+<br>id uuid PRIMARY KEY DEFAULT gen_random_uuid()<br>
+created_at timestamp DEFAULT now<br>
+size integer DEFAULT 2<br>
+workspace_id uuid NOT NULL REFERENCES workspace (id) ON DELETE CASCADE<br>
+___INDEX__ ON last_message_at_<br>
+___INDEX__ ON workspace_id_<br>
 
 <span><b><a id="db-entity-direct-message-group-member" href="#db-entity-direct-message-group-member">direct_message_group_member</a></b> <a href="#database-entities" style="padding-left:7px;font-size:1.2rem;color:grey">▴</a></span>
-id uuid PRIMARY KEY DEFAULT gen_random_uuid()
-direct_message_group_id uuid NOT NULL REFERENCES direct_message_group (id) ON DELETE CASCADE
-last_viewed_group_messages_at timestamp
-user_id uuid NOT NULL REFERENCES user (id) ON DELETE CASCADE
-___UNIQUE__ (direct_message_group_id, user_id)_
-___INDEX__ ON direct_message_group_id_
-___INDEX__ ON user_id_
+<br>id uuid PRIMARY KEY DEFAULT gen_random_uuid()<br>
+direct_message_group_id uuid NOT NULL REFERENCES direct_message_group (id) ON DELETE CASCADE<br>
+last_viewed_group_messages_at timestamp<br>
+user_id uuid NOT NULL REFERENCES user (id) ON DELETE CASCADE<br>
+___UNIQUE__ (direct_message_group_id, user_id)_<br>
+___INDEX__ ON direct_message_group_id_<br>
+___INDEX__ ON user_id_<br>
 
 <span><b><a id="db-entity-direct-message-later-flag" href="#db-entity-direct-message-later-flag">direct_message_later_flag</a></b> <a href="#database-entities" style="padding-left:7px;font-size:1.2rem;color:grey">▴</a></span>
-id uuid PRIMARY KEY DEFAULT gen_random_uuid()
-<a href="#database-direct-message-later-flag-status-mask-def">***</a>direct_message_later_flag_status integer DEFAULT 1
-direct_message_group_id uuid NOT NULL REFERENCES channel (id) ON DELETE CASCADE
-direct_message_id uuid REFERENCES direct_message (id) ON DELETE CASCADE
-user_id uuid NOT NULL REFERENCES user (id) ON DELETE CASCADE
-workspace_id uuid NOT NULL REFERENCES workspace (id) ON DELETE CASCADE
-___UNIQUE__ (direct_message_id, user_id)_
-___INDEX__ ON (workspace_id, user_id)_
+<br>id uuid PRIMARY KEY DEFAULT gen_random_uuid()<br>
+<a href="#database-direct-message-later-flag-status-mask-def">***</a>direct_message_later_flag_status integer DEFAULT 1<br>
+direct_message_group_id uuid NOT NULL REFERENCES channel (id) ON DELETE CASCADE<br>
+direct_message_id uuid REFERENCES direct_message (id) ON DELETE CASCADE<br>
+user_id uuid NOT NULL REFERENCES user (id) ON DELETE CASCADE<br>
+workspace_id uuid NOT NULL REFERENCES workspace (id) ON DELETE CASCADE<br>
+___UNIQUE__ (direct_message_id, user_id)_<br>
+___INDEX__ ON (workspace_id, user_id)_<br>
 
 <span><b><a id="db-entity-direct-message-mention" href="#db-entity-direct-message-mention">direct_message_mention</a></b> <a href="#database-entities" style="padding-left:7px;font-size:1.2rem;color:grey">▴</a></span>
-id uuid PRIMARY KEY DEFAULT gen_random_uuid()
-created_at timestamp DEFAULT now
-direct_message_id uuid NOT NULL REFERENCES direct_message (id) ON DELETE CASCADE
-mentioned_id uuid REFERENCES user (id) ON DELETE SET NULL
-mentioner_id uuid NOT NULL REFERENCES user (id) ON DELETE CASCADE
-___UNIQUE__ (direct_message_id, mentioned_id, mentioner_id)_
-___INDEX__ ON created_at_
-___INDEX__ ON mentioned_id_
+<br>id uuid PRIMARY KEY DEFAULT gen_random_uuid()<br>
+created_at timestamp DEFAULT now<br>
+direct_message_id uuid NOT NULL REFERENCES direct_message (id) ON DELETE CASCADE<br>
+mentioned_id uuid REFERENCES user (id) ON DELETE SET NULL<br>
+mentioner_id uuid NOT NULL REFERENCES user (id) ON DELETE CASCADE<br>
+___UNIQUE__ (direct_message_id, mentioned_id, mentioner_id)_<br>
+___INDEX__ ON created_at_<br>
+___INDEX__ ON mentioned_id_<br>
 
 <span><b><a id="db-entity-direct-message-notification" href="#db-entity-direct-message-notification">direct_message_notification</a></b> <a href="#database-entities" style="padding-left:7px;font-size:1.2rem;color:grey">▴</a></span>
-id uuid PRIMARY KEY DEFAULT gen_random_uuid()
-created_at timestamp DEFAULT now
-direct_message_id uuid NOT NULL REFERENCES direct_message (id) ON DELETE CASCADE
-<a href="#database-direct-message-notif-type-mask-def">***</a>direct_message_notif_type integer NOT NULL
-seen boolean DEFAULT false
-user_id uuid NOT NULL REFERENCES user (id) ON DELETE CASCADE
-___UNIQUE__ (direct_message_id, user_id)_
-___INDEX__ ON created_at_
-___INDEX__ ON user_id_
+<br>id uuid PRIMARY KEY DEFAULT gen_random_uuid()<br>
+created_at timestamp DEFAULT now<br>
+direct_message_id uuid NOT NULL REFERENCES direct_message (id) ON DELETE CASCADE<br>
+<a href="#database-direct-message-notif-type-mask-def">***</a>direct_message_notif_type integer NOT NULL<br>
+seen boolean DEFAULT false<br>
+user_id uuid NOT NULL REFERENCES user (id) ON DELETE CASCADE<br>
+___UNIQUE__ (direct_message_id, user_id)_<br>
+___INDEX__ ON created_at_<br>
+___INDEX__ ON user_id_<br>
 
 <span><b><a id="db-entity-direct-message-reaction" href="#db-entity-direct-message-reaction">direct_message_reaction</a></b> <a href="#database-entities" style="padding-left:7px;font-size:1.2rem;color:grey">▴</a></span>
-id uuid PRIMARY KEY DEFAULT gen_random_uuid()
-created_at timestamp DEFAULT now
-direct_message_id uuid NOT NULL REFERENCES channel_message (id) ON DELETE CASCADE
-emoji varchar(1) NOT NULL
-user_id uuid NOT NULL REFERENCES user (id) ON DELETE CASCADE
-___UNIQUE__ (direct_message_id, user_id)_
-___INDEX__ ON created_at_
-___INDEX__ ON direct_message_id_
-___INDEX__ ON user_id_
+<br>id uuid PRIMARY KEY DEFAULT gen_random_uuid()<br>
+created_at timestamp DEFAULT now<br>
+direct_message_id uuid NOT NULL REFERENCES channel_message (id) ON DELETE CASCADE<br>
+emoji varchar(1) NOT NULL<br>
+user_id uuid NOT NULL REFERENCES user (id) ON DELETE CASCADE<br>
+___UNIQUE__ (direct_message_id, user_id)_<br>
+___INDEX__ ON created_at_<br>
+___INDEX__ ON direct_message_id_<br>
+___INDEX__ ON user_id_<br>
 
 <span><b><a id="db-entity-direct-message-reply" href="#db-entity-direct-message-reply">direct_message_reply</a></b> <a href="#database-entities" style="padding-left:7px;font-size:1.2rem;color:grey">▴</a></span>
-id uuid PRIMARY KEY DEFAULT gen_random_uuid()
-message_id uuid UNIQUE NOT NULL REFERENCES direct_message (id) ON DELETE CASCADE
-replied_to_id uuid REFERENCES user (id) ON DELETE SET NULL
-replier_id uuid NOT NULL REFERENCES user (id) ON DELETE CASCADE
-reply_to_message_id uuid REFERENCES channel_message (id) ON DELETE SET NULL
-thread_id uuid NOT NULL REFERENCES thread (id) ON DELETE CASCADE
-___INDEX__ ON replied_to_id_
-___INDEX__ ON thread_id_
+<br>id uuid PRIMARY KEY DEFAULT gen_random_uuid()<br>
+message_id uuid UNIQUE NOT NULL REFERENCES direct_message (id) ON DELETE CASCADE<br>
+replied_to_id uuid REFERENCES user (id) ON DELETE SET NULL<br>
+replier_id uuid NOT NULL REFERENCES user (id) ON DELETE CASCADE<br>
+reply_to_message_id uuid REFERENCES channel_message (id) ON DELETE SET NULL<br>
+thread_id uuid NOT NULL REFERENCES thread (id) ON DELETE CASCADE<br>
+___INDEX__ ON replied_to_id_<br>
+___INDEX__ ON thread_id_<br>
 
 <span><b><a id="db-entity-file" href="#db-entity-file">file</a></b> <a href="#database-entities" style="padding-left:7px;font-size:1.2rem;color:grey">▴</a></span>
-id uuid PRIMARY KEY DEFAULT gen_random_uuid()
-name varchar(80) NOT NULL
-store_key varchar(256) NOT NULL
-uploaded_at timestamp DEFAULT now
-direct_message_id uuid REFERENCES direct_message (id)
-channel_message_id uuid REFERENCES channel_message (id)
-___INDEX__ ON uploaded_at_
-___INDEX__ ON user_id_
+<br>id uuid PRIMARY KEY DEFAULT gen_random_uuid()<br>
+name varchar(80) NOT NULL<br>
+store_key varchar(256) NOT NULL<br>
+uploaded_at timestamp DEFAULT now<br>
+direct_message_id uuid REFERENCES direct_message (id)<br>
+channel_message_id uuid REFERENCES channel_message (id)<br>
+___INDEX__ ON uploaded_at_<br>
+___INDEX__ ON user_id_<br>
 
 <span><b><a id="db-entity-theme" href="#db-entity-theme">theme</a></b> <a href="#database-entities" style="padding-left:7px;font-size:1.2rem;color:grey">▴</a></span>
-id uuid PRIMARY KEY DEFAULT gen_random_uuid()
-name UNIQUE NOT NULL varchar(40)
+<br>id uuid PRIMARY KEY DEFAULT gen_random_uuid()<br>
+name UNIQUE NOT NULL varchar(40)<br>
 
 <span><b><a id="db-entity-thread" href="#db-entity-thread">thread</a></b> <a href="#database-entities" style="padding-left:7px;font-size:1.2rem;color:grey">▴</a></span>
-id uuid PRIMARY KEY DEFAULT gen_random_uuid()
-channel_id uuid NOT NULL REFERENCES channel (id) ON DELETE CASCADE
-first_message_id uuid UNIQUE REFERENCES channel_message (id) ON DELETE SET NULL
-workspace_id uuid NOT NULL REFERENCES workspace (id) ON DELETE CASCADE
-___INDEX__ ON first_message_id_
+<br>id uuid PRIMARY KEY DEFAULT gen_random_uuid()<br>
+channel_id uuid NOT NULL REFERENCES channel (id) ON DELETE CASCADE<br>
+first_message_id uuid UNIQUE REFERENCES channel_message (id) ON DELETE SET NULL<br>
+workspace_id uuid NOT NULL REFERENCES workspace (id) ON DELETE CASCADE<br>
+___INDEX__ ON first_message_id_<br>
 
 <span><b><a id="db-entity-thread-watch" href="#db-entity-thread-watch">thread_watch</a></b> <a href="#database-entities" style="padding-left:7px;font-size:1.2rem;color:grey">▴</a></span>
-thread_id uuid NOT NULL REFERENCES thread ON DELETE CASCADE
-user_id uuid NOT NULL REFERENCES user ON DELETE CASCADE
-___PRIMARY KEY__ (thread_id, user_id)_
+<br>thread_id uuid NOT NULL REFERENCES thread ON DELETE CASCADE<br>
+user_id uuid NOT NULL REFERENCES user ON DELETE CASCADE<br>
+___PRIMARY KEY__ (thread_id, user_id)_<br>
 
 <span><b><a id="db-entity-user" href="#db-entity-user">user</a></b> <a href="#database-entities" style="padding-left:7px;font-size:1.2rem;color:grey">▴</a></span>
-id uuid PRIMARY KEY DEFAULT gen_random_uuid()
-access_failed_count integer NOT NULL
-avatar_id uuid REFERENCES file (id) DEFAULT 1
-concurrency_stamp TEXT
-created_at timestamp DEFAULT now
-deleted boolean DEFAULT false
-email varchar(320) NOT NULL UNIQUE
-email_confirmed boolean DEFAULT false
-first_name varchar(20)
-last_name varchar(50)
-lockout_enabled boolean DEFAULT false
-lockout_end timestamp
-<a href="#database-user-notif-pref-mask-def">***</a>user_notif_pref_mask integer DEFAULT 0
-notif_allow_time_start time
-notif_allow_time_end time
-notif_pause_until timestamp
-notif_sound integer DEFAULT 0
-normalized_email varchar(320)
-normalized_username varchar(80)
-online_status varchar(20) DEFAULT "online"
-online_status_until timestamp
-password_hash varchar(32)
-phone_number varchar(20)
-phone_number_confirmed boolean DEFAULT false
-security_stamp TEXT
-theme uuid REFERENCES theme ON DELETE SET NULL
-timezone varchar(40) NOT NULL
-two_factor_enabled boolean DEFAULT false
-username varchar(48)
-___INDEX__ ON deleted_
-___INDEX__ ON normalized_email_
-___INDEX__ ON normalized_username_
+<br>id uuid PRIMARY KEY DEFAULT gen_random_uuid()<br>
+access_failed_count integer NOT NULL<br>
+avatar_id uuid REFERENCES file (id) DEFAULT 1<br>
+concurrency_stamp TEXT<br>
+created_at timestamp DEFAULT now<br>
+deleted boolean DEFAULT false<br>
+email varchar(320) NOT NULL UNIQUE<br>
+email_confirmed boolean DEFAULT false<br>
+first_name varchar(20)<br>
+last_name varchar(50)<br>
+lockout_enabled boolean DEFAULT false<br>
+lockout_end timestamp<br>
+<a href="#database-user-notif-pref-mask-def">***</a>user_notif_pref_mask integer DEFAULT 0<br>
+notif_allow_time_start time<br>
+notif_allow_time_end time<br>
+notif_pause_until timestamp<br>
+notif_sound integer DEFAULT 0<br>
+normalized_email varchar(320)<br>
+normalized_username varchar(80)<br>
+online_status varchar(20) DEFAULT "online"<br>
+online_status_until timestamp<br>
+password_hash varchar(32)<br>
+phone_number varchar(20)<br>
+phone_number_confirmed boolean DEFAULT false<br>
+security_stamp TEXT<br>
+theme uuid REFERENCES theme ON DELETE SET NULL<br>
+timezone varchar(40) NOT NULL<br>
+two_factor_enabled boolean DEFAULT false<br>
+username varchar(48)<br>
+___INDEX__ ON deleted_<br>
+___INDEX__ ON normalized_email_<br>
+___INDEX__ ON normalized_username_<br>
 
 <span><b><a id="db-entity-user-claim" href="#db-entity-user-claim">user_claim</a></b> <a href="#database-entities" style="padding-left:7px;font-size:1.2rem;color:grey">▴</a></span>
-id uuid PRIMARY KEY DEFAULT gen_random_uuid()
-claim_type varchar(80)
-claim_value varchar(256)
-user_id uuid NOT NULL REFERENCES user (id) ON DELETE CASCADE
+<br>id uuid PRIMARY KEY DEFAULT gen_random_uuid()<br>
+claim_type varchar(80)<br>
+claim_value varchar(256)<br>
+user_id uuid NOT NULL REFERENCES user (id) ON DELETE CASCADE<br>
 
 <span><b><a id="db-entity-user-login" href="#db-entity-user-login">user_login</a></b> <a href="#database-entities" style="padding-left:7px;font-size:1.2rem;color:grey">▴</a></span>
-login_provider varchar(128) NOT NULL
-provider_key varchar(128) NOT NULL
-provider_display_name varchar(128)
-user_id uuid NOT NULL REFERENCES user (id) ON DELETE CASCADE
-___PRIMARY KEY__ (login_provider, provider_key)_
+<br>login_provider varchar(128) NOT NULL<br>
+provider_key varchar(128) NOT NULL<br>
+provider_display_name varchar(128)<br>
+user_id uuid NOT NULL REFERENCES user (id) ON DELETE CASCADE<br>
+___PRIMARY KEY__ (login_provider, provider_key)_<br>
 
 <span><b><a id="db-entity-user-token" href="#db-entity-user-token">user_token</a></b> <a href="#database-entities" style="padding-left:7px;font-size:1.2rem;color:grey">▴</a></span>
-user_id uuid
-login_provider varchar(128) NOT NULL
-name varchar(1000) NOT NULL
-value varchar(1000)
-___PRIMARY KEY__ (user_id, login_provider, name)_
+<br>user_id uuid<br>
+login_provider varchar(128) NOT NULL<br>
+name varchar(1000) NOT NULL<br>
+value varchar(1000)<br>
+___PRIMARY KEY__ (user_id, login_provider, name)_<br>
 
 <span><b><a id="db-entity-workspace" href="#db-entity-workspace">workspace</a></b> <a href="#database-entities" style="padding-left:7px;font-size:1.2rem;color:grey">▴</a></span>
-id uuid PRIMARY KEY DEFAULT gen_random_uuid()
-avatar_id uuid REFERENCES file (id) DEFAULT 1 ON DELETE SET DEFAULT
-created_at timestamp DEFAULT now
-description varchar(120) NOT NULL
-name varchar(80) NOT NULL
-num_members integer DEFAULT 1
+<br>id uuid PRIMARY KEY DEFAULT gen_random_uuid()<br>
+avatar_id uuid REFERENCES file (id) DEFAULT 1 ON DELETE SET DEFAULT<br>
+created_at timestamp DEFAULT now<br>
+description varchar(120) NOT NULL<br>
+name varchar(80) NOT NULL<br>
+num_members integer DEFAULT 1<br>
 
 <span><b><a id="db-entity-workspace-admin-permissions" href="#db-entity-workspace-admin-permissions">workspace_admin_permissions</a></b> <a href="#database-entities" style="padding-left:7px;font-size:1.2rem;color:grey">▴</a></span>
-admin_id uuid NOT NULL REFERENCES user (id) ON DELETE CASCADE
-<a href="#database-workspace-admin-permissions-mask-def">***</a>workspace_admin_permissions_mask integer DEFAULT 1
-workspace_id uuid NOT NULL REFERENCES workspace ON DELETE CASCADE
-___PRIMARY KEY__ (admin_id, workspace_id)_
-___INDEX__ ON admin_id_
+<br>admin_id uuid NOT NULL REFERENCES user (id) ON DELETE CASCADE<br>
+<a href="#database-workspace-admin-permissions-mask-def">***</a>workspace_admin_permissions_mask integer DEFAULT 1<br>
+workspace_id uuid NOT NULL REFERENCES workspace ON DELETE CASCADE<br>
+___PRIMARY KEY__ (admin_id, workspace_id)_<br>
+___INDEX__ ON admin_id_<br>
 
 <span><b><a id="db-entity-workspace-invite" href="#db-entity-workspace-invite">workspace_invite</a></b> <a href="#database-entities" style="padding-left:7px;font-size:1.2rem;color:grey">▴</a></span>
-id uuid PRIMARY KEY DEFAULT gen_random_uuid()
-admin_id uuid NOT NULL REFERENCES user (id) ON DELETE CASCADE
-created_at timestamp DEFAULT now
-user_id uuid NOT NULL REFERENCES user (id) ON DELETE CASCADE
-workspace_id uuid NOT NULL REFERENCES workspace (id) ON DELETE CASCADE
-<a href="#database-workspace-invite-status-mask-def">***</a>workspace_invite_status integer DEFAULT 1
-___INDEX__ ON created_at_
-___INDEX__ ON status_
-___INDEX__ ON user_id_
+<br>id uuid PRIMARY KEY DEFAULT gen_random_uuid()<br>
+admin_id uuid NOT NULL REFERENCES user (id) ON DELETE CASCADE<br>
+created_at timestamp DEFAULT now<br>
+user_id uuid NOT NULL REFERENCES user (id) ON DELETE CASCADE<br>
+workspace_id uuid NOT NULL REFERENCES workspace (id) ON DELETE CASCADE<br>
+<a href="#database-workspace-invite-status-mask-def">***</a>workspace_invite_status integer DEFAULT 1<br>
+___INDEX__ ON created_at_<br>
+___INDEX__ ON status_<br>
+___INDEX__ ON user_id_<br>
 
 <span><b><a id="db-entity-workspace-member" href="#db-entity-workspace-member">workspace_member</a></b> <a href="#database-entities" style="padding-left:7px;font-size:1.2rem;color:grey">▴</a></span>
-id uuid PRIMARY KEY DEFAULT gen_random_uuid()
-admin boolean DEFAULT false
-avatar_id uuid REFERENCES file (id) DEFAULT 1 ON DELETE SET DEFAULT
-joined_at timestamp DEFAULT now
-notif_allow_time_start time
-notif_allow_time_end time
-notif_sound integer DEFAULT 0
-online_status varchar(20) DEFAULT "online"
-online_status_until timestamp
-owner boolean DEFAULT false
-theme uuid ON DELETE SET NULL
-title varchar(80)
-user_id uuid NOT NULL REFERENCES user (id) ON DELETE CASCADE
-workspace_id uuid NOT NULL REFERENCES workspace (id) ON DELETE CASCADE
-___UNIQUE__ (user_id, workspace_id)_
-___INDEX__ ON joined_on_
-___INDEX__ ON (workspace_id, user_id)_
+<br>id uuid PRIMARY KEY DEFAULT gen_random_uuid()<br>
+admin boolean DEFAULT false<br>
+avatar_id uuid REFERENCES file (id) DEFAULT 1 ON DELETE SET DEFAULT<br>
+joined_at timestamp DEFAULT now<br>
+notif_allow_time_start time<br>
+notif_allow_time_end time<br>
+notif_sound integer DEFAULT 0<br>
+online_status varchar(20) DEFAULT "online"<br>
+online_status_until timestamp<br>
+owner boolean DEFAULT false<br>
+theme uuid ON DELETE SET NULL<br>
+title varchar(80)<br>
+user_id uuid NOT NULL REFERENCES user (id) ON DELETE CASCADE<br>
+workspace_id uuid NOT NULL REFERENCES workspace (id) ON DELETE CASCADE<br>
+___UNIQUE__ (user_id, workspace_id)_<br>
+___INDEX__ ON joined_on_<br>
+___INDEX__ ON (workspace_id, user_id)_<br>
 
 <span><b><a id="db-entity-workspace-search" href="#db-entity-workspace-search">workspace_search</a></b> <a href="#database-entities" style="padding-left:7px;font-size:1.2rem;color:grey">▴</a></span>
-id uuid PRIMARY KEY DEFAULT gen_random_uuid()
-created_at timestamp DEFAULT now
-query varchar(80)
-user_id uuid NOT NULL REFERENCES user (id) ON DELETE CASCADE
-workspace_id uuid NOT NULL REFERENCES workspace (id) ON DELETE CASCADE
-___INDEX__ ON created_at_
-___INDEX__ ON (workspace_id, user_id)_
+<br>id uuid PRIMARY KEY DEFAULT gen_random_uuid()<br>
+created_at timestamp DEFAULT now<br>
+query varchar(80)<br>
+user_id uuid NOT NULL REFERENCES user (id) ON DELETE CASCADE<br>
+workspace_id uuid NOT NULL REFERENCES workspace (id) ON DELETE CASCADE<br>
+___INDEX__ ON created_at_<br>
+___INDEX__ ON (workspace_id, user_id)_<br>
 
-<h3><a id="database-mask-defs" href="#database-mask-defs">Bit Mask/Enum Definitions</a><a href="#top" style="padding-left:7px;font-size:1.2rem;color:grey;">▴</a></h3>
+<h3><a id="mask-defs" href="#mask-defs">Bit Mask/Enum Definitions</a><a href="#top" style="padding-left:7px;font-size:1.2rem;color:grey;">▴</a></h3>
 
 <ul>
-<li><a id="database-allowed-channel-posters-mask-def" href="#database-allowed-channel-posters-mask-def">allowed_channel_posters_mask</a><a href="#db-entity-channel-permissions"  style="padding-left:7px;font-size:1.2rem;color:grey">▴</a>
+<li><a id="allowed-channel-posters-mask-def" href="#allowed-channel-posters-mask-def">Allowed Channel Posters Mask</a><a href="#db-entity-channel"  style="padding-left:7px;font-size:1.2rem;color:grey">▴</a>
 <ul>
 <li>1 - all</li>
 <li>2 - admins only</li>
 </ul>
 </li>
-<li><a id="database-channel-invite-status-mask-def" href="#database-channel-invite-status-mask-def">channel_invite_status</a><a href="#db-entity-channel-invite"  style="padding-left:7px;font-size:1.2rem;color:grey">▴</a>
+<li><a id="invite-status-mask-def" href="#invite-status-mask-def">Invite Status Enum</a><a href="#db-entity-channel-invite"  style="padding-left:7px;font-size:1.2rem;color:grey">▴</a>
 <ul>
 <li>1 - sent</li>
 <li>2 - accepted</li>
 <li>4 - rejected</li>
 </ul>
 </li>
-<li><a id="database-channel-later-flag-status-mask-def" href="#database-channel-later-flag-status-mask-def">channel_message_later_flag_status</a><a href="#db-entity-channel-message-later-flag" style="padding-left:7px;font-size:1.2rem;color:grey">▴</a>
+<li><a id="later-flag-status-mask-def" href="#later-flag-status-mask-def">Later Flag Status Enum</a><a href="#db-entity-channel-message-later-flag" style="padding-left:7px;font-size:1.2rem;color:grey">▴</a>
 <ul>
 <li>1 - in progress</li>
 <li>2 - archived</li>
 <li>4 - completed</li>
 </ul>
 </li>
-<li><a id="database-channel-message-notif-type-mask-def" href="#database-channel-message-notif-type-mask-def">channel_message_notif_type</a><a href="#db-entity-channel-message-notification"  style="padding-left:7px;font-size:1.2rem;color:grey">▴</a>
+<li><a id="notif-type-mask-def" href="#notif-type-mask-def">Notification Type Enum</a><a href="#db-entity-channel-message-notification"  style="padding-left:7px;font-size:1.2rem;color:grey">▴</a>
 <ul>
 <li>1 - reply</li>
 <li>2 - mention</li>
@@ -638,21 +637,7 @@ ___INDEX__ ON (workspace_id, user_id)_
 <li>8 - thread watch</li>
 </ul>
 </li>
-<li><a id="database-direct-message-later-flag-status-mask-def" href="#database-direct-message-later-flag-status-mask-def">direct_message_later_flag_status</a><a href="#db-entity-direct-message-later-flag"  style="padding-left:7px;font-size:1.2rem;color:grey">▴</a>
-<ul>
-<li>1 - in progress</li>
-<li>2 - archived</li>
-<li>4 - completed</li>
-</ul>
-</li>
-<li><a id="database-direct-message-notif-type-mask-def" href="#database-direct-message-notif-type-mask-def">direct_message_notif_type</a><a href="#db-entity-direct-message-notification"  style="padding-left:7px;font-size:1.2rem;color:grey">▴</a>
-<ul>
-<li>1 - reply</li>
-<li>2 - mention</li>
-<li>4 - reaction</li>
-</ul>
-</li>
-<li><a id="database-user-notif-pref-mask-def" href="#database-user-notif-pref-mask-def">user_notif_pref_mask</a><a href="#db-entity-user"  style="padding-left:7px;font-size:1.2rem;color:grey">▴</a>
+<li><a id="notif-pref-mask-def" href="#notif-pref-mask-def">Notifications Preferences Mask</a><a href="#db-entity-user"  style="padding-left:7px;font-size:1.2rem;color:grey">▴</a>
 <ul>
 <li>1 - all messages</li>
 <li>2 - nothing</li>
@@ -662,7 +647,7 @@ ___INDEX__ ON (workspace_id, user_id)_
 <li>32 - thread watch</li>
 </ul>
 </li>
-<li><a id="database-workspace-admin-permissions-mask-def" href="#database-workspace-admin-permissions-mask-def">workspace_admin_permissions_mask</a><a href="#db-entity-workspace-admin-permissions"  style="padding-left:7px;font-size:1.2rem;color:grey">▴</a>
+<li><a id="workspace-admin-permissions-mask-def" href="#workspace-admin-permissions-mask-def">Admin Preferences Mask</a><a href="#db-entity-workspace-admin-permissions"  style="padding-left:7px;font-size:1.2rem;color:grey">▴</a>
 <ul>
 <li>1 - all</li>
 <li>2 - invite</li>
@@ -677,28 +662,44 @@ ___INDEX__ ON (workspace_id, user_id)_
 <li>1024 - delete message permission</li>
 </ul>
 </li>
-<li><a id="database-workspace-invite-status-mask-def" href="#database-workspace-invite-status-mask-def">workspace_invite_status</a><a href="#db-entity-workspace-invite"  style="padding-left:7px;font-size:1.2rem;color:grey">▴</a>
+<li>
+<a id="message-type-enum-def" href="#message-type-enum-def">Message Type</a>
 <ul>
-<li>1 - sent</li>
-<li>2 - accepted</li>
-<li>4 - rejected</li>
+<li>1 - direct message</li>
+<li>2 - channel message</li>
 </ul>
 </li>
-<li><a id="database-workspace-notif-pref-mask-def" href="#database-workspace-notif-pref-mask-def">workspace_notif_pref_mask</a><a href="#db-entity-workspace-preferences"  style="padding-left:7px;font-size:1.2rem;color:grey">▴</a>
+<li>
+<a href="#sort-order-enum-def" id="sort-order-enum-def">Sort Order</a>
 <ul>
-<li>1 - all messages</li>
-<li>2 - nothing</li>
-<li>4 - mentions</li>
-<li>8 - dms</li>
-<li>16 - replies</li>
-<li>32 - thread watch</li>
+<li>1 - relevance</li>
+<li>2 - new to old</li>
+<li>4 - old to new</li>
+<li>8 - most members</li>
+<li>16 - least members</li>
+<li>32 - a to z</li>
+<li>64 - z to a</li>
 </ul>
 </li>
+<li>
+<a href="#view-pane-enum-def" id="view-pane-enum-def">View Pane</a>
+<ul>
+<li>1 - all channels</li>
+<li>2 - direct message</li>
+<li>4 - all direct messages</li>
+<li>8 - drafts and sent</li>
+<li>16 - later</li>
+<li>32 - mentions and reactions</li>
+<li>64 - search results</li>
+<li>128 - threads</li>
+<li>256 - unreads</li>
+<li>512 - channel</li>
 </ul>
+</li>
 
 <h3><a id="database-preloaded-rows" href="#database-preloaded-rows">Preloaded Rows</a><a href="#top" style="padding-left:7px;font-size:1.2rem;color:grey;">▴</a></h3>
 <ul>
-<li><a id="database-preloaded-files" href="#database-files">files</a>
+<li><a id="database-preloaded-files" href="#database-preloaded-files">files</a>
 <ul>
 <li>default avatars</li>
 <li>notification sounds</li>
@@ -732,6 +733,7 @@ ___INDEX__ ON (workspace_id, user_id)_
 </ul>
 <a id="workspaces-page-query" href="#workspaces-page-query"></a>
 <a href="#graphql-queries" style="padding-left:7px;font-size:1.2rem;color:grey;">▴</a>
+
 ```
 query WorkspacesPageQuery(
     userId: ID!, 
@@ -1066,7 +1068,6 @@ mutation updateWorkspaceMember(
     <li><a href="#gql-mentions-connection">MentionsConnection</a></li>
     <li><a href="#gql-mentions-reactions-pane">MentionsReactionsPaneContent</a></li>
     <li><a href="#gql-message">Message</a></li>
-    <li><a href="#gql-message-type">MessageType</a></li>
     <li><a href="#gql-messages-connection">MessagesConnection</a></li>
     <li><a href="#gql-messages-connection-edge">MessagesConnectionEdge</a></li>
     <li><a href="#gql-node">Node</a></li>
@@ -1076,7 +1077,6 @@ mutation updateWorkspaceMember(
     <li><a href="#gql-reaction">Reaction</a></li>
     <li><a href="#gql-reactions-connection">ReactionsConnection</a></li>
     <li><a href="#gql-reactions-connection-edge">ReactionsConnectionEdge</a></li>
-    <li><a href="#gql-sort-order">SortOrder</a></li>
     <li><a href="#gql-starred-connection">StarredConnection</a></li>
     <li><a href="#gql-starred-connection-edge">StarredConnectionEdge</a></li>
     <li><a href="#gql-theme">Theme</a></li>
@@ -1410,15 +1410,6 @@ type Message implements Node {
 ```
 
 <a href="#graphql-types" style="padding-left:7px;font-size:1.2rem;color:grey;">▴</a>
-<a href="#gql-message-type" id="gql-message-type"></a>
-```
-enum MessageType {
-    DIRECT
-    CHANNEL
-}
-```
-
-<a href="#graphql-types" style="padding-left:7px;font-size:1.2rem;color:grey;">▴</a>
 <a href="#gql-messages-connection" id="gql-messages-connection"></a>
 ```
 type MessagesConnection {
@@ -1504,20 +1495,6 @@ type ReactionsConnection {
 type ReactionsConnectionEdge {
     node: Reaction!
     cursor: String!
-}
-```
-
-<a href="#graphql-types" style="padding-left:7px;font-size:1.2rem;color:grey;">▴</a>
-<a href="#gql-sort-order" id="gql-sort-order"></a>
-```
-enum SortOrder {
-    RELEVANCE
-    NEW_TO_OLD
-    OLD_TO_NEW
-    MOST_MEMBERS
-    LEAST_MEMBERS
-    A_TO_Z
-    Z_TO_A
 }
 ```
 
@@ -1909,7 +1886,7 @@ input _AllDirectMessagesFilter {
     userId: ID!
     cursor: _Cursor!
     from: [ID!]
-    sortOrder: SortOrder
+    sortOrder: Int
     afterTimestamp: _Timestamp
     beforeTimestamp: _Timestamp
     query: String
@@ -1963,7 +1940,7 @@ input _ChannelsFilter {
     workspaceId: ID!
     userId: ID!
     cursor: _Cursor!
-    sortOrder: SortOrder
+    sortOrder: Int
     query: String
     with: [User!]
     createdBefore: _Timestamp
@@ -2032,7 +2009,7 @@ input _LaterFlagsFilter {
     status: Int!
     workspaceId: ID!
     channelIds: [ID!]
-    sortOrder: SortOrder
+    sortOrder: Int
     from: [ID!]
     to: [ID!]
     mentioning: [ID!]
@@ -2053,7 +2030,7 @@ input _MentionsFilter {
     cursor: _SpecialMessagesCursor!
     workspaceId: ID!
     channelIds: [ID!]
-    sortOrder: SortOrder
+    sortOrder: Int
     from: [ID!]
     mentioning: [ID!]
     beforeTimestamp: _Timestamp
@@ -2077,7 +2054,7 @@ input _Message {
     id: ID
     content: String!
     draft: Boolean!
-    type: MessageType!
+    type: Int!
     sentAt: _Timestamp
     channelId: ID
     directMessageGroupId: ID
@@ -2112,7 +2089,7 @@ input _MessagesFilter {
     cursor: _SpecialMessagesCursor!
     workspaceId: ID!
     channelIds: [ID!]
-    sortOrder: SortOrder
+    sortOrder: Int
     from: [ID!]
     to: [ID!]
     mentioning: [ID!]
@@ -2132,7 +2109,7 @@ input _ReactionsFilter {
     cursor: _SpecialMessagesCursor!
     workspaceId: ID!
     channelIds: [ID!]
-    sortOrder: SortOrder
+    sortOrder: Int
     from: [ID!]
     mentioning: [ID!]
     beforeTimestamp: _Timestamp
@@ -2172,7 +2149,7 @@ input _ThreadsFilter {
     createdBefore: _Timestamp
     createAfter: _Timestamp
     query: String
-    sortOrder: SortOrder
+    sortOrder: Int
 }
 ```
 
@@ -2317,11 +2294,11 @@ input _WorkspaceSearchResultsFilter {
 
 <h1><a id="ui" href="#ui">React App UI</a><a href="#top" style="padding-left:7px;font-size:1.2rem;color:grey;">▴</a></span></h1>
 
-The React UI will consist of four main pages: the workspaces (/workspaces) page, the workspace (/workspace) page, the workspace administration (/workspace/admin) page, and the account (/account) page. These pages and certain subcomponents of each page such as popups and view pane contents of the workspace page will be code-split with webpack and dynamically imported as needed by the browser in conjunction with client-side routing. You can view the entire app component tree by loading [docs/component-tree.html]() in your browser.
+The React UI will consist of four main pages: the workspaces (/workspaces) page, the workspace (/workspace) page, the workspace administration (/workspace/admin) page, and the account (/account) page. These pages and certain subcomponents of each page such as popups and view pane contents of the workspace page will be code-split with webpack and dynamically imported as needed by the browser in conjunction with client-side routing. You can view the entire app component tree by loading [docs/ui/component-tree.html]() in your browser.
 
 Auth-related pages are served by the Identity Service on redirect from the WebClient Service. To start out I will use the prebuilt ASP.NET Razor auth pages that come with Duende Identity Server for convenience, but may make React versions in the future. 
 
-I am pretty excited about using <a href="https://relay.dev/docs/tutorial/graphql/">Relay</a>, a GraphQL client, for this app. Normally in React apps you either make one big network request when pages load and continuously deal with needing to synchronize page requests with component-level data requirements, or you have components make their own network requests. Relay allows us to have the best of both worlds. Components specify their own query fragments, which are processed by a custom Relay compiler at build-time so that they can be stitched together by the Relay runtime into one page-wide GraphQL query that gets executed at runtime.
+I am pretty excited about using <a href="https://relay.dev/docs/tutorial/graphql/">Relay</a>, a GraphQL client, for this app. Normally in React apps you either make one big network request when pages load and continuously deal with needing to synchronize page requests with component-level data requirements, or you have components make their own network requests. Relay allows us to have the best of both worlds. Components specify their own query fragments, which are processed by a custom Relay compiler at build-time so that they can be stitched together by the Relay runtime into one page-wide GraphQL query that gets executed at runtime, only fetching the necessary data (i.e., it interacts with the Relay Store).
 
 [React-Aria](https://react-spectrum.adobe.com/react-aria/why.html) and [Tailwind](https://tailwindcss.com/) are the last major UI-related dependencies for this project. React-Aria is an unstyled component library developed by Adobe that gives developers industry-grade internationalization, accessibility, and interaction support for free. Tailwind is a CSS framework that provides utility classes based on CSS primitives. It is useful for a variety of reasons, including the ability to include styling details directly in component files, and build-time loading of only the classes used by your components.
 
