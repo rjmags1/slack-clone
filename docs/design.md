@@ -1,18 +1,18 @@
 <h1><a id="top" href="#top">Slack-Clone Design</a></h1>
 
 # TODO:
+- decompose how interactions with Persistence Service in terms of Entity components
 - review graphql schema
-- decompose how API service will work in terms of components prior to resolver execution - query analysis middleware? user-centric authorization?
-- think about API service resolver efficiency - will resolvers be able to make efficient queries?
-- think about all web services in terms of ASP.NET components
+- decompose API service in terms of components - query analysis middleware? user-centric authorization? resolver efficiency?
 - decompose how Realtime service will communicate with frontend
   - Get specific about the features the Realtime service will be responsible for - messages, notifications, people signing in and out of workspaces, etc.
   - What functions will the frontend be able to invoke on the Realtime service, and vice versa? Where will the frontend Realtime logic live, how will it integrate with the Relay Store? 
-  - What will the Realtime service look like in terms hubs, groups, etc.?
+  - What will the Realtime service look like in terms of components - hubs, groups, etc.?
 - Testing
   - Automation/Github Actions? Unit testing? Integration/E2E? Libraries involved?
 - Review data model
 - Review component tree
+- Write out Relay query fragments
 - Make implementation plan and start implementing
     - Very specific about the first few steps/phases can be vague about the rest
 
