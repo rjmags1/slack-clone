@@ -1,20 +1,21 @@
 <h1><a id="top" href="#top">Slack-Clone Design</a></h1>
 
 # TODO:
-- decompose how interactions with Persistence Service in terms of Entity components
-- review graphql schema
-- decompose API service in terms of components - query analysis middleware? user-centric authorization? resolver efficiency?
 - decompose how Realtime service will communicate with frontend
   - Get specific about the features the Realtime service will be responsible for - messages, notifications, people signing in and out of workspaces, etc.
   - What functions will the frontend be able to invoke on the Realtime service, and vice versa? Where will the frontend Realtime logic live, how will it integrate with the Relay Store? 
   - What will the Realtime service look like in terms of components - hubs, groups, etc.?
-- Testing
-  - Automation/Github Actions? Unit testing? Integration/E2E? Libraries involved?
-- Review data model
-- Review component tree
+  - Testing?
+- decompose how WebClient Service will be implemented
+  - Components that will be used in controllers
+  - webpack features/general plan
+  - testing?
+- Non-Unit Testing
+  - Automation/Github Actions? Integration/E2E? Libraries?
 - Write out Relay query fragments
+- Review data model, graphql schema, component tree, general review of this document
 - Make implementation plan and start implementing
-    - Very specific about the first few steps/phases can be vague about the rest
+    - Very specific about the first few steps/phases can be vague about the rest. Start out with setting up the EF model and getting a DDL migration working. Write test data generation script.
 
 <hr>
 
@@ -210,11 +211,17 @@ The WebClient Service exposes the following endpoints:
 
 <h3><a id="api-service" href="#api-service">API Service</a><a href="#services" style="padding-left:7px;font-size:1.2rem;color:grey;">▴</a></h3>
 
-The API Service is a GraphQL server that exposes a single endpoint, __/graphql__. GraphQL introduces an object graph layer between API consumers and the underlying data stores. This layer reduces the workload of both frontend and backend developers because it obsoletes the complexity associated with maintaining many REST endpoints as data requirements change. The graph for this project is based on the <a href="#graphql-schema">schema</a> below, which implements the Global Object Identication spec for compatibility with Relay Client. The API Service uses the <a href="https://graphql-dotnet.github.io/docs/getting-started/introduction/">GraphQL .NET</a> library to implement .NET types that are used to respond to queries made by the Relay Client in the React app. 
+The API Service is a GraphQL server that exposes a single endpoint, __/graphql__. GraphQL is an object graph layer between API consumers and the underlying data stores. This layer can reduce the workload of both frontend and backend developers because it obsoletes the complexity associated with maintaining many REST endpoints as data requirements change. The object graph for this project is based on the <a href="#graphql-schema">schema</a> below, which implements the Global Object Identication spec for compatibility with Relay Client. The API Service uses the <a href="https://graphql-dotnet.github.io/docs/getting-started/introduction/">GraphQL .NET</a> library to implement .NET types that are used to respond to queries made by the Relay Client in the React app. Field resolvers of the .NET types that represent GraphQL objects will make use of `Store` methods described in the <a id="persistence-service" href="#persistence-service">Persistence Service</a> section to interact with the database.
 
-There are many two-way/cyclical 'edges' in the schema that could lead to infinite query cycles, and in general GraphQL allows clients to request large amounts of information with highly nested queries. This makes the API Service vulnerable to DoS attacks, which must be mitigated. <a href="https://graphql-dotnet.github.io/docs/getting-started/malicious-queries/">GraphQL .NET</a> provides query analysis configuration that can be used to avoid executing malicious queries which I will use in this project.
+GraphQL allows clients to request large amounts of information with highly nested queries. This makes the API Service vulnerable to DoS attacks, which must be mitigated. <a href="https://graphql-dotnet.github.io/docs/getting-started/malicious-queries/">GraphQL .NET</a> provides query analysis configuration that can be used to avoid executing maliciously large queries which I will use in this project. 
 
-The API Service will also be responsible for performing a large amount of user authorization by checking the database and other data stores for permissions prior to query execution.
+For a GraphQL API to perform as well as a well-designed REST API, appropriate batch loading and caching must be implemented. Naive object field resolver implementations that simply fetch rows from the database can result in major performance hits - this is commonly referred to as the N + 1 problem. GraphQL.NET's Dataloader implementation addresses this area of concern and will be used heavily in this project. It provides batch loading to ensure related entities are retrieved in one round trip and caching to avoid reloading rows previously loaded during the course of GraphQL query field resolution. GraphQL.NET also comes with a Document Cache feature that allows caching of the GraphQL documents on top of the caching done by Dataloader. The Document Cache will allow the API server to skip certain parsing and validation steps prior to query execution.
+
+The API Service will also be responsible for performing a large amount of user authorization by checking user claims prior to query execution. Certain cases such as determining if an API caller is allowed to view details pertaining to particular channels or workspaces may require a single extra round trip to the database, which is permissible. In general database round trips will be minimized as much as possible in my implementation. I plan on making use of left joins/CTEs/transactions and other SQL features to avoid extra authorization related round trips where applicable.
+
+#### Testing
+
+Since most of the logic for this service relies on the Persistence Service and widely used and tested external libraries, the only behavior that will be unit tested is the authorization behavior. Unit tests should assert on rejecting all requests from unauthenticated clients. They should also assert on omission of response fields that an authenticated client does not have permissions to view. In a real application the performance of queries would need to be benchmarked and optimized based on the results, but this is a personal project.
 
 <h3><a id="realtime-service" href="#realtime-service">Realtime Service</a><a href="#services" style="padding-left:7px;font-size:1.2rem;color:grey;">▴</a></h3>
 
@@ -232,7 +239,15 @@ The File Service will be trivially simple and is mainly included as a stand-in f
 
 <h3><a id="persistence-service" href="#persistence-service">Persistence Service</a><a href="#services" style="padding-left:7px;font-size:1.2rem;color:grey;">▴</a></h3>
 
-The Persistence Service is a PostgreSQL database that receives queries from Entity Framework ORM method calls, parses and executes them, and returns raw table rows back to the Entity method caller. The schema is outlined <a href="#database-schema">below</a>. Virtually all database interactions, including migrations, will be done through Entity and its associated packages.
+The Persistence Service consists of a PostgreSQL database that receives queries from Entity Framework ORM method calls, parses and executes them, and returns raw table rows back to the EF method caller. The schema is outlined <a href="#database-schema">below</a>. All database interactions, including migrations, will be done through EF and its associated packages.
+
+Despite the fact that I have written the below schema in pseudo-SQL, the EF model will be generated in a code-first manner (i.e., not from a pre-existing Postgres database). This will allow me to take advantage of the developer-friendly migration strategy provided by EF; hopefully it is as convenient as it seems on paper. It will also allow me to organize my EF model into multiple subclasses of `DbContext`, as the scaffolding approach dumps all EF entity classes into a single `DbContext` class.
+
+The logic that wraps EF methods to interact with Postgres will be organized into `Store` interfaces and associated implementations to allow for dependency injection. `Store` interfaces specify query behaviors associated with entities (i.e., `IUserStore` will specify methods for CRUD operations on user data in the database). The implementations of these interfaces will contain EF method calls, and some of them will involve dynamic building of LINQ queries with `Func` delegates/`Expression` trees to implement the filtering behaviors specified in the graphql schema. There are several projects endorsed by the GraphQL.NET docs that auto-generate GraphQL schemas from an EF model, which object field resolvers containing EF method calls for you. For now I am choosing to forego using such tools to manually handle certain complicated cases myself and improve my C#/Entity skills. 
+
+#### Testing
+
+Each of the `Store` method implementations will be unit tested to ensure correct functionality and to enable immediate detection of breaking changes. Unit tests will be created at method implementation time and should assert on correct data loading. Any non-trivial helper methods will also have unit tests written at implementation time. Unit tests will be performed with an exact copy of the current 'production' database schema with representative test data.  I will probably write a script in Python that generates raw SQL that can then be used to fill a production database schema copy with test data, based on the structure of the schema (i.e., so the python script does not need constant updating).
 
 <hr>
 
@@ -1591,7 +1606,7 @@ type Time {
 ```
 type Timestamp {
     date: String!
-    time: Time!
+    time(userId: ID!): Time!
 }
 ```
 
