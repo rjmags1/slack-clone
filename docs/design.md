@@ -2,9 +2,7 @@
 
 # TODO:
 - decompose how Realtime service will communicate with frontend
-  - Get specific about the features the Realtime service will be responsible for - messages, notifications, people signing in and out of workspaces, etc.
   - What functions will the frontend be able to invoke on the Realtime service, and vice versa? Where will the frontend Realtime logic live, how will it integrate with the Relay Store? 
-  - What will the Realtime service look like in terms of components - hubs, groups, etc.?
   - Testing?
 - decompose how WebClient Service will be implemented
   - Components that will be used in controllers
@@ -12,6 +10,7 @@
   - testing?
 - Non-Unit Testing
   - Automation/Github Actions? Integration/E2E? Libraries?
+- Update services diagram and the communication between each service
 - Write out Relay query fragments
 - Review data model, graphql schema, component tree, general review of this document
 - Make implementation plan and start implementing
@@ -91,9 +90,13 @@
 <h1><a id="stack" href="#stack">Stack</a></h1>
 <ul>
     <li><a href="https://learn.microsoft.com/en-us/aspnet/core/introduction-to-aspnet-core?view=aspnetcore-7.0">ASP.NET Core (7.0)</a> - API Service, Identity Service, File Service, Realtime Service, WebClient Service</li>
-    <li><a href="https://learn.microsoft.com/en-us/aspnet/core/introduction-to-aspnet-core?view=aspnetcore-7.0">ASP.NET Core SignalR (2.4)</a> - Realtime Service, WebClient Service</li>
+    <ul>
+        <li><a href="https://learn.microsoft.com/en-us/aspnet/core/introduction-to-aspnet-core?view=aspnetcore-7.0">ASP.NET Core SignalR (2.4)</a> - Realtime Service, WebClient Service</li>
+    </ul>
     <li><a href="https://docs.duendesoftware.com/identityserver/v6/">Duende Identity Server (6.2)</a> - Identity Service</li>
-    <li><a href="https://docs.duendesoftware.com/identityserver/v6/bff/">Duende.BFF (2.0)</a> - WebClient Service</li>
+        <ul>
+            <li><a href="https://docs.duendesoftware.com/identityserver/v6/bff/">Duende.BFF (2.0)</a> - WebClient Service</li>
+        </ul>
     <li><a href="https://learn.microsoft.com/en-us/ef/core/">Entity Framework Core (7.0)</a> - API Service, Identity Service, File Service, Realtime Service</li>
     <li>
         <a href="https://graphql.org/">GraphQL</a>
@@ -136,9 +139,10 @@
 
 <h3><a id="identity-service" href="#identity-service">Identity Service</a><a href="#services" style="padding-left:7px;font-size:1.2rem;color:grey;">▴</a></h3>
 
-The Identity Service is implemented with <a href="https://docs.duendesoftware.com/identityserver/v6/">Duende IdentityServer</a>, an auth framework supporting the <a href="https://infosec.mozilla.org/guidelines/iam/openid_connect.html">OpenID Connect</a> and <a href="https://datatracker.ietf.org/doc/html/rfc6749">OAuth2.0</a> protocols that integrates with ASP.NET Core. This auth pattern is useful because it allows for secure consolidation of sensitive user information as well as deduplication of auth logic across various services in an application.
+The Identity Service is implemented with <a href="https://docs.duendesoftware.com/identityserver/v6/">Duende IdentityServer</a>, an auth framework supporting the <a href="https://infosec.mozilla.org/guidelines/iam/openid_connect.html">OpenID Connect</a> and <a href="https://datatracker.ietf.org/doc/html/rfc6749">OAuth2.0</a> protocols that integrates with ASP.NET Core. This auth pattern is useful because it allows for secure consolidation of sensitive user information as well as deduplication of auth logic across various services in an application. There are several useful packages provided by Duende that allow for smooth integration with EF Core and ASP.NET Identity which I plan on making use of. ASP.NET Identity is the baked in auth support library for ASP.NET Core, and it provides an API supporting typical user login. It comes with a number of EF models that can be scaffolded into an application. 
 
 The functionality of IdentityServer and the protocols it implements can be described simplistically in terms of the core concepts of clients, scopes and claims. Clients represent pieces of software that interact with the IdentityServer, i.e. the WebClient Service. Claims are individual pieces of key-value pair information about clients and end-users, and scopes are named groups of claims (i.e., "scope of access to information"). Specific clients are registered with the IdentityServer, and specific scopes are registered to each registered client. Clients are granted access to registered scopes upon request via one of several grant mechanisms. The claims associated with such scopes are emitted in access tokens and identity tokens which upon expiration may be refreshed with a refresh token. 
+
 
 ##### Clients and Scopes
 
@@ -172,6 +176,9 @@ The Identity Service exposes the following endpoints:
 | Logout | /logout | Users get redirected here by the WebClient service when they decide to logout and are then redirected to the appropriate WebClient Service endpoint. |
 | Register | /register | Users get redirected here by the WebClient service when they decide to create a new account. |
 
+#### Testing
+
+Testing for the Identity Service will include unit tests asserting on correct functionality of each of the endpoints exposed by the underlying IdentityServer. Unit tests will also assert on the contents of the scopes detailed above as well as correct scope delegation to configured clients.
 
 <h3><a id="web-client-service" href="#web-client-service">WebClient Service</a><a href="#services" style="padding-left:7px;font-size:1.2rem;color:grey;">▴</a></h3>
 
@@ -208,6 +215,10 @@ The WebClient Service exposes the following endpoints:
 |User|/auth/user|Session management endpoint that is used to check if a user has an active session and/or fetch profile and session data about the user.|
 |API|/api/graphql|Proxy endpoint for the API service.|
 
+#### Testing
+
+WebClient Service unit tests should assert on correct behavior of each of the endpoints it exposes.
+
 
 <h3><a id="api-service" href="#api-service">API Service</a><a href="#services" style="padding-left:7px;font-size:1.2rem;color:grey;">▴</a></h3>
 
@@ -225,13 +236,17 @@ Since most of the logic for this service relies on the Persistence Service and w
 
 <h3><a id="realtime-service" href="#realtime-service">Realtime Service</a><a href="#services" style="padding-left:7px;font-size:1.2rem;color:grey;">▴</a></h3>
 
-The Realtime Service is responsible for handling all realtime functionality, including messages and notifications. It forms persistent connections with React app instances running in user browsers and is implemented with <a href="https://learn.microsoft.com/en-us/aspnet/core/signalr/introduction?view=aspnetcore-7.0">ASP.NET Core SignalR</a>.  SignalR and its usage in implementing the Realtime Service can be simplistically described in terms of the following SignalR abstractions: Hubs, Groups, and Connections. 
+The Realtime Service is responsible for handling all realtime functionality: including messages, notifications, and keeping track of when users are signed into workspaces. It forms persistent connections with React app instances running in user browsers and is implemented with <a href="https://learn.microsoft.com/en-us/aspnet/core/signalr/introduction?view=aspnetcore-7.0">ASP.NET Core SignalR</a>.  SignalR and its usage in implementing the Realtime Service can be simplistically described in terms of the following SignalR abstractions: Hubs, Groups, and Connections. 
 
-Hubs represent the platform clients and the Realtime Service communicate with each other with. Clients and the Realtime Service can call named methods on each other, and clients can subscribe to Realtime Service events. These events and methods live in Hubs. This project will start out with two hubs: NotificationHub and MessageHub. 
+Hubs represent the platform clients and the Realtime Service communicate with each other with. Clients and the Realtime Service can call named methods on each other, and clients can subscribe to Realtime Service events. These events and methods live in Hubs. This project will start out with three hubs: `MessageHub`, `NotificationHub`, and `WorkspaceHub`. Hubs are responsible for enqueing messages to a message queue. Using a message queue provides strong persistence guarantees without bloating other parts of the backend. I will probably use Apache Kafka down the line but for now will handle persistence by calling the API Service via the WebClient Service.
 
 A Connection is a persistent duplex connection (usually on top of WebSockets but SignalR provides other options) between a piece of client software (such as a web browser) and the Realtime Service over which they call each others methods and use server events. A user may have multiple clients connected to the Realtime Service on its behalf, and SignalR handles most of the complexity associated with operations such as ensuring a message sent by a user on one client shows up on all their other open clients, or closing all client connections associated with a user when that user logs out on one of its clients. Each Connection can can be associated with one of each Hub type.
 
-Groups represent groups of Connections between clients and the Realtime Service. In SignalR servers groups can be created, destroyed, and have members added and removed. Each workspace channel and direct message conversation for which there is at least one active member online that is signed into that workspace will correspond to an active Group instance in the Realtime Service.
+Groups represent groups of Connections between clients and the Realtime Service. In SignalR servers Groups can be created, destroyed, and have members added and removed. Each workspace channel and direct message conversation for which there is at least one active member online that is signed into that workspace will correspond to an active Group instance in the `MessageHub` and `NotificationHub`. For the `WorkspaceHub`, each workspace for which there is one active member online will correspond to an active Group instance.
+
+#### Testing
+
+Testing for the Realtime Service should assert on messages and notifications arriving to the correct clients, as well as correct online statuses being delivered to clients signed into a particular workspace. Unit tests will also assert on auth behavior: denial of connections that do not present a short-lived JWT from the WebClient Service, acceptance of connections that do. 
 
 <h3><a id="file-service" href="#file-service">File Service</a><a href="#services" style="padding-left:7px;font-size:1.2rem;color:grey;">▴</a></h3>
 
