@@ -1,20 +1,10 @@
 <h1><a id="top" href="#top">Slack-Clone Design</a></h1>
 
 # TODO:
-- decompose how Realtime service will communicate with frontend
-  - What functions will the frontend be able to invoke on the Realtime service, and vice versa? Where will the frontend Realtime logic live, how will it integrate with the Relay Store? 
-  - Testing?
-- decompose how WebClient Service will be implemented
-  - Components that will be used in controllers
-  - webpack features/general plan
-  - testing?
-- Non-Unit Testing
-  - Automation/Github Actions? Integration/E2E? Libraries?
-- Update services diagram and the communication between each service
-- Write out Relay query fragments
-- Review data model, graphql schema, component tree, general review of this document
+- Specify with more detail how API -> Kafka -> Realtime interaction will work.
 - Make implementation plan and start implementing
     - Very specific about the first few steps/phases can be vague about the rest. Start out with setting up the EF model and getting a DDL migration working. Write test data generation script.
+- Review data model, graphql schema, component tree, general review of this document
 
 <hr>
 
@@ -60,11 +50,11 @@
     <li>Privacy, administrative, profile, and notification settings</li>
     <li>Mentions and message reactions</li>
     <li>Search workspace for channels, messages, reactions, and more</li>
-    <li>Pubilc GraphQL API</li>
+    <li>Public GraphQL API</li>
 </ul>
 
 <h4>Services</h4>
-<img src="./services-diagram.png" width="850" />
+<img src="./services-diagram.drawio.png" width="850" />
 <ul>
     <li>Identity Service - authenticates users and issues resource access tokens</li>
     <li>WebClient Service - serves bundled, code-split React UI</li>
@@ -83,7 +73,7 @@
     <li>Design a non-trivial API and underlying data model</li>
     <li>Improve working knowledge of webpack</li>
     <li>Maintain React skills</li>
-    <li>Experiment with realtime web functionality</li>
+    <li>Experiment with realtime functionality</li>
 </ul>
 <hr>
 
@@ -91,7 +81,8 @@
 <ul>
     <li><a href="https://learn.microsoft.com/en-us/aspnet/core/introduction-to-aspnet-core?view=aspnetcore-7.0">ASP.NET Core (7.0)</a> - API Service, Identity Service, File Service, Realtime Service, WebClient Service</li>
     <ul>
-        <li><a href="https://learn.microsoft.com/en-us/aspnet/core/introduction-to-aspnet-core?view=aspnetcore-7.0">ASP.NET Core SignalR (2.4)</a> - Realtime Service, WebClient Service</li>
+        <li><a href="https://learn.microsoft.com/en-us/aspnet/core/introduction-to-aspnet-core?view=aspnetcore-7.0">ASP.NET Core SignalR (2.4)</a> - Realtime Service</li>
+        <li><a href="https://docs.confluent.io/kafka-clients/dotnet/current/overview.html">confluent-kafka-dotnet (2.1)</a> - Realtime Service, API Service</li>
     </ul>
     <li><a href="https://docs.duendesoftware.com/identityserver/v6/">Duende Identity Server (6.2)</a> - Identity Service</li>
         <ul>
@@ -178,7 +169,7 @@ The Identity Service exposes the following endpoints:
 
 #### Testing
 
-Testing for the Identity Service will include unit tests asserting on correct functionality of each of the endpoints exposed by the underlying IdentityServer. Unit tests will also assert on the contents of the scopes detailed above as well as correct scope delegation to configured clients.
+Testing for the Identity Service will consist of unit and integration tests that together assert on correct functionality of each of the endpoints exposed by the underlying IdentityServer. Tests will also assert on the contents of the scopes detailed above as well as correct scope delegation to configured clients. Tests will be written as soon as possible during implementation, ideally right after a piece of functionality is implemented.
 
 <h3><a id="web-client-service" href="#web-client-service">WebClient Service</a><a href="#services" style="padding-left:7px;font-size:1.2rem;color:grey;">▴</a></h3>
 
@@ -186,7 +177,7 @@ The WebClient Service is an ASP.NET Core server that relies on <a href="https://
 
 - It proxies ajax requests made by the React app to the API Service. The WebClient Service uses signed and encrypted Http-only cookies to maintain session state between itself and React frontend instances running in user browsers. Any necessary token management and IdentityServer interactions necessary for the frontend to access API Service resources are handled completely by the WebClient Service on behalf of the frontend javascript. 
 
-- It issues short-lived throwaway tokens on successful user sign-in for authenticated establishment of persistent connections directly between frontend javascript and the Realtime Service. It is useful to isolate the Realtime Service and not proxy connections to it with the WebClient Service because persistent connections are resource-intensive. The Realtime Service should be its own independently configurable and scaleable system.
+- It issues short-lived throwaway tokens on successful user sign-in and reconnection after loss of connection with the Realtime Service for authenticated establishment of persistent connections directly between frontend javascript and the Realtime Service. It is useful to isolate the Realtime Service and not proxy connections to it with the WebClient Service because persistent connections are resource-intensive. The Realtime Service should be its own independently configurable and scaleable system.
 
 This setup allows for complete avoidance of sensitive auth token exposure to the browser, delegating all IdentityService interactions to the WebClient service on behalf of the browser client. 
 
@@ -217,40 +208,35 @@ The WebClient Service exposes the following endpoints:
 
 #### Testing
 
-WebClient Service unit tests should assert on correct behavior of each of the endpoints it exposes.
-
+WebClient Service integration and unit tests will assert on correct behavior of each of the endpoints it exposes. They will also assert on the Service's role as JWT broker to the Realtime Service. I initially plan on code-splitting by page and view pane, but will take a look at bundle sizes down the line to optimize load time.
 
 <h3><a id="api-service" href="#api-service">API Service</a><a href="#services" style="padding-left:7px;font-size:1.2rem;color:grey;">▴</a></h3>
 
-The API Service is a GraphQL server that exposes a single endpoint, __/graphql__. GraphQL is an object graph layer between API consumers and the underlying data stores. This layer can reduce the workload of both frontend and backend developers because it obsoletes the complexity associated with maintaining many REST endpoints as data requirements change. The object graph for this project is based on the <a href="#graphql-schema">schema</a> below, which implements the Global Object Identication spec for compatibility with Relay Client. The API Service uses the <a href="https://graphql-dotnet.github.io/docs/getting-started/introduction/">GraphQL .NET</a> library to implement .NET types that are used to respond to queries made by the Relay Client in the React app. Field resolvers of the .NET types that represent GraphQL objects will make use of `Store` methods described in the <a id="persistence-service" href="#persistence-service">Persistence Service</a> section to interact with the database.
+The API Service is a GraphQL server that exposes a single endpoint, __/graphql__. GraphQL is an object graph layer between API consumers and the underlying data stores. This layer can reduce the workload of both frontend and backend developers because it obsoletes the complexity associated with maintaining many REST endpoints as data requirements change. The object graph for this project is based on the <a href="#graphql-schema">schema</a> below, which implements the Global Object Identication spec for compatibility with Relay Client. The API Service uses the <a href="https://graphql-dotnet.github.io/docs/getting-started/introduction/">GraphQL .NET</a> library to implement .NET types that are used to respond to queries made by the Relay Client in the React app. Field resolvers of the .NET types that represent GraphQL objects will make use of `Store` methods described in the <a id="persistence-service" href="#persistence-service">Persistence Service</a> section to interact with the database. For operations involving realtime functionality (notifications, messages, workspace signin and signout), the API Service will publish to to a Kafka pub/sub system after successful persistence to the database, which the Realtime Service subscribes to.
 
 GraphQL allows clients to request large amounts of information with highly nested queries. This makes the API Service vulnerable to DoS attacks, which must be mitigated. <a href="https://graphql-dotnet.github.io/docs/getting-started/malicious-queries/">GraphQL .NET</a> provides query analysis configuration that can be used to avoid executing maliciously large queries which I will use in this project. 
 
-For a GraphQL API to perform as well as a well-designed REST API, appropriate batch loading and caching must be implemented. Naive object field resolver implementations that simply fetch rows from the database can result in major performance hits - this is commonly referred to as the N + 1 problem. GraphQL.NET's Dataloader implementation addresses this area of concern and will be used heavily in this project. It provides batch loading to ensure related entities are retrieved in one round trip and caching to avoid reloading rows previously loaded during the course of GraphQL query field resolution. GraphQL.NET also comes with a Document Cache feature that allows caching of the GraphQL documents on top of the caching done by Dataloader. The Document Cache will allow the API server to skip certain parsing and validation steps prior to query execution.
+For a GraphQL API to perform like a REST API, appropriate batch loading and caching must be implemented. Naive object field resolver implementations that simply fetch rows from the database can result in major performance hits - this is commonly referred to as the N + 1 problem. GraphQL.NET's Dataloader implementation addresses this area of concern and will be used heavily in this project. It provides batch loading to ensure related entities are retrieved in one round trip and caching to avoid reloading rows previously loaded during the course of GraphQL query field resolution. GraphQL.NET also comes with a Document Cache feature that allows caching of the GraphQL documents on top of the caching done by Dataloader. The Document Cache will allow the API server to skip certain parsing and validation steps prior to query execution.
 
-The API Service will also be responsible for performing a large amount of user authorization by checking user claims prior to query execution. Certain cases such as determining if an API caller is allowed to view details pertaining to particular channels or workspaces may require a single extra round trip to the database, which is permissible. In general database round trips will be minimized as much as possible in my implementation. I plan on making use of left joins/CTEs/transactions and other SQL features to avoid extra authorization related round trips where applicable.
+The API Service will also be responsible for performing a large amount of user authorization by checking user claims prior to query execution. Certain cases such as determining if an API caller is allowed to view details pertaining to particular channels or workspaces may require a single extra round trip to the database, which is permissible. In general database round trips will be minimized as much as possible. I plan on making use of left joins/CTEs/transactions and other SQL features to avoid extra authorization related round trips where applicable. 
 
 #### Testing
 
-Since most of the logic for this service relies on the Persistence Service and widely used and tested external libraries, the only behavior that will be unit tested is the authorization behavior. Unit tests should assert on rejecting all requests from unauthenticated clients. They should also assert on omission of response fields that an authenticated client does not have permissions to view. In a real application the performance of queries would need to be benchmarked and optimized based on the results, but this is a personal project.
+Testing of the API Service will assert on field resolvers and authorization behavior. Unit and integration tests should assert on rejecting all requests from unauthenticated clients. They should also assert on omission of response fields that an authenticated client does not have permissions to view. It will be important during the course of implementation to monitor the performance of field resolvers and queries.
 
 <h3><a id="realtime-service" href="#realtime-service">Realtime Service</a><a href="#services" style="padding-left:7px;font-size:1.2rem;color:grey;">▴</a></h3>
 
-The Realtime Service is responsible for handling all realtime functionality: including messages, notifications, and keeping track of when users are signed into workspaces. It forms persistent connections with React app instances running in user browsers and is implemented with <a href="https://learn.microsoft.com/en-us/aspnet/core/signalr/introduction?view=aspnetcore-7.0">ASP.NET Core SignalR</a>.  SignalR and its usage in implementing the Realtime Service can be simplistically described in terms of the following SignalR abstractions: Hubs, Groups, and Connections. 
+The Realtime Service is responsible for handling all realtime functionality by subscribing to a Kafka pub/sub system, including messages, notifications, and keeping track of when users are signed into workspaces. It forms persistent connections with React app instances running in user browsers and is implemented with <a href="https://learn.microsoft.com/en-us/aspnet/core/signalr/introduction?view=aspnetcore-7.0">ASP.NET Core SignalR</a> and <a href="https://docs.confluent.io/kafka-clients/dotnet/current/overview.html">Confluent Kafka .NET Client</a>.
 
-Hubs represent the platform clients and the Realtime Service communicate with each other with. Clients and the Realtime Service can call named methods on each other, and clients can subscribe to Realtime Service events. These events and methods live in Hubs. This project will start out with three hubs: `MessageHub`, `NotificationHub`, and `WorkspaceHub`. Hubs are responsible for enqueing messages to a message queue. Using a message queue provides strong persistence guarantees without bloating other parts of the backend. I will probably use Apache Kafka down the line but for now will handle persistence by calling the API Service via the WebClient Service.
-
-A Connection is a persistent duplex connection (usually on top of WebSockets but SignalR provides other options) between a piece of client software (such as a web browser) and the Realtime Service over which they call each others methods and use server events. A user may have multiple clients connected to the Realtime Service on its behalf, and SignalR handles most of the complexity associated with operations such as ensuring a message sent by a user on one client shows up on all their other open clients, or closing all client connections associated with a user when that user logs out on one of its clients. Each Connection can can be associated with one of each Hub type.
-
-Groups represent groups of Connections between clients and the Realtime Service. In SignalR servers Groups can be created, destroyed, and have members added and removed. Each workspace channel and direct message conversation for which there is at least one active member online that is signed into that workspace will correspond to an active Group instance in the `MessageHub` and `NotificationHub`. For the `WorkspaceHub`, each workspace for which there is one active member online will correspond to an active Group instance.
+TODO!
 
 #### Testing
 
-Testing for the Realtime Service should assert on messages and notifications arriving to the correct clients, as well as correct online statuses being delivered to clients signed into a particular workspace. Unit tests will also assert on auth behavior: denial of connections that do not present a short-lived JWT from the WebClient Service, acceptance of connections that do. 
+Integration and unit tests for the Realtime Service should assert on messages and notifications arriving to the correct clients, as well as correct online statuses being delivered to clients signed into a particular workspace. Unit tests will also assert on auth behavior: denial of connections that do not present a short-lived JWT from the WebClient Service, acceptance of connections that do. Unit tests will be written at implementation-time.
 
 <h3><a id="file-service" href="#file-service">File Service</a><a href="#services" style="padding-left:7px;font-size:1.2rem;color:grey;">▴</a></h3>
 
-The File Service will be trivially simple and is mainly included as a stand-in for a cloud-based blob storage service such as Amazon S3 that would be used in a production application. Its sole responsibilities are to assign unique keys to each file uploaded to it and serve files via unique URLs using the assigned keys as URL query parameters.
+The File Service will be trivially simple and is mainly included as a secured stand-in for a cloud-based blob storage service such as Amazon S3 that would be used in a production application. Its sole responsibilities are to assign unique keys to each file uploaded to it and serve files via unique URLs using the assigned keys as URL query parameters.
 
 <h3><a id="persistence-service" href="#persistence-service">Persistence Service</a><a href="#services" style="padding-left:7px;font-size:1.2rem;color:grey;">▴</a></h3>
 
@@ -258,11 +244,11 @@ The Persistence Service consists of a PostgreSQL database that receives queries 
 
 Despite the fact that I have written the below schema in pseudo-SQL, the EF model will be generated in a code-first manner (i.e., not from a pre-existing Postgres database). This will allow me to take advantage of the developer-friendly migration strategy provided by EF; hopefully it is as convenient as it seems on paper. It will also allow me to organize my EF model into multiple subclasses of `DbContext`, as the scaffolding approach dumps all EF entity classes into a single `DbContext` class.
 
-The logic that wraps EF methods to interact with Postgres will be organized into `Store` interfaces and associated implementations to allow for dependency injection. `Store` interfaces specify query behaviors associated with entities (i.e., `IUserStore` will specify methods for CRUD operations on user data in the database). The implementations of these interfaces will contain EF method calls, and some of them will involve dynamic building of LINQ queries with `Func` delegates/`Expression` trees to implement the filtering behaviors specified in the graphql schema. There are several projects endorsed by the GraphQL.NET docs that auto-generate GraphQL schemas from an EF model, which object field resolvers containing EF method calls for you. For now I am choosing to forego using such tools to manually handle certain complicated cases myself and improve my C#/Entity skills. 
+The logic that wraps EF methods to interact with Postgres will be organized into `Store` interfaces and associated implementations to allow for dependency injection. `Store` interfaces specify query behaviors associated with entities (i.e., `IUserStore` will specify methods for CRUD operations on user data in the database). The implementations of these interfaces will contain EF method calls, and some of them will involve dynamic building of LINQ queries with `Func` delegates/`Expression` trees to implement the filtering behaviors specified in the graphql schema. There are several projects endorsed by the GraphQL.NET docs that auto-generate GraphQL schemas from an EF model, with object field resolvers containing EF method calls for you. For now I am choosing to forego using such tools to manually handle certain complicated cases myself and improve my C#/Entity skills. 
 
 #### Testing
 
-Each of the `Store` method implementations will be unit tested to ensure correct functionality and to enable immediate detection of breaking changes. Unit tests will be created at method implementation time and should assert on correct data loading. Any non-trivial helper methods will also have unit tests written at implementation time. Unit tests will be performed with an exact copy of the current 'production' database schema with representative test data.  I will probably write a script in Python that generates raw SQL that can then be used to fill a production database schema copy with test data, based on the structure of the schema (i.e., so the python script does not need constant updating).
+Each of the `Store` method implementations will be unit tested to ensure correct functionality and to enable immediate detection of breaking changes. Unit tests will be created at method implementation time and should assert on correct data loading. Any non-trivial helper methods will also have unit tests written at implementation time. Unit tests will be performed with an exact copy of the current 'production' database schema with representative test data. 
 
 <hr>
 
@@ -2334,4 +2320,4 @@ I am pretty excited about using <a href="https://relay.dev/docs/tutorial/graphql
 
 <h1><a id="implementation" href="#implementation">Implementation Plan</a><a href="#top" style="padding-left:7px;font-size:1.2rem;color:grey;">▴</a></span></h1>
 
-TODO
+Github will be used for version control, and all tests will be run against a replica of the database schema filled with test data. There will be a dev branch and a main branch; any merges into main will trigger all tests to run and the merge will fail if any tests fail. Integration tests will be written to test interfacing between services once the relevant services and interactions are sufficiently developed. End to end testing will be done far down the line and will most likely be done with Playwright.
