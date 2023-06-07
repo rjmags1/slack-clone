@@ -1,7 +1,6 @@
 <h1><a id="top" href="#top">Slack-Clone Design</a></h1>
 
 # TODO:
-- Specify with more detail how API -> Kafka -> Realtime interaction will work.
 - Make implementation plan and start implementing
     - Very specific about the first few steps/phases can be vague about the rest. Start out with setting up the EF model and getting a DDL migration working. Write test data generation script.
 - Review data model, graphql schema, component tree, general review of this document
@@ -50,7 +49,7 @@
     <li>Privacy, administrative, profile, and notification settings</li>
     <li>Mentions and message reactions</li>
     <li>Search workspace for channels, messages, reactions, and more</li>
-    <li>Public GraphQL API</li>
+    <li>GraphQL API</li>
 </ul>
 
 <h4>Services</h4>
@@ -84,6 +83,7 @@
         <li><a href="https://learn.microsoft.com/en-us/aspnet/core/introduction-to-aspnet-core?view=aspnetcore-7.0">ASP.NET Core SignalR (2.4)</a> - Realtime Service</li>
         <li><a href="https://docs.confluent.io/kafka-clients/dotnet/current/overview.html">confluent-kafka-dotnet (2.1)</a> - Realtime Service, API Service</li>
     </ul>
+    <li><a href="https://kafka.apache.org/intro">Apache Kafka</a> - API Service, Realtime Service</li>
     <li><a href="https://docs.duendesoftware.com/identityserver/v6/">Duende Identity Server (6.2)</a> - Identity Service</li>
         <ul>
             <li><a href="https://docs.duendesoftware.com/identityserver/v6/bff/">Duende.BFF (2.0)</a> - WebClient Service</li>
@@ -228,7 +228,11 @@ Testing of the API Service will assert on field resolvers and authorization beha
 
 The Realtime Service is responsible for handling all realtime functionality by subscribing to a Kafka pub/sub system, including messages, notifications, and keeping track of when users are signed into workspaces. It forms persistent connections with React app instances running in user browsers and is implemented with <a href="https://learn.microsoft.com/en-us/aspnet/core/signalr/introduction?view=aspnetcore-7.0">ASP.NET Core SignalR</a> and <a href="https://docs.confluent.io/kafka-clients/dotnet/current/overview.html">Confluent Kafka .NET Client</a>.
 
-TODO!
+Kafka is an event streaming platform that is often used to implement publish/subscribe systems and message queues. It provides a lot of useful guarantees in terms of scalability, persistence, security, and fault-tolerance. Events in Kafka are application events, such as a notification or a message. Producers place events into Kafka topics, which are essentially channels of events. Kafka guarantees at least once delivery of events so long as there are consumers to receive the events by persisting them to disk and providing event evacuation configuration. Brokers in Kafka are individual servers that are responsible for providing the topic functionality. 
+
+SignalR is a realtime library provided by ASP.NET Core. SignalR servers form persistent duplex connections with clients and allow for remote method calls in both directions. Hubs in SignalR represent a central communication switch or hub; for instance, clients connected to a MessageHub can send messages through the hub, and the MessageHub can ensure the message only arrives to the intended recipient(s). SignalR handles a lot of tricky edge cases out of the box, such as complexity associated with one user having multiple clients connected to the application at the same time.
+
+The Kafka system will consist of 2 topics, one for messages and one for notifications. Each of these topics will have their own single broker. Kafka, though versatile and powerful, is a very complicated piece of software and so for this personal project I will stick with a simplistic usage, at least to start out. Kafka provides various scalability guarantees that would make implementing a more realistic use case and integrating it with the rest of the app feasible. The API Service will push events using the Producer API of Confluent .NET Client to the appropriate Kafka topic, and the Realtime Service will use the Confluent Consumer API to receive events from Kafka topics. On event receipt, the Realtime Service will use SignalR's Hub, HubContext, and Group APIs to forward events to the appropriate clients.
 
 #### Testing
 
