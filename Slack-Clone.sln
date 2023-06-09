@@ -7,9 +7,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{89B8CF2B-D7F
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IdentityService", "src\IdentityService\IdentityService.csproj", "{8F412E53-DA72-426C-A914-DCF14775189D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ApiService", "src\Api\ApiService.csproj", "{1D3D6DFD-BA17-4C79-8C73-8A260A2C6D76}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ApiService", "src\ApiService\ApiService.csproj", "{1D3D6DFD-BA17-4C79-8C73-8A260A2C6D76}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebClientService", "src\WebClient\WebClientService.csproj", "{5C50A089-E909-44D9-8FE8-E123D2C7D693}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebClientService", "src\WebClientService\WebClientService.csproj", "{5C50A089-E909-44D9-8FE8-E123D2C7D693}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
