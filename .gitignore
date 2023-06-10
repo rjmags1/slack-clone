@@ -1,1 +1,6 @@
 .DS_Store
+**/keys
+.env
+bin/
+obj/
+.vscode

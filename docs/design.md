@@ -2324,4 +2324,11 @@ I am pretty excited about using <a href="https://relay.dev/docs/tutorial/graphql
 
 <h1><a id="implementation" href="#implementation">Implementation Plan</a><a href="#top" style="padding-left:7px;font-size:1.2rem;color:grey;">▴</a></span></h1>
 
-Github will be used for version control, and all tests will be run against a replica of the database schema filled with test data. There will be a dev branch and a main branch; any merges into main will trigger all tests to run and the merge will fail if any tests fail. Integration tests will be written to test interfacing between services once the relevant services and interactions are sufficiently developed. End to end testing will be done far down the line and will most likely be done with Playwright.
+Github/git will be used for version control, and all tests will be run against a replica of the database schema filled with test data. There will be a dev branch and a main branch; any merges into main will trigger all tests to run and the merge will fail if any tests fail. Integration tests will be written to test interfacing between services once the relevant services and interactions are sufficiently developed. End to end testing will be done far down the line and will most likely be done with Playwright.
+
+### Phase 1
+- EF model -> DDL migration + Persistence, API, WebClient, Identity Service skeletons
+  - Use Duende IdentityServer libraries and quickstarts scaffold and integrate with EF, ASP.NET Identity
+  - Add my entities to the model in addition to ones provided by Duende IdentityServer
+  - Python script that reads the table structure from the database and based on that is able to insert test data
+  - Persistence Service as its own project for entity method calls?
