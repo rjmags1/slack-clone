@@ -54,7 +54,9 @@ public class Callback : PageModel
 
         if (_logger.IsEnabled(LogLevel.Debug))
         {
-            var externalClaims = externalUser.Claims.Select(c => $"{c.Type}: {c.Value}");
+            var externalClaims = externalUser.Claims.Select(
+                c => $"{c.Type}: {c.Value}"
+            );
             _logger.LogDebug("External claims: {@claims}", externalClaims);
         }
 
@@ -81,7 +83,11 @@ public class Callback : PageModel
             // remove the user id claim so we don't include it as an extra claim if/when we provision the user
             var claims = externalUser.Claims.ToList();
             claims.Remove(userIdClaim);
-            user = _users.AutoProvisionUser(provider, providerUserId, claims.ToList());
+            user = _users.AutoProvisionUser(
+                provider,
+                providerUserId,
+                claims.ToList()
+            );
         }
 
         // this allows us to collect any additional claims or properties
@@ -89,7 +95,11 @@ public class Callback : PageModel
         // this is typically used to store data needed for signout from those protocols.
         var additionalLocalClaims = new List<Claim>();
         var localSignInProps = new AuthenticationProperties();
-        CaptureExternalLoginContext(result, additionalLocalClaims, localSignInProps);
+        CaptureExternalLoginContext(
+            result,
+            additionalLocalClaims,
+            localSignInProps
+        );
 
         // issue authentication cookie for user
         var isuser = new IdentityServerUser(user.SubjectId)
@@ -102,13 +112,17 @@ public class Callback : PageModel
         await HttpContext.SignInAsync(isuser, localSignInProps);
 
         // delete temporary cookie used during external authentication
-        await HttpContext.SignOutAsync(IdentityServerConstants.ExternalCookieAuthenticationScheme);
+        await HttpContext.SignOutAsync(
+            IdentityServerConstants.ExternalCookieAuthenticationScheme
+        );
 
         // retrieve return URL
         var returnUrl = result.Properties.Items["returnUrl"] ?? "~/";
 
         // check if external login is in the context of an OIDC request
-        var context = await _interaction.GetAuthorizationContextAsync(returnUrl);
+        var context = await _interaction.GetAuthorizationContextAsync(
+            returnUrl
+        );
         await _events.RaiseAsync(
             new UserLoginSuccessEvent(
                 provider,
@@ -158,7 +172,11 @@ public class Callback : PageModel
             localSignInProps.StoreTokens(
                 new[]
                 {
-                    new AuthenticationToken { Name = "id_token", Value = idToken }
+                    new AuthenticationToken
+                    {
+                        Name = "id_token",
+                        Value = idToken
+                    }
                 }
             );
         }

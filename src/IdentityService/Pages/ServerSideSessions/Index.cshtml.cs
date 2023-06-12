@@ -10,7 +10,9 @@ namespace IdentityService.Pages.ServerSideSessions
     {
         private readonly ISessionManagementService _sessionManagementService;
 
-        public IndexModel(ISessionManagementService sessionManagementService = null)
+        public IndexModel(
+            ISessionManagementService sessionManagementService = null
+        )
         {
             _sessionManagementService = sessionManagementService;
         }
@@ -36,16 +38,17 @@ namespace IdentityService.Pages.ServerSideSessions
         {
             if (_sessionManagementService != null)
             {
-                UserSessions = await _sessionManagementService.QuerySessionsAsync(
-                    new SessionQuery
-                    {
-                        ResultsToken = Token,
-                        RequestPriorResults = Prev == "true",
-                        DisplayName = DisplayNameFilter,
-                        SessionId = SessionIdFilter,
-                        SubjectId = SubjectIdFilter
-                    }
-                );
+                UserSessions =
+                    await _sessionManagementService.QuerySessionsAsync(
+                        new SessionQuery
+                        {
+                            ResultsToken = Token,
+                            RequestPriorResults = Prev == "true",
+                            DisplayName = DisplayNameFilter,
+                            SessionId = SessionIdFilter,
+                            SubjectId = SubjectIdFilter
+                        }
+                    );
             }
         }
 

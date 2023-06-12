@@ -52,7 +52,9 @@ app.UseAuthorization();
 app.UseEndpoints(endpoints =>
 {
     endpoints.MapBffManagementEndpoints();
-    endpoints.MapGet("/local/identity", LocalIdentityHandler).AsBffApiEndpoint();
+    endpoints
+        .MapGet("/local/identity", LocalIdentityHandler)
+        .AsBffApiEndpoint();
     endpoints
         .MapRemoteBffApiEndpoint("/remote", "https://localhost:6001")
         .RequireAccessToken(Duende.Bff.TokenType.User);

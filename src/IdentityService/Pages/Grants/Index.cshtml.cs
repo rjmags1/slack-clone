@@ -43,7 +43,9 @@ public class Index : PageModel
             var client = await _clients.FindClientByIdAsync(grant.ClientId);
             if (client != null)
             {
-                var resources = await _resources.FindResourcesByScopeAsync(grant.Scopes);
+                var resources = await _resources.FindResourcesByScopeAsync(
+                    grant.Scopes
+                );
 
                 var item = new GrantViewModel()
                 {
@@ -76,7 +78,9 @@ public class Index : PageModel
     public async Task<IActionResult> OnPost()
     {
         await _interaction.RevokeUserConsentAsync(ClientId);
-        await _events.RaiseAsync(new GrantsRevokedEvent(User.GetSubjectId(), ClientId));
+        await _events.RaiseAsync(
+            new GrantsRevokedEvent(User.GetSubjectId(), ClientId)
+        );
 
         return RedirectToPage("/Grants/Index");
     }

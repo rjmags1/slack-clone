@@ -1,7 +1,9 @@
 ﻿using IdentityService;
 using Serilog;
 
-Log.Logger = new LoggerConfiguration().WriteTo.Console().CreateBootstrapLogger();
+Log.Logger = new LoggerConfiguration().WriteTo
+    .Console()
+    .CreateBootstrapLogger();
 
 Log.Information("Starting up");
 

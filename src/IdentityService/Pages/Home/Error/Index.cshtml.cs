@@ -13,7 +13,10 @@ public class Index : PageModel
 
     public ViewModel View { get; set; }
 
-    public Index(IIdentityServerInteractionService interaction, IWebHostEnvironment environment)
+    public Index(
+        IIdentityServerInteractionService interaction,
+        IWebHostEnvironment environment
+    )
     {
         _interaction = interaction;
         _environment = environment;

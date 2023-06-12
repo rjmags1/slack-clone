@@ -24,7 +24,8 @@ public class LoggedOut : PageModel
 
         View = new LoggedOutViewModel
         {
-            AutomaticRedirectAfterSignOut = LogoutOptions.AutomaticRedirectAfterSignOut,
+            AutomaticRedirectAfterSignOut =
+                LogoutOptions.AutomaticRedirectAfterSignOut,
             PostLogoutRedirectUri = logout?.PostLogoutRedirectUri,
             ClientName = String.IsNullOrEmpty(logout?.ClientName)
                 ? logout?.ClientId

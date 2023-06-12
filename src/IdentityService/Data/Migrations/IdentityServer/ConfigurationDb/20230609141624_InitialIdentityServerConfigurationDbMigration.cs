@@ -7,7 +7,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IdentityService.Data.Migrations.IdentityServer.ConfigurationDb
 {
     /// <inheritdoc />
-    public partial class InitialIdentityServerConfigurationDbMigration : Migration
+    public partial class InitialIdentityServerConfigurationDbMigration
+        : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -23,7 +24,10 @@ namespace IdentityService.Data.Migrations.IdentityServer.ConfigurationDb
                                 "Npgsql:ValueGenerationStrategy",
                                 NpgsqlValueGenerationStrategy.IdentityByDefaultColumn
                             ),
-                        Enabled = table.Column<bool>(type: "boolean", nullable: false),
+                        Enabled = table.Column<bool>(
+                            type: "boolean",
+                            nullable: false
+                        ),
                         Name = table.Column<string>(
                             type: "character varying(200)",
                             maxLength: 200,
@@ -64,7 +68,10 @@ namespace IdentityService.Data.Migrations.IdentityServer.ConfigurationDb
                             type: "timestamp with time zone",
                             nullable: true
                         ),
-                        NonEditable = table.Column<bool>(type: "boolean", nullable: false)
+                        NonEditable = table.Column<bool>(
+                            type: "boolean",
+                            nullable: false
+                        )
                     },
                 constraints: table =>
                 {
@@ -83,7 +90,10 @@ namespace IdentityService.Data.Migrations.IdentityServer.ConfigurationDb
                                 "Npgsql:ValueGenerationStrategy",
                                 NpgsqlValueGenerationStrategy.IdentityByDefaultColumn
                             ),
-                        Enabled = table.Column<bool>(type: "boolean", nullable: false),
+                        Enabled = table.Column<bool>(
+                            type: "boolean",
+                            nullable: false
+                        ),
                         Name = table.Column<string>(
                             type: "character varying(200)",
                             maxLength: 200,
@@ -99,8 +109,14 @@ namespace IdentityService.Data.Migrations.IdentityServer.ConfigurationDb
                             maxLength: 1000,
                             nullable: true
                         ),
-                        Required = table.Column<bool>(type: "boolean", nullable: false),
-                        Emphasize = table.Column<bool>(type: "boolean", nullable: false),
+                        Required = table.Column<bool>(
+                            type: "boolean",
+                            nullable: false
+                        ),
+                        Emphasize = table.Column<bool>(
+                            type: "boolean",
+                            nullable: false
+                        ),
                         ShowInDiscoveryDocument = table.Column<bool>(
                             type: "boolean",
                             nullable: false
@@ -117,7 +133,10 @@ namespace IdentityService.Data.Migrations.IdentityServer.ConfigurationDb
                             type: "timestamp with time zone",
                             nullable: true
                         ),
-                        NonEditable = table.Column<bool>(type: "boolean", nullable: false)
+                        NonEditable = table.Column<bool>(
+                            type: "boolean",
+                            nullable: false
+                        )
                     },
                 constraints: table =>
                 {
@@ -136,7 +155,10 @@ namespace IdentityService.Data.Migrations.IdentityServer.ConfigurationDb
                                 "Npgsql:ValueGenerationStrategy",
                                 NpgsqlValueGenerationStrategy.IdentityByDefaultColumn
                             ),
-                        Enabled = table.Column<bool>(type: "boolean", nullable: false),
+                        Enabled = table.Column<bool>(
+                            type: "boolean",
+                            nullable: false
+                        ),
                         ClientId = table.Column<string>(
                             type: "character varying(200)",
                             maxLength: 200,
@@ -147,7 +169,10 @@ namespace IdentityService.Data.Migrations.IdentityServer.ConfigurationDb
                             maxLength: 200,
                             nullable: false
                         ),
-                        RequireClientSecret = table.Column<bool>(type: "boolean", nullable: false),
+                        RequireClientSecret = table.Column<bool>(
+                            type: "boolean",
+                            nullable: false
+                        ),
                         ClientName = table.Column<string>(
                             type: "character varying(200)",
                             maxLength: 200,
@@ -168,22 +193,46 @@ namespace IdentityService.Data.Migrations.IdentityServer.ConfigurationDb
                             maxLength: 2000,
                             nullable: true
                         ),
-                        RequireConsent = table.Column<bool>(type: "boolean", nullable: false),
-                        AllowRememberConsent = table.Column<bool>(type: "boolean", nullable: false),
+                        RequireConsent = table.Column<bool>(
+                            type: "boolean",
+                            nullable: false
+                        ),
+                        AllowRememberConsent = table.Column<bool>(
+                            type: "boolean",
+                            nullable: false
+                        ),
                         AlwaysIncludeUserClaimsInIdToken = table.Column<bool>(
                             type: "boolean",
                             nullable: false
                         ),
-                        RequirePkce = table.Column<bool>(type: "boolean", nullable: false),
-                        AllowPlainTextPkce = table.Column<bool>(type: "boolean", nullable: false),
-                        RequireRequestObject = table.Column<bool>(type: "boolean", nullable: false),
+                        RequirePkce = table.Column<bool>(
+                            type: "boolean",
+                            nullable: false
+                        ),
+                        AllowPlainTextPkce = table.Column<bool>(
+                            type: "boolean",
+                            nullable: false
+                        ),
+                        RequireRequestObject = table.Column<bool>(
+                            type: "boolean",
+                            nullable: false
+                        ),
                         AllowAccessTokensViaBrowser = table.Column<bool>(
                             type: "boolean",
                             nullable: false
                         ),
-                        RequireDPoP = table.Column<bool>(type: "boolean", nullable: false),
-                        DPoPValidationMode = table.Column<int>(type: "integer", nullable: false),
-                        DPoPClockSkew = table.Column<TimeSpan>(type: "interval", nullable: false),
+                        RequireDPoP = table.Column<bool>(
+                            type: "boolean",
+                            nullable: false
+                        ),
+                        DPoPValidationMode = table.Column<int>(
+                            type: "integer",
+                            nullable: false
+                        ),
+                        DPoPClockSkew = table.Column<TimeSpan>(
+                            type: "interval",
+                            nullable: false
+                        ),
                         FrontChannelLogoutUri = table.Column<string>(
                             type: "character varying(2000)",
                             maxLength: 2000,
@@ -202,19 +251,31 @@ namespace IdentityService.Data.Migrations.IdentityServer.ConfigurationDb
                             type: "boolean",
                             nullable: false
                         ),
-                        AllowOfflineAccess = table.Column<bool>(type: "boolean", nullable: false),
-                        IdentityTokenLifetime = table.Column<int>(type: "integer", nullable: false),
+                        AllowOfflineAccess = table.Column<bool>(
+                            type: "boolean",
+                            nullable: false
+                        ),
+                        IdentityTokenLifetime = table.Column<int>(
+                            type: "integer",
+                            nullable: false
+                        ),
                         AllowedIdentityTokenSigningAlgorithms = table.Column<string>(
                             type: "character varying(100)",
                             maxLength: 100,
                             nullable: true
                         ),
-                        AccessTokenLifetime = table.Column<int>(type: "integer", nullable: false),
+                        AccessTokenLifetime = table.Column<int>(
+                            type: "integer",
+                            nullable: false
+                        ),
                         AuthorizationCodeLifetime = table.Column<int>(
                             type: "integer",
                             nullable: false
                         ),
-                        ConsentLifetime = table.Column<int>(type: "integer", nullable: true),
+                        ConsentLifetime = table.Column<int>(
+                            type: "integer",
+                            nullable: true
+                        ),
                         AbsoluteRefreshTokenLifetime = table.Column<int>(
                             type: "integer",
                             nullable: false
@@ -223,7 +284,10 @@ namespace IdentityService.Data.Migrations.IdentityServer.ConfigurationDb
                             type: "integer",
                             nullable: false
                         ),
-                        RefreshTokenUsage = table.Column<int>(type: "integer", nullable: false),
+                        RefreshTokenUsage = table.Column<int>(
+                            type: "integer",
+                            nullable: false
+                        ),
                         UpdateAccessTokenClaimsOnRefresh = table.Column<bool>(
                             type: "boolean",
                             nullable: false
@@ -232,9 +296,18 @@ namespace IdentityService.Data.Migrations.IdentityServer.ConfigurationDb
                             type: "integer",
                             nullable: false
                         ),
-                        AccessTokenType = table.Column<int>(type: "integer", nullable: false),
-                        EnableLocalLogin = table.Column<bool>(type: "boolean", nullable: false),
-                        IncludeJwtId = table.Column<bool>(type: "boolean", nullable: false),
+                        AccessTokenType = table.Column<int>(
+                            type: "integer",
+                            nullable: false
+                        ),
+                        EnableLocalLogin = table.Column<bool>(
+                            type: "boolean",
+                            nullable: false
+                        ),
+                        IncludeJwtId = table.Column<bool>(
+                            type: "boolean",
+                            nullable: false
+                        ),
                         AlwaysSendClientClaims = table.Column<bool>(
                             type: "boolean",
                             nullable: false
@@ -254,15 +327,27 @@ namespace IdentityService.Data.Migrations.IdentityServer.ConfigurationDb
                             maxLength: 2000,
                             nullable: true
                         ),
-                        UserSsoLifetime = table.Column<int>(type: "integer", nullable: true),
+                        UserSsoLifetime = table.Column<int>(
+                            type: "integer",
+                            nullable: true
+                        ),
                         UserCodeType = table.Column<string>(
                             type: "character varying(100)",
                             maxLength: 100,
                             nullable: true
                         ),
-                        DeviceCodeLifetime = table.Column<int>(type: "integer", nullable: false),
-                        CibaLifetime = table.Column<int>(type: "integer", nullable: true),
-                        PollingInterval = table.Column<int>(type: "integer", nullable: true),
+                        DeviceCodeLifetime = table.Column<int>(
+                            type: "integer",
+                            nullable: false
+                        ),
+                        CibaLifetime = table.Column<int>(
+                            type: "integer",
+                            nullable: true
+                        ),
+                        PollingInterval = table.Column<int>(
+                            type: "integer",
+                            nullable: true
+                        ),
                         CoordinateLifetimeWithUserSession = table.Column<bool>(
                             type: "boolean",
                             nullable: true
@@ -279,7 +364,10 @@ namespace IdentityService.Data.Migrations.IdentityServer.ConfigurationDb
                             type: "timestamp with time zone",
                             nullable: true
                         ),
-                        NonEditable = table.Column<bool>(type: "boolean", nullable: false)
+                        NonEditable = table.Column<bool>(
+                            type: "boolean",
+                            nullable: false
+                        )
                     },
                 constraints: table =>
                 {
@@ -308,13 +396,19 @@ namespace IdentityService.Data.Migrations.IdentityServer.ConfigurationDb
                             maxLength: 200,
                             nullable: true
                         ),
-                        Enabled = table.Column<bool>(type: "boolean", nullable: false),
+                        Enabled = table.Column<bool>(
+                            type: "boolean",
+                            nullable: false
+                        ),
                         Type = table.Column<string>(
                             type: "character varying(20)",
                             maxLength: 20,
                             nullable: false
                         ),
-                        Properties = table.Column<string>(type: "text", nullable: true),
+                        Properties = table.Column<string>(
+                            type: "text",
+                            nullable: true
+                        ),
                         Created = table.Column<DateTime>(
                             type: "timestamp with time zone",
                             nullable: false
@@ -327,7 +421,10 @@ namespace IdentityService.Data.Migrations.IdentityServer.ConfigurationDb
                             type: "timestamp with time zone",
                             nullable: true
                         ),
-                        NonEditable = table.Column<bool>(type: "boolean", nullable: false)
+                        NonEditable = table.Column<bool>(
+                            type: "boolean",
+                            nullable: false
+                        )
                     },
                 constraints: table =>
                 {
@@ -346,7 +443,10 @@ namespace IdentityService.Data.Migrations.IdentityServer.ConfigurationDb
                                 "Npgsql:ValueGenerationStrategy",
                                 NpgsqlValueGenerationStrategy.IdentityByDefaultColumn
                             ),
-                        Enabled = table.Column<bool>(type: "boolean", nullable: false),
+                        Enabled = table.Column<bool>(
+                            type: "boolean",
+                            nullable: false
+                        ),
                         Name = table.Column<string>(
                             type: "character varying(200)",
                             maxLength: 200,
@@ -362,8 +462,14 @@ namespace IdentityService.Data.Migrations.IdentityServer.ConfigurationDb
                             maxLength: 1000,
                             nullable: true
                         ),
-                        Required = table.Column<bool>(type: "boolean", nullable: false),
-                        Emphasize = table.Column<bool>(type: "boolean", nullable: false),
+                        Required = table.Column<bool>(
+                            type: "boolean",
+                            nullable: false
+                        ),
+                        Emphasize = table.Column<bool>(
+                            type: "boolean",
+                            nullable: false
+                        ),
                         ShowInDiscoveryDocument = table.Column<bool>(
                             type: "boolean",
                             nullable: false
@@ -376,7 +482,10 @@ namespace IdentityService.Data.Migrations.IdentityServer.ConfigurationDb
                             type: "timestamp with time zone",
                             nullable: true
                         ),
-                        NonEditable = table.Column<bool>(type: "boolean", nullable: false)
+                        NonEditable = table.Column<bool>(
+                            type: "boolean",
+                            nullable: false
+                        )
                     },
                 constraints: table =>
                 {
@@ -395,7 +504,10 @@ namespace IdentityService.Data.Migrations.IdentityServer.ConfigurationDb
                                 "Npgsql:ValueGenerationStrategy",
                                 NpgsqlValueGenerationStrategy.IdentityByDefaultColumn
                             ),
-                        ApiResourceId = table.Column<int>(type: "integer", nullable: false),
+                        ApiResourceId = table.Column<int>(
+                            type: "integer",
+                            nullable: false
+                        ),
                         Type = table.Column<string>(
                             type: "character varying(200)",
                             maxLength: 200,
@@ -426,7 +538,10 @@ namespace IdentityService.Data.Migrations.IdentityServer.ConfigurationDb
                                 "Npgsql:ValueGenerationStrategy",
                                 NpgsqlValueGenerationStrategy.IdentityByDefaultColumn
                             ),
-                        ApiResourceId = table.Column<int>(type: "integer", nullable: false),
+                        ApiResourceId = table.Column<int>(
+                            type: "integer",
+                            nullable: false
+                        ),
                         Key = table.Column<string>(
                             type: "character varying(250)",
                             maxLength: 250,
@@ -467,7 +582,10 @@ namespace IdentityService.Data.Migrations.IdentityServer.ConfigurationDb
                             maxLength: 200,
                             nullable: false
                         ),
-                        ApiResourceId = table.Column<int>(type: "integer", nullable: false)
+                        ApiResourceId = table.Column<int>(
+                            type: "integer",
+                            nullable: false
+                        )
                     },
                 constraints: table =>
                 {
@@ -493,7 +611,10 @@ namespace IdentityService.Data.Migrations.IdentityServer.ConfigurationDb
                                 "Npgsql:ValueGenerationStrategy",
                                 NpgsqlValueGenerationStrategy.IdentityByDefaultColumn
                             ),
-                        ApiResourceId = table.Column<int>(type: "integer", nullable: false),
+                        ApiResourceId = table.Column<int>(
+                            type: "integer",
+                            nullable: false
+                        ),
                         Description = table.Column<string>(
                             type: "character varying(1000)",
                             maxLength: 1000,
@@ -542,7 +663,10 @@ namespace IdentityService.Data.Migrations.IdentityServer.ConfigurationDb
                                 "Npgsql:ValueGenerationStrategy",
                                 NpgsqlValueGenerationStrategy.IdentityByDefaultColumn
                             ),
-                        ScopeId = table.Column<int>(type: "integer", nullable: false),
+                        ScopeId = table.Column<int>(
+                            type: "integer",
+                            nullable: false
+                        ),
                         Type = table.Column<string>(
                             type: "character varying(200)",
                             maxLength: 200,
@@ -573,7 +697,10 @@ namespace IdentityService.Data.Migrations.IdentityServer.ConfigurationDb
                                 "Npgsql:ValueGenerationStrategy",
                                 NpgsqlValueGenerationStrategy.IdentityByDefaultColumn
                             ),
-                        ScopeId = table.Column<int>(type: "integer", nullable: false),
+                        ScopeId = table.Column<int>(
+                            type: "integer",
+                            nullable: false
+                        ),
                         Key = table.Column<string>(
                             type: "character varying(250)",
                             maxLength: 250,
@@ -619,7 +746,10 @@ namespace IdentityService.Data.Migrations.IdentityServer.ConfigurationDb
                             maxLength: 250,
                             nullable: false
                         ),
-                        ClientId = table.Column<int>(type: "integer", nullable: false)
+                        ClientId = table.Column<int>(
+                            type: "integer",
+                            nullable: false
+                        )
                     },
                 constraints: table =>
                 {
@@ -650,7 +780,10 @@ namespace IdentityService.Data.Migrations.IdentityServer.ConfigurationDb
                             maxLength: 150,
                             nullable: false
                         ),
-                        ClientId = table.Column<int>(type: "integer", nullable: false)
+                        ClientId = table.Column<int>(
+                            type: "integer",
+                            nullable: false
+                        )
                     },
                 constraints: table =>
                 {
@@ -681,7 +814,10 @@ namespace IdentityService.Data.Migrations.IdentityServer.ConfigurationDb
                             maxLength: 250,
                             nullable: false
                         ),
-                        ClientId = table.Column<int>(type: "integer", nullable: false)
+                        ClientId = table.Column<int>(
+                            type: "integer",
+                            nullable: false
+                        )
                     },
                 constraints: table =>
                 {
@@ -712,7 +848,10 @@ namespace IdentityService.Data.Migrations.IdentityServer.ConfigurationDb
                             maxLength: 200,
                             nullable: false
                         ),
-                        ClientId = table.Column<int>(type: "integer", nullable: false)
+                        ClientId = table.Column<int>(
+                            type: "integer",
+                            nullable: false
+                        )
                     },
                 constraints: table =>
                 {
@@ -743,11 +882,17 @@ namespace IdentityService.Data.Migrations.IdentityServer.ConfigurationDb
                             maxLength: 400,
                             nullable: false
                         ),
-                        ClientId = table.Column<int>(type: "integer", nullable: false)
+                        ClientId = table.Column<int>(
+                            type: "integer",
+                            nullable: false
+                        )
                     },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_ClientPostLogoutRedirectUris", x => x.Id);
+                    table.PrimaryKey(
+                        "PK_ClientPostLogoutRedirectUris",
+                        x => x.Id
+                    );
                     table.ForeignKey(
                         name: "FK_ClientPostLogoutRedirectUris_Clients_ClientId",
                         column: x => x.ClientId,
@@ -769,7 +914,10 @@ namespace IdentityService.Data.Migrations.IdentityServer.ConfigurationDb
                                 "Npgsql:ValueGenerationStrategy",
                                 NpgsqlValueGenerationStrategy.IdentityByDefaultColumn
                             ),
-                        ClientId = table.Column<int>(type: "integer", nullable: false),
+                        ClientId = table.Column<int>(
+                            type: "integer",
+                            nullable: false
+                        ),
                         Key = table.Column<string>(
                             type: "character varying(250)",
                             maxLength: 250,
@@ -810,7 +958,10 @@ namespace IdentityService.Data.Migrations.IdentityServer.ConfigurationDb
                             maxLength: 400,
                             nullable: false
                         ),
-                        ClientId = table.Column<int>(type: "integer", nullable: false)
+                        ClientId = table.Column<int>(
+                            type: "integer",
+                            nullable: false
+                        )
                     },
                 constraints: table =>
                 {
@@ -841,7 +992,10 @@ namespace IdentityService.Data.Migrations.IdentityServer.ConfigurationDb
                             maxLength: 200,
                             nullable: false
                         ),
-                        ClientId = table.Column<int>(type: "integer", nullable: false)
+                        ClientId = table.Column<int>(
+                            type: "integer",
+                            nullable: false
+                        )
                     },
                 constraints: table =>
                 {
@@ -867,7 +1021,10 @@ namespace IdentityService.Data.Migrations.IdentityServer.ConfigurationDb
                                 "Npgsql:ValueGenerationStrategy",
                                 NpgsqlValueGenerationStrategy.IdentityByDefaultColumn
                             ),
-                        ClientId = table.Column<int>(type: "integer", nullable: false),
+                        ClientId = table.Column<int>(
+                            type: "integer",
+                            nullable: false
+                        ),
                         Description = table.Column<string>(
                             type: "character varying(2000)",
                             maxLength: 2000,
@@ -916,7 +1073,10 @@ namespace IdentityService.Data.Migrations.IdentityServer.ConfigurationDb
                                 "Npgsql:ValueGenerationStrategy",
                                 NpgsqlValueGenerationStrategy.IdentityByDefaultColumn
                             ),
-                        IdentityResourceId = table.Column<int>(type: "integer", nullable: false),
+                        IdentityResourceId = table.Column<int>(
+                            type: "integer",
+                            nullable: false
+                        ),
                         Type = table.Column<string>(
                             type: "character varying(200)",
                             maxLength: 200,
@@ -947,7 +1107,10 @@ namespace IdentityService.Data.Migrations.IdentityServer.ConfigurationDb
                                 "Npgsql:ValueGenerationStrategy",
                                 NpgsqlValueGenerationStrategy.IdentityByDefaultColumn
                             ),
-                        IdentityResourceId = table.Column<int>(type: "integer", nullable: false),
+                        IdentityResourceId = table.Column<int>(
+                            type: "integer",
+                            nullable: false
+                        ),
                         Key = table.Column<string>(
                             type: "character varying(250)",
                             maxLength: 250,
@@ -961,7 +1124,10 @@ namespace IdentityService.Data.Migrations.IdentityServer.ConfigurationDb
                     },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_IdentityResourceProperties", x => x.Id);
+                    table.PrimaryKey(
+                        "PK_IdentityResourceProperties",
+                        x => x.Id
+                    );
                     table.ForeignKey(
                         name: "FK_IdentityResourceProperties_IdentityResources_IdentityResour~",
                         column: x => x.IdentityResourceId,

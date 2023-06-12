@@ -19,7 +19,11 @@ public class Index : PageModel
             "::1",
             HttpContext.Connection.LocalIpAddress.ToString()
         };
-        if (!localAddresses.Contains(HttpContext.Connection.RemoteIpAddress.ToString()))
+        if (
+            !localAddresses.Contains(
+                HttpContext.Connection.RemoteIpAddress.ToString()
+            )
+        )
         {
             return NotFound();
         }

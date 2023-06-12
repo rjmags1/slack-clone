@@ -7,7 +7,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IdentityService.Data.Migrations.IdentityServer.PersistedGrantDb
 {
     /// <inheritdoc />
-    public partial class InitialIdentityServerPersistedGrantDbMigration : Migration
+    public partial class InitialIdentityServerPersistedGrantDbMigration
+        : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -72,21 +73,39 @@ namespace IdentityService.Data.Migrations.IdentityServer.PersistedGrantDb
                 columns: table =>
                     new
                     {
-                        Id = table.Column<string>(type: "text", nullable: false),
-                        Version = table.Column<int>(type: "integer", nullable: false),
+                        Id = table.Column<string>(
+                            type: "text",
+                            nullable: false
+                        ),
+                        Version = table.Column<int>(
+                            type: "integer",
+                            nullable: false
+                        ),
                         Created = table.Column<DateTime>(
                             type: "timestamp with time zone",
                             nullable: false
                         ),
-                        Use = table.Column<string>(type: "text", nullable: true),
+                        Use = table.Column<string>(
+                            type: "text",
+                            nullable: true
+                        ),
                         Algorithm = table.Column<string>(
                             type: "character varying(100)",
                             maxLength: 100,
                             nullable: false
                         ),
-                        IsX509Certificate = table.Column<bool>(type: "boolean", nullable: false),
-                        DataProtected = table.Column<bool>(type: "boolean", nullable: false),
-                        Data = table.Column<string>(type: "text", nullable: false)
+                        IsX509Certificate = table.Column<bool>(
+                            type: "boolean",
+                            nullable: false
+                        ),
+                        DataProtected = table.Column<bool>(
+                            type: "boolean",
+                            nullable: false
+                        ),
+                        Data = table.Column<string>(
+                            type: "text",
+                            nullable: false
+                        )
                     },
                 constraints: table =>
                 {
@@ -207,7 +226,10 @@ namespace IdentityService.Data.Migrations.IdentityServer.PersistedGrantDb
                             type: "timestamp with time zone",
                             nullable: true
                         ),
-                        Data = table.Column<string>(type: "text", nullable: false)
+                        Data = table.Column<string>(
+                            type: "text",
+                            nullable: false
+                        )
                     },
                 constraints: table =>
                 {
@@ -228,7 +250,11 @@ namespace IdentityService.Data.Migrations.IdentityServer.PersistedGrantDb
                 column: "Expiration"
             );
 
-            migrationBuilder.CreateIndex(name: "IX_Keys_Use", table: "Keys", column: "Use");
+            migrationBuilder.CreateIndex(
+                name: "IX_Keys_Use",
+                table: "Keys",
+                column: "Use"
+            );
 
             migrationBuilder.CreateIndex(
                 name: "IX_PersistedGrants_ConsumedTime",

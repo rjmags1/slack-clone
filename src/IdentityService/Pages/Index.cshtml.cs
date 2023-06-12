@@ -11,9 +11,10 @@ public class Index : PageModel
 
     public void OnGet()
     {
-        Version = typeof(Duende.IdentityServer.Hosting.IdentityServerMiddleware).Assembly
-            .GetCustomAttribute<AssemblyInformationalVersionAttribute>()
-            ?.InformationalVersion.Split('+')
-            .First();
+        Version =
+            typeof(Duende.IdentityServer.Hosting.IdentityServerMiddleware).Assembly
+                .GetCustomAttribute<AssemblyInformationalVersionAttribute>()
+                ?.InformationalVersion.Split('+')
+                .First();
     }
 }

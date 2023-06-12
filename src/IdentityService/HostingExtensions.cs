@@ -7,14 +7,18 @@ namespace IdentityService;
 
 internal static class HostingExtensions
 {
-    public static WebApplication ConfigureServices(this WebApplicationBuilder builder)
+    public static WebApplication ConfigureServices(
+        this WebApplicationBuilder builder
+    )
     {
         DotNetEnv.Env.Load();
 
         builder.Services.AddRazorPages();
 
         var migrationsAssembly = typeof(Program).Assembly.GetName().Name;
-        string connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING");
+        string connectionString = Environment.GetEnvironmentVariable(
+            "DB_CONNECTION_STRING"
+        );
 
         builder.Services
             .AddIdentityServer()
@@ -73,7 +77,8 @@ internal static class HostingExtensions
                 .GetRequiredService<PersistedGrantDbContext>()
                 .Database.Migrate();
 
-            var context = serviceScope.ServiceProvider.GetRequiredService<ConfigurationDbContext>();
+            var context =
+                serviceScope.ServiceProvider.GetRequiredService<ConfigurationDbContext>();
             context.Database.Migrate();
             if (!context.Clients.Any())
             {

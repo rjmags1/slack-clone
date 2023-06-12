@@ -66,7 +66,9 @@ public class Index : PageModel
     public async Task<IActionResult> OnPost()
     {
         // check if we are in the context of an authorization request
-        var context = await _interaction.GetAuthorizationContextAsync(Input.ReturnUrl);
+        var context = await _interaction.GetAuthorizationContextAsync(
+            Input.ReturnUrl
+        );
 
         // the user clicked the "cancel" button
         if (Input.Button != "login")
@@ -76,7 +78,10 @@ public class Index : PageModel
                 // if the user cancels, send a result back into IdentityServer as if they
                 // denied the consent (even if this client does not require consent).
                 // this will send back an access denied OIDC error response to the client.
-                await _interaction.DenyAuthorizationAsync(context, AuthorizationError.AccessDenied);
+                await _interaction.DenyAuthorizationAsync(
+                    context,
+                    AuthorizationError.AccessDenied
+                );
 
                 // we can trust model.ReturnUrl since GetAuthorizationContextAsync returned non-null
                 if (context.IsNativeClient())
@@ -118,13 +123,18 @@ public class Index : PageModel
                     props = new AuthenticationProperties
                     {
                         IsPersistent = true,
-                        ExpiresUtc = DateTimeOffset.UtcNow.Add(LoginOptions.RememberMeLoginDuration)
+                        ExpiresUtc = DateTimeOffset.UtcNow.Add(
+                            LoginOptions.RememberMeLoginDuration
+                        )
                     };
                 }
                 ;
 
                 // issue authentication cookie with subject ID and username
-                var isuser = new IdentityServerUser(user.SubjectId) { DisplayName = user.Username };
+                var isuser = new IdentityServerUser(user.SubjectId)
+                {
+                    DisplayName = user.Username
+                };
 
                 await HttpContext.SignInAsync(isuser, props);
 
@@ -164,7 +174,10 @@ public class Index : PageModel
                     clientId: context?.Client.ClientId
                 )
             );
-            ModelState.AddModelError(string.Empty, LoginOptions.InvalidCredentialsErrorMessage);
+            ModelState.AddModelError(
+                string.Empty,
+                LoginOptions.InvalidCredentialsErrorMessage
+            );
         }
 
         // something went wrong, show form with error
@@ -176,11 +189,20 @@ public class Index : PageModel
     {
         Input = new InputModel { ReturnUrl = returnUrl };
 
-        var context = await _interaction.GetAuthorizationContextAsync(returnUrl);
-        if (context?.IdP != null && await _schemeProvider.GetSchemeAsync(context.IdP) != null)
+        var context = await _interaction.GetAuthorizationContextAsync(
+            returnUrl
+        );
+        if (
+            context?.IdP != null
+            && await _schemeProvider.GetSchemeAsync(context.IdP) != null
+        )
         {
             var local =
-                context.IdP == Duende.IdentityServer.IdentityServerConstants.LocalIdentityProvider;
+                context.IdP
+                == Duende
+                    .IdentityServer
+                    .IdentityServerConstants
+                    .LocalIdentityProvider;
 
             // this is meant to short circuit the UI and only trigger the one external IdP
             View = new ViewModel { EnableLocalLogin = local, };
@@ -191,7 +213,10 @@ public class Index : PageModel
             {
                 View.ExternalProviders = new[]
                 {
-                    new ViewModel.ExternalProvider { AuthenticationScheme = context.IdP }
+                    new ViewModel.ExternalProvider
+                    {
+                        AuthenticationScheme = context.IdP
+                    }
                 };
             }
 
@@ -212,7 +237,9 @@ public class Index : PageModel
             )
             .ToList();
 
-        var dyanmicSchemes = (await _identityProviderStore.GetAllSchemeNamesAsync())
+        var dyanmicSchemes = (
+            await _identityProviderStore.GetAllSchemeNamesAsync()
+        )
             .Where(x => x.Enabled)
             .Select(
                 x =>
