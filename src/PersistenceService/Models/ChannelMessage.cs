@@ -3,18 +3,27 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 
-namespace ApiService.Models;
+namespace PersistenceService.Models;
 
-[Index(nameof(DirectMessageGroupId))]
+[Index(nameof(ChannelId))]
 [Index(nameof(Deleted))]
 [Index(nameof(Draft))]
-[Index(nameof(DirectMessageLaterFlagId))]
+[Index(nameof(ChannelMessageLaterFlagId))]
 [Index(nameof(SentAt))]
 [Index(nameof(UserId))]
-public class DirectMessage
+public class ChannelMessage
 {
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public Guid Id { get; set; }
+
+    [DefaultValue(false)]
+    public bool Admin { get; set; }
+
+#pragma warning disable CS8618
+    public Channel Channel { get; set; }
+#pragma warning restore CS8618
+
+    public Guid ChannelId { get; set; }
 
     [MaxLength(2000)]
 #pragma warning disable CS8618
@@ -27,21 +36,15 @@ public class DirectMessage
     [DefaultValue(false)]
     public bool Deleted { get; set; }
 
-#pragma warning disable CS8618
-    public DirectMessageGroup DirectMessageGroup { get; set; }
-#pragma warning restore CS8618
-
-    public Guid DirectMessageGroupId { get; set; }
-
     [DefaultValue(true)]
     public bool Draft { get; set; }
 
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public DateTime LastEdit { get; set; }
 
-    public DirectMessageLaterFlag? DirectMessageLaterFlag { get; set; }
+    public ChannelMessageLaterFlag? LaterFlag { get; set; }
 
-    public Guid? DirectMessageLaterFlagId { get; set; }
+    public Guid? ChannelMessageLaterFlagId { get; set; }
 
     public DateTime? SentAt { get; set; }
 

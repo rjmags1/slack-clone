@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 
-namespace ApiService.Models;
+namespace PersistenceService.Models;
 
 [Index(nameof(Name), nameof(WorkspaceId), IsUnique = true)]
 [Index(nameof(Private))]

@@ -2,7 +2,7 @@ using System.ComponentModel;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 
-namespace ApiService.Models;
+namespace PersistenceService.Models;
 
 [Index(
     nameof(ChannelMessageId),

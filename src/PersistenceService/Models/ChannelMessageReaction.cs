@@ -3,24 +3,28 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 
-namespace ApiService.Models;
+namespace PersistenceService.Models;
 
-[Index(nameof(DirectMessageGroupId), nameof(UserId), IsUnique = true)]
+[Index(nameof(ChannelMessageId), nameof(UserId))]
+[Index(nameof(CreatedAt))]
 [Index(nameof(UserId))]
-public class DirectMessageGroupMember
+public class ChannelMessageReaction
 {
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public Guid Id { get; set; }
 
 #pragma warning disable CS8618
-    public DirectMessageGroup DirectMessageGroup { get; set; }
+    public ChannelMessage ChannelMessage { get; set; }
 #pragma warning restore CS8618
 
-    public Guid DirectMessageGroupId { get; set; }
+    public Guid ChannelMessageId { get; set; }
 
-    public DateTime? LastViewedAt { get; set; }
+    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+    public DateTime CreatedAt { get; set; }
 
 #pragma warning disable CS8618
+    public string Emoji { get; set; }
+
     public User User { get; set; }
 #pragma warning restore CS8618
 

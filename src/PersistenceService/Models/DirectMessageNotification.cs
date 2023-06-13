@@ -3,12 +3,12 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 
-namespace ApiService.Models;
+namespace PersistenceService.Models;
 
-[Index(nameof(DirectMessageId), nameof(UserId))]
+[Index(nameof(DirectMessageId), nameof(UserId), IsUnique = true)]
 [Index(nameof(CreatedAt))]
 [Index(nameof(UserId))]
-public class DirectMessageReaction
+public class DirectMessageNotification
 {
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public Guid Id { get; set; }
@@ -22,9 +22,12 @@ public class DirectMessageReaction
 
     public Guid DirectMessageId { get; set; }
 
-#pragma warning disable CS8618
-    public string Emoji { get; set; }
+    public int DirectMessageNotificationType { get; set; }
 
+    [DefaultValue(false)]
+    public bool Seen { get; set; }
+
+#pragma warning disable CS8618
     public User User { get; set; }
 #pragma warning restore CS8618
 

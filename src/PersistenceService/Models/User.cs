@@ -2,19 +2,13 @@ using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity;
 
-namespace ApiService.Models;
+namespace PersistenceService.Models;
 
 [Index(nameof(Deleted))]
-[Index(nameof(NormalizedEmail))]
-[Index(nameof(NormalizedUsername))]
-[Index(nameof(Email), IsUnique = true)]
-[Index(nameof(Username), IsUnique = true)]
-public class User
+public class User : IdentityUser
 {
-    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-    public Guid Id { get; set; }
-
 #pragma warning disable CS8618
     public File Avatar { get; set; }
 #pragma warning restore CS8618
@@ -28,9 +22,6 @@ public class User
     public bool Deleted { get; set; }
 
 #pragma warning disable CS8618
-    [MaxLength(320)]
-    public string Email { get; set; }
-
     [MaxLength(20)]
     public string FirstName { get; set; }
 
@@ -50,13 +41,7 @@ public class User
     [DefaultValue(0)]
     public int NotificationSound { get; set; }
 
-    [MaxLength(320)]
 #pragma warning disable CS8618
-    public string NormalizedEmail { get; set; }
-
-    [MaxLength(80)]
-    public string NormalizedUsername { get; set; }
-
     [MaxLength(20)]
     [DefaultValue("online")]
     public string OnlineStatus { get; set; }
@@ -69,9 +54,6 @@ public class User
     public Guid? ThemeId { get; set; }
 
 #pragma warning disable CS8618
-    public TimeZoneInfo Timezone { get; set; }
-
-    [MaxLength(48)]
-    public string Username { get; set; }
+    public string Timezone { get; set; }
 #pragma warning restore CS8618
 }

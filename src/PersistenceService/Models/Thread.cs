@@ -3,19 +3,23 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 
-namespace ApiService.Models;
+namespace PersistenceService.Models;
 
-[Index(nameof(WorkspaceId))]
-public class DirectMessageGroup
+[Index(nameof(FirstMessageId))]
+public class Thread
 {
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public Guid Id { get; set; }
 
-    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-    public DateTime CreatedAt { get; set; }
+#pragma warning disable CS8618
+    public Channel Channel { get; set; }
+#pragma warning restore CS8618
 
-    [DefaultValue(2)]
-    public int Size { get; set; }
+    public Guid ChannelId { get; set; }
+
+    public ChannelMessage? FirstMessage { get; set; }
+
+    public Guid? FirstMessageId { get; set; }
 
 #pragma warning disable CS8618
     public Workspace Workspace { get; set; }
