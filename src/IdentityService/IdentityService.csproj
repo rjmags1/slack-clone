@@ -22,5 +22,6 @@
 		</PackageReference>
 		<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="7.0.4" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="6.0.0" />
+        <ProjectReference Include="../PersistenceService/PersistenceService.csproj" />
 	</ItemGroup>
 </Project>

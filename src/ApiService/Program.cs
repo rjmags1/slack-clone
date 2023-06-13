@@ -1,6 +1,6 @@
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.EntityFrameworkCore;
-using ApiService.Data.ApplicationDbContext;
+using PersistenceService.Data.ApplicationDb;
 
 var builder = WebApplication.CreateBuilder(args);
 

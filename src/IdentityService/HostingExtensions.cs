@@ -2,10 +2,11 @@ using Duende.IdentityServer.EntityFramework.DbContexts;
 using Duende.IdentityServer.EntityFramework.Mappers;
 using Microsoft.EntityFrameworkCore;
 using Duende.IdentityServer;
-using IdentityService.Data;
-using IdentityService.Models;
+using PersistenceService.Models;
 using Microsoft.AspNetCore.Identity;
 using Serilog;
+using PersistenceService.Data.ApplicationDb;
+using System.Reflection;
 
 namespace IdentityService;
 
@@ -28,7 +29,7 @@ internal static class HostingExtensions
         );
 
         builder.Services
-            .AddIdentity<ApplicationUser, IdentityRole>()
+            .AddIdentity<User, IdentityRole>()
             .AddEntityFrameworkStores<ApplicationDbContext>()
             .AddDefaultTokenProviders();
 
@@ -53,7 +54,7 @@ internal static class HostingExtensions
             .AddInMemoryIdentityResources(Config.IdentityResources)
             .AddInMemoryApiScopes(Config.ApiScopes)
             .AddInMemoryClients(Config.Clients)
-            .AddAspNetIdentity<ApplicationUser>()
+            .AddAspNetIdentity<User>()
             .AddProfileService<CustomProfileService>();
 
         return builder.Build();
