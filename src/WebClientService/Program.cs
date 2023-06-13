@@ -1,6 +1,7 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using Duende.Bff.Yarp;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -26,9 +27,16 @@ builder.Services
             options.ClientId = "bff";
             options.ClientSecret = "secret";
             options.ResponseType = "code";
+            options.Scope.Add("openid");
+            options.Scope.Add("profile");
             options.Scope.Add("api1");
+            options.Scope.Add("color");
             options.SaveTokens = true;
             options.GetClaimsFromUserInfoEndpoint = true;
+            options.ClaimActions.MapUniqueJsonKey(
+                "favorite_color",
+                "favorite_color"
+            );
         }
     );
 

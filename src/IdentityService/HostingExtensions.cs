@@ -1,6 +1,10 @@
 using Duende.IdentityServer.EntityFramework.DbContexts;
 using Duende.IdentityServer.EntityFramework.Mappers;
 using Microsoft.EntityFrameworkCore;
+using Duende.IdentityServer;
+using IdentityService.Data;
+using IdentityService.Models;
+using Microsoft.AspNetCore.Identity;
 using Serilog;
 
 namespace IdentityService;
@@ -12,13 +16,21 @@ internal static class HostingExtensions
     )
     {
         DotNetEnv.Env.Load();
-
-        builder.Services.AddRazorPages();
-
         var migrationsAssembly = typeof(Program).Assembly.GetName().Name;
         string connectionString = Environment.GetEnvironmentVariable(
             "DB_CONNECTION_STRING"
         );
+
+        builder.Services.AddRazorPages();
+
+        builder.Services.AddDbContext<ApplicationDbContext>(
+            options => options.UseNpgsql(connectionString)
+        );
+
+        builder.Services
+            .AddIdentity<ApplicationUser, IdentityRole>()
+            .AddEntityFrameworkStores<ApplicationDbContext>()
+            .AddDefaultTokenProviders();
 
         builder.Services
             .AddIdentityServer()
@@ -38,7 +50,11 @@ internal static class HostingExtensions
                         sql => sql.MigrationsAssembly(migrationsAssembly)
                     );
             })
-            .AddTestUsers(TestUsers.Users);
+            .AddInMemoryIdentityResources(Config.IdentityResources)
+            .AddInMemoryApiScopes(Config.ApiScopes)
+            .AddInMemoryClients(Config.Clients)
+            .AddAspNetIdentity<ApplicationUser>()
+            .AddProfileService<CustomProfileService>();
 
         return builder.Build();
     }
@@ -56,10 +72,9 @@ internal static class HostingExtensions
 
         app.UseStaticFiles();
         app.UseRouting();
-
         app.UseIdentityServer();
-
         app.UseAuthorization();
+
         app.MapRazorPages().RequireAuthorization();
 
         return app;

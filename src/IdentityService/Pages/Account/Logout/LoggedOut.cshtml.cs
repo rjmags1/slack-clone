@@ -9,7 +9,7 @@ namespace IdentityService.Pages.Logout;
 public class LoggedOut : PageModel
 {
     private readonly IIdentityServerInteractionService _interactionService;
-
+        
     public LoggedOutViewModel View { get; set; }
 
     public LoggedOut(IIdentityServerInteractionService interactionService)
@@ -24,12 +24,9 @@ public class LoggedOut : PageModel
 
         View = new LoggedOutViewModel
         {
-            AutomaticRedirectAfterSignOut =
-                LogoutOptions.AutomaticRedirectAfterSignOut,
+            AutomaticRedirectAfterSignOut = LogoutOptions.AutomaticRedirectAfterSignOut,
             PostLogoutRedirectUri = logout?.PostLogoutRedirectUri,
-            ClientName = String.IsNullOrEmpty(logout?.ClientName)
-                ? logout?.ClientId
-                : logout?.ClientName,
+            ClientName = String.IsNullOrEmpty(logout?.ClientName) ? logout?.ClientId : logout?.ClientName,
             SignOutIframeUrl = logout?.SignOutIFrameUrl
         };
     }
