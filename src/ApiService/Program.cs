@@ -1,4 +1,6 @@
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.EntityFrameworkCore;
+using PersistenceService.Data.ApplicationDb;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,6 +19,12 @@ builder.Services
             };
         }
     );
+DotNetEnv.Env.Load();
+string connectionString =
+    Environment.GetEnvironmentVariable("DB_CONNECTION_STRING") ?? "";
+builder.Services.AddDbContext<ApplicationDbContext>(
+    options => options.UseNpgsql(connectionString)
+);
 
 var app = builder.Build();
 

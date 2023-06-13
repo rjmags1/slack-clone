@@ -18,12 +18,10 @@ public class Index : PageModel
     private readonly IResourceStore _resources;
     private readonly IEventService _events;
 
-    public Index(
-        IIdentityServerInteractionService interaction,
+    public Index(IIdentityServerInteractionService interaction,
         IClientStore clients,
         IResourceStore resources,
-        IEventService events
-    )
+        IEventService events)
     {
         _interaction = interaction;
         _clients = clients;
@@ -32,7 +30,7 @@ public class Index : PageModel
     }
 
     public ViewModel View { get; set; }
-
+        
     public async Task OnGet()
     {
         var grants = await _interaction.GetAllUserGrantsAsync();
@@ -54,19 +52,18 @@ public class Index : PageModel
                     Description = grant.Description,
                     Created = grant.CreationTime,
                     Expires = grant.Expiration,
-                    IdentityGrantNames = resources.IdentityResources
-                        .Select(x => x.DisplayName ?? x.Name)
-                        .ToArray(),
-                    ApiGrantNames = resources.ApiScopes
-                        .Select(x => x.DisplayName ?? x.Name)
-                        .ToArray()
+                    IdentityGrantNames = resources.IdentityResources.Select(x => x.DisplayName ?? x.Name).ToArray(),
+                    ApiGrantNames = resources.ApiScopes.Select(x => x.DisplayName ?? x.Name).ToArray()
                 };
 
                 list.Add(item);
             }
         }
 
-        View = new ViewModel { Grants = list };
+        View = new ViewModel
+        {
+            Grants = list
+        };
     }
 
     [BindProperty]

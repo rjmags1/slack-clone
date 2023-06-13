@@ -1,20 +1,37 @@
 using Duende.IdentityServer.EntityFramework.DbContexts;
 using Duende.IdentityServer.EntityFramework.Mappers;
 using Microsoft.EntityFrameworkCore;
+using Duende.IdentityServer;
+using PersistenceService.Models;
+using Microsoft.AspNetCore.Identity;
 using Serilog;
+using PersistenceService.Data.ApplicationDb;
+using System.Reflection;
 
 namespace IdentityService;
 
 internal static class HostingExtensions
 {
-    public static WebApplication ConfigureServices(this WebApplicationBuilder builder)
+    public static WebApplication ConfigureServices(
+        this WebApplicationBuilder builder
+    )
     {
         DotNetEnv.Env.Load();
+        var migrationsAssembly = typeof(Program).Assembly.GetName().Name;
+        string connectionString = Environment.GetEnvironmentVariable(
+            "DB_CONNECTION_STRING"
+        );
 
         builder.Services.AddRazorPages();
 
-        var migrationsAssembly = typeof(Program).Assembly.GetName().Name;
-        string connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING");
+        builder.Services.AddDbContext<ApplicationDbContext>(
+            options => options.UseNpgsql(connectionString)
+        );
+
+        builder.Services
+            .AddIdentity<User, IdentityRole>()
+            .AddEntityFrameworkStores<ApplicationDbContext>()
+            .AddDefaultTokenProviders();
 
         builder.Services
             .AddIdentityServer()
@@ -34,7 +51,11 @@ internal static class HostingExtensions
                         sql => sql.MigrationsAssembly(migrationsAssembly)
                     );
             })
-            .AddTestUsers(TestUsers.Users);
+            .AddInMemoryIdentityResources(Config.IdentityResources)
+            .AddInMemoryApiScopes(Config.ApiScopes)
+            .AddInMemoryClients(Config.Clients)
+            .AddAspNetIdentity<User>()
+            .AddProfileService<CustomProfileService>();
 
         return builder.Build();
     }
@@ -52,10 +73,9 @@ internal static class HostingExtensions
 
         app.UseStaticFiles();
         app.UseRouting();
-
         app.UseIdentityServer();
-
         app.UseAuthorization();
+
         app.MapRazorPages().RequireAuthorization();
 
         return app;
@@ -73,7 +93,8 @@ internal static class HostingExtensions
                 .GetRequiredService<PersistedGrantDbContext>()
                 .Database.Migrate();
 
-            var context = serviceScope.ServiceProvider.GetRequiredService<ConfigurationDbContext>();
+            var context =
+                serviceScope.ServiceProvider.GetRequiredService<ConfigurationDbContext>();
             context.Database.Migrate();
             if (!context.Clients.Any())
             {
