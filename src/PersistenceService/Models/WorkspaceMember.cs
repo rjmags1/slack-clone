@@ -5,9 +5,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace PersistenceService.Models;
 
-[Index(nameof(UserId), nameof(WorkspaceId))]
+[Index(nameof(UserId), nameof(WorkspaceId), IsUnique = true)]
 [Index(nameof(JoinedAt))]
-[Index(nameof(WorkspaceId), nameof(UserId))]
+[Index(nameof(WorkspaceId))]
 public class WorkspaceMember
 {
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
@@ -27,12 +27,15 @@ public class WorkspaceMember
 
     public TimeOnly NotificationsAllTimeEnd { get; set; }
 
+    [DefaultValue(0)]
     public int NotificationSound { get; set; }
 
-    [DefaultValue("offline")]
 #pragma warning disable CS8618
+    [DefaultValue("offline")]
     public string OnlineStatus { get; set; }
 #pragma warning restore CS8618
+
+    public DateTime? OnlineStatusUntil { get; set; }
 
     [DefaultValue(false)]
     public bool Owner { get; set; }
@@ -41,8 +44,8 @@ public class WorkspaceMember
 
     public Guid? ThemeId { get; set; }
 
-    [MaxLength(80)]
 #pragma warning disable CS8618
+    [MaxLength(80)]
     public string Title { get; set; }
 #pragma warning restore CS8618
 

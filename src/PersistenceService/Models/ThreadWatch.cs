@@ -5,7 +5,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace PersistenceService.Models;
 
-[PrimaryKey(nameof(ThreadId), nameof(UserId))]
+[PrimaryKey(nameof(UserId), nameof(ThreadId))]
+[Index(nameof(ThreadId))]
 public class ThreadWatch
 {
 #pragma warning disable CS8618

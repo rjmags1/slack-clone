@@ -121,7 +121,7 @@ public class Callback : PageModel
             new UserLoginSuccessEvent(
                 provider,
                 providerUserId,
-                user.Id,
+                user.Id.ToString(),
                 user.UserName,
                 true,
                 context?.Client.ClientId
@@ -151,7 +151,7 @@ public class Callback : PageModel
 
         var user = new User
         {
-            Id = sub,
+            Id = Guid.Parse(sub),
             UserName = sub, // don't need a username, since the user will be using an external provider to login
         };
 

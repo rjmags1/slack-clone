@@ -6,13 +6,12 @@ using Microsoft.EntityFrameworkCore;
 namespace PersistenceService.Models;
 
 [Index(
-    nameof(DirectMessageId),
     nameof(MentionedId),
+    nameof(DirectMessageId),
     nameof(MentionerId),
     IsUnique = true
 )]
 [Index(nameof(CreatedAt))]
-[Index(nameof(MentionedId))]
 public class DirectMessageMention
 {
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
@@ -27,9 +26,11 @@ public class DirectMessageMention
 
     public Guid DirectMessageId { get; set; }
 
-    public User? Mentioned { get; set; }
+#pragma warning disable CS8618
+    public User Mentioned { get; set; }
+#pragma warning restore CS8618
 
-    public Guid? MentionedId { get; set; }
+    public Guid MentionedId { get; set; }
 
 #pragma warning disable CS8618
     public User Mentioner { get; set; }

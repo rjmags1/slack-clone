@@ -5,13 +5,12 @@ using Microsoft.EntityFrameworkCore;
 namespace PersistenceService.Models;
 
 [Index(
-    nameof(ChannelMessageId),
     nameof(MentionedId),
+    nameof(ChannelMessageId),
     nameof(MentionerId),
     IsUnique = true
 )]
 [Index(nameof(CreatedAt))]
-[Index(nameof(MentionedId))]
 public class ChannelMessageMention
 {
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
@@ -31,8 +30,8 @@ public class ChannelMessageMention
     public Guid? MentionedId { get; set; }
 
 #pragma warning disable CS8618
-    public User Mentioner { get; set; }
+    public User? Mentioner { get; set; }
 #pragma warning restore CS8618
 
-    public Guid MentionerId { get; set; }
+    public Guid? MentionerId { get; set; }
 }

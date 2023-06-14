@@ -16,7 +16,7 @@ public class DirectMessage
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public Guid Id { get; set; }
 
-    [MaxLength(2000)]
+    [MaxLength(2500)]
 #pragma warning disable CS8618
     public string Content { get; set; }
 #pragma warning restore CS8618
@@ -36,12 +36,22 @@ public class DirectMessage
     [DefaultValue(true)]
     public bool Draft { get; set; }
 
-    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-    public DateTime LastEdit { get; set; }
+    public DateTime? LastEdit { get; set; }
 
     public DirectMessageLaterFlag? DirectMessageLaterFlag { get; set; }
 
     public Guid? DirectMessageLaterFlagId { get; set; }
+
+    public ICollection<File> Files { get; } = new List<File>();
+
+    public ICollection<DirectMessageMention> Mentions { get; } =
+        new List<DirectMessageMention>();
+
+    public ICollection<DirectMessageReaction> Reactions { get; } =
+        new List<DirectMessageReaction>();
+
+    public ICollection<DirectMessageReply> Replies { get; } =
+        new List<DirectMessageReply>();
 
     public DateTime? SentAt { get; set; }
 

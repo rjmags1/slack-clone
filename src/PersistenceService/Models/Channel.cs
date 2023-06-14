@@ -5,9 +5,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace PersistenceService.Models;
 
-[Index(nameof(Name), nameof(WorkspaceId), IsUnique = true)]
+[Index(nameof(WorkspaceId), nameof(Name), IsUnique = true)]
 [Index(nameof(Private))]
-[Index(nameof(WorkspaceId))]
 public class Channel
 {
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
@@ -35,6 +34,14 @@ public class Channel
     [MaxLength(120)]
     public string Description { get; set; }
 #pragma warning restore CS8618
+
+    public ICollection<ChannelMember> ChannelMembers { get; } =
+        new List<ChannelMember>();
+
+    public ICollection<ChannelMessage> ChannelMessages { get; } =
+        new List<ChannelMessage>();
+
+    public ICollection<File> Files { get; } = new List<File>();
 
 #pragma warning disable CS8618
     [DefaultValue("")]

@@ -23,6 +23,7 @@ public class ChannelMessageReaction
     public DateTime CreatedAt { get; set; }
 
 #pragma warning disable CS8618
+    [MaxLength(4)]
     public string Emoji { get; set; }
 
     public User User { get; set; }

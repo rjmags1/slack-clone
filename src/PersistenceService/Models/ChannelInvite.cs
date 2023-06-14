@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 
@@ -16,6 +17,7 @@ public class ChannelInvite
     public User Admin { get; set; }
 #pragma warning restore CS8618
 
+    [ForeignKey("Admin")]
     public Guid AdminId { get; set; }
 
 #pragma warning disable CS8618
@@ -34,6 +36,7 @@ public class ChannelInvite
     public User User { get; set; }
 #pragma warning restore CS8618
 
+    [ForeignKey("User")]
     public Guid UserId { get; set; }
 
 #pragma warning disable CS8618

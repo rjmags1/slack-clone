@@ -9,11 +9,15 @@ namespace PersistenceService.Models;
 [Index(nameof(Deleted))]
 public class User : IdentityUser
 {
-#pragma warning disable CS8618
-    public File Avatar { get; set; }
+#pragma warning disable CS8618, CS0114
+    [Key]
+    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+    public Guid Id { get; set; }
+
+    public File? Avatar { get; set; }
 #pragma warning restore CS8618
 
-    public Guid AvatarId { get; set; }
+    public Guid? AvatarId { get; set; }
 
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public DateTime CreatedAt { get; set; }

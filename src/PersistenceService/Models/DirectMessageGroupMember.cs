@@ -5,8 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace PersistenceService.Models;
 
-[Index(nameof(DirectMessageGroupId), nameof(UserId), IsUnique = true)]
-[Index(nameof(UserId))]
+[Index(nameof(UserId), nameof(DirectMessageGroupId), IsUnique = true)]
 public class DirectMessageGroupMember
 {
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
@@ -18,7 +17,7 @@ public class DirectMessageGroupMember
 
     public Guid DirectMessageGroupId { get; set; }
 
-    public DateTime? LastViewedAt { get; set; }
+    public DateTime? LastViewedGroupMessagesAt { get; set; }
 
 #pragma warning disable CS8618
     public User User { get; set; }

@@ -16,16 +16,17 @@ public class ChannelMessage
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public Guid Id { get; set; }
 
-    [DefaultValue(false)]
-    public bool Admin { get; set; }
-
 #pragma warning disable CS8618
     public Channel Channel { get; set; }
 #pragma warning restore CS8618
 
     public Guid ChannelId { get; set; }
 
-    [MaxLength(2000)]
+    public ChannelMessageLaterFlag? ChannelMessageLaterFlag { get; set; }
+
+    public Guid? ChannelMessageLaterFlagId { get; set; }
+
+    [MaxLength(2500)]
 #pragma warning disable CS8618
     public string Content { get; set; }
 #pragma warning restore CS8618
@@ -39,18 +40,22 @@ public class ChannelMessage
     [DefaultValue(true)]
     public bool Draft { get; set; }
 
-    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-    public DateTime LastEdit { get; set; }
+    public ICollection<File> Files { get; } = new List<File>();
 
-    public ChannelMessageLaterFlag? LaterFlag { get; set; }
+    public DateTime? LastEdit { get; set; }
 
-    public Guid? ChannelMessageLaterFlagId { get; set; }
+    public ICollection<ChannelMessageMention> Mentions { get; } =
+        new List<ChannelMessageMention>();
+
+    public ICollection<ChannelMessageReaction> Reactions { get; } =
+        new List<ChannelMessageReaction>();
+
+    public ICollection<ChannelMessageReply> Replies { get; } =
+        new List<ChannelMessageReply>();
 
     public DateTime? SentAt { get; set; }
 
-#pragma warning disable CS8618
-    public User User { get; set; }
-#pragma warning restore CS8618
+    public User? User { get; set; }
 
-    public Guid UserId { get; set; }
+    public Guid? UserId { get; set; }
 }

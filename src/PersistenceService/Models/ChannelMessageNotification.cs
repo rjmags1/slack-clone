@@ -4,9 +4,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace PersistenceService.Models;
 
-[Index(nameof(ChannelMessageId), nameof(UserId), IsUnique = true)]
+[Index(nameof(UserId), nameof(ChannelMessageId), IsUnique = true)]
 [Index(nameof(CreatedAt))]
-[Index(nameof(UserId))]
 public class ChannelMessageNotification
 {
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]

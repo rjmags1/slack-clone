@@ -12,7 +12,7 @@ public class Workspace
 
     public File? Avatar { get; set; }
 
-    public Guid AvatarId { get; set; }
+    public Guid? AvatarId { get; set; }
 
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public DateTime CreatedAt { get; set; }

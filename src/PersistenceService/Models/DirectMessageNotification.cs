@@ -5,9 +5,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace PersistenceService.Models;
 
-[Index(nameof(DirectMessageId), nameof(UserId), IsUnique = true)]
+[Index(nameof(UserId), nameof(DirectMessageId), IsUnique = true)]
 [Index(nameof(CreatedAt))]
-[Index(nameof(UserId))]
 public class DirectMessageNotification
 {
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]

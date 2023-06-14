@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 namespace PersistenceService.Models;
 
 [Index(nameof(MessageRepliedToId))]
+[Index(nameof(DirectMessageId), IsUnique = true)]
 public class DirectMessageReply
 {
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]

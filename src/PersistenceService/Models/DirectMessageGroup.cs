@@ -14,6 +14,14 @@ public class DirectMessageGroup
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public DateTime CreatedAt { get; set; }
 
+    public ICollection<DirectMessageGroupMember> DirectMessageGroupMembers { get; } =
+        new List<DirectMessageGroupMember>();
+
+    public ICollection<DirectMessage> DirectMessages { get; } =
+        new List<DirectMessage>();
+
+    public ICollection<File> Files { get; } = new List<File>();
+
     [DefaultValue(2)]
     public int Size { get; set; }
 
