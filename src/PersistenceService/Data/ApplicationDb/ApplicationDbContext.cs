@@ -42,39 +42,6 @@ public class ApplicationDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder
-            .Entity<Channel>()
-            .HasOne(e => e.Avatar)
-            .WithOne(e => e.Channel)
-            .HasForeignKey<Models.File>(e => e.Id);
-        modelBuilder
-            .Entity<Models.File>()
-            .HasOne(e => e.Channel)
-            .WithOne(e => e.Avatar)
-            .HasForeignKey<Channel>(e => e.Id);
-
-        modelBuilder
-            .Entity<ChannelMessage>()
-            .HasOne(e => e.ChannelMessageLaterFlag)
-            .WithOne(e => e.ChannelMessage)
-            .HasForeignKey<ChannelMessageLaterFlag>(e => e.Id);
-        modelBuilder
-            .Entity<ChannelMessageLaterFlag>()
-            .HasOne(e => e.ChannelMessage)
-            .WithOne(e => e.ChannelMessageLaterFlag)
-            .HasForeignKey<ChannelMessage>(e => e.Id);
-
-        modelBuilder
-            .Entity<DirectMessage>()
-            .HasOne(e => e.DirectMessageLaterFlag)
-            .WithOne(e => e.DirectMessage)
-            .HasForeignKey<DirectMessageLaterFlag>(e => e.Id);
-        modelBuilder
-            .Entity<DirectMessageLaterFlag>()
-            .HasOne(e => e.DirectMessage)
-            .WithOne(e => e.DirectMessageLaterFlag)
-            .HasForeignKey<DirectMessage>(e => e.Id);
-
-        modelBuilder
             .Entity<ChannelMessage>()
             .HasMany(e => e.Replies)
             .WithOne(e => e.ChannelMessage)
@@ -87,6 +54,12 @@ public class ApplicationDbContext : DbContext
             .WithOne(e => e.DirectMessage)
             .HasForeignKey(e => e.DirectMessageId)
             .IsRequired();
+
+        modelBuilder
+            .Entity<ChannelMessage>()
+            .HasOne(e => e.Thread)
+            .WithMany(e => e.Messages)
+            .HasForeignKey(e => e.ThreadId);
     }
 }
 

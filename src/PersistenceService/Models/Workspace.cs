@@ -10,11 +10,14 @@ public class Workspace
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public Guid Id { get; set; }
 
+    [DeleteBehavior(DeleteBehavior.SetNull)]
     public File? Avatar { get; set; }
 
+    [ForeignKey(nameof(Avatar))]
     public Guid? AvatarId { get; set; }
 
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+    [Column(TypeName = "timestamp")]
     public DateTime CreatedAt { get; set; }
 
 #pragma warning disable CS8618

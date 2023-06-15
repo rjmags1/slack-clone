@@ -295,7 +295,7 @@ Each of the `Store` method implementations will be unit tested to ensure correct
 <span><b><a id="db-entity-channel" href="#db-entity-channel">channel</a></b><a href="#database-entities" style="padding-left:7px;font-size:1.2rem;color:grey;">▴</a></span>
 <br>id uuid PRIMARY KEY DEFAULT gen_random_uuid()<br>
 allow_threads boolean DEFAULT true<br>
-avatar_id uuid REFERENCES file (id) DEFAULT 1 ON DELETE SET NULL<br>
+avatar_id uuid REFERENCES file (id) ON DELETE SET NULL<br>
 <a href="#allowed-channel-posters-mask-def">***</a>allowed_channel_posters_mask integer DEFAULT 1<br>
 created_at timestamp DEFAULT now <br>
 created_by uuid REFERENCES user (id) ON DELETE SET NULL<br>
@@ -339,13 +339,12 @@ created_at timestamp DEFAULT now<br>
 deleted boolean DEFAULT false<br>
 draft boolean DEFAULT true<br>
 last_edit timestamp<br>
-later_flag_id uuid REFERENCES channel_message_later_flag (id) ON DELETE SET NULL<br>
 sent_at timestamp<br>
+thread_id uuid REFERENCES thread (id) ON DELETE CASCADE<br>
 user_id uuid NOT NULL REFERENCES user (id) ON DELETE SET NULL<br>
 ___INDEX__ ON channel_id_<br>
 ___INDEX__ ON deleted_<br>
 ___INDEX__ ON draft_<br>
-___INDEX__ ON later_flag_id_<br>
 ___INDEX__ ON sent_at_<br>
 ___INDEX__ ON user_id_<br>
 
@@ -353,7 +352,7 @@ ___INDEX__ ON user_id_<br>
 <br>id uuid PRIMARY KEY DEFAULT gen_random_uuid()<br>
 channel_id uuid NOT NULL REFERENCES channel (id) ON DELETE CASCADE<br>
 <a href="#database-channel-later-flag-status-mask-def">***</a>channel_later_flag_status integer DEFAULT 1<br>
-channel_message_id uuid REFERENCES channel_message (id) ON DELETE CASCADE<br>
+channel_message_id uuid NOT NULL REFERENCES channel_message (id) ON DELETE CASCADE<br>
 user_id uuid NOT NULL REFERENCES user (id) ON DELETE CASCADE<br>
 workspace_id uuid NOT NULL REFERENCES workspace (id) ON DELETE CASCADE<br>
 ___UNIQUE__ (channel_message_id, user_id)_<br>
@@ -364,7 +363,7 @@ ___INDEX__ ON (workspace_id, user_id)_<br>
 channel_message_id uuid NOT NULL REFERENCES channel_message (id) ON DELETE CASCADE<br>
 created_at timestamp DEFAULT now<br>
 mentioned_id uuid REFERENCES user (id) ON DELETE SET NULL<br>
-mentioner_id uuid NOT NULL REFERENCES user (id) ON DELETE SET NULL<br>
+mentioner_id uuid NOT NULL REFERENCES user (id) ON DELETE CASCADE<br>
 ___UNIQUE__ (mentioned_id, channel_message_id, mentioner_id)_<br>
 ___INDEX__ ON created_at_<br>
 
@@ -406,13 +405,11 @@ deleted boolean DEFAULT false<br>
 direct_message_group_id uuid NOT NULL REFERENCES direct_message_group (id) ON DELETE CASCADE<br>
 draft boolean DEFAULT true<br>
 last_edit timestamp<br>
-later_flag_id uuid REFERENCES direct_message_later_flag (id) ON DELETE SET NULL<br>
 sent_at timestamp<br>
 user_id uuid REFERENCES user (id) ON DELETE CASCADE<br>
 ___INDEX__ ON direct_message_group_id_<br>
 ___INDEX__ ON deleted_<br>
 ___INDEX__ ON draft_<br>
-___INDEX__ ON later_flag_id_<br>
 ___INDEX__ ON sent_at_<br>
 ___INDEX__ ON user_id_<br>
 
@@ -444,7 +441,7 @@ ___INDEX__ ON (workspace_id, user_id)_<br>
 <br>id uuid PRIMARY KEY DEFAULT gen_random_uuid()<br>
 created_at timestamp DEFAULT now<br>
 direct_message_id uuid NOT NULL REFERENCES direct_message (id) ON DELETE CASCADE<br>
-mentioned_id uuid REFERENCES user (id) ON DELETE SET CASCADE<br>
+mentioned_id uuid REFERENCES user (id) ON DELETE SET NULL<br>
 mentioner_id uuid NOT NULL REFERENCES user (id) ON DELETE CASCADE<br>
 ___UNIQUE__ (mentioned_id, direct_message_id, mentioner_id)_<br>
 ___INDEX__ ON created_at_<br>
@@ -474,7 +471,7 @@ ___INDEX__ ON user_id_<br>
 direct_message_id uuid UNIQUE NOT NULL REFERENCES direct_message (id) ON DELETE CASCADE<br>
 replied_to_id uuid REFERENCES user (id) ON DELETE SET NULL<br>
 replier_id uuid NOT NULL REFERENCES user (id) ON DELETE CASCADE<br>
-messaged_replied_to_id uuid REFERENCES channel_message (id) ON DELETE SET NULL<br>
+message_replied_to_id uuid REFERENCES channel_message (id) ON DELETE SET NULL<br>
 ___INDEX__ ON replied_to_id_<br>
 
 <span><b><a id="db-entity-file" href="#db-entity-file">file</a></b> <a href="#database-entities" style="padding-left:7px;font-size:1.2rem;color:grey">▴</a></span>
@@ -482,10 +479,10 @@ ___INDEX__ ON replied_to_id_<br>
 name varchar(80) NOT NULL<br>
 store_key varchar(256) NOT NULL<br>
 uploaded_at timestamp DEFAULT now<br>
-direct_message_id uuid REFERENCES direct_message (id)<br>
-direct_message_group_id uuid REFERENCES direct_message_group (id) <br>
-channel_message_id uuid REFERENCES channel_message (id)<br>
-channel uuid REFERENCES channel (id) <br>
+direct_message_id uuid REFERENCES direct_message (id) ON DELETE CASCADE<br>
+direct_message_group_id uuid REFERENCES direct_message_group (id) ON DELETE CASCADE <br>
+channel_message_id uuid REFERENCES channel_message (id) ON DELETE CASCADE<br>
+channel uuid REFERENCES channel (id) ON DELETE CASCADE<br>
 ___INDEX__ ON uploaded_at_<br>
 ___INDEX__ ON direct_message_id_<br>
 ___INDEX__ ON direct_message_group_id_<br>
@@ -512,14 +509,14 @@ ___INDEX__ ON thread_id_<br>
 <span><b><a id="db-entity-user" href="#db-entity-user">user</a></b> <a href="#database-entities" style="padding-left:7px;font-size:1.2rem;color:grey">▴</a></span>
 <br>id uuid PRIMARY KEY DEFAULT gen_random_uuid()<br>
 access_failed_count integer NOT NULL<br>
-avatar_id uuid REFERENCES file (id)<br>
+avatar_id uuid REFERENCES file (id) ON DELETE SET NULL<br>
 concurrency_stamp TEXT<br>
 created_at timestamp DEFAULT now<br>
 deleted boolean DEFAULT false<br>
 email varchar(320) NOT NULL UNIQUE<br>
 email_confirmed boolean DEFAULT false<br>
-first_name varchar(20)<br>
-last_name varchar(50)<br>
+first_name varchar(20) NOT NULL<br>
+last_name varchar(50) NOT NULL<br>
 lockout_enabled boolean DEFAULT false<br>
 lockout_end timestamp<br>
 <a href="#database-user-notif-pref-mask-def">***</a>user_notif_pref_mask integer DEFAULT 0<br>
@@ -599,7 +596,7 @@ notif_sound integer DEFAULT 0<br>
 online_status varchar(20) DEFAULT "offline"<br>
 online_status_until timestamp<br>
 owner boolean DEFAULT false<br>
-theme uuid ON DELETE SET NULL<br>
+theme_id uuid REFERENCES theme (id) ON DELETE SET NULL<br>
 title varchar(80)<br>
 user_id uuid NOT NULL REFERENCES user (id) ON DELETE CASCADE<br>
 workspace_id uuid NOT NULL REFERENCES workspace (id) ON DELETE CASCADE<br>
@@ -610,7 +607,7 @@ ___INDEX__ ON (workspace_id, user_id)_<br>
 <span><b><a id="db-entity-workspace-search" href="#db-entity-workspace-search">workspace_search</a></b> <a href="#database-entities" style="padding-left:7px;font-size:1.2rem;color:grey">▴</a></span>
 <br>id uuid PRIMARY KEY DEFAULT gen_random_uuid()<br>
 created_at timestamp DEFAULT now<br>
-query varchar(80)<br>
+query varchar(80) NOT NULL<br>
 user_id uuid NOT NULL REFERENCES user (id) ON DELETE CASCADE<br>
 workspace_id uuid NOT NULL REFERENCES workspace (id) ON DELETE CASCADE<br>
 ___INDEX__ ON created_at_<br>

@@ -17,21 +17,28 @@ public class ChannelMessageMention
     public Guid Id { get; set; }
 
 #pragma warning disable CS8618
+    [DeleteBehavior(DeleteBehavior.Cascade)]
     public ChannelMessage ChannelMessage { get; set; }
 #pragma warning restore CS8618
 
+    [ForeignKey(nameof(Channel))]
     public Guid ChannelMessageId { get; set; }
 
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+    [Column(TypeName = "timestamp")]
     public DateTime CreatedAt { get; set; }
 
+    [DeleteBehavior(DeleteBehavior.SetNull)]
     public User? Mentioned { get; set; }
 
+    [ForeignKey(nameof(Mentioned))]
     public Guid? MentionedId { get; set; }
 
 #pragma warning disable CS8618
-    public User? Mentioner { get; set; }
+    [DeleteBehavior(DeleteBehavior.Cascade)]
+    public User Mentioner { get; set; }
 #pragma warning restore CS8618
 
-    public Guid? MentionerId { get; set; }
+    [ForeignKey(nameof(Mentioner))]
+    public Guid MentionerId { get; set; }
 }

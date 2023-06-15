@@ -7,6 +7,8 @@ using Microsoft.AspNetCore.Identity;
 namespace PersistenceService.Models;
 
 [Index(nameof(Deleted))]
+[Index(nameof(NormalizedEmail))]
+[Index(nameof(NormalizedUserName))]
 public class User : IdentityUser
 {
 #pragma warning disable CS8618, CS0114
@@ -14,12 +16,15 @@ public class User : IdentityUser
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public Guid Id { get; set; }
 
+    [DeleteBehavior(DeleteBehavior.SetNull)]
     public File? Avatar { get; set; }
 #pragma warning restore CS8618
 
+    [ForeignKey(nameof(Avatar))]
     public Guid? AvatarId { get; set; }
 
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+    [Column(TypeName = "timestamp")]
     public DateTime CreatedAt { get; set; }
 
     [DefaultValue(false)]
@@ -51,10 +56,13 @@ public class User : IdentityUser
     public string OnlineStatus { get; set; }
 #pragma warning restore CS8618
 
+    [Column(TypeName = "timestamp")]
     public DateTime? OnlineStatusUntil { get; set; }
 
+    [DeleteBehavior(DeleteBehavior.SetNull)]
     public Theme? Theme { get; set; }
 
+    [ForeignKey(nameof(Theme))]
     public Guid? ThemeId { get; set; }
 
 #pragma warning disable CS8618

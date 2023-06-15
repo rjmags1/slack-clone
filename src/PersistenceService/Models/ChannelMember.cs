@@ -15,22 +15,27 @@ public class ChannelMember
     public bool Admin { get; set; }
 
 #pragma warning disable CS8618
+    [DeleteBehavior(DeleteBehavior.Cascade)]
     public Channel Channel { get; set; }
 #pragma warning restore CS8618
 
+    [ForeignKey(nameof(Channel))]
     public Guid ChannelId { get; set; }
 
     [DefaultValue(true)]
     public bool EnableNotifications { get; set; }
 
+    [Column(TypeName = "timestamp")]
     public DateTime? LastViewedAt { get; set; }
 
     [DefaultValue(false)]
     public bool Starred { get; set; }
 
 #pragma warning disable CS8618
+    [DeleteBehavior(DeleteBehavior.Cascade)]
     public User User { get; set; }
 #pragma warning restore CS8618
 
+    [ForeignKey(nameof(User))]
     public Guid UserId { get; set; }
 }

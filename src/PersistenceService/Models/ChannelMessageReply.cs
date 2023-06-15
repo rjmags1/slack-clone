@@ -14,28 +14,38 @@ public class ChannelMessageReply
     public Guid Id { get; set; }
 
 #pragma warning disable CS8618
+    [DeleteBehavior(DeleteBehavior.Cascade)]
     public ChannelMessage ChannelMessage { get; set; }
 #pragma warning restore CS8618
 
+    [ForeignKey(nameof(ChannelMessage))]
     public Guid ChannelMessageId { get; set; }
 
+    [DeleteBehavior(DeleteBehavior.SetNull)]
     public ChannelMessage? MessageRepliedTo { get; set; }
 
+    [ForeignKey(nameof(MessageRepliedTo))]
     public Guid? MessageRepliedToId { get; set; }
 
+    [DeleteBehavior(DeleteBehavior.SetNull)]
     public User? RepliedTo { get; set; }
 
+    [ForeignKey(nameof(RepliedTo))]
     public Guid? RepliedToId { get; set; }
 
 #pragma warning disable CS8618
+    [DeleteBehavior(DeleteBehavior.Cascade)]
     public User Replier { get; set; }
 #pragma warning restore CS8618
 
+    [ForeignKey(nameof(Replier))]
     public Guid ReplierId { get; set; }
 
 #pragma warning disable CS8618
+    [DeleteBehavior(DeleteBehavior.Cascade)]
     public Thread Thread { get; set; }
 #pragma warning restore CS8618
 
+    [ForeignKey(nameof(Thread))]
     public Guid ThreadId { get; set; }
 }

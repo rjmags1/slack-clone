@@ -16,26 +16,34 @@ public class DirectMessageLaterFlag
     public int DirectMessageLaterFlagStatus { get; set; }
 
 #pragma warning disable CS8618
+    [DeleteBehavior(DeleteBehavior.Cascade)]
     public DirectMessageGroup DirectMessageGroup { get; set; }
 #pragma warning restore CS8618
 
+    [ForeignKey(nameof(DirectMessageGroup))]
     public Guid DirectMessageGroupId { get; set; }
 
 #pragma warning disable CS8618
+    [DeleteBehavior(DeleteBehavior.Cascade)]
     public DirectMessage DirectMessage { get; set; }
 #pragma warning restore CS8618
 
+    [ForeignKey(nameof(DirectMessage))]
     public Guid DirectMessageId { get; set; }
 
 #pragma warning disable CS8618
+    [DeleteBehavior(DeleteBehavior.Cascade)]
     public User User { get; set; }
 #pragma warning restore CS8618
 
+    [ForeignKey(nameof(User))]
     public Guid UserId { get; set; }
 
 #pragma warning disable CS8618
+    [DeleteBehavior(DeleteBehavior.Cascade)]
     public Workspace Workspace { get; set; }
 #pragma warning restore CS8618
 
+    [ForeignKey(nameof(Workspace))]
     public Guid WorkspaceId { get; set; }
 }

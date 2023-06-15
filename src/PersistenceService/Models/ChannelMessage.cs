@@ -8,7 +8,6 @@ namespace PersistenceService.Models;
 [Index(nameof(ChannelId))]
 [Index(nameof(Deleted))]
 [Index(nameof(Draft))]
-[Index(nameof(ChannelMessageLaterFlagId))]
 [Index(nameof(SentAt))]
 [Index(nameof(UserId))]
 public class ChannelMessage
@@ -17,14 +16,12 @@ public class ChannelMessage
     public Guid Id { get; set; }
 
 #pragma warning disable CS8618
+    [DeleteBehavior(DeleteBehavior.Cascade)]
     public Channel Channel { get; set; }
 #pragma warning restore CS8618
 
+    [ForeignKey(nameof(Channel))]
     public Guid ChannelId { get; set; }
-
-    public ChannelMessageLaterFlag? ChannelMessageLaterFlag { get; set; }
-
-    public Guid? ChannelMessageLaterFlagId { get; set; }
 
     [MaxLength(2500)]
 #pragma warning disable CS8618
@@ -32,6 +29,7 @@ public class ChannelMessage
 #pragma warning restore CS8618
 
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+    [Column(TypeName = "timestamp")]
     public DateTime CreatedAt { get; set; }
 
     [DefaultValue(false)]
@@ -42,6 +40,7 @@ public class ChannelMessage
 
     public ICollection<File> Files { get; } = new List<File>();
 
+    [Column(TypeName = "timestamp")]
     public DateTime? LastEdit { get; set; }
 
     public ICollection<ChannelMessageMention> Mentions { get; } =
@@ -53,9 +52,20 @@ public class ChannelMessage
     public ICollection<ChannelMessageReply> Replies { get; } =
         new List<ChannelMessageReply>();
 
+    [Column(TypeName = "timestamp")]
     public DateTime? SentAt { get; set; }
 
-    public User? User { get; set; }
+    [DeleteBehavior(DeleteBehavior.Cascade)]
+    public Thread? Thread { get; set; }
 
-    public Guid? UserId { get; set; }
+    [ForeignKey(nameof(Thread))]
+    public Guid? ThreadId { get; set; }
+
+#pragma warning disable CS8618
+    [DeleteBehavior(DeleteBehavior.SetNull)]
+    public User User { get; set; }
+#pragma warning restore CS8618
+
+    [ForeignKey(nameof(User))]
+    public Guid UserId { get; set; }
 }

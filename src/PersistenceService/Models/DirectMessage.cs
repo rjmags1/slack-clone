@@ -8,7 +8,6 @@ namespace PersistenceService.Models;
 [Index(nameof(DirectMessageGroupId))]
 [Index(nameof(Deleted))]
 [Index(nameof(Draft))]
-[Index(nameof(DirectMessageLaterFlagId))]
 [Index(nameof(SentAt))]
 [Index(nameof(UserId))]
 public class DirectMessage
@@ -22,25 +21,25 @@ public class DirectMessage
 #pragma warning restore CS8618
 
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+    [Column(TypeName = "timestamp")]
     public DateTime CreatedAt { get; set; }
 
     [DefaultValue(false)]
     public bool Deleted { get; set; }
 
 #pragma warning disable CS8618
+    [DeleteBehavior(DeleteBehavior.Cascade)]
     public DirectMessageGroup DirectMessageGroup { get; set; }
 #pragma warning restore CS8618
 
+    [ForeignKey(nameof(DirectMessageGroup))]
     public Guid DirectMessageGroupId { get; set; }
 
     [DefaultValue(true)]
     public bool Draft { get; set; }
 
+    [Column(TypeName = "timestamp")]
     public DateTime? LastEdit { get; set; }
-
-    public DirectMessageLaterFlag? DirectMessageLaterFlag { get; set; }
-
-    public Guid? DirectMessageLaterFlagId { get; set; }
 
     public ICollection<File> Files { get; } = new List<File>();
 
@@ -53,11 +52,14 @@ public class DirectMessage
     public ICollection<DirectMessageReply> Replies { get; } =
         new List<DirectMessageReply>();
 
+    [Column(TypeName = "timestamp")]
     public DateTime? SentAt { get; set; }
 
 #pragma warning disable CS8618
+    [DeleteBehavior(DeleteBehavior.Cascade)]
     public User User { get; set; }
 #pragma warning restore CS8618
 
+    [ForeignKey(nameof(User))]
     public Guid UserId { get; set; }
 }

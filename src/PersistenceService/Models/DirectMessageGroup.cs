@@ -12,6 +12,7 @@ public class DirectMessageGroup
     public Guid Id { get; set; }
 
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+    [Column(TypeName = "timestamp")]
     public DateTime CreatedAt { get; set; }
 
     public ICollection<DirectMessageGroupMember> DirectMessageGroupMembers { get; } =
@@ -26,8 +27,10 @@ public class DirectMessageGroup
     public int Size { get; set; }
 
 #pragma warning disable CS8618
+    [DeleteBehavior(DeleteBehavior.Cascade)]
     public Workspace Workspace { get; set; }
 #pragma warning restore CS8618
 
+    [ForeignKey(nameof(Workspace))]
     public Guid WorkspaceId { get; set; }
 }
