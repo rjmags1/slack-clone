@@ -28,11 +28,13 @@ public class ChannelMessageMention
     [Column(TypeName = "timestamp")]
     public DateTime CreatedAt { get; set; }
 
-    [DeleteBehavior(DeleteBehavior.SetNull)]
-    public User? Mentioned { get; set; }
+#pragma warning disable CS8618
+    [DeleteBehavior(DeleteBehavior.Cascade)]
+    public User Mentioned { get; set; }
+#pragma warning restore CS8618
 
     [ForeignKey(nameof(Mentioned))]
-    public Guid? MentionedId { get; set; }
+    public Guid MentionedId { get; set; }
 
 #pragma warning disable CS8618
     [DeleteBehavior(DeleteBehavior.Cascade)]

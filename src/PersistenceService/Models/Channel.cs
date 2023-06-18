@@ -28,13 +28,16 @@ public class Channel
     [Column(TypeName = "timestamp")]
     public DateTime CreatedAt { get; set; }
 
-    [DeleteBehavior(DeleteBehavior.SetNull)]
-    public User? CreatedBy { get; set; }
+#pragma warning disable CS8618
+    [DeleteBehavior(DeleteBehavior.Cascade)]
+    public User CreatedBy { get; set; }
 
     [ForeignKey(nameof(CreatedBy))]
-    public Guid? CreatedById { get; set; }
+    public Guid CreatedById { get; set; }
 
-#pragma warning disable CS8618
+    [ConcurrencyCheck]
+    public byte[] ConcurrencyStamp { get; set; }
+
     [DefaultValue("")]
     [MaxLength(120)]
     public string Description { get; set; }

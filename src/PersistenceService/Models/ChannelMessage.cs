@@ -62,7 +62,7 @@ public class ChannelMessage
     public Guid? ThreadId { get; set; }
 
 #pragma warning disable CS8618
-    [DeleteBehavior(DeleteBehavior.SetNull)]
+    [DeleteBehavior(DeleteBehavior.Cascade)]
     public User User { get; set; }
 #pragma warning restore CS8618
 

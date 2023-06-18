@@ -30,12 +30,12 @@ public class DirectMessageMention
     public Guid DirectMessageId { get; set; }
 
 #pragma warning disable CS8618
-    [DeleteBehavior(DeleteBehavior.SetNull)]
-    public User? Mentioned { get; set; }
+    [DeleteBehavior(DeleteBehavior.Cascade)]
+    public User Mentioned { get; set; }
 #pragma warning restore CS8618
 
     [ForeignKey(nameof(Mentioned))]
-    public Guid? MentionedId { get; set; }
+    public Guid MentionedId { get; set; }
 
 #pragma warning disable CS8618
     [DeleteBehavior(DeleteBehavior.Cascade)]

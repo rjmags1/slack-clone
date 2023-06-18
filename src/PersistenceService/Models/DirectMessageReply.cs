@@ -20,11 +20,13 @@ public class DirectMessageReply
     [ForeignKey(nameof(DirectMessage))]
     public Guid DirectMessageId { get; set; }
 
-    [DeleteBehavior(DeleteBehavior.SetNull)]
-    public User? RepliedTo { get; set; }
+#pragma warning disable CS8618
+    [DeleteBehavior(DeleteBehavior.Cascade)]
+    public User RepliedTo { get; set; }
+#pragma warning restore CS8618
 
     [ForeignKey(nameof(RepliedTo))]
-    public Guid? RepliedToId { get; set; }
+    public Guid RepliedToId { get; set; }
 
 #pragma warning disable CS8618
     [DeleteBehavior(DeleteBehavior.Cascade)]
@@ -34,9 +36,11 @@ public class DirectMessageReply
     [ForeignKey(nameof(Replier))]
     public Guid ReplierId { get; set; }
 
-    [DeleteBehavior(DeleteBehavior.SetNull)]
-    public DirectMessage? MessageRepliedTo { get; set; }
+#pragma warning disable CS8618
+    [DeleteBehavior(DeleteBehavior.Cascade)]
+    public DirectMessage MessageRepliedTo { get; set; }
+#pragma warning restore CS8618
 
     [ForeignKey(nameof(MessageRepliedTo))]
-    public Guid? MessageRepliedToId { get; set; }
+    public Guid MessageRepliedToId { get; set; }
 }

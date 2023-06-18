@@ -21,17 +21,21 @@ public class ChannelMessageReply
     [ForeignKey(nameof(ChannelMessage))]
     public Guid ChannelMessageId { get; set; }
 
-    [DeleteBehavior(DeleteBehavior.SetNull)]
-    public ChannelMessage? MessageRepliedTo { get; set; }
+#pragma warning disable CS8618
+    [DeleteBehavior(DeleteBehavior.Cascade)]
+    public ChannelMessage MessageRepliedTo { get; set; }
+#pragma warning restore CS8618
 
     [ForeignKey(nameof(MessageRepliedTo))]
-    public Guid? MessageRepliedToId { get; set; }
+    public Guid MessageRepliedToId { get; set; }
 
-    [DeleteBehavior(DeleteBehavior.SetNull)]
-    public User? RepliedTo { get; set; }
+#pragma warning disable CS8618
+    [DeleteBehavior(DeleteBehavior.Cascade)]
+    public User RepliedTo { get; set; }
+#pragma warning restore CS8618
 
     [ForeignKey(nameof(RepliedTo))]
-    public Guid? RepliedToId { get; set; }
+    public Guid RepliedToId { get; set; }
 
 #pragma warning disable CS8618
     [DeleteBehavior(DeleteBehavior.Cascade)]

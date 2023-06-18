@@ -20,12 +20,12 @@ public class Thread
     public Guid ChannelId { get; set; }
 
 #pragma warning disable CS8618
-    [DeleteBehavior(DeleteBehavior.SetNull)]
+    [DeleteBehavior(DeleteBehavior.Cascade)]
     public ChannelMessage FirstMessage { get; set; }
 #pragma warning restore CS8618
 
     [ForeignKey(nameof(FirstMessage))]
-    public Guid? FirstMessageId { get; set; }
+    public Guid FirstMessageId { get; set; }
 
     public ICollection<ChannelMessage> Messages { get; } =
         new List<ChannelMessage>();
