@@ -277,8 +277,6 @@ Each of the `Store` method implementations will be unit tested to ensure correct
     <li><a href="#db-entity-channel-message-reaction">direct_message_reaction</a></li>
     <li><a href="#db-entity-direct-message-reply">direct_message_reply</a></li>
     <li><a href="#db-entity-file">file</a></li>
-    <li><a href="#db-entity-role">role</a></li>
-    <li><a href="#db-entity-role-claim">role_claim</a></li>
     <li><a href="#db-entity-theme">theme</a></li>
     <li><a href="#db-entity-thread">thread</a></li>
     <li><a href="#db-entity-thread-watch">thread_watch</a></li>
@@ -297,19 +295,18 @@ Each of the `Store` method implementations will be unit tested to ensure correct
 <span><b><a id="db-entity-channel" href="#db-entity-channel">channel</a></b><a href="#database-entities" style="padding-left:7px;font-size:1.2rem;color:grey;">▴</a></span>
 <br>id uuid PRIMARY KEY DEFAULT gen_random_uuid()<br>
 allow_threads boolean DEFAULT true<br>
-avatar_id uuid REFERENCES file (id) DEFAULT 1 ON DELETE SET DEFAULT<br>
+avatar_id uuid REFERENCES file (id) ON DELETE SET NULL<br>
 <a href="#allowed-channel-posters-mask-def">***</a>allowed_channel_posters_mask integer DEFAULT 1<br>
 created_at timestamp DEFAULT now <br>
 created_by uuid REFERENCES user (id) ON DELETE SET NULL<br>
-description varchar(120) NOT NULL<br>
-name varchar(40) NOT NULL<br>
+description varchar(120) DEFAULT ""<br>
+name varchar(40) DEFAULT ""<br>
 num_members integer DEFAULT 1<br>
 private boolean DEFAULT false<br>
-topic varchar(40) NOT NULL<br>
+topic varchar(40) DEFAULT ""<br>
 workspace_id uuid NOT NULL REFERENCES workspace (id) ON DELETE CASCADE<br>
-___UNIQUE__ (name, workspace_id)_<br>
+___UNIQUE__ (workspace_id, name)_<br>
 ___INDEX__ ON private_<br>
-___INDEX__ ON workspace_id_
 
 <span><b><a id="db-entity-channel-invite" href="#db-entity-channel-invite">channel_invite</a></b> <a href="#database-entities" style="padding-left:7px;font-size:1.2rem;color:grey">▴</a></span>
 <br>id uuid PRIMARY KEY DEFAULT gen_random_uuid()<br>
@@ -320,36 +317,34 @@ created_at timestamp DEFAULT now<br>
 user_id uuid NOT NULL REFERENCES user (id) ON DELETE CASCADE<br>
 workspace_id uuid NOT NULL REFERENCES workspace (id) ON DELETE CASCADE<br>
 ___INDEX__ ON created_at_<br>
-___INDEX__ ON status_<br>
+___INDEX__ ON channel_invite_status_<br>
 ___INDEX__ ON (user_id, workspace_id)_<br>
 
 <span><b><a id="db-entity-channel-member" href="#db-entity-channel-member">channel_member</a></b> <a href="#database-entities" style="padding-left:7px;font-size:1.2rem;color:grey;">▴</a></span>
 <br>id uuid PRIMARY KEY DEFAULT gen_random_uuid()<br>
 admin boolean DEFAULT false<br>
 channel_id uuid NOT NULL REFERENCES channel (id) ON DELETE CASCADE<br>
-enable_notifs boolean DEFAULT true<br>
+enable_notifications boolean DEFAULT true<br>
 last_viewed_at timestamp<br>
 starred boolean DEFAULT false<br>
 user_id uuid NOT NULL REFERENCES user (id) ON DELETE CASCADE<br>
 ___UNIQUE__ (channel_id, user_id)_<br>
-___INDEX__ ON channel_id_<br>
 ___INDEX__ ON user_id_<br>
 
 <span><b><a id="db-entity-channel-message" href="#db-entity-channel-message">channel_message</a></b> <a href="#database-entities" style="padding-left:7px;font-size:1.2rem;color:grey;">▴</a></span>
 <br>id uuid PRIMARY KEY DEFAULT gen_random_uuid()<br>
 channel_id uuid NOT NULL REFERENCES channel (id) ON DELETE CASCADE<br>
-content varchar(2000) NOT NULL<br>
+content varchar(2500) NOT NULL<br>
 created_at timestamp DEFAULT now<br>
 deleted boolean DEFAULT false<br>
 draft boolean DEFAULT true<br>
 last_edit timestamp<br>
-later_flag_id uuid REFERENCES channel_message_later_flag (id) ON DELETE SET NULL<br>
 sent_at timestamp<br>
-user_id uuid NOT NULL REFERENCES user (id)<br>
+thread_id uuid REFERENCES thread (id) ON DELETE CASCADE<br>
+user_id uuid NOT NULL REFERENCES user (id) ON DELETE SET NULL<br>
 ___INDEX__ ON channel_id_<br>
 ___INDEX__ ON deleted_<br>
 ___INDEX__ ON draft_<br>
-___INDEX__ ON later_flag_id_<br>
 ___INDEX__ ON sent_at_<br>
 ___INDEX__ ON user_id_<br>
 
@@ -357,7 +352,7 @@ ___INDEX__ ON user_id_<br>
 <br>id uuid PRIMARY KEY DEFAULT gen_random_uuid()<br>
 channel_id uuid NOT NULL REFERENCES channel (id) ON DELETE CASCADE<br>
 <a href="#database-channel-later-flag-status-mask-def">***</a>channel_later_flag_status integer DEFAULT 1<br>
-channel_message_id uuid REFERENCES channel_message (id) ON DELETE CASCADE<br>
+channel_message_id uuid NOT NULL REFERENCES channel_message (id) ON DELETE CASCADE<br>
 user_id uuid NOT NULL REFERENCES user (id) ON DELETE CASCADE<br>
 workspace_id uuid NOT NULL REFERENCES workspace (id) ON DELETE CASCADE<br>
 ___UNIQUE__ (channel_message_id, user_id)_<br>
@@ -369,9 +364,8 @@ channel_message_id uuid NOT NULL REFERENCES channel_message (id) ON DELETE CASCA
 created_at timestamp DEFAULT now<br>
 mentioned_id uuid REFERENCES user (id) ON DELETE SET NULL<br>
 mentioner_id uuid NOT NULL REFERENCES user (id) ON DELETE CASCADE<br>
-___UNIQUE__ (channel_message_id, mentioned_id, mentioner_id)_<br>
+___UNIQUE__ (mentioned_id, channel_message_id, mentioner_id)_<br>
 ___INDEX__ ON created_at_<br>
-___INDEX__ ON mentioned_id_<br>
 
 <span><b><a id="db-entity-channel-message-notification" href="#db-entity-channel-message-notification">channel_message_notification</a></b> <a href="#database-entities" style="padding-left:7px;font-size:1.2rem;color:grey">▴</a></span>
 <br>id uuid PRIMARY KEY DEFAULT gen_random_uuid()<br>
@@ -380,46 +374,42 @@ channel_message_id uuid NOT NULL REFERENCES channel_message (id) ON DELETE CASCA
 created_at timestamp DEFAULT now<br>
 seen boolean DEFAULT false<br>
 user_id uuid NOT NULL REFERENCES user (id) ON DELETE CASCADE<br>
-___UNIQUE__ (channel_message_id, user_id)_<br>
+___UNIQUE__ (user_id, channel_message_id)_<br>
 ___INDEX__ ON created_at_<br>
-___INDEX__ ON user_id_<br>
 
 <span><b><a id="db-entity-channel-message-reaction" href="#db-entity-channel-message-reaction">channel_message_reaction</a></b> <a href="#database-entities" style="padding-left:7px;font-size:1.2rem;color:grey">▴</a></span>
 <br>id uuid PRIMARY KEY DEFAULT gen_random_uuid()<br>
 channel_message_id uuid NOT NULL REFERENCES channel_message (id) ON DELETE CASCADE<br>
 created_at timestamp DEFAULT now<br>
-emoji varchar(1) NOT NULL<br>
+emoji varchar(4) NOT NULL<br>
 user_id uuid NOT NULL REFERENCES user (id) ON DELETE CASCADE<br>
 ___UNIQUE__ (channel_message_id, user_id)_<br>
-___INDEX__ ON channel_message_id_<br>
 ___INDEX__ ON created_at_<br>
 ___INDEX__ ON user_id_<br>
 
 <span><b><a id="db-entity-channel-message-reply" href="#db-entity-channel-message-reply">channel_message_reply</a></b> <a href="#database-entities" style="padding-left:7px;font-size:1.2rem;color:grey">▴</a></span>
 <br>id uuid PRIMARY KEY DEFAULT gen_random_uuid()<br>
-message_id uuid UNIQUE NOT NULL REFERENCES channel_message (id) ON DELETE CASCADE<br>
+channel_message_id uuid UNIQUE NOT NULL REFERENCES channel_message (id) ON DELETE CASCADE<br>
+message_replied_to_id uuid REFERENCES channel_message (id) ON DELETE SET NULL<br>
 replied_to_id uuid REFERENCES user (id) ON DELETE SET NULL<br>
 replier_id uuid NOT NULL REFERENCES user (id) ON DELETE CASCADE<br>
-reply_to_message_id uuid REFERENCES channel_message (id) ON DELETE SET NULL<br>
 thread_id uuid NOT NULL REFERENCES thread (id) ON DELETE CASCADE<br>
 ___INDEX__ ON replied_to_id_<br>
 ___INDEX__ ON thread_id_<br>
 
 <span><b><a id="db-entity-direct-message" href="#db-entity-direct-message">direct_message</a></b> <a href="#database-entities" style="padding-left:7px;font-size:1.2rem;color:grey">▴</a></span>
 <br>id uuid PRIMARY KEY DEFAULT gen_random_uuid()<br>
-content varchar(2000) NOT NULL<br>
+content varchar(2500) NOT NULL<br>
 created_at timestamp DEFAULT now<br>
 deleted boolean DEFAULT false<br>
 direct_message_group_id uuid NOT NULL REFERENCES direct_message_group (id) ON DELETE CASCADE<br>
 draft boolean DEFAULT true<br>
 last_edit timestamp<br>
-later_flag_id uuid REFERENCES direct_message_later_flag (id) ON DELETE SET NULL<br>
 sent_at timestamp<br>
-user_id uuid REFERENCES user (id) ON DELETE SET NULL<br>
+user_id uuid REFERENCES user (id) ON DELETE CASCADE<br>
 ___INDEX__ ON direct_message_group_id_<br>
 ___INDEX__ ON deleted_<br>
 ___INDEX__ ON draft_<br>
-___INDEX__ ON later_flag_id_<br>
 ___INDEX__ ON sent_at_<br>
 ___INDEX__ ON user_id_<br>
 
@@ -428,7 +418,6 @@ ___INDEX__ ON user_id_<br>
 created_at timestamp DEFAULT now<br>
 size integer DEFAULT 2<br>
 workspace_id uuid NOT NULL REFERENCES workspace (id) ON DELETE CASCADE<br>
-___INDEX__ ON last_message_at_<br>
 ___INDEX__ ON workspace_id_<br>
 
 <span><b><a id="db-entity-direct-message-group-member" href="#db-entity-direct-message-group-member">direct_message_group_member</a></b> <a href="#database-entities" style="padding-left:7px;font-size:1.2rem;color:grey">▴</a></span>
@@ -436,9 +425,7 @@ ___INDEX__ ON workspace_id_<br>
 direct_message_group_id uuid NOT NULL REFERENCES direct_message_group (id) ON DELETE CASCADE<br>
 last_viewed_group_messages_at timestamp<br>
 user_id uuid NOT NULL REFERENCES user (id) ON DELETE CASCADE<br>
-___UNIQUE__ (direct_message_group_id, user_id)_<br>
-___INDEX__ ON direct_message_group_id_<br>
-___INDEX__ ON user_id_<br>
+___UNIQUE__ (user_id, direct_message_group_id)_<br>
 
 <span><b><a id="db-entity-direct-message-later-flag" href="#db-entity-direct-message-later-flag">direct_message_later_flag</a></b> <a href="#database-entities" style="padding-left:7px;font-size:1.2rem;color:grey">▴</a></span>
 <br>id uuid PRIMARY KEY DEFAULT gen_random_uuid()<br>
@@ -456,9 +443,8 @@ created_at timestamp DEFAULT now<br>
 direct_message_id uuid NOT NULL REFERENCES direct_message (id) ON DELETE CASCADE<br>
 mentioned_id uuid REFERENCES user (id) ON DELETE SET NULL<br>
 mentioner_id uuid NOT NULL REFERENCES user (id) ON DELETE CASCADE<br>
-___UNIQUE__ (direct_message_id, mentioned_id, mentioner_id)_<br>
+___UNIQUE__ (mentioned_id, direct_message_id, mentioner_id)_<br>
 ___INDEX__ ON created_at_<br>
-___INDEX__ ON mentioned_id_<br>
 
 <span><b><a id="db-entity-direct-message-notification" href="#db-entity-direct-message-notification">direct_message_notification</a></b> <a href="#database-entities" style="padding-left:7px;font-size:1.2rem;color:grey">▴</a></span>
 <br>id uuid PRIMARY KEY DEFAULT gen_random_uuid()<br>
@@ -467,40 +453,41 @@ direct_message_id uuid NOT NULL REFERENCES direct_message (id) ON DELETE CASCADE
 <a href="#database-direct-message-notif-type-mask-def">***</a>direct_message_notif_type integer NOT NULL<br>
 seen boolean DEFAULT false<br>
 user_id uuid NOT NULL REFERENCES user (id) ON DELETE CASCADE<br>
-___UNIQUE__ (direct_message_id, user_id)_<br>
+___UNIQUE__ (user_id, direct_message_id)_<br>
 ___INDEX__ ON created_at_<br>
-___INDEX__ ON user_id_<br>
 
 <span><b><a id="db-entity-direct-message-reaction" href="#db-entity-direct-message-reaction">direct_message_reaction</a></b> <a href="#database-entities" style="padding-left:7px;font-size:1.2rem;color:grey">▴</a></span>
 <br>id uuid PRIMARY KEY DEFAULT gen_random_uuid()<br>
 created_at timestamp DEFAULT now<br>
 direct_message_id uuid NOT NULL REFERENCES channel_message (id) ON DELETE CASCADE<br>
-emoji varchar(1) NOT NULL<br>
+emoji varchar(4) NOT NULL<br>
 user_id uuid NOT NULL REFERENCES user (id) ON DELETE CASCADE<br>
 ___UNIQUE__ (direct_message_id, user_id)_<br>
 ___INDEX__ ON created_at_<br>
-___INDEX__ ON direct_message_id_<br>
 ___INDEX__ ON user_id_<br>
 
 <span><b><a id="db-entity-direct-message-reply" href="#db-entity-direct-message-reply">direct_message_reply</a></b> <a href="#database-entities" style="padding-left:7px;font-size:1.2rem;color:grey">▴</a></span>
 <br>id uuid PRIMARY KEY DEFAULT gen_random_uuid()<br>
-message_id uuid UNIQUE NOT NULL REFERENCES direct_message (id) ON DELETE CASCADE<br>
+direct_message_id uuid UNIQUE NOT NULL REFERENCES direct_message (id) ON DELETE CASCADE<br>
 replied_to_id uuid REFERENCES user (id) ON DELETE SET NULL<br>
 replier_id uuid NOT NULL REFERENCES user (id) ON DELETE CASCADE<br>
-reply_to_message_id uuid REFERENCES channel_message (id) ON DELETE SET NULL<br>
-thread_id uuid NOT NULL REFERENCES thread (id) ON DELETE CASCADE<br>
+message_replied_to_id uuid REFERENCES channel_message (id) ON DELETE SET NULL<br>
 ___INDEX__ ON replied_to_id_<br>
-___INDEX__ ON thread_id_<br>
 
 <span><b><a id="db-entity-file" href="#db-entity-file">file</a></b> <a href="#database-entities" style="padding-left:7px;font-size:1.2rem;color:grey">▴</a></span>
 <br>id uuid PRIMARY KEY DEFAULT gen_random_uuid()<br>
 name varchar(80) NOT NULL<br>
 store_key varchar(256) NOT NULL<br>
 uploaded_at timestamp DEFAULT now<br>
-direct_message_id uuid REFERENCES direct_message (id)<br>
-channel_message_id uuid REFERENCES channel_message (id)<br>
+direct_message_id uuid REFERENCES direct_message (id) ON DELETE CASCADE<br>
+direct_message_group_id uuid REFERENCES direct_message_group (id) ON DELETE CASCADE <br>
+channel_message_id uuid REFERENCES channel_message (id) ON DELETE CASCADE<br>
+channel uuid REFERENCES channel (id) ON DELETE CASCADE<br>
 ___INDEX__ ON uploaded_at_<br>
-___INDEX__ ON user_id_<br>
+___INDEX__ ON direct_message_id_<br>
+___INDEX__ ON direct_message_group_id_<br>
+___INDEX__ ON channel_message_id_<br>
+___INDEX__ ON channel_id_<br>
 
 <span><b><a id="db-entity-theme" href="#db-entity-theme">theme</a></b> <a href="#database-entities" style="padding-left:7px;font-size:1.2rem;color:grey">▴</a></span>
 <br>id uuid PRIMARY KEY DEFAULT gen_random_uuid()<br>
@@ -516,19 +503,20 @@ ___INDEX__ ON first_message_id_<br>
 <span><b><a id="db-entity-thread-watch" href="#db-entity-thread-watch">thread_watch</a></b> <a href="#database-entities" style="padding-left:7px;font-size:1.2rem;color:grey">▴</a></span>
 <br>thread_id uuid NOT NULL REFERENCES thread ON DELETE CASCADE<br>
 user_id uuid NOT NULL REFERENCES user ON DELETE CASCADE<br>
-___PRIMARY KEY__ (thread_id, user_id)_<br>
+___PRIMARY KEY__ (user_id, thread_id)_<br>
+___INDEX__ ON thread_id_<br>
 
 <span><b><a id="db-entity-user" href="#db-entity-user">user</a></b> <a href="#database-entities" style="padding-left:7px;font-size:1.2rem;color:grey">▴</a></span>
 <br>id uuid PRIMARY KEY DEFAULT gen_random_uuid()<br>
 access_failed_count integer NOT NULL<br>
-avatar_id uuid REFERENCES file (id) DEFAULT 1<br>
+avatar_id uuid REFERENCES file (id) ON DELETE SET NULL<br>
 concurrency_stamp TEXT<br>
 created_at timestamp DEFAULT now<br>
 deleted boolean DEFAULT false<br>
 email varchar(320) NOT NULL UNIQUE<br>
 email_confirmed boolean DEFAULT false<br>
-first_name varchar(20)<br>
-last_name varchar(50)<br>
+first_name varchar(20) NOT NULL<br>
+last_name varchar(50) NOT NULL<br>
 lockout_enabled boolean DEFAULT false<br>
 lockout_end timestamp<br>
 <a href="#database-user-notif-pref-mask-def">***</a>user_notif_pref_mask integer DEFAULT 0<br>
@@ -574,7 +562,7 @@ ___PRIMARY KEY__ (user_id, login_provider, name)_<br>
 
 <span><b><a id="db-entity-workspace" href="#db-entity-workspace">workspace</a></b> <a href="#database-entities" style="padding-left:7px;font-size:1.2rem;color:grey">▴</a></span>
 <br>id uuid PRIMARY KEY DEFAULT gen_random_uuid()<br>
-avatar_id uuid REFERENCES file (id) DEFAULT 1 ON DELETE SET DEFAULT<br>
+avatar_id uuid REFERENCES file (id) ON DELETE SET NULL<br>
 created_at timestamp DEFAULT now<br>
 description varchar(120) NOT NULL<br>
 name varchar(80) NOT NULL<br>
@@ -585,7 +573,6 @@ num_members integer DEFAULT 1<br>
 <a href="#database-workspace-admin-permissions-mask-def">***</a>workspace_admin_permissions_mask integer DEFAULT 1<br>
 workspace_id uuid NOT NULL REFERENCES workspace ON DELETE CASCADE<br>
 ___PRIMARY KEY__ (admin_id, workspace_id)_<br>
-___INDEX__ ON admin_id_<br>
 
 <span><b><a id="db-entity-workspace-invite" href="#db-entity-workspace-invite">workspace_invite</a></b> <a href="#database-entities" style="padding-left:7px;font-size:1.2rem;color:grey">▴</a></span>
 <br>id uuid PRIMARY KEY DEFAULT gen_random_uuid()<br>
@@ -595,21 +582,21 @@ user_id uuid NOT NULL REFERENCES user (id) ON DELETE CASCADE<br>
 workspace_id uuid NOT NULL REFERENCES workspace (id) ON DELETE CASCADE<br>
 <a href="#database-workspace-invite-status-mask-def">***</a>workspace_invite_status integer DEFAULT 1<br>
 ___INDEX__ ON created_at_<br>
-___INDEX__ ON status_<br>
+___INDEX__ ON workspace_invite_status_<br>
 ___INDEX__ ON user_id_<br>
 
 <span><b><a id="db-entity-workspace-member" href="#db-entity-workspace-member">workspace_member</a></b> <a href="#database-entities" style="padding-left:7px;font-size:1.2rem;color:grey">▴</a></span>
 <br>id uuid PRIMARY KEY DEFAULT gen_random_uuid()<br>
 admin boolean DEFAULT false<br>
-avatar_id uuid REFERENCES file (id) DEFAULT 1 ON DELETE SET DEFAULT<br>
+avatar_id uuid REFERENCES file (id) ON DELETE SET NULL<br>
 joined_at timestamp DEFAULT now<br>
 notif_allow_time_start time<br>
 notif_allow_time_end time<br>
 notif_sound integer DEFAULT 0<br>
-online_status varchar(20) DEFAULT "online"<br>
+online_status varchar(20) DEFAULT "offline"<br>
 online_status_until timestamp<br>
 owner boolean DEFAULT false<br>
-theme uuid ON DELETE SET NULL<br>
+theme_id uuid REFERENCES theme (id) ON DELETE SET NULL<br>
 title varchar(80)<br>
 user_id uuid NOT NULL REFERENCES user (id) ON DELETE CASCADE<br>
 workspace_id uuid NOT NULL REFERENCES workspace (id) ON DELETE CASCADE<br>
@@ -620,7 +607,7 @@ ___INDEX__ ON (workspace_id, user_id)_<br>
 <span><b><a id="db-entity-workspace-search" href="#db-entity-workspace-search">workspace_search</a></b> <a href="#database-entities" style="padding-left:7px;font-size:1.2rem;color:grey">▴</a></span>
 <br>id uuid PRIMARY KEY DEFAULT gen_random_uuid()<br>
 created_at timestamp DEFAULT now<br>
-query varchar(80)<br>
+query varchar(80) NOT NULL<br>
 user_id uuid NOT NULL REFERENCES user (id) ON DELETE CASCADE<br>
 workspace_id uuid NOT NULL REFERENCES workspace (id) ON DELETE CASCADE<br>
 ___INDEX__ ON created_at_<br>
@@ -2332,3 +2319,4 @@ Github/git will be used for version control, and all tests will be run against a
   - Add my entities to the model in addition to ones provided by Duende IdentityServer
   - Python script that reads the table structure from the database and based on that is able to insert test data
   - Persistence Service as its own project for entity method calls?
+- Replace Duende TestUsers with database data

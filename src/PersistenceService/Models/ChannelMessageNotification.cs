@@ -4,31 +4,35 @@ using Microsoft.EntityFrameworkCore;
 
 namespace PersistenceService.Models;
 
-[Index(nameof(ChannelMessageId), nameof(UserId), IsUnique = true)]
+[Index(nameof(UserId), nameof(ChannelMessageId), IsUnique = true)]
 [Index(nameof(CreatedAt))]
-[Index(nameof(UserId))]
 public class ChannelMessageNotification
 {
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public Guid Id { get; set; }
 
 #pragma warning disable CS8618
+    [DeleteBehavior(DeleteBehavior.Cascade)]
     public ChannelMessage ChannelMessage { get; set; }
 #pragma warning restore CS8618
 
+    [ForeignKey(nameof(ChannelMessage))]
     public Guid ChannelMessageId { get; set; }
 
     public int ChannelMessageNotificationType { get; set; }
 
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+    [Column(TypeName = "timestamp")]
     public DateTime CreatedAt { get; set; }
 
     [DefaultValue(false)]
     public bool Seen { get; set; }
 
 #pragma warning disable CS8618
+    [DeleteBehavior(DeleteBehavior.Cascade)]
     public User User { get; set; }
 #pragma warning restore CS8618
 
+    [ForeignKey(nameof(User))]
     public Guid UserId { get; set; }
 }

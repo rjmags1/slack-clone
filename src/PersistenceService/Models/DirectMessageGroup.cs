@@ -11,15 +11,31 @@ public class DirectMessageGroup
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public Guid Id { get; set; }
 
+#pragma warning disable CS8618
+    [ConcurrencyCheck]
+    public byte[] ConcurrencyStamp { get; set; }
+#pragma warning restore CS8618
+
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+    [Column(TypeName = "timestamp")]
     public DateTime CreatedAt { get; set; }
+
+    public ICollection<DirectMessageGroupMember> DirectMessageGroupMembers { get; } =
+        new List<DirectMessageGroupMember>();
+
+    public ICollection<DirectMessage> DirectMessages { get; } =
+        new List<DirectMessage>();
+
+    public ICollection<File> Files { get; } = new List<File>();
 
     [DefaultValue(2)]
     public int Size { get; set; }
 
 #pragma warning disable CS8618
+    [DeleteBehavior(DeleteBehavior.Cascade)]
     public Workspace Workspace { get; set; }
 #pragma warning restore CS8618
 
+    [ForeignKey(nameof(Workspace))]
     public Guid WorkspaceId { get; set; }
 }
