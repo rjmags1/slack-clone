@@ -80,7 +80,7 @@ namespace PersistenceService.Migrations
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     ChannelMessageId = table.Column<Guid>(type: "uuid", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "timestamp", nullable: false),
-                    MentionedId = table.Column<Guid>(type: "uuid", nullable: true),
+                    MentionedId = table.Column<Guid>(type: "uuid", nullable: false),
                     MentionerId = table.Column<Guid>(type: "uuid", nullable: false)
                 },
                 constraints: table =>
@@ -125,8 +125,8 @@ namespace PersistenceService.Migrations
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     ChannelMessageId = table.Column<Guid>(type: "uuid", nullable: false),
-                    MessageRepliedToId = table.Column<Guid>(type: "uuid", nullable: true),
-                    RepliedToId = table.Column<Guid>(type: "uuid", nullable: true),
+                    MessageRepliedToId = table.Column<Guid>(type: "uuid", nullable: false),
+                    RepliedToId = table.Column<Guid>(type: "uuid", nullable: false),
                     ReplierId = table.Column<Guid>(type: "uuid", nullable: false),
                     ThreadId = table.Column<Guid>(type: "uuid", nullable: false)
                 },
@@ -142,6 +142,7 @@ namespace PersistenceService.Migrations
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     ChannelId = table.Column<Guid>(type: "uuid", nullable: false),
                     Content = table.Column<string>(type: "character varying(2500)", maxLength: 2500, nullable: false),
+                    ConcurrencyStamp = table.Column<byte[]>(type: "bytea", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "timestamp", nullable: false),
                     Deleted = table.Column<bool>(type: "boolean", nullable: false),
                     Draft = table.Column<bool>(type: "boolean", nullable: false),
@@ -164,7 +165,8 @@ namespace PersistenceService.Migrations
                     AvatarId = table.Column<Guid>(type: "uuid", nullable: true),
                     AllowedChannelPostersMask = table.Column<int>(type: "integer", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "timestamp", nullable: false),
-                    CreatedById = table.Column<Guid>(type: "uuid", nullable: true),
+                    CreatedById = table.Column<Guid>(type: "uuid", nullable: false),
+                    ConcurrencyStamp = table.Column<byte[]>(type: "bytea", nullable: false),
                     Description = table.Column<string>(type: "character varying(120)", maxLength: 120, nullable: false),
                     Name = table.Column<string>(type: "character varying(40)", maxLength: 40, nullable: false),
                     NumMembers = table.Column<int>(type: "integer", nullable: false),
@@ -196,6 +198,7 @@ namespace PersistenceService.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    ConcurrencyStamp = table.Column<byte[]>(type: "bytea", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "timestamp", nullable: false),
                     Size = table.Column<int>(type: "integer", nullable: false),
                     WorkspaceId = table.Column<Guid>(type: "uuid", nullable: false)
@@ -234,7 +237,7 @@ namespace PersistenceService.Migrations
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "timestamp", nullable: false),
                     DirectMessageId = table.Column<Guid>(type: "uuid", nullable: false),
-                    MentionedId = table.Column<Guid>(type: "uuid", nullable: true),
+                    MentionedId = table.Column<Guid>(type: "uuid", nullable: false),
                     MentionerId = table.Column<Guid>(type: "uuid", nullable: false)
                 },
                 constraints: table =>
@@ -279,9 +282,9 @@ namespace PersistenceService.Migrations
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     DirectMessageId = table.Column<Guid>(type: "uuid", nullable: false),
-                    RepliedToId = table.Column<Guid>(type: "uuid", nullable: true),
+                    RepliedToId = table.Column<Guid>(type: "uuid", nullable: false),
                     ReplierId = table.Column<Guid>(type: "uuid", nullable: false),
-                    MessageRepliedToId = table.Column<Guid>(type: "uuid", nullable: true)
+                    MessageRepliedToId = table.Column<Guid>(type: "uuid", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -293,12 +296,14 @@ namespace PersistenceService.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    ConcurrencyStamp = table.Column<byte[]>(type: "bytea", nullable: false),
                     Content = table.Column<string>(type: "character varying(2500)", maxLength: 2500, nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "timestamp", nullable: false),
                     Deleted = table.Column<bool>(type: "boolean", nullable: false),
                     DirectMessageGroupId = table.Column<Guid>(type: "uuid", nullable: false),
                     Draft = table.Column<bool>(type: "boolean", nullable: false),
                     LastEdit = table.Column<DateTime>(type: "timestamp", nullable: true),
+                    ReplyToId = table.Column<Guid>(type: "uuid", nullable: false),
                     SentAt = table.Column<DateTime>(type: "timestamp", nullable: true),
                     UserId = table.Column<Guid>(type: "uuid", nullable: false)
                 },
@@ -309,6 +314,12 @@ namespace PersistenceService.Migrations
                         name: "FK_DirectMessages_DirectMessageGroups_DirectMessageGroupId",
                         column: x => x.DirectMessageGroupId,
                         principalTable: "DirectMessageGroups",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_DirectMessages_DirectMessages_ReplyToId",
+                        column: x => x.ReplyToId,
+                        principalTable: "DirectMessages",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -373,16 +384,16 @@ namespace PersistenceService.Migrations
                     OnlineStatus = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
                     OnlineStatusUntil = table.Column<DateTime>(type: "timestamp", nullable: true),
                     ThemeId = table.Column<Guid>(type: "uuid", nullable: true),
-                    Timezone = table.Column<string>(type: "text", nullable: false),
-                    UserName = table.Column<string>(type: "text", nullable: true),
-                    NormalizedUserName = table.Column<string>(type: "text", nullable: true),
-                    Email = table.Column<string>(type: "text", nullable: true),
-                    NormalizedEmail = table.Column<string>(type: "text", nullable: true),
+                    Timezone = table.Column<string>(type: "character varying(40)", maxLength: 40, nullable: false),
+                    UserName = table.Column<string>(type: "character varying(80)", maxLength: 80, nullable: false),
+                    NormalizedUserName = table.Column<string>(type: "character varying(80)", maxLength: 80, nullable: false),
+                    Email = table.Column<string>(type: "character varying(320)", maxLength: 320, nullable: false),
+                    NormalizedEmail = table.Column<string>(type: "character varying(320)", maxLength: 320, nullable: false),
+                    PasswordHash = table.Column<string>(type: "character varying(128)", maxLength: 128, nullable: false),
+                    PhoneNumber = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
+                    ConcurrencyStamp = table.Column<byte[]>(type: "bytea", nullable: false),
+                    SecurityStamp = table.Column<byte[]>(type: "bytea", nullable: false),
                     EmailConfirmed = table.Column<bool>(type: "boolean", nullable: false),
-                    PasswordHash = table.Column<string>(type: "text", nullable: true),
-                    SecurityStamp = table.Column<string>(type: "text", nullable: true),
-                    ConcurrencyStamp = table.Column<string>(type: "text", nullable: true),
-                    PhoneNumber = table.Column<string>(type: "text", nullable: true),
                     PhoneNumberConfirmed = table.Column<bool>(type: "boolean", nullable: false),
                     TwoFactorEnabled = table.Column<bool>(type: "boolean", nullable: false),
                     LockoutEnd = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
@@ -412,6 +423,7 @@ namespace PersistenceService.Migrations
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     AvatarId = table.Column<Guid>(type: "uuid", nullable: true),
+                    ConcurrencyStamp = table.Column<byte[]>(type: "bytea", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "timestamp", nullable: false),
                     Description = table.Column<string>(type: "character varying(120)", maxLength: 120, nullable: false),
                     Name = table.Column<string>(type: "character varying(80)", maxLength: 80, nullable: false),
@@ -434,7 +446,9 @@ namespace PersistenceService.Migrations
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     ChannelId = table.Column<Guid>(type: "uuid", nullable: false),
-                    FirstMessageId = table.Column<Guid>(type: "uuid", nullable: true),
+                    ConcurrencyStamp = table.Column<byte[]>(type: "bytea", nullable: false),
+                    FirstMessageId = table.Column<Guid>(type: "uuid", nullable: false),
+                    NumMessages = table.Column<int>(type: "integer", nullable: false),
                     WorkspaceId = table.Column<Guid>(type: "uuid", nullable: false)
                 },
                 constraints: table =>
@@ -445,7 +459,7 @@ namespace PersistenceService.Migrations
                         column: x => x.FirstMessageId,
                         principalTable: "ChannelMessages",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.SetNull);
+                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_Threads_Channels_ChannelId",
                         column: x => x.ChannelId,
@@ -466,6 +480,7 @@ namespace PersistenceService.Migrations
                 {
                     AdminId = table.Column<Guid>(type: "uuid", nullable: false),
                     WorkspaceId = table.Column<Guid>(type: "uuid", nullable: false),
+                    ConcurrencyStamp = table.Column<byte[]>(type: "bytea", nullable: false),
                     WorkspaceAdminPermissionsMask = table.Column<int>(type: "integer", nullable: false)
                 },
                 constraints: table =>
@@ -935,6 +950,11 @@ namespace PersistenceService.Migrations
                 column: "Draft");
 
             migrationBuilder.CreateIndex(
+                name: "IX_DirectMessages_ReplyToId",
+                table: "DirectMessages",
+                column: "ReplyToId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_DirectMessages_SentAt",
                 table: "DirectMessages",
                 column: "SentAt");
@@ -1191,7 +1211,7 @@ namespace PersistenceService.Migrations
                 column: "MentionedId",
                 principalTable: "Users",
                 principalColumn: "Id",
-                onDelete: ReferentialAction.SetNull);
+                onDelete: ReferentialAction.Cascade);
 
             migrationBuilder.AddForeignKey(
                 name: "FK_ChannelMessageMentions_Users_MentionerId",
@@ -1247,7 +1267,7 @@ namespace PersistenceService.Migrations
                 column: "MessageRepliedToId",
                 principalTable: "ChannelMessages",
                 principalColumn: "Id",
-                onDelete: ReferentialAction.SetNull);
+                onDelete: ReferentialAction.Cascade);
 
             migrationBuilder.AddForeignKey(
                 name: "FK_ChannelMessageReplies_Threads_ThreadId",
@@ -1263,7 +1283,7 @@ namespace PersistenceService.Migrations
                 column: "RepliedToId",
                 principalTable: "Users",
                 principalColumn: "Id",
-                onDelete: ReferentialAction.SetNull);
+                onDelete: ReferentialAction.Cascade);
 
             migrationBuilder.AddForeignKey(
                 name: "FK_ChannelMessageReplies_Users_ReplierId",
@@ -1295,7 +1315,7 @@ namespace PersistenceService.Migrations
                 column: "UserId",
                 principalTable: "Users",
                 principalColumn: "Id",
-                onDelete: ReferentialAction.SetNull);
+                onDelete: ReferentialAction.Cascade);
 
             migrationBuilder.AddForeignKey(
                 name: "FK_Channels_Files_AvatarId",
@@ -1311,7 +1331,7 @@ namespace PersistenceService.Migrations
                 column: "CreatedById",
                 principalTable: "Users",
                 principalColumn: "Id",
-                onDelete: ReferentialAction.SetNull);
+                onDelete: ReferentialAction.Cascade);
 
             migrationBuilder.AddForeignKey(
                 name: "FK_Channels_Workspaces_WorkspaceId",
@@ -1383,7 +1403,7 @@ namespace PersistenceService.Migrations
                 column: "MentionedId",
                 principalTable: "Users",
                 principalColumn: "Id",
-                onDelete: ReferentialAction.SetNull);
+                onDelete: ReferentialAction.Cascade);
 
             migrationBuilder.AddForeignKey(
                 name: "FK_DirectMessageMentions_Users_MentionerId",
@@ -1439,7 +1459,7 @@ namespace PersistenceService.Migrations
                 column: "MessageRepliedToId",
                 principalTable: "DirectMessages",
                 principalColumn: "Id",
-                onDelete: ReferentialAction.SetNull);
+                onDelete: ReferentialAction.Cascade);
 
             migrationBuilder.AddForeignKey(
                 name: "FK_DirectMessageReplies_Users_RepliedToId",
@@ -1447,7 +1467,7 @@ namespace PersistenceService.Migrations
                 column: "RepliedToId",
                 principalTable: "Users",
                 principalColumn: "Id",
-                onDelete: ReferentialAction.SetNull);
+                onDelete: ReferentialAction.Cascade);
 
             migrationBuilder.AddForeignKey(
                 name: "FK_DirectMessageReplies_Users_ReplierId",

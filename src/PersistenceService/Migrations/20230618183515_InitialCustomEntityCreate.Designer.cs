@@ -12,7 +12,7 @@ using PersistenceService.Data.ApplicationDb;
 namespace PersistenceService.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20230615192237_InitialCustomEntityCreate")]
+    [Migration("20230618183515_InitialCustomEntityCreate")]
     partial class InitialCustomEntityCreate
     {
         /// <inheritdoc />
@@ -40,11 +40,16 @@ namespace PersistenceService.Migrations
                     b.Property<Guid?>("AvatarId")
                         .HasColumnType("uuid");
 
+                    b.Property<byte[]>("ConcurrencyStamp")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .HasColumnType("bytea");
+
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp");
 
-                    b.Property<Guid?>("CreatedById")
+                    b.Property<Guid>("CreatedById")
                         .HasColumnType("uuid");
 
                     b.Property<string>("Description")
@@ -170,6 +175,11 @@ namespace PersistenceService.Migrations
                     b.Property<Guid>("ChannelId")
                         .HasColumnType("uuid");
 
+                    b.Property<byte[]>("ConcurrencyStamp")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .HasColumnType("bytea");
+
                     b.Property<string>("Content")
                         .IsRequired()
                         .HasMaxLength(2500)
@@ -262,7 +272,7 @@ namespace PersistenceService.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp");
 
-                    b.Property<Guid?>("MentionedId")
+                    b.Property<Guid>("MentionedId")
                         .HasColumnType("uuid");
 
                     b.Property<Guid>("MentionerId")
@@ -357,10 +367,10 @@ namespace PersistenceService.Migrations
                     b.Property<Guid>("ChannelMessageId")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid?>("MessageRepliedToId")
+                    b.Property<Guid>("MessageRepliedToId")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid?>("RepliedToId")
+                    b.Property<Guid>("RepliedToId")
                         .HasColumnType("uuid");
 
                     b.Property<Guid>("ReplierId")
@@ -391,6 +401,11 @@ namespace PersistenceService.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<byte[]>("ConcurrencyStamp")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .HasColumnType("bytea");
+
                     b.Property<string>("Content")
                         .IsRequired()
                         .HasMaxLength(2500)
@@ -412,6 +427,9 @@ namespace PersistenceService.Migrations
                     b.Property<DateTime?>("LastEdit")
                         .HasColumnType("timestamp");
 
+                    b.Property<Guid>("ReplyToId")
+                        .HasColumnType("uuid");
+
                     b.Property<DateTime?>("SentAt")
                         .HasColumnType("timestamp");
 
@@ -426,6 +444,8 @@ namespace PersistenceService.Migrations
 
                     b.HasIndex("Draft");
 
+                    b.HasIndex("ReplyToId");
+
                     b.HasIndex("SentAt");
 
                     b.HasIndex("UserId");
@@ -438,6 +458,11 @@ namespace PersistenceService.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
+
+                    b.Property<byte[]>("ConcurrencyStamp")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .HasColumnType("bytea");
 
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
@@ -529,7 +554,7 @@ namespace PersistenceService.Migrations
                     b.Property<Guid>("DirectMessageId")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid?>("MentionedId")
+                    b.Property<Guid>("MentionedId")
                         .HasColumnType("uuid");
 
                     b.Property<Guid>("MentionerId")
@@ -624,10 +649,10 @@ namespace PersistenceService.Migrations
                     b.Property<Guid>("DirectMessageId")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid?>("MessageRepliedToId")
+                    b.Property<Guid>("MessageRepliedToId")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid?>("RepliedToId")
+                    b.Property<Guid>("RepliedToId")
                         .HasColumnType("uuid");
 
                     b.Property<Guid>("ReplierId")
@@ -722,8 +747,16 @@ namespace PersistenceService.Migrations
                     b.Property<Guid>("ChannelId")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid?>("FirstMessageId")
+                    b.Property<byte[]>("ConcurrencyStamp")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .HasColumnType("bytea");
+
+                    b.Property<Guid>("FirstMessageId")
                         .HasColumnType("uuid");
+
+                    b.Property<int>("NumMessages")
+                        .HasColumnType("integer");
 
                     b.Property<Guid>("WorkspaceId")
                         .HasColumnType("uuid");
@@ -767,8 +800,10 @@ namespace PersistenceService.Migrations
                     b.Property<Guid?>("AvatarId")
                         .HasColumnType("uuid");
 
-                    b.Property<string>("ConcurrencyStamp")
-                        .HasColumnType("text");
+                    b.Property<byte[]>("ConcurrencyStamp")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .HasColumnType("bytea");
 
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
@@ -778,7 +813,9 @@ namespace PersistenceService.Migrations
                         .HasColumnType("boolean");
 
                     b.Property<string>("Email")
-                        .HasColumnType("text");
+                        .IsRequired()
+                        .HasMaxLength(320)
+                        .HasColumnType("character varying(320)");
 
                     b.Property<bool>("EmailConfirmed")
                         .HasColumnType("boolean");
@@ -800,10 +837,14 @@ namespace PersistenceService.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("NormalizedEmail")
-                        .HasColumnType("text");
+                        .IsRequired()
+                        .HasMaxLength(320)
+                        .HasColumnType("character varying(320)");
 
                     b.Property<string>("NormalizedUserName")
-                        .HasColumnType("text");
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("character varying(80)");
 
                     b.Property<int>("NotificationSound")
                         .HasColumnType("integer");
@@ -826,29 +867,37 @@ namespace PersistenceService.Migrations
                         .HasColumnType("timestamp");
 
                     b.Property<string>("PasswordHash")
-                        .HasColumnType("text");
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
 
                     b.Property<string>("PhoneNumber")
-                        .HasColumnType("text");
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
 
                     b.Property<bool>("PhoneNumberConfirmed")
                         .HasColumnType("boolean");
 
-                    b.Property<string>("SecurityStamp")
-                        .HasColumnType("text");
+                    b.Property<byte[]>("SecurityStamp")
+                        .IsRequired()
+                        .HasColumnType("bytea");
 
                     b.Property<Guid?>("ThemeId")
                         .HasColumnType("uuid");
 
                     b.Property<string>("Timezone")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
 
                     b.Property<bool>("TwoFactorEnabled")
                         .HasColumnType("boolean");
 
                     b.Property<string>("UserName")
-                        .HasColumnType("text");
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("character varying(80)");
 
                     b.Property<int>("UserNotificationsPreferencesMask")
                         .HasColumnType("integer");
@@ -876,6 +925,11 @@ namespace PersistenceService.Migrations
 
                     b.Property<Guid?>("AvatarId")
                         .HasColumnType("uuid");
+
+                    b.Property<byte[]>("ConcurrencyStamp")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .HasColumnType("bytea");
 
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
@@ -908,6 +962,11 @@ namespace PersistenceService.Migrations
 
                     b.Property<Guid>("WorkspaceId")
                         .HasColumnType("uuid");
+
+                    b.Property<byte[]>("ConcurrencyStamp")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .HasColumnType("bytea");
 
                     b.Property<int>("WorkspaceAdminPermissionsMask")
                         .HasColumnType("integer");
@@ -1064,7 +1123,8 @@ namespace PersistenceService.Migrations
                     b.HasOne("PersistenceService.Models.User", "CreatedBy")
                         .WithMany()
                         .HasForeignKey("CreatedById")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("PersistenceService.Models.Workspace", "Workspace")
                         .WithMany()
@@ -1149,7 +1209,7 @@ namespace PersistenceService.Migrations
                     b.HasOne("PersistenceService.Models.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.SetNull)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Channel");
@@ -1205,7 +1265,8 @@ namespace PersistenceService.Migrations
                     b.HasOne("PersistenceService.Models.User", "Mentioned")
                         .WithMany()
                         .HasForeignKey("MentionedId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("PersistenceService.Models.User", "Mentioner")
                         .WithMany()
@@ -1269,12 +1330,14 @@ namespace PersistenceService.Migrations
                     b.HasOne("PersistenceService.Models.ChannelMessage", "MessageRepliedTo")
                         .WithMany()
                         .HasForeignKey("MessageRepliedToId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("PersistenceService.Models.User", "RepliedTo")
                         .WithMany()
                         .HasForeignKey("RepliedToId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("PersistenceService.Models.User", "Replier")
                         .WithMany()
@@ -1307,6 +1370,12 @@ namespace PersistenceService.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("PersistenceService.Models.DirectMessage", "ReplyTo")
+                        .WithMany()
+                        .HasForeignKey("ReplyToId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("PersistenceService.Models.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
@@ -1314,6 +1383,8 @@ namespace PersistenceService.Migrations
                         .IsRequired();
 
                     b.Navigation("DirectMessageGroup");
+
+                    b.Navigation("ReplyTo");
 
                     b.Navigation("User");
                 });
@@ -1394,7 +1465,8 @@ namespace PersistenceService.Migrations
                     b.HasOne("PersistenceService.Models.User", "Mentioned")
                         .WithMany()
                         .HasForeignKey("MentionedId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("PersistenceService.Models.User", "Mentioner")
                         .WithMany()
@@ -1458,12 +1530,14 @@ namespace PersistenceService.Migrations
                     b.HasOne("PersistenceService.Models.DirectMessage", "MessageRepliedTo")
                         .WithMany()
                         .HasForeignKey("MessageRepliedToId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("PersistenceService.Models.User", "RepliedTo")
                         .WithMany()
                         .HasForeignKey("RepliedToId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("PersistenceService.Models.User", "Replier")
                         .WithMany()
@@ -1522,7 +1596,8 @@ namespace PersistenceService.Migrations
                     b.HasOne("PersistenceService.Models.ChannelMessage", "FirstMessage")
                         .WithMany()
                         .HasForeignKey("FirstMessageId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("PersistenceService.Models.Workspace", "Workspace")
                         .WithMany()
