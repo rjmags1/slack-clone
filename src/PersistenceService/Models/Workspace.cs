@@ -16,6 +16,11 @@ public class Workspace
     [ForeignKey(nameof(Avatar))]
     public Guid? AvatarId { get; set; }
 
+#pragma warning disable CS8618
+    [ConcurrencyCheck]
+    public byte[] ConcurrencyStamp { get; set; }
+#pragma warning restore CS8618
+
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     [Column(TypeName = "timestamp")]
     public DateTime CreatedAt { get; set; }

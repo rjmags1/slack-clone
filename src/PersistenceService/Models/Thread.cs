@@ -20,6 +20,9 @@ public class Thread
     public Guid ChannelId { get; set; }
 
 #pragma warning disable CS8618
+    [ConcurrencyCheck]
+    public byte[] ConcurrencyStamp { get; set; }
+
     [DeleteBehavior(DeleteBehavior.Cascade)]
     public ChannelMessage FirstMessage { get; set; }
 #pragma warning restore CS8618
@@ -29,6 +32,9 @@ public class Thread
 
     public ICollection<ChannelMessage> Messages { get; } =
         new List<ChannelMessage>();
+
+    [DefaultValue(2)]
+    public int NumMessages { get; set; }
 
 #pragma warning disable CS8618
     [DeleteBehavior(DeleteBehavior.Cascade)]

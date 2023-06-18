@@ -11,6 +11,11 @@ public class DirectMessageGroup
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public Guid Id { get; set; }
 
+#pragma warning disable CS8618
+    [ConcurrencyCheck]
+    public byte[] ConcurrencyStamp { get; set; }
+#pragma warning restore CS8618
+
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     [Column(TypeName = "timestamp")]
     public DateTime CreatedAt { get; set; }

@@ -16,6 +16,11 @@ public class WorkspaceAdminPermissions
     [ForeignKey(nameof(Admin))]
     public Guid AdminId { get; set; }
 
+#pragma warning disable CS8618
+    [ConcurrencyCheck]
+    public byte[] ConcurrencyStamp { get; set; }
+#pragma warning restore CS8618
+
     [DefaultValue(1)]
     public int WorkspaceAdminPermissionsMask { get; set; }
 

@@ -66,6 +66,30 @@ public class User : IdentityUser
     public Guid? ThemeId { get; set; }
 
 #pragma warning disable CS8618
+    [MaxLength(40)]
     public string Timezone { get; set; }
+
+    [MaxLength(80)]
+    public string UserName { get; set; }
+
+    [MaxLength(80)]
+    public string NormalizedUserName { get; set; }
+
+    [MaxLength(320)]
+    public string Email { get; set; }
+
+    [MaxLength(320)]
+    public string NormalizedEmail { get; set; }
+
+    [MaxLength(128)]
+    public string PasswordHash { get; set; }
+
+    [MaxLength(20)]
+    public string PhoneNumber { get; set; }
+
+    [ConcurrencyCheck]
+    public byte[] ConcurrencyStamp { get; set; }
+
+    public byte[] SecurityStamp { get; set; }
 #pragma warning restore CS8618
 }

@@ -26,6 +26,9 @@ public class ChannelMessage
     [MaxLength(2500)]
 #pragma warning disable CS8618
     public string Content { get; set; }
+
+    [ConcurrencyCheck]
+    public byte[] ConcurrencyStamp { get; set; }
 #pragma warning restore CS8618
 
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]

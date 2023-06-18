@@ -15,8 +15,11 @@ public class DirectMessage
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public Guid Id { get; set; }
 
-    [MaxLength(2500)]
 #pragma warning disable CS8618
+    [ConcurrencyCheck]
+    public byte[] ConcurrencyStamp { get; set; }
+
+    [MaxLength(2500)]
     public string Content { get; set; }
 #pragma warning restore CS8618
 
@@ -51,6 +54,14 @@ public class DirectMessage
 
     public ICollection<DirectMessageReply> Replies { get; } =
         new List<DirectMessageReply>();
+
+#pragma warning disable CS8618
+    [DeleteBehavior(DeleteBehavior.Cascade)]
+    public DirectMessage ReplyTo { get; set; }
+#pragma warning restore CS8618
+
+    [ForeignKey(nameof(ReplyTo))]
+    public Guid ReplyToId { get; set; }
 
     [Column(TypeName = "timestamp")]
     public DateTime? SentAt { get; set; }
