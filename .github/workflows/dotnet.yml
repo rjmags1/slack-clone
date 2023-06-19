@@ -25,7 +25,7 @@ jobs:
           --health-timeout 5s \
           --health-retries 3 \
           --name test-postgres \
-          postgres:latest
+          postgres:15
 
     - name: Wait for Postgres to be ready
       run: |
