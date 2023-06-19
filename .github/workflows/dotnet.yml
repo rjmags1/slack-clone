@@ -18,7 +18,7 @@ jobs:
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: slack_clone_test
         ports:
-          - 5433:5432
+          - 10246:5432
         options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 3
 
     steps:
@@ -27,7 +27,7 @@ jobs:
     - name: Start PostgreSQL Docker container
       run: |
         docker run -d \
-          -p 5433:5432 \
+          -p 10246:5432 \
           -e POSTGRES_USER=postgres \
           -e POSTGRES_PASSWORD=postgres \
           -e POSTGRES_DB=slack_clone_test \
@@ -64,3 +64,8 @@ jobs:
       
     - name: Test
       run: dotnet test --no-build --verbosity normal --configuration Release
+      
+    - name: Cleanup
+      run: |
+        docker stop test-postgres
+        docker rm test-postgres
