@@ -1,6 +1,5 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
-using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using PersistenceService.Models;
 
 namespace PersistenceService.Data.ApplicationDb;
@@ -8,36 +7,38 @@ namespace PersistenceService.Data.ApplicationDb;
 #pragma warning disable CS8618
 public class ApplicationDbContext : DbContext
 {
-    DbSet<Channel> Channels { get; set; }
-    DbSet<ChannelInvite> ChannelInvites { get; set; }
-    DbSet<ChannelMember> ChannelMembers { get; set; }
-    DbSet<ChannelMessage> ChannelMessages { get; set; }
-    DbSet<ChannelMessageLaterFlag> ChannelMessageLaterFlags { get; set; }
-    DbSet<ChannelMessageMention> ChannelMessageMentions { get; set; }
-    DbSet<ChannelMessageNotification> ChannelMessageNotifications { get; set; }
-    DbSet<ChannelMessageReaction> ChannelMessageReactions { get; set; }
-    DbSet<ChannelMessageReply> ChannelMessageReplies { get; set; }
-    DbSet<DirectMessage> DirectMessages { get; set; }
-    DbSet<DirectMessageGroup> DirectMessageGroups { get; set; }
-    DbSet<DirectMessageGroupMember> DirectMessageGroupMembers { get; set; }
-    DbSet<DirectMessageLaterFlag> DirectMessageLaterFlags { get; set; }
-    DbSet<DirectMessageMention> DirectMessageMentions { get; set; }
-    DbSet<DirectMessageNotification> DirectMessageNotifications { get; set; }
-    DbSet<DirectMessageReaction> DirectMessageReactions { get; set; }
-    DbSet<DirectMessageReply> DirectMessageReplies { get; set; }
-    DbSet<Models.File> Files { get; set; }
-    DbSet<Theme> Themes { get; set; }
-    DbSet<Models.Thread> Threads { get; set; }
-    DbSet<ThreadWatch> ThreadWatches { get; set; }
-    DbSet<User> Users { get; set; }
-    DbSet<Workspace> Workspaces { get; set; }
-    DbSet<WorkspaceAdminPermissions> WorkspaceAdminPermissions { get; set; }
-    DbSet<WorkspaceInvite> WorkspaceInvites { get; set; }
-    DbSet<WorkspaceMember> WorkspaceMembers { get; set; }
-    DbSet<WorkspaceSearch> WorkspaceSearches { get; set; }
+    public DbSet<Channel> Channels { get; set; }
+    public DbSet<ChannelInvite> ChannelInvites { get; set; }
+    public DbSet<ChannelMember> ChannelMembers { get; set; }
+    public DbSet<ChannelMessage> ChannelMessages { get; set; }
+    public DbSet<ChannelMessageLaterFlag> ChannelMessageLaterFlags { get; set; }
+    public DbSet<ChannelMessageMention> ChannelMessageMentions { get; set; }
+    public DbSet<ChannelMessageNotification> ChannelMessageNotifications { get; set; }
+    public DbSet<ChannelMessageReaction> ChannelMessageReactions { get; set; }
+    public DbSet<ChannelMessageReply> ChannelMessageReplies { get; set; }
+    public DbSet<DirectMessage> DirectMessages { get; set; }
+    public DbSet<DirectMessageGroup> DirectMessageGroups { get; set; }
+    public DbSet<DirectMessageGroupMember> DirectMessageGroupMembers { get; set; }
+    public DbSet<DirectMessageLaterFlag> DirectMessageLaterFlags { get; set; }
+    public DbSet<DirectMessageMention> DirectMessageMentions { get; set; }
+    public DbSet<DirectMessageNotification> DirectMessageNotifications { get; set; }
+    public DbSet<DirectMessageReaction> DirectMessageReactions { get; set; }
+    public DbSet<DirectMessageReply> DirectMessageReplies { get; set; }
+    public DbSet<Models.File> Files { get; set; }
+    public DbSet<Theme> Themes { get; set; }
+    public DbSet<Models.Thread> Threads { get; set; }
+    public DbSet<ThreadWatch> ThreadWatches { get; set; }
+    public DbSet<User> Users { get; set; }
+    public DbSet<Workspace> Workspaces { get; set; }
+    public DbSet<WorkspaceAdminPermissions> WorkspaceAdminPermissions { get; set; }
+    public DbSet<WorkspaceInvite> WorkspaceInvites { get; set; }
+    public DbSet<WorkspaceMember> WorkspaceMembers { get; set; }
+    public DbSet<WorkspaceSearch> WorkspaceSearches { get; set; }
 
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
         : base(options) { }
+
+    public ApplicationDbContext() { }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -172,7 +173,8 @@ public class ApplicationDbContextFactory
         var optionsBuilder =
             new DbContextOptionsBuilder<ApplicationDbContext>();
         string connectionString =
-            Environment.GetEnvironmentVariable("DB_CONNECTION_STRING") ?? "";
+            Environment.GetEnvironmentVariable("DB_CONNECTION_STRING")
+            ?? "Failed to load DB_CONNECTION_STRING environment variable";
         optionsBuilder.UseNpgsql(connectionString);
         return new ApplicationDbContext(optionsBuilder.Options);
     }
