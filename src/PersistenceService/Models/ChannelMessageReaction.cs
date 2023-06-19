@@ -21,7 +21,6 @@ public class ChannelMessageReaction
     [ForeignKey(nameof(ChannelMessage))]
     public Guid ChannelMessageId { get; set; }
 
-    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     [Column(TypeName = "timestamp")]
     public DateTime CreatedAt { get; set; }
 

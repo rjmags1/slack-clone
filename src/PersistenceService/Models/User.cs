@@ -23,7 +23,6 @@ public class User : IdentityUser
     [ForeignKey(nameof(Avatar))]
     public Guid? AvatarId { get; set; }
 
-    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     [Column(TypeName = "timestamp")]
     public DateTime CreatedAt { get; set; }
 

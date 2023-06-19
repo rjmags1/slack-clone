@@ -16,7 +16,6 @@ public class DirectMessageGroup
     public byte[] ConcurrencyStamp { get; set; }
 #pragma warning restore CS8618
 
-    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     [Column(TypeName = "timestamp")]
     public DateTime CreatedAt { get; set; }
 

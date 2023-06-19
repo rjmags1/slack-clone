@@ -12,6 +12,9 @@ public class DirectMessageLaterFlag
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public Guid Id { get; set; }
 
+    [Column(TypeName = "timestamp")]
+    public DateTime CreatedAt { get; set; }
+
     [DefaultValue(1)]
     public int DirectMessageLaterFlagStatus { get; set; }
 

@@ -30,6 +30,9 @@ public class ChannelMessageLaterFlag
     [ForeignKey(nameof(ChannelMessage))]
     public Guid ChannelMessageId { get; set; }
 
+    [Column(TypeName = "timestamp")]
+    public DateTime CreatedAt { get; set; }
+
 #pragma warning disable CS8618
     [DeleteBehavior(DeleteBehavior.Cascade)]
     public User User { get; set; }

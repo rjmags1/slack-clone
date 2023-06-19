@@ -44,7 +44,8 @@ namespace PersistenceService.Migrations
 
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp");
+                        .HasColumnType("timestamp")
+                        .HasDefaultValueSql("now()");
 
                     b.Property<Guid>("CreatedById")
                         .HasColumnType("uuid");
@@ -104,7 +105,8 @@ namespace PersistenceService.Migrations
 
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp");
+                        .HasColumnType("timestamp")
+                        .HasDefaultValueSql("now()");
 
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid");
@@ -184,7 +186,8 @@ namespace PersistenceService.Migrations
 
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp");
+                        .HasColumnType("timestamp")
+                        .HasDefaultValueSql("now()");
 
                     b.Property<bool>("Deleted")
                         .HasColumnType("boolean");
@@ -236,6 +239,11 @@ namespace PersistenceService.Migrations
                     b.Property<Guid>("ChannelMessageId")
                         .HasColumnType("uuid");
 
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp")
+                        .HasDefaultValueSql("now()");
+
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid");
 
@@ -267,7 +275,8 @@ namespace PersistenceService.Migrations
 
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp");
+                        .HasColumnType("timestamp")
+                        .HasDefaultValueSql("now()");
 
                     b.Property<Guid>("MentionedId")
                         .HasColumnType("uuid");
@@ -303,7 +312,8 @@ namespace PersistenceService.Migrations
 
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp");
+                        .HasColumnType("timestamp")
+                        .HasDefaultValueSql("now()");
 
                     b.Property<bool>("Seen")
                         .HasColumnType("boolean");
@@ -334,7 +344,8 @@ namespace PersistenceService.Migrations
 
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp");
+                        .HasColumnType("timestamp")
+                        .HasDefaultValueSql("now()");
 
                     b.Property<string>("Emoji")
                         .IsRequired()
@@ -410,7 +421,8 @@ namespace PersistenceService.Migrations
 
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp");
+                        .HasColumnType("timestamp")
+                        .HasDefaultValueSql("now()");
 
                     b.Property<bool>("Deleted")
                         .HasColumnType("boolean");
@@ -463,7 +475,8 @@ namespace PersistenceService.Migrations
 
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp");
+                        .HasColumnType("timestamp")
+                        .HasDefaultValueSql("now()");
 
                     b.Property<int>("Size")
                         .HasColumnType("integer");
@@ -509,6 +522,11 @@ namespace PersistenceService.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp")
+                        .HasDefaultValueSql("now()");
+
                     b.Property<Guid>("DirectMessageGroupId")
                         .HasColumnType("uuid");
 
@@ -546,7 +564,8 @@ namespace PersistenceService.Migrations
 
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp");
+                        .HasColumnType("timestamp")
+                        .HasDefaultValueSql("now()");
 
                     b.Property<Guid>("DirectMessageId")
                         .HasColumnType("uuid");
@@ -579,7 +598,8 @@ namespace PersistenceService.Migrations
 
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp");
+                        .HasColumnType("timestamp")
+                        .HasDefaultValueSql("now()");
 
                     b.Property<Guid>("DirectMessageId")
                         .HasColumnType("uuid");
@@ -613,7 +633,8 @@ namespace PersistenceService.Migrations
 
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp");
+                        .HasColumnType("timestamp")
+                        .HasDefaultValueSql("now()");
 
                     b.Property<Guid>("DirectMessageId")
                         .HasColumnType("uuid");
@@ -699,7 +720,8 @@ namespace PersistenceService.Migrations
 
                     b.Property<DateTime>("UploadedAt")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp");
+                        .HasColumnType("timestamp")
+                        .HasDefaultValueSql("now()");
 
                     b.HasKey("Id");
 
@@ -804,7 +826,8 @@ namespace PersistenceService.Migrations
 
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp");
+                        .HasColumnType("timestamp")
+                        .HasDefaultValueSql("now()");
 
                     b.Property<bool>("Deleted")
                         .HasColumnType("boolean");
@@ -930,7 +953,8 @@ namespace PersistenceService.Migrations
 
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp");
+                        .HasColumnType("timestamp")
+                        .HasDefaultValueSql("now()");
 
                     b.Property<string>("Description")
                         .IsRequired()
@@ -986,7 +1010,8 @@ namespace PersistenceService.Migrations
 
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp");
+                        .HasColumnType("timestamp")
+                        .HasDefaultValueSql("now()");
 
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid");
@@ -1026,7 +1051,8 @@ namespace PersistenceService.Migrations
 
                     b.Property<DateTime>("JoinedAt")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp");
+                        .HasColumnType("timestamp")
+                        .HasDefaultValueSql("now()");
 
                     b.Property<int>("NotificationSound")
                         .HasColumnType("integer");
@@ -1086,7 +1112,8 @@ namespace PersistenceService.Migrations
 
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp");
+                        .HasColumnType("timestamp")
+                        .HasDefaultValueSql("now()");
 
                     b.Property<string>("Query")
                         .IsRequired()

@@ -22,7 +22,6 @@ public class WorkspaceMember
     [ForeignKey(nameof(Avatar))]
     public Guid? AvatarId { get; set; }
 
-    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     [Column(TypeName = "timestamp")]
     public DateTime JoinedAt { get; set; }
 

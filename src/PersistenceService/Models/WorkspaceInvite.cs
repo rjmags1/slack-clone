@@ -21,7 +21,6 @@ public class WorkspaceInvite
     [ForeignKey(nameof(Admin))]
     public Guid AdminId { get; set; }
 
-    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     [Column(TypeName = "timestamp")]
     public DateTime CreatedAt { get; set; }
 
