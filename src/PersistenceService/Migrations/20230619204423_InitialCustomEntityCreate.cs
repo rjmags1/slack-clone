@@ -31,7 +31,7 @@ namespace PersistenceService.Migrations
                     AdminId = table.Column<Guid>(type: "uuid", nullable: false),
                     ChannelId = table.Column<Guid>(type: "uuid", nullable: false),
                     ChannelInviteStatus = table.Column<int>(type: "integer", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp", nullable: false, defaultValueSql: "now()"),
                     UserId = table.Column<Guid>(type: "uuid", nullable: false),
                     WorkspaceId = table.Column<Guid>(type: "uuid", nullable: false)
                 },
@@ -65,6 +65,7 @@ namespace PersistenceService.Migrations
                     ChannelId = table.Column<Guid>(type: "uuid", nullable: false),
                     ChannelLaterFlagStatus = table.Column<int>(type: "integer", nullable: false),
                     ChannelMessageId = table.Column<Guid>(type: "uuid", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp", nullable: false, defaultValueSql: "now()"),
                     UserId = table.Column<Guid>(type: "uuid", nullable: false),
                     WorkspaceId = table.Column<Guid>(type: "uuid", nullable: false)
                 },
@@ -79,7 +80,7 @@ namespace PersistenceService.Migrations
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     ChannelMessageId = table.Column<Guid>(type: "uuid", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp", nullable: false, defaultValueSql: "now()"),
                     MentionedId = table.Column<Guid>(type: "uuid", nullable: false),
                     MentionerId = table.Column<Guid>(type: "uuid", nullable: false)
                 },
@@ -95,7 +96,7 @@ namespace PersistenceService.Migrations
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     ChannelMessageId = table.Column<Guid>(type: "uuid", nullable: false),
                     ChannelMessageNotificationType = table.Column<int>(type: "integer", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp", nullable: false, defaultValueSql: "now()"),
                     Seen = table.Column<bool>(type: "boolean", nullable: false),
                     UserId = table.Column<Guid>(type: "uuid", nullable: false)
                 },
@@ -110,7 +111,7 @@ namespace PersistenceService.Migrations
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     ChannelMessageId = table.Column<Guid>(type: "uuid", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp", nullable: false, defaultValueSql: "now()"),
                     Emoji = table.Column<string>(type: "character varying(4)", maxLength: 4, nullable: false),
                     UserId = table.Column<Guid>(type: "uuid", nullable: false)
                 },
@@ -143,7 +144,7 @@ namespace PersistenceService.Migrations
                     ChannelId = table.Column<Guid>(type: "uuid", nullable: false),
                     Content = table.Column<string>(type: "character varying(2500)", maxLength: 2500, nullable: false),
                     ConcurrencyStamp = table.Column<byte[]>(type: "bytea", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp", nullable: false, defaultValueSql: "now()"),
                     Deleted = table.Column<bool>(type: "boolean", nullable: false),
                     Draft = table.Column<bool>(type: "boolean", nullable: false),
                     LastEdit = table.Column<DateTime>(type: "timestamp", nullable: true),
@@ -164,7 +165,7 @@ namespace PersistenceService.Migrations
                     AllowThreads = table.Column<bool>(type: "boolean", nullable: false),
                     AvatarId = table.Column<Guid>(type: "uuid", nullable: true),
                     AllowedChannelPostersMask = table.Column<int>(type: "integer", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp", nullable: false, defaultValueSql: "now()"),
                     CreatedById = table.Column<Guid>(type: "uuid", nullable: false),
                     ConcurrencyStamp = table.Column<byte[]>(type: "bytea", nullable: false),
                     Description = table.Column<string>(type: "character varying(120)", maxLength: 120, nullable: false),
@@ -199,7 +200,7 @@ namespace PersistenceService.Migrations
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     ConcurrencyStamp = table.Column<byte[]>(type: "bytea", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp", nullable: false, defaultValueSql: "now()"),
                     Size = table.Column<int>(type: "integer", nullable: false),
                     WorkspaceId = table.Column<Guid>(type: "uuid", nullable: false)
                 },
@@ -213,6 +214,7 @@ namespace PersistenceService.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp", nullable: false, defaultValueSql: "now()"),
                     DirectMessageLaterFlagStatus = table.Column<int>(type: "integer", nullable: false),
                     DirectMessageGroupId = table.Column<Guid>(type: "uuid", nullable: false),
                     DirectMessageId = table.Column<Guid>(type: "uuid", nullable: false),
@@ -235,7 +237,7 @@ namespace PersistenceService.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp", nullable: false, defaultValueSql: "now()"),
                     DirectMessageId = table.Column<Guid>(type: "uuid", nullable: false),
                     MentionedId = table.Column<Guid>(type: "uuid", nullable: false),
                     MentionerId = table.Column<Guid>(type: "uuid", nullable: false)
@@ -250,7 +252,7 @@ namespace PersistenceService.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp", nullable: false, defaultValueSql: "now()"),
                     DirectMessageId = table.Column<Guid>(type: "uuid", nullable: false),
                     DirectMessageNotificationType = table.Column<int>(type: "integer", nullable: false),
                     Seen = table.Column<bool>(type: "boolean", nullable: false),
@@ -266,7 +268,7 @@ namespace PersistenceService.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp", nullable: false, defaultValueSql: "now()"),
                     DirectMessageId = table.Column<Guid>(type: "uuid", nullable: false),
                     Emoji = table.Column<string>(type: "character varying(4)", maxLength: 4, nullable: false),
                     UserId = table.Column<Guid>(type: "uuid", nullable: false)
@@ -298,7 +300,7 @@ namespace PersistenceService.Migrations
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     ConcurrencyStamp = table.Column<byte[]>(type: "bytea", nullable: false),
                     Content = table.Column<string>(type: "character varying(2500)", maxLength: 2500, nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp", nullable: false, defaultValueSql: "now()"),
                     Deleted = table.Column<bool>(type: "boolean", nullable: false),
                     DirectMessageGroupId = table.Column<Guid>(type: "uuid", nullable: false),
                     Draft = table.Column<bool>(type: "boolean", nullable: false),
@@ -335,7 +337,7 @@ namespace PersistenceService.Migrations
                     DirectMessageGroupId = table.Column<Guid>(type: "uuid", nullable: true),
                     Name = table.Column<string>(type: "character varying(80)", maxLength: 80, nullable: false),
                     StoreKey = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: false),
-                    UploadedAt = table.Column<DateTime>(type: "timestamp", nullable: false)
+                    UploadedAt = table.Column<DateTime>(type: "timestamp", nullable: false, defaultValueSql: "now()")
                 },
                 constraints: table =>
                 {
@@ -372,7 +374,7 @@ namespace PersistenceService.Migrations
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     AvatarId = table.Column<Guid>(type: "uuid", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp", nullable: false, defaultValueSql: "now()"),
                     Deleted = table.Column<bool>(type: "boolean", nullable: false),
                     FirstName = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
                     LastName = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
@@ -424,7 +426,7 @@ namespace PersistenceService.Migrations
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     AvatarId = table.Column<Guid>(type: "uuid", nullable: true),
                     ConcurrencyStamp = table.Column<byte[]>(type: "bytea", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp", nullable: false, defaultValueSql: "now()"),
                     Description = table.Column<string>(type: "character varying(120)", maxLength: 120, nullable: false),
                     Name = table.Column<string>(type: "character varying(80)", maxLength: 80, nullable: false),
                     NumMembers = table.Column<int>(type: "integer", nullable: false)
@@ -506,7 +508,7 @@ namespace PersistenceService.Migrations
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     AdminId = table.Column<Guid>(type: "uuid", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp", nullable: false, defaultValueSql: "now()"),
                     UserId = table.Column<Guid>(type: "uuid", nullable: false),
                     WorkspaceId = table.Column<Guid>(type: "uuid", nullable: false),
                     WorkspaceInviteStatus = table.Column<int>(type: "integer", nullable: false)
@@ -541,7 +543,7 @@ namespace PersistenceService.Migrations
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     Admin = table.Column<bool>(type: "boolean", nullable: false),
                     AvatarId = table.Column<Guid>(type: "uuid", nullable: true),
-                    JoinedAt = table.Column<DateTime>(type: "timestamp", nullable: false),
+                    JoinedAt = table.Column<DateTime>(type: "timestamp", nullable: false, defaultValueSql: "now()"),
                     NotificationsAllowTimeStart = table.Column<TimeOnly>(type: "time without time zone", nullable: true),
                     NotificationsAllTimeEnd = table.Column<TimeOnly>(type: "time without time zone", nullable: true),
                     NotificationSound = table.Column<int>(type: "integer", nullable: false),
@@ -587,7 +589,7 @@ namespace PersistenceService.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp", nullable: false, defaultValueSql: "now()"),
                     Query = table.Column<string>(type: "character varying(80)", maxLength: 80, nullable: false),
                     UserId = table.Column<Guid>(type: "uuid", nullable: false),
                     WorkspaceId = table.Column<Guid>(type: "uuid", nullable: false)

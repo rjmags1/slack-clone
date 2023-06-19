@@ -47,7 +47,6 @@ public class File
     public string StoreKey { get; set; }
 #pragma warning restore CS8618
 
-    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     [Column(TypeName = "timestamp")]
     public DateTime UploadedAt { get; set; }
 }

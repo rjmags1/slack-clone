@@ -24,7 +24,6 @@ public class Channel
     [DefaultValue(1)]
     public int AllowedChannelPostersMask { get; set; }
 
-    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     [Column(TypeName = "timestamp")]
     public DateTime CreatedAt { get; set; }
 

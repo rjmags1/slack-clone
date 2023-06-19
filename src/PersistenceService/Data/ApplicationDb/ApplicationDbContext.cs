@@ -60,6 +60,106 @@ public class ApplicationDbContext : DbContext
             .HasOne(e => e.Thread)
             .WithMany(e => e.Messages)
             .HasForeignKey(e => e.ThreadId);
+
+        modelBuilder
+            .Entity<Channel>()
+            .Property(e => e.CreatedAt)
+            .HasDefaultValueSql("now()");
+
+        modelBuilder
+            .Entity<ChannelInvite>()
+            .Property(e => e.CreatedAt)
+            .HasDefaultValueSql("now()");
+
+        modelBuilder
+            .Entity<ChannelMessage>()
+            .Property(e => e.CreatedAt)
+            .HasDefaultValueSql("now()");
+
+        modelBuilder
+            .Entity<ChannelMessageLaterFlag>()
+            .Property(e => e.CreatedAt)
+            .HasDefaultValueSql("now()");
+
+        modelBuilder
+            .Entity<ChannelMessageMention>()
+            .Property(e => e.CreatedAt)
+            .HasDefaultValueSql("now()");
+
+        modelBuilder
+            .Entity<ChannelMessageNotification>()
+            .Property(e => e.CreatedAt)
+            .HasDefaultValueSql("now()");
+
+        modelBuilder
+            .Entity<ChannelMessageReaction>()
+            .Property(e => e.CreatedAt)
+            .HasDefaultValueSql("now()");
+
+        modelBuilder
+            .Entity<DirectMessage>()
+            .Property(e => e.CreatedAt)
+            .HasDefaultValueSql("now()");
+
+        modelBuilder
+            .Entity<DirectMessageGroup>()
+            .Property(e => e.CreatedAt)
+            .HasDefaultValueSql("now()");
+
+        modelBuilder
+            .Entity<DirectMessageLaterFlag>()
+            .Property(e => e.CreatedAt)
+            .HasDefaultValueSql("now()");
+
+        modelBuilder
+            .Entity<DirectMessageMention>()
+            .Property(e => e.CreatedAt)
+            .HasDefaultValueSql("now()");
+
+        modelBuilder
+            .Entity<DirectMessageNotification>()
+            .Property(e => e.CreatedAt)
+            .HasDefaultValueSql("now()");
+
+        modelBuilder
+            .Entity<DirectMessageReaction>()
+            .Property(e => e.CreatedAt)
+            .HasDefaultValueSql("now()");
+
+        modelBuilder
+            .Entity<DirectMessageReaction>()
+            .Property(e => e.CreatedAt)
+            .HasDefaultValueSql("now()");
+
+        modelBuilder
+            .Entity<Models.File>()
+            .Property(e => e.UploadedAt)
+            .HasDefaultValueSql("now()");
+
+        modelBuilder
+            .Entity<User>()
+            .Property(e => e.CreatedAt)
+            .HasDefaultValueSql("now()");
+
+        modelBuilder
+            .Entity<Workspace>()
+            .Property(e => e.CreatedAt)
+            .HasDefaultValueSql("now()");
+
+        modelBuilder
+            .Entity<WorkspaceInvite>()
+            .Property(e => e.CreatedAt)
+            .HasDefaultValueSql("now()");
+
+        modelBuilder
+            .Entity<WorkspaceMember>()
+            .Property(e => e.JoinedAt)
+            .HasDefaultValueSql("now()");
+
+        modelBuilder
+            .Entity<WorkspaceSearch>()
+            .Property(e => e.CreatedAt)
+            .HasDefaultValueSql("now()");
     }
 }
 
