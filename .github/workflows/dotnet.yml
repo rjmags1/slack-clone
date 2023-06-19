@@ -16,7 +16,7 @@ jobs:
     - name: Start PostgreSQL Docker container
       run: |
         docker run -d \
-          -p 10246:5432 \
+          -p 5432:5432 \
           -e POSTGRES_USER=postgres \
           -e POSTGRES_PASSWORD=postgres \
           -e POSTGRES_DB=slack_clone_test \
