@@ -11,7 +11,7 @@ public class ApplicationDbContextFixture : IDisposable
     public ApplicationDbContextFixture()
     {
         string connectionString =
-            "Server=localhost;Port=5432;Database=slack_clone_test;Username=postgres;Password=postgres";
+            "Server=localhost;Port=5432;Database=slack_clone_test;Username=postgres;Password=postgres;IncludeErrorDetail=true";
         var options = new DbContextOptionsBuilder<ApplicationDbContext>()
             .UseNpgsql(connectionString)
             //.EnableSensitiveDataLogging()
@@ -29,3 +29,7 @@ public class ApplicationDbContextFixture : IDisposable
         context.Dispose();
     }
 }
+
+[CollectionDefinition("Database collection")]
+public class DatabaseCollection
+    : ICollectionFixture<ApplicationDbContextFixture> { }
