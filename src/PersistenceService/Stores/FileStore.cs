@@ -1,25 +1,12 @@
-using System.Text;
 using PersistenceService.Data.ApplicationDb;
 using PersistenceService.Models;
 
 namespace PersistenceService.Stores;
 
-public class FileStore
+public class FileStore : Store
 {
-    private ApplicationDbContext _context;
-    private string _letters;
-    private Random _random;
-
     public FileStore(ApplicationDbContext context)
-    {
-        _context = context;
-        _letters = Enumerable
-            .Range('A', 26)
-            .Concat(Enumerable.Range('a', 26))
-            .Select(x => (char)x)
-            .ToString()!;
-        _random = new Random();
-    }
+        : base(context) { }
 
     public async Task<List<Models.File>> InsertTestFiles(
         int numNonAssociatedFiles
@@ -42,27 +29,16 @@ public class FileStore
         return files;
     }
 
-    public async Task<int> InsertFiles(List<Models.File> files)
+    public async Task<List<Models.File>> InsertFiles(List<Models.File> files)
     {
         _context.AddRange(files);
-        return await _context.SaveChangesAsync();
+        await _context.SaveChangesAsync();
+        return files;
     }
 
     private string GenerateTestFileName(int randsize) =>
-        "test_name" + GenerateRandomString(randsize);
+        "test_file_name" + GenerateRandomString(randsize);
 
     private string GenerateTestFileKey(int randsize) =>
-        "test_key" + GenerateRandomString(randsize);
-
-    private string GenerateRandomString(int length)
-    {
-        StringBuilder builder = new StringBuilder();
-        for (int i = 0; i < length; i++)
-        {
-            int index = _random.Next(_letters.Length);
-            builder.Append(_letters[index]);
-        }
-
-        return builder.ToString();
-    }
+        "test_file_key" + GenerateRandomString(randsize);
 }

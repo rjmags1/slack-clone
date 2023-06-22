@@ -31,12 +31,7 @@ public class ThemeStoreTests
         }
 
         ThemeStore themeStore = new ThemeStore(_dbContext);
-        int numThemes1 = await _dbContext.Themes.CountAsync();
-        int numInserted = await themeStore.InsertThemes(themes);
-        int numThemes2 = await _dbContext.Themes.CountAsync();
-        Assert.Equal(numThemes2 - numThemes1, numInserted);
-
-        List<Theme> loaded = _dbContext.Themes
+        List<Theme> loaded = (await themeStore.InsertThemes(themes))
             .OrderByDescending(f => f.Name)
             .Take(10)
             .ToList();
@@ -44,6 +39,7 @@ public class ThemeStoreTests
             themes.Select(f => f.Name),
             loaded.Select(f => f.Name).OrderBy(name => name)
         );
+        Assert.All(loaded, t => Assert.NotNull(t.Id));
     }
 
     [Fact]

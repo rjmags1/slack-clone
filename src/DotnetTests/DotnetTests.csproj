@@ -27,4 +27,10 @@
     <ProjectReference Include="..\PersistenceService\PersistenceService.csproj" />
   </ItemGroup>
 
+ <ItemGroup>
+    <Content Include=".env">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup> 
+
 </Project>

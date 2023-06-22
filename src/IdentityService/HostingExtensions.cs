@@ -6,7 +6,8 @@ using PersistenceService.Models;
 using Microsoft.AspNetCore.Identity;
 using Serilog;
 using PersistenceService.Data.ApplicationDb;
-using System.Reflection;
+using PersistenceService.Stores;
+using PersistenceService.Utils;
 
 namespace IdentityService;
 
@@ -28,8 +29,23 @@ internal static class HostingExtensions
             options => options.UseNpgsql(connectionString)
         );
 
+        builder.Services.AddScoped<
+            IPasswordHasher<User>,
+            BcryptPasswordHasher
+        >();
+
         builder.Services
-            .AddIdentity<User, IdentityRole>()
+            .AddIdentity<User, IdentityRole<Guid>>(options =>
+            {
+                options.Password.RequireDigit = true;
+                options.Password.RequiredLength = 8;
+                options.Password.RequireNonAlphanumeric = true;
+                options.Password.RequireUppercase = true;
+                options.Password.RequireLowercase = true;
+                options.Password.RequiredUniqueChars = 6;
+                options.User.RequireUniqueEmail = true;
+            })
+            .AddUserManager<UserStore>()
             .AddEntityFrameworkStores<ApplicationDbContext>()
             .AddDefaultTokenProviders();
 

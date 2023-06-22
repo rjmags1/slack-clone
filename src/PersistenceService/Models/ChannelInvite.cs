@@ -10,7 +10,6 @@ namespace PersistenceService.Models;
 [Index(nameof(UserId), nameof(WorkspaceId))]
 public class ChannelInvite
 {
-    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public Guid Id { get; set; }
 
 #pragma warning disable CS8618

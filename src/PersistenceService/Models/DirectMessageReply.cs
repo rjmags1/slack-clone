@@ -9,7 +9,6 @@ namespace PersistenceService.Models;
 [Index(nameof(DirectMessageId), IsUnique = true)]
 public class DirectMessageReply
 {
-    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public Guid Id { get; set; }
 
 #pragma warning disable CS8618

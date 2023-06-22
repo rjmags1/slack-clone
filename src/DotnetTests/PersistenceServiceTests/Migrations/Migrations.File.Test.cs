@@ -2,7 +2,7 @@ using DotnetTests.Fixtures;
 using Microsoft.EntityFrameworkCore;
 using PersistenceService.Data.ApplicationDb;
 using Models = PersistenceService.Models;
-using System.ComponentModel;
+using Microsoft.EntityFrameworkCore.Metadata;
 
 namespace DotnetTests.PersistenceService.Migrations;
 
@@ -11,11 +11,14 @@ public class FileMigrationsTests
 {
     private readonly ApplicationDbContext _dbContext;
 
+    private readonly IEntityType _entityType;
+
     public FileMigrationsTests(
         ApplicationDbContextFixture applicationDbContextFixture
     )
     {
         _dbContext = applicationDbContextFixture.context;
+        _entityType = _dbContext.Model.FindEntityType(typeof(Models.File))!;
     }
 
     [Fact]
@@ -28,8 +31,9 @@ public class FileMigrationsTests
     [Fact]
     public void IdColumn()
     {
-        var entityType = _dbContext.Model.FindEntityType(typeof(Models.File))!;
-        var idProperty = entityType.FindProperty(nameof(Models.File.Id))!;
+        var idProperty = _entityType.FindProperty(nameof(Models.File.Id))!;
+        string defaultValueSql = idProperty.GetDefaultValueSql()!;
+        Assert.Equal(defaultValueSql, "gen_random_uuid()");
         string idColumnType = idProperty.GetColumnType();
         var idColumnNullable = idProperty.IsColumnNullable();
         Assert.Equal("uuid", idColumnType);
@@ -40,8 +44,7 @@ public class FileMigrationsTests
     [Fact]
     public void NameColumn()
     {
-        var entityType = _dbContext.Model.FindEntityType(typeof(Models.File))!;
-        var nameProperty = entityType.FindProperty(nameof(Models.File.Name))!;
+        var nameProperty = _entityType.FindProperty(nameof(Models.File.Name))!;
         var maxLength = nameProperty.GetMaxLength();
         var nameColumnNullable = nameProperty.IsColumnNullable();
         Assert.Equal(maxLength, 80);
@@ -51,8 +54,7 @@ public class FileMigrationsTests
     [Fact]
     public void StoreKeyColumn()
     {
-        var entityType = _dbContext.Model.FindEntityType(typeof(Models.File))!;
-        var storeKeyProperty = entityType.FindProperty(
+        var storeKeyProperty = _entityType.FindProperty(
             nameof(Models.File.StoreKey)
         )!;
         var maxLength = storeKeyProperty.GetMaxLength();
@@ -64,8 +66,7 @@ public class FileMigrationsTests
     [Fact]
     public void UploadedAtColumn()
     {
-        var entityType = _dbContext.Model.FindEntityType(typeof(Models.File))!;
-        var uploadedAtProperty = entityType.FindProperty(
+        var uploadedAtProperty = _entityType.FindProperty(
             nameof(Models.File.UploadedAt)
         )!;
         string uploadedAtColumnType = uploadedAtProperty.GetColumnType();
@@ -79,13 +80,12 @@ public class FileMigrationsTests
     [Fact]
     public void DirectMessageIdColumn()
     {
-        var entityType = _dbContext.Model.FindEntityType(typeof(Models.File))!;
-        var directMessageIdProperty = entityType.FindProperty(
+        var directMessageIdProperty = _entityType.FindProperty(
             nameof(Models.File.DirectMessageId)
         )!;
         string directMessageIdColumnType =
             directMessageIdProperty.GetColumnType();
-        var foreignKey = entityType
+        var foreignKey = _entityType
             .FindProperty(nameof(Models.File.DirectMessageId))!
             .GetContainingForeignKeys()
             .SingleOrDefault();
@@ -98,13 +98,12 @@ public class FileMigrationsTests
     [Fact]
     public void DirectMessageGroupIdColumn()
     {
-        var entityType = _dbContext.Model.FindEntityType(typeof(Models.File))!;
-        var directMessageGroupIdProperty = entityType.FindProperty(
+        var directMessageGroupIdProperty = _entityType.FindProperty(
             nameof(Models.File.DirectMessageGroupId)
         )!;
         var directMessageGroupIdColumnType =
             directMessageGroupIdProperty.GetColumnType();
-        var foreignKey = entityType
+        var foreignKey = _entityType
             .FindProperty(nameof(Models.File.DirectMessageGroupId))!
             .GetContainingForeignKeys()
             .SingleOrDefault();
@@ -117,11 +116,10 @@ public class FileMigrationsTests
     [Fact]
     public void ChannelMessageIdColumn()
     {
-        var entityType = _dbContext.Model.FindEntityType(typeof(Models.File))!;
-        var channelMessageIdProperty = entityType.FindProperty(
+        var channelMessageIdProperty = _entityType.FindProperty(
             nameof(Models.File.ChannelMessageId)
         )!;
-        var foreignKey = entityType
+        var foreignKey = _entityType
             .FindProperty(nameof(Models.File.ChannelMessageId))!
             .GetContainingForeignKeys()
             .SingleOrDefault();
@@ -136,12 +134,11 @@ public class FileMigrationsTests
     [Fact]
     public void ChannelIdColumn()
     {
-        var entityType = _dbContext.Model.FindEntityType(typeof(Models.File))!;
-        var channelIdProperty = entityType.FindProperty(
+        var channelIdProperty = _entityType.FindProperty(
             nameof(Models.File.ChannelId)
         )!;
         string channelIdColumnType = channelIdProperty.GetColumnType();
-        var foreignKey = entityType
+        var foreignKey = _entityType
             .FindProperty(nameof(Models.File.ChannelId))!
             .GetContainingForeignKeys()
             .SingleOrDefault();
@@ -153,24 +150,23 @@ public class FileMigrationsTests
     [Fact]
     public void Indexes()
     {
-        var entityType = _dbContext.Model.FindEntityType(typeof(Models.File))!;
-        var channelIdProperty = entityType.FindProperty(
+        var channelIdProperty = _entityType.FindProperty(
             nameof(Models.File.ChannelId)
         )!;
         Assert.NotNull(channelIdProperty.GetIndex());
-        var channelMessageIdProperty = entityType.FindProperty(
+        var channelMessageIdProperty = _entityType.FindProperty(
             nameof(Models.File.ChannelMessageId)
         )!;
         Assert.NotNull(channelMessageIdProperty.GetIndex());
-        var directMessageIdProperty = entityType.FindProperty(
+        var directMessageIdProperty = _entityType.FindProperty(
             nameof(Models.File.DirectMessageId)
         )!;
         Assert.NotNull(directMessageIdProperty.GetIndex());
-        var directMessageGroupIdProperty = entityType.FindProperty(
+        var directMessageGroupIdProperty = _entityType.FindProperty(
             nameof(Models.File.DirectMessageGroupId)
         )!;
         Assert.NotNull(directMessageGroupIdProperty.GetIndex());
-        var uploadedAtProperty = entityType.FindProperty(
+        var uploadedAtProperty = _entityType.FindProperty(
             nameof(Models.File.UploadedAt)
         )!;
         Assert.NotNull(uploadedAtProperty.GetIndex());

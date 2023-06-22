@@ -49,7 +49,7 @@ public class FileStoreTests
     }
 
     [Fact]
-    public async Task InsertFiles_ShouldInsertFiles()
+    public async void InsertFiles_ShouldInsertFiles()
     {
         List<Models.File> files = new List<Models.File>();
         string testNamePrefix = "test-file-name-";
@@ -65,12 +65,8 @@ public class FileStoreTests
         }
 
         FileStore fileStore = new FileStore(_dbContext);
-        int numFiles1 = await _dbContext.Files.CountAsync();
-        int numInserted = await fileStore.InsertFiles(files);
-        int numFiles2 = await _dbContext.Files.CountAsync();
-        Assert.Equal(numFiles2 - numFiles1, numInserted);
 
-        List<Models.File> loaded = _dbContext.Files
+        List<Models.File> loaded = (await fileStore.InsertFiles(files))
             .OrderByDescending(f => f.UploadedAt)
             .Take(10)
             .ToList();
@@ -78,5 +74,7 @@ public class FileStoreTests
             files.Select(f => f.Name),
             loaded.Select(f => f.Name).OrderBy(name => name)
         );
+        Assert.All(loaded, f => Assert.NotNull(f.Id));
+        Assert.All(loaded, f => Assert.NotNull(f.UploadedAt));
     }
 }

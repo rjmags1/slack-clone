@@ -8,7 +8,6 @@ namespace PersistenceService.Models;
 [Index(nameof(WorkspaceId), nameof(UserId))]
 public class ChannelMessageLaterFlag
 {
-    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public Guid Id { get; set; }
 
 #pragma warning disable CS8618

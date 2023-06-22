@@ -3,19 +3,16 @@ using PersistenceService.Models;
 
 namespace PersistenceService.Stores;
 
-public class ThemeStore
+public class ThemeStore : Store
 {
-    private ApplicationDbContext _context;
-
     public ThemeStore(ApplicationDbContext context)
-    {
-        _context = context;
-    }
+        : base(context) { }
 
-    public async Task<int> InsertThemes(List<Theme> themes)
+    public async Task<List<Theme>> InsertThemes(List<Theme> themes)
     {
         _context.AddRange(themes);
-        return await _context.SaveChangesAsync();
+        await _context.SaveChangesAsync();
+        return themes;
     }
 
     public async Task<List<Theme>> InsertShippedThemes()

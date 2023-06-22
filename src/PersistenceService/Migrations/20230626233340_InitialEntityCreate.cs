@@ -1,21 +1,36 @@
 ﻿using System;
 using Microsoft.EntityFrameworkCore.Migrations;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
 namespace PersistenceService.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCustomEntityCreate : Migration
+    public partial class InitialEntityCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
+                name: "AspNetRoles",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "gen_random_uuid()"),
+                    Name = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: true),
+                    NormalizedName = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: true),
+                    ConcurrencyStamp = table.Column<string>(type: "text", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_AspNetRoles", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Themes",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    Id = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "gen_random_uuid()"),
                     Name = table.Column<string>(type: "character varying(40)", maxLength: 40, nullable: false)
                 },
                 constraints: table =>
@@ -24,10 +39,143 @@ namespace PersistenceService.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "AspNetRoleClaims",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    RoleId = table.Column<Guid>(type: "uuid", nullable: false),
+                    ClaimType = table.Column<string>(type: "text", nullable: true),
+                    ClaimValue = table.Column<string>(type: "text", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_AspNetRoleClaims", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_AspNetRoleClaims_AspNetRoles_RoleId",
+                        column: x => x.RoleId,
+                        principalTable: "AspNetRoles",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "AspNetUserClaims",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    UserId = table.Column<Guid>(type: "uuid", nullable: false),
+                    ClaimType = table.Column<string>(type: "text", nullable: true),
+                    ClaimValue = table.Column<string>(type: "text", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_AspNetUserClaims", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "AspNetUserLogins",
+                columns: table => new
+                {
+                    LoginProvider = table.Column<string>(type: "text", nullable: false),
+                    ProviderKey = table.Column<string>(type: "text", nullable: false),
+                    ProviderDisplayName = table.Column<string>(type: "text", nullable: true),
+                    UserId = table.Column<Guid>(type: "uuid", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_AspNetUserLogins", x => new { x.LoginProvider, x.ProviderKey });
+                });
+
+            migrationBuilder.CreateTable(
+                name: "AspNetUserRoles",
+                columns: table => new
+                {
+                    UserId = table.Column<Guid>(type: "uuid", nullable: false),
+                    RoleId = table.Column<Guid>(type: "uuid", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_AspNetUserRoles", x => new { x.UserId, x.RoleId });
+                    table.ForeignKey(
+                        name: "FK_AspNetUserRoles_AspNetRoles_RoleId",
+                        column: x => x.RoleId,
+                        principalTable: "AspNetRoles",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "AspNetUsers",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "gen_random_uuid()"),
+                    AvatarId = table.Column<Guid>(type: "uuid", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp", nullable: false, defaultValueSql: "now()"),
+                    Deleted = table.Column<bool>(type: "boolean", nullable: false),
+                    FirstName = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
+                    LastName = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    UserNotificationsPreferencesMask = table.Column<int>(type: "integer", nullable: false),
+                    NotificationsAllowStartTime = table.Column<TimeOnly>(type: "time without time zone", nullable: true),
+                    NotificationsAllowEndTime = table.Column<TimeOnly>(type: "time without time zone", nullable: true),
+                    NotificationsPauseUntil = table.Column<TimeOnly>(type: "time without time zone", nullable: true),
+                    NotificationSound = table.Column<int>(type: "integer", nullable: false),
+                    OnlineStatus = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: true),
+                    OnlineStatusUntil = table.Column<DateTime>(type: "timestamp", nullable: true),
+                    ThemeId = table.Column<Guid>(type: "uuid", nullable: true),
+                    Timezone = table.Column<string>(type: "character varying(40)", maxLength: 40, nullable: false),
+                    UserName = table.Column<string>(type: "character varying(30)", maxLength: 30, nullable: false),
+                    NormalizedUserName = table.Column<string>(type: "character varying(30)", maxLength: 30, nullable: false),
+                    Email = table.Column<string>(type: "character varying(320)", maxLength: 320, nullable: false),
+                    NormalizedEmail = table.Column<string>(type: "character varying(320)", maxLength: 320, nullable: false),
+                    EmailConfirmed = table.Column<bool>(type: "boolean", nullable: false),
+                    PasswordHash = table.Column<string>(type: "character varying(128)", maxLength: 128, nullable: false),
+                    SecurityStamp = table.Column<string>(type: "character varying(36)", maxLength: 36, nullable: false),
+                    ConcurrencyStamp = table.Column<string>(type: "character varying(36)", maxLength: 36, nullable: false),
+                    PhoneNumber = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: true),
+                    PhoneNumberConfirmed = table.Column<bool>(type: "boolean", nullable: false),
+                    TwoFactorEnabled = table.Column<bool>(type: "boolean", nullable: false),
+                    LockoutEnd = table.Column<DateTime>(type: "timestamp", nullable: true),
+                    LockoutEnabled = table.Column<bool>(type: "boolean", nullable: false),
+                    AccessFailedCount = table.Column<int>(type: "integer", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_AspNetUsers", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_AspNetUsers_Themes_ThemeId",
+                        column: x => x.ThemeId,
+                        principalTable: "Themes",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.SetNull);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "AspNetUserTokens",
+                columns: table => new
+                {
+                    UserId = table.Column<Guid>(type: "uuid", nullable: false),
+                    LoginProvider = table.Column<string>(type: "text", nullable: false),
+                    Name = table.Column<string>(type: "text", nullable: false),
+                    Value = table.Column<string>(type: "text", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_AspNetUserTokens", x => new { x.UserId, x.LoginProvider, x.Name });
+                    table.ForeignKey(
+                        name: "FK_AspNetUserTokens_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "ChannelInvites",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    Id = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "gen_random_uuid()"),
                     AdminId = table.Column<Guid>(type: "uuid", nullable: false),
                     ChannelId = table.Column<Guid>(type: "uuid", nullable: false),
                     ChannelInviteStatus = table.Column<int>(type: "integer", nullable: false),
@@ -38,13 +186,25 @@ namespace PersistenceService.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_ChannelInvites", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ChannelInvites_AspNetUsers_AdminId",
+                        column: x => x.AdminId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_ChannelInvites_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
                 name: "ChannelMembers",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    Id = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "gen_random_uuid()"),
                     Admin = table.Column<bool>(type: "boolean", nullable: false),
                     ChannelId = table.Column<Guid>(type: "uuid", nullable: false),
                     EnableNotifications = table.Column<bool>(type: "boolean", nullable: false),
@@ -55,13 +215,19 @@ namespace PersistenceService.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_ChannelMembers", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ChannelMembers_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
                 name: "ChannelMessageLaterFlags",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    Id = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "gen_random_uuid()"),
                     ChannelId = table.Column<Guid>(type: "uuid", nullable: false),
                     ChannelLaterFlagStatus = table.Column<int>(type: "integer", nullable: false),
                     ChannelMessageId = table.Column<Guid>(type: "uuid", nullable: false),
@@ -72,13 +238,19 @@ namespace PersistenceService.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_ChannelMessageLaterFlags", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ChannelMessageLaterFlags_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
                 name: "ChannelMessageMentions",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    Id = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "gen_random_uuid()"),
                     ChannelMessageId = table.Column<Guid>(type: "uuid", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "timestamp", nullable: false, defaultValueSql: "now()"),
                     MentionedId = table.Column<Guid>(type: "uuid", nullable: false),
@@ -87,13 +259,25 @@ namespace PersistenceService.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_ChannelMessageMentions", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ChannelMessageMentions_AspNetUsers_MentionedId",
+                        column: x => x.MentionedId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_ChannelMessageMentions_AspNetUsers_MentionerId",
+                        column: x => x.MentionerId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
                 name: "ChannelMessageNotifications",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    Id = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "gen_random_uuid()"),
                     ChannelMessageId = table.Column<Guid>(type: "uuid", nullable: false),
                     ChannelMessageNotificationType = table.Column<int>(type: "integer", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "timestamp", nullable: false, defaultValueSql: "now()"),
@@ -103,13 +287,19 @@ namespace PersistenceService.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_ChannelMessageNotifications", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ChannelMessageNotifications_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
                 name: "ChannelMessageReactions",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    Id = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "gen_random_uuid()"),
                     ChannelMessageId = table.Column<Guid>(type: "uuid", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "timestamp", nullable: false, defaultValueSql: "now()"),
                     Emoji = table.Column<string>(type: "character varying(4)", maxLength: 4, nullable: false),
@@ -118,13 +308,19 @@ namespace PersistenceService.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_ChannelMessageReactions", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ChannelMessageReactions_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
                 name: "ChannelMessageReplies",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    Id = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "gen_random_uuid()"),
                     ChannelMessageId = table.Column<Guid>(type: "uuid", nullable: false),
                     MessageRepliedToId = table.Column<Guid>(type: "uuid", nullable: false),
                     RepliedToId = table.Column<Guid>(type: "uuid", nullable: false),
@@ -134,13 +330,25 @@ namespace PersistenceService.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_ChannelMessageReplies", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ChannelMessageReplies_AspNetUsers_RepliedToId",
+                        column: x => x.RepliedToId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_ChannelMessageReplies_AspNetUsers_ReplierId",
+                        column: x => x.ReplierId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
                 name: "ChannelMessages",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    Id = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "gen_random_uuid()"),
                     ChannelId = table.Column<Guid>(type: "uuid", nullable: false),
                     Content = table.Column<string>(type: "character varying(2500)", maxLength: 2500, nullable: false),
                     ConcurrencyStamp = table.Column<byte[]>(type: "bytea", nullable: false),
@@ -155,13 +363,19 @@ namespace PersistenceService.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_ChannelMessages", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ChannelMessages_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
                 name: "Channels",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    Id = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "gen_random_uuid()"),
                     AllowThreads = table.Column<bool>(type: "boolean", nullable: false),
                     AvatarId = table.Column<Guid>(type: "uuid", nullable: true),
                     AllowedChannelPostersMask = table.Column<int>(type: "integer", nullable: false),
@@ -178,13 +392,19 @@ namespace PersistenceService.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Channels", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Channels_AspNetUsers_CreatedById",
+                        column: x => x.CreatedById,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
                 name: "DirectMessageGroupMembers",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    Id = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "gen_random_uuid()"),
                     DirectMessageGroupId = table.Column<Guid>(type: "uuid", nullable: false),
                     LastViewedGroupMessagesAt = table.Column<DateTime>(type: "timestamp", nullable: true),
                     UserId = table.Column<Guid>(type: "uuid", nullable: false)
@@ -192,13 +412,19 @@ namespace PersistenceService.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_DirectMessageGroupMembers", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_DirectMessageGroupMembers_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
                 name: "DirectMessageGroups",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    Id = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "gen_random_uuid()"),
                     ConcurrencyStamp = table.Column<byte[]>(type: "bytea", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "timestamp", nullable: false, defaultValueSql: "now()"),
                     Size = table.Column<int>(type: "integer", nullable: false),
@@ -210,94 +436,10 @@ namespace PersistenceService.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "DirectMessageLaterFlags",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp", nullable: false, defaultValueSql: "now()"),
-                    DirectMessageLaterFlagStatus = table.Column<int>(type: "integer", nullable: false),
-                    DirectMessageGroupId = table.Column<Guid>(type: "uuid", nullable: false),
-                    DirectMessageId = table.Column<Guid>(type: "uuid", nullable: false),
-                    UserId = table.Column<Guid>(type: "uuid", nullable: false),
-                    WorkspaceId = table.Column<Guid>(type: "uuid", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_DirectMessageLaterFlags", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_DirectMessageLaterFlags_DirectMessageGroups_DirectMessageGr~",
-                        column: x => x.DirectMessageGroupId,
-                        principalTable: "DirectMessageGroups",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "DirectMessageMentions",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp", nullable: false, defaultValueSql: "now()"),
-                    DirectMessageId = table.Column<Guid>(type: "uuid", nullable: false),
-                    MentionedId = table.Column<Guid>(type: "uuid", nullable: false),
-                    MentionerId = table.Column<Guid>(type: "uuid", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_DirectMessageMentions", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "DirectMessageNotifications",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp", nullable: false, defaultValueSql: "now()"),
-                    DirectMessageId = table.Column<Guid>(type: "uuid", nullable: false),
-                    DirectMessageNotificationType = table.Column<int>(type: "integer", nullable: false),
-                    Seen = table.Column<bool>(type: "boolean", nullable: false),
-                    UserId = table.Column<Guid>(type: "uuid", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_DirectMessageNotifications", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "DirectMessageReactions",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp", nullable: false, defaultValueSql: "now()"),
-                    DirectMessageId = table.Column<Guid>(type: "uuid", nullable: false),
-                    Emoji = table.Column<string>(type: "character varying(4)", maxLength: 4, nullable: false),
-                    UserId = table.Column<Guid>(type: "uuid", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_DirectMessageReactions", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "DirectMessageReplies",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    DirectMessageId = table.Column<Guid>(type: "uuid", nullable: false),
-                    RepliedToId = table.Column<Guid>(type: "uuid", nullable: false),
-                    ReplierId = table.Column<Guid>(type: "uuid", nullable: false),
-                    MessageRepliedToId = table.Column<Guid>(type: "uuid", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_DirectMessageReplies", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "DirectMessages",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    Id = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "gen_random_uuid()"),
                     ConcurrencyStamp = table.Column<byte[]>(type: "bytea", nullable: false),
                     Content = table.Column<string>(type: "character varying(2500)", maxLength: 2500, nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "timestamp", nullable: false, defaultValueSql: "now()"),
@@ -313,6 +455,12 @@ namespace PersistenceService.Migrations
                 {
                     table.PrimaryKey("PK_DirectMessages", x => x.Id);
                     table.ForeignKey(
+                        name: "FK_DirectMessages_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
                         name: "FK_DirectMessages_DirectMessageGroups_DirectMessageGroupId",
                         column: x => x.DirectMessageGroupId,
                         principalTable: "DirectMessageGroups",
@@ -327,10 +475,137 @@ namespace PersistenceService.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "DirectMessageMentions",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "gen_random_uuid()"),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp", nullable: false, defaultValueSql: "now()"),
+                    DirectMessageId = table.Column<Guid>(type: "uuid", nullable: false),
+                    MentionedId = table.Column<Guid>(type: "uuid", nullable: false),
+                    MentionerId = table.Column<Guid>(type: "uuid", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_DirectMessageMentions", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_DirectMessageMentions_AspNetUsers_MentionedId",
+                        column: x => x.MentionedId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_DirectMessageMentions_AspNetUsers_MentionerId",
+                        column: x => x.MentionerId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_DirectMessageMentions_DirectMessages_DirectMessageId",
+                        column: x => x.DirectMessageId,
+                        principalTable: "DirectMessages",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "DirectMessageNotifications",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "gen_random_uuid()"),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp", nullable: false, defaultValueSql: "now()"),
+                    DirectMessageId = table.Column<Guid>(type: "uuid", nullable: false),
+                    DirectMessageNotificationType = table.Column<int>(type: "integer", nullable: false),
+                    Seen = table.Column<bool>(type: "boolean", nullable: false),
+                    UserId = table.Column<Guid>(type: "uuid", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_DirectMessageNotifications", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_DirectMessageNotifications_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_DirectMessageNotifications_DirectMessages_DirectMessageId",
+                        column: x => x.DirectMessageId,
+                        principalTable: "DirectMessages",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "DirectMessageReactions",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "gen_random_uuid()"),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp", nullable: false, defaultValueSql: "now()"),
+                    DirectMessageId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Emoji = table.Column<string>(type: "character varying(4)", maxLength: 4, nullable: false),
+                    UserId = table.Column<Guid>(type: "uuid", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_DirectMessageReactions", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_DirectMessageReactions_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_DirectMessageReactions_DirectMessages_DirectMessageId",
+                        column: x => x.DirectMessageId,
+                        principalTable: "DirectMessages",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "DirectMessageReplies",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "gen_random_uuid()"),
+                    DirectMessageId = table.Column<Guid>(type: "uuid", nullable: false),
+                    RepliedToId = table.Column<Guid>(type: "uuid", nullable: false),
+                    ReplierId = table.Column<Guid>(type: "uuid", nullable: false),
+                    MessageRepliedToId = table.Column<Guid>(type: "uuid", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_DirectMessageReplies", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_DirectMessageReplies_AspNetUsers_RepliedToId",
+                        column: x => x.RepliedToId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_DirectMessageReplies_AspNetUsers_ReplierId",
+                        column: x => x.ReplierId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_DirectMessageReplies_DirectMessages_DirectMessageId",
+                        column: x => x.DirectMessageId,
+                        principalTable: "DirectMessages",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_DirectMessageReplies_DirectMessages_MessageRepliedToId",
+                        column: x => x.MessageRepliedToId,
+                        principalTable: "DirectMessages",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Files",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    Id = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "gen_random_uuid()"),
                     ChannelId = table.Column<Guid>(type: "uuid", nullable: true),
                     ChannelMessageId = table.Column<Guid>(type: "uuid", nullable: true),
                     DirectMessageId = table.Column<Guid>(type: "uuid", nullable: true),
@@ -369,61 +644,10 @@ namespace PersistenceService.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Users",
+                name: "Workspace",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    AvatarId = table.Column<Guid>(type: "uuid", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp", nullable: false, defaultValueSql: "now()"),
-                    Deleted = table.Column<bool>(type: "boolean", nullable: false),
-                    FirstName = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
-                    LastName = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
-                    UserNotificationsPreferencesMask = table.Column<int>(type: "integer", nullable: false),
-                    NotificationsAllowStartTime = table.Column<TimeOnly>(type: "time without time zone", nullable: true),
-                    NotificationsAllowEndTime = table.Column<TimeOnly>(type: "time without time zone", nullable: true),
-                    NotificationsPauseUntil = table.Column<TimeOnly>(type: "time without time zone", nullable: true),
-                    NotificationSound = table.Column<int>(type: "integer", nullable: false),
-                    OnlineStatus = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
-                    OnlineStatusUntil = table.Column<DateTime>(type: "timestamp", nullable: true),
-                    ThemeId = table.Column<Guid>(type: "uuid", nullable: true),
-                    Timezone = table.Column<string>(type: "character varying(40)", maxLength: 40, nullable: false),
-                    UserName = table.Column<string>(type: "character varying(80)", maxLength: 80, nullable: false),
-                    NormalizedUserName = table.Column<string>(type: "character varying(80)", maxLength: 80, nullable: false),
-                    Email = table.Column<string>(type: "character varying(320)", maxLength: 320, nullable: false),
-                    NormalizedEmail = table.Column<string>(type: "character varying(320)", maxLength: 320, nullable: false),
-                    PasswordHash = table.Column<string>(type: "character varying(128)", maxLength: 128, nullable: false),
-                    PhoneNumber = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
-                    ConcurrencyStamp = table.Column<byte[]>(type: "bytea", nullable: false),
-                    SecurityStamp = table.Column<byte[]>(type: "bytea", nullable: false),
-                    EmailConfirmed = table.Column<bool>(type: "boolean", nullable: false),
-                    PhoneNumberConfirmed = table.Column<bool>(type: "boolean", nullable: false),
-                    TwoFactorEnabled = table.Column<bool>(type: "boolean", nullable: false),
-                    LockoutEnd = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
-                    LockoutEnabled = table.Column<bool>(type: "boolean", nullable: false),
-                    AccessFailedCount = table.Column<int>(type: "integer", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Users", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Users_Files_AvatarId",
-                        column: x => x.AvatarId,
-                        principalTable: "Files",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.SetNull);
-                    table.ForeignKey(
-                        name: "FK_Users_Themes_ThemeId",
-                        column: x => x.ThemeId,
-                        principalTable: "Themes",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.SetNull);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Workspaces",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    Id = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "gen_random_uuid()"),
                     AvatarId = table.Column<Guid>(type: "uuid", nullable: true),
                     ConcurrencyStamp = table.Column<byte[]>(type: "bytea", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "timestamp", nullable: false, defaultValueSql: "now()"),
@@ -433,9 +657,9 @@ namespace PersistenceService.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Workspaces", x => x.Id);
+                    table.PrimaryKey("PK_Workspace", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Workspaces_Files_AvatarId",
+                        name: "FK_Workspace_Files_AvatarId",
                         column: x => x.AvatarId,
                         principalTable: "Files",
                         principalColumn: "Id",
@@ -443,10 +667,51 @@ namespace PersistenceService.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "DirectMessageLaterFlags",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "gen_random_uuid()"),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp", nullable: false, defaultValueSql: "now()"),
+                    DirectMessageLaterFlagStatus = table.Column<int>(type: "integer", nullable: false),
+                    DirectMessageGroupId = table.Column<Guid>(type: "uuid", nullable: false),
+                    DirectMessageId = table.Column<Guid>(type: "uuid", nullable: false),
+                    UserId = table.Column<Guid>(type: "uuid", nullable: false),
+                    WorkspaceId = table.Column<Guid>(type: "uuid", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_DirectMessageLaterFlags", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_DirectMessageLaterFlags_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_DirectMessageLaterFlags_DirectMessageGroups_DirectMessageGr~",
+                        column: x => x.DirectMessageGroupId,
+                        principalTable: "DirectMessageGroups",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_DirectMessageLaterFlags_DirectMessages_DirectMessageId",
+                        column: x => x.DirectMessageId,
+                        principalTable: "DirectMessages",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_DirectMessageLaterFlags_Workspace_WorkspaceId",
+                        column: x => x.WorkspaceId,
+                        principalTable: "Workspace",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Threads",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    Id = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "gen_random_uuid()"),
                     ChannelId = table.Column<Guid>(type: "uuid", nullable: false),
                     ConcurrencyStamp = table.Column<byte[]>(type: "bytea", nullable: false),
                     FirstMessageId = table.Column<Guid>(type: "uuid", nullable: false),
@@ -469,9 +734,9 @@ namespace PersistenceService.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_Threads_Workspaces_WorkspaceId",
+                        name: "FK_Threads_Workspace_WorkspaceId",
                         column: x => x.WorkspaceId,
-                        principalTable: "Workspaces",
+                        principalTable: "Workspace",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -489,15 +754,15 @@ namespace PersistenceService.Migrations
                 {
                     table.PrimaryKey("PK_WorkspaceAdminPermissions", x => new { x.AdminId, x.WorkspaceId });
                     table.ForeignKey(
-                        name: "FK_WorkspaceAdminPermissions_Users_AdminId",
+                        name: "FK_WorkspaceAdminPermissions_AspNetUsers_AdminId",
                         column: x => x.AdminId,
-                        principalTable: "Users",
+                        principalTable: "AspNetUsers",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_WorkspaceAdminPermissions_Workspaces_WorkspaceId",
+                        name: "FK_WorkspaceAdminPermissions_Workspace_WorkspaceId",
                         column: x => x.WorkspaceId,
-                        principalTable: "Workspaces",
+                        principalTable: "Workspace",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -506,7 +771,7 @@ namespace PersistenceService.Migrations
                 name: "WorkspaceInvites",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    Id = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "gen_random_uuid()"),
                     AdminId = table.Column<Guid>(type: "uuid", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "timestamp", nullable: false, defaultValueSql: "now()"),
                     UserId = table.Column<Guid>(type: "uuid", nullable: false),
@@ -517,21 +782,21 @@ namespace PersistenceService.Migrations
                 {
                     table.PrimaryKey("PK_WorkspaceInvites", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_WorkspaceInvites_Users_AdminId",
+                        name: "FK_WorkspaceInvites_AspNetUsers_AdminId",
                         column: x => x.AdminId,
-                        principalTable: "Users",
+                        principalTable: "AspNetUsers",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_WorkspaceInvites_Users_UserId",
+                        name: "FK_WorkspaceInvites_AspNetUsers_UserId",
                         column: x => x.UserId,
-                        principalTable: "Users",
+                        principalTable: "AspNetUsers",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_WorkspaceInvites_Workspaces_WorkspaceId",
+                        name: "FK_WorkspaceInvites_Workspace_WorkspaceId",
                         column: x => x.WorkspaceId,
-                        principalTable: "Workspaces",
+                        principalTable: "Workspace",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -540,7 +805,7 @@ namespace PersistenceService.Migrations
                 name: "WorkspaceMembers",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    Id = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "gen_random_uuid()"),
                     Admin = table.Column<bool>(type: "boolean", nullable: false),
                     AvatarId = table.Column<Guid>(type: "uuid", nullable: true),
                     JoinedAt = table.Column<DateTime>(type: "timestamp", nullable: false, defaultValueSql: "now()"),
@@ -559,6 +824,12 @@ namespace PersistenceService.Migrations
                 {
                     table.PrimaryKey("PK_WorkspaceMembers", x => x.Id);
                     table.ForeignKey(
+                        name: "FK_WorkspaceMembers_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
                         name: "FK_WorkspaceMembers_Files_AvatarId",
                         column: x => x.AvatarId,
                         principalTable: "Files",
@@ -571,15 +842,9 @@ namespace PersistenceService.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.SetNull);
                     table.ForeignKey(
-                        name: "FK_WorkspaceMembers_Users_UserId",
-                        column: x => x.UserId,
-                        principalTable: "Users",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_WorkspaceMembers_Workspaces_WorkspaceId",
+                        name: "FK_WorkspaceMembers_Workspace_WorkspaceId",
                         column: x => x.WorkspaceId,
-                        principalTable: "Workspaces",
+                        principalTable: "Workspace",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -588,7 +853,7 @@ namespace PersistenceService.Migrations
                 name: "WorkspaceSearches",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    Id = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "gen_random_uuid()"),
                     CreatedAt = table.Column<DateTime>(type: "timestamp", nullable: false, defaultValueSql: "now()"),
                     Query = table.Column<string>(type: "character varying(80)", maxLength: 80, nullable: false),
                     UserId = table.Column<Guid>(type: "uuid", nullable: false),
@@ -598,15 +863,15 @@ namespace PersistenceService.Migrations
                 {
                     table.PrimaryKey("PK_WorkspaceSearches", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_WorkspaceSearches_Users_UserId",
+                        name: "FK_WorkspaceSearches_AspNetUsers_UserId",
                         column: x => x.UserId,
-                        principalTable: "Users",
+                        principalTable: "AspNetUsers",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_WorkspaceSearches_Workspaces_WorkspaceId",
+                        name: "FK_WorkspaceSearches_Workspace_WorkspaceId",
                         column: x => x.WorkspaceId,
-                        principalTable: "Workspaces",
+                        principalTable: "Workspace",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -622,18 +887,70 @@ namespace PersistenceService.Migrations
                 {
                     table.PrimaryKey("PK_ThreadWatches", x => new { x.UserId, x.ThreadId });
                     table.ForeignKey(
+                        name: "FK_ThreadWatches_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
                         name: "FK_ThreadWatches_Threads_ThreadId",
                         column: x => x.ThreadId,
                         principalTable: "Threads",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_ThreadWatches_Users_UserId",
-                        column: x => x.UserId,
-                        principalTable: "Users",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
                 });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AspNetRoleClaims_RoleId",
+                table: "AspNetRoleClaims",
+                column: "RoleId");
+
+            migrationBuilder.CreateIndex(
+                name: "RoleNameIndex",
+                table: "AspNetRoles",
+                column: "NormalizedName",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AspNetUserClaims_UserId",
+                table: "AspNetUserClaims",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AspNetUserLogins_UserId",
+                table: "AspNetUserLogins",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AspNetUserRoles_RoleId",
+                table: "AspNetUserRoles",
+                column: "RoleId");
+
+            migrationBuilder.CreateIndex(
+                name: "EmailIndex",
+                table: "AspNetUsers",
+                column: "NormalizedEmail");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AspNetUsers_AvatarId",
+                table: "AspNetUsers",
+                column: "AvatarId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AspNetUsers_Deleted",
+                table: "AspNetUsers",
+                column: "Deleted");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AspNetUsers_ThemeId",
+                table: "AspNetUsers",
+                column: "ThemeId");
+
+            migrationBuilder.CreateIndex(
+                name: "UserNameIndex",
+                table: "AspNetUsers",
+                column: "NormalizedUserName",
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_ChannelInvites_AdminId",
@@ -1019,29 +1336,9 @@ namespace PersistenceService.Migrations
                 column: "ThreadId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Users_AvatarId",
-                table: "Users",
+                name: "IX_Workspace_AvatarId",
+                table: "Workspace",
                 column: "AvatarId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Users_Deleted",
-                table: "Users",
-                column: "Deleted");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Users_NormalizedEmail",
-                table: "Users",
-                column: "NormalizedEmail");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Users_NormalizedUserName",
-                table: "Users",
-                column: "NormalizedUserName");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Users_ThemeId",
-                table: "Users",
-                column: "ThemeId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_WorkspaceAdminPermissions_WorkspaceId",
@@ -1100,11 +1397,6 @@ namespace PersistenceService.Migrations
                 columns: new[] { "WorkspaceId", "UserId" });
 
             migrationBuilder.CreateIndex(
-                name: "IX_Workspaces_AvatarId",
-                table: "Workspaces",
-                column: "AvatarId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_WorkspaceSearches_CreatedAt",
                 table: "WorkspaceSearches",
                 column: "CreatedAt");
@@ -1120,6 +1412,38 @@ namespace PersistenceService.Migrations
                 columns: new[] { "WorkspaceId", "UserId" });
 
             migrationBuilder.AddForeignKey(
+                name: "FK_AspNetUserClaims_AspNetUsers_UserId",
+                table: "AspNetUserClaims",
+                column: "UserId",
+                principalTable: "AspNetUsers",
+                principalColumn: "Id",
+                onDelete: ReferentialAction.Cascade);
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_AspNetUserLogins_AspNetUsers_UserId",
+                table: "AspNetUserLogins",
+                column: "UserId",
+                principalTable: "AspNetUsers",
+                principalColumn: "Id",
+                onDelete: ReferentialAction.Cascade);
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_AspNetUserRoles_AspNetUsers_UserId",
+                table: "AspNetUserRoles",
+                column: "UserId",
+                principalTable: "AspNetUsers",
+                principalColumn: "Id",
+                onDelete: ReferentialAction.Cascade);
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_AspNetUsers_Files_AvatarId",
+                table: "AspNetUsers",
+                column: "AvatarId",
+                principalTable: "Files",
+                principalColumn: "Id",
+                onDelete: ReferentialAction.SetNull);
+
+            migrationBuilder.AddForeignKey(
                 name: "FK_ChannelInvites_Channels_ChannelId",
                 table: "ChannelInvites",
                 column: "ChannelId",
@@ -1128,26 +1452,10 @@ namespace PersistenceService.Migrations
                 onDelete: ReferentialAction.Cascade);
 
             migrationBuilder.AddForeignKey(
-                name: "FK_ChannelInvites_Users_AdminId",
-                table: "ChannelInvites",
-                column: "AdminId",
-                principalTable: "Users",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.Cascade);
-
-            migrationBuilder.AddForeignKey(
-                name: "FK_ChannelInvites_Users_UserId",
-                table: "ChannelInvites",
-                column: "UserId",
-                principalTable: "Users",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.Cascade);
-
-            migrationBuilder.AddForeignKey(
-                name: "FK_ChannelInvites_Workspaces_WorkspaceId",
+                name: "FK_ChannelInvites_Workspace_WorkspaceId",
                 table: "ChannelInvites",
                 column: "WorkspaceId",
-                principalTable: "Workspaces",
+                principalTable: "Workspace",
                 principalColumn: "Id",
                 onDelete: ReferentialAction.Cascade);
 
@@ -1156,14 +1464,6 @@ namespace PersistenceService.Migrations
                 table: "ChannelMembers",
                 column: "ChannelId",
                 principalTable: "Channels",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.Cascade);
-
-            migrationBuilder.AddForeignKey(
-                name: "FK_ChannelMembers_Users_UserId",
-                table: "ChannelMembers",
-                column: "UserId",
-                principalTable: "Users",
                 principalColumn: "Id",
                 onDelete: ReferentialAction.Cascade);
 
@@ -1184,18 +1484,10 @@ namespace PersistenceService.Migrations
                 onDelete: ReferentialAction.Cascade);
 
             migrationBuilder.AddForeignKey(
-                name: "FK_ChannelMessageLaterFlags_Users_UserId",
-                table: "ChannelMessageLaterFlags",
-                column: "UserId",
-                principalTable: "Users",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.Cascade);
-
-            migrationBuilder.AddForeignKey(
-                name: "FK_ChannelMessageLaterFlags_Workspaces_WorkspaceId",
+                name: "FK_ChannelMessageLaterFlags_Workspace_WorkspaceId",
                 table: "ChannelMessageLaterFlags",
                 column: "WorkspaceId",
-                principalTable: "Workspaces",
+                principalTable: "Workspace",
                 principalColumn: "Id",
                 onDelete: ReferentialAction.Cascade);
 
@@ -1208,22 +1500,6 @@ namespace PersistenceService.Migrations
                 onDelete: ReferentialAction.Cascade);
 
             migrationBuilder.AddForeignKey(
-                name: "FK_ChannelMessageMentions_Users_MentionedId",
-                table: "ChannelMessageMentions",
-                column: "MentionedId",
-                principalTable: "Users",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.Cascade);
-
-            migrationBuilder.AddForeignKey(
-                name: "FK_ChannelMessageMentions_Users_MentionerId",
-                table: "ChannelMessageMentions",
-                column: "MentionerId",
-                principalTable: "Users",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.Cascade);
-
-            migrationBuilder.AddForeignKey(
                 name: "FK_ChannelMessageNotifications_ChannelMessages_ChannelMessageId",
                 table: "ChannelMessageNotifications",
                 column: "ChannelMessageId",
@@ -1232,26 +1508,10 @@ namespace PersistenceService.Migrations
                 onDelete: ReferentialAction.Cascade);
 
             migrationBuilder.AddForeignKey(
-                name: "FK_ChannelMessageNotifications_Users_UserId",
-                table: "ChannelMessageNotifications",
-                column: "UserId",
-                principalTable: "Users",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.Cascade);
-
-            migrationBuilder.AddForeignKey(
                 name: "FK_ChannelMessageReactions_ChannelMessages_ChannelMessageId",
                 table: "ChannelMessageReactions",
                 column: "ChannelMessageId",
                 principalTable: "ChannelMessages",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.Cascade);
-
-            migrationBuilder.AddForeignKey(
-                name: "FK_ChannelMessageReactions_Users_UserId",
-                table: "ChannelMessageReactions",
-                column: "UserId",
-                principalTable: "Users",
                 principalColumn: "Id",
                 onDelete: ReferentialAction.Cascade);
 
@@ -1280,22 +1540,6 @@ namespace PersistenceService.Migrations
                 onDelete: ReferentialAction.Cascade);
 
             migrationBuilder.AddForeignKey(
-                name: "FK_ChannelMessageReplies_Users_RepliedToId",
-                table: "ChannelMessageReplies",
-                column: "RepliedToId",
-                principalTable: "Users",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.Cascade);
-
-            migrationBuilder.AddForeignKey(
-                name: "FK_ChannelMessageReplies_Users_ReplierId",
-                table: "ChannelMessageReplies",
-                column: "ReplierId",
-                principalTable: "Users",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.Cascade);
-
-            migrationBuilder.AddForeignKey(
                 name: "FK_ChannelMessages_Channels_ChannelId",
                 table: "ChannelMessages",
                 column: "ChannelId",
@@ -1312,14 +1556,6 @@ namespace PersistenceService.Migrations
                 onDelete: ReferentialAction.Cascade);
 
             migrationBuilder.AddForeignKey(
-                name: "FK_ChannelMessages_Users_UserId",
-                table: "ChannelMessages",
-                column: "UserId",
-                principalTable: "Users",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.Cascade);
-
-            migrationBuilder.AddForeignKey(
                 name: "FK_Channels_Files_AvatarId",
                 table: "Channels",
                 column: "AvatarId",
@@ -1328,18 +1564,10 @@ namespace PersistenceService.Migrations
                 onDelete: ReferentialAction.SetNull);
 
             migrationBuilder.AddForeignKey(
-                name: "FK_Channels_Users_CreatedById",
-                table: "Channels",
-                column: "CreatedById",
-                principalTable: "Users",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.Cascade);
-
-            migrationBuilder.AddForeignKey(
-                name: "FK_Channels_Workspaces_WorkspaceId",
+                name: "FK_Channels_Workspace_WorkspaceId",
                 table: "Channels",
                 column: "WorkspaceId",
-                principalTable: "Workspaces",
+                principalTable: "Workspace",
                 principalColumn: "Id",
                 onDelete: ReferentialAction.Cascade);
 
@@ -1352,138 +1580,10 @@ namespace PersistenceService.Migrations
                 onDelete: ReferentialAction.Cascade);
 
             migrationBuilder.AddForeignKey(
-                name: "FK_DirectMessageGroupMembers_Users_UserId",
-                table: "DirectMessageGroupMembers",
-                column: "UserId",
-                principalTable: "Users",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.Cascade);
-
-            migrationBuilder.AddForeignKey(
-                name: "FK_DirectMessageGroups_Workspaces_WorkspaceId",
+                name: "FK_DirectMessageGroups_Workspace_WorkspaceId",
                 table: "DirectMessageGroups",
                 column: "WorkspaceId",
-                principalTable: "Workspaces",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.Cascade);
-
-            migrationBuilder.AddForeignKey(
-                name: "FK_DirectMessageLaterFlags_DirectMessages_DirectMessageId",
-                table: "DirectMessageLaterFlags",
-                column: "DirectMessageId",
-                principalTable: "DirectMessages",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.Cascade);
-
-            migrationBuilder.AddForeignKey(
-                name: "FK_DirectMessageLaterFlags_Users_UserId",
-                table: "DirectMessageLaterFlags",
-                column: "UserId",
-                principalTable: "Users",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.Cascade);
-
-            migrationBuilder.AddForeignKey(
-                name: "FK_DirectMessageLaterFlags_Workspaces_WorkspaceId",
-                table: "DirectMessageLaterFlags",
-                column: "WorkspaceId",
-                principalTable: "Workspaces",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.Cascade);
-
-            migrationBuilder.AddForeignKey(
-                name: "FK_DirectMessageMentions_DirectMessages_DirectMessageId",
-                table: "DirectMessageMentions",
-                column: "DirectMessageId",
-                principalTable: "DirectMessages",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.Cascade);
-
-            migrationBuilder.AddForeignKey(
-                name: "FK_DirectMessageMentions_Users_MentionedId",
-                table: "DirectMessageMentions",
-                column: "MentionedId",
-                principalTable: "Users",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.Cascade);
-
-            migrationBuilder.AddForeignKey(
-                name: "FK_DirectMessageMentions_Users_MentionerId",
-                table: "DirectMessageMentions",
-                column: "MentionerId",
-                principalTable: "Users",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.Cascade);
-
-            migrationBuilder.AddForeignKey(
-                name: "FK_DirectMessageNotifications_DirectMessages_DirectMessageId",
-                table: "DirectMessageNotifications",
-                column: "DirectMessageId",
-                principalTable: "DirectMessages",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.Cascade);
-
-            migrationBuilder.AddForeignKey(
-                name: "FK_DirectMessageNotifications_Users_UserId",
-                table: "DirectMessageNotifications",
-                column: "UserId",
-                principalTable: "Users",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.Cascade);
-
-            migrationBuilder.AddForeignKey(
-                name: "FK_DirectMessageReactions_DirectMessages_DirectMessageId",
-                table: "DirectMessageReactions",
-                column: "DirectMessageId",
-                principalTable: "DirectMessages",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.Cascade);
-
-            migrationBuilder.AddForeignKey(
-                name: "FK_DirectMessageReactions_Users_UserId",
-                table: "DirectMessageReactions",
-                column: "UserId",
-                principalTable: "Users",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.Cascade);
-
-            migrationBuilder.AddForeignKey(
-                name: "FK_DirectMessageReplies_DirectMessages_DirectMessageId",
-                table: "DirectMessageReplies",
-                column: "DirectMessageId",
-                principalTable: "DirectMessages",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.Cascade);
-
-            migrationBuilder.AddForeignKey(
-                name: "FK_DirectMessageReplies_DirectMessages_MessageRepliedToId",
-                table: "DirectMessageReplies",
-                column: "MessageRepliedToId",
-                principalTable: "DirectMessages",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.Cascade);
-
-            migrationBuilder.AddForeignKey(
-                name: "FK_DirectMessageReplies_Users_RepliedToId",
-                table: "DirectMessageReplies",
-                column: "RepliedToId",
-                principalTable: "Users",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.Cascade);
-
-            migrationBuilder.AddForeignKey(
-                name: "FK_DirectMessageReplies_Users_ReplierId",
-                table: "DirectMessageReplies",
-                column: "ReplierId",
-                principalTable: "Users",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.Cascade);
-
-            migrationBuilder.AddForeignKey(
-                name: "FK_DirectMessages_Users_UserId",
-                table: "DirectMessages",
-                column: "UserId",
-                principalTable: "Users",
+                principalTable: "Workspace",
                 principalColumn: "Id",
                 onDelete: ReferentialAction.Cascade);
         }
@@ -1492,36 +1592,55 @@ namespace PersistenceService.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropForeignKey(
-                name: "FK_ChannelMessages_Channels_ChannelId",
+                name: "FK_ChannelMessages_AspNetUsers_UserId",
                 table: "ChannelMessages");
 
             migrationBuilder.DropForeignKey(
-                name: "FK_Files_Channels_ChannelId",
-                table: "Files");
+                name: "FK_Channels_AspNetUsers_CreatedById",
+                table: "Channels");
+
+            migrationBuilder.DropForeignKey(
+                name: "FK_DirectMessages_AspNetUsers_UserId",
+                table: "DirectMessages");
+
+            migrationBuilder.DropForeignKey(
+                name: "FK_Channels_Files_AvatarId",
+                table: "Channels");
+
+            migrationBuilder.DropForeignKey(
+                name: "FK_Workspace_Files_AvatarId",
+                table: "Workspace");
+
+            migrationBuilder.DropForeignKey(
+                name: "FK_ChannelMessages_Channels_ChannelId",
+                table: "ChannelMessages");
 
             migrationBuilder.DropForeignKey(
                 name: "FK_Threads_Channels_ChannelId",
                 table: "Threads");
 
             migrationBuilder.DropForeignKey(
-                name: "FK_ChannelMessages_Users_UserId",
-                table: "ChannelMessages");
-
-            migrationBuilder.DropForeignKey(
-                name: "FK_DirectMessages_Users_UserId",
-                table: "DirectMessages");
-
-            migrationBuilder.DropForeignKey(
-                name: "FK_DirectMessageGroups_Workspaces_WorkspaceId",
-                table: "DirectMessageGroups");
-
-            migrationBuilder.DropForeignKey(
-                name: "FK_Threads_Workspaces_WorkspaceId",
+                name: "FK_Threads_Workspace_WorkspaceId",
                 table: "Threads");
 
             migrationBuilder.DropForeignKey(
                 name: "FK_Threads_ChannelMessages_FirstMessageId",
                 table: "Threads");
+
+            migrationBuilder.DropTable(
+                name: "AspNetRoleClaims");
+
+            migrationBuilder.DropTable(
+                name: "AspNetUserClaims");
+
+            migrationBuilder.DropTable(
+                name: "AspNetUserLogins");
+
+            migrationBuilder.DropTable(
+                name: "AspNetUserRoles");
+
+            migrationBuilder.DropTable(
+                name: "AspNetUserTokens");
 
             migrationBuilder.DropTable(
                 name: "ChannelInvites");
@@ -1578,16 +1697,13 @@ namespace PersistenceService.Migrations
                 name: "WorkspaceSearches");
 
             migrationBuilder.DropTable(
-                name: "Channels");
+                name: "AspNetRoles");
 
             migrationBuilder.DropTable(
-                name: "Users");
+                name: "AspNetUsers");
 
             migrationBuilder.DropTable(
                 name: "Themes");
-
-            migrationBuilder.DropTable(
-                name: "Workspaces");
 
             migrationBuilder.DropTable(
                 name: "Files");
@@ -1597,6 +1713,12 @@ namespace PersistenceService.Migrations
 
             migrationBuilder.DropTable(
                 name: "DirectMessageGroups");
+
+            migrationBuilder.DropTable(
+                name: "Channels");
+
+            migrationBuilder.DropTable(
+                name: "Workspace");
 
             migrationBuilder.DropTable(
                 name: "ChannelMessages");

@@ -14,7 +14,6 @@ namespace PersistenceService.Models;
 [Index(nameof(CreatedAt))]
 public class DirectMessageMention
 {
-    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public Guid Id { get; set; }
 
     [Column(TypeName = "timestamp")]

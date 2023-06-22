@@ -9,13 +9,9 @@ namespace PersistenceService.Models;
 [Index(nameof(Deleted))]
 [Index(nameof(NormalizedEmail))]
 [Index(nameof(NormalizedUserName))]
-public class User : IdentityUser
+public class User : IdentityUser<Guid>
 {
 #pragma warning disable CS8618, CS0114
-    [Key]
-    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-    public Guid Id { get; set; }
-
     [DeleteBehavior(DeleteBehavior.SetNull)]
     public File? Avatar { get; set; }
 #pragma warning restore CS8618
@@ -51,8 +47,7 @@ public class User : IdentityUser
 
 #pragma warning disable CS8618
     [MaxLength(20)]
-    [DefaultValue("online")]
-    public string OnlineStatus { get; set; }
+    public string? OnlineStatus { get; set; }
 #pragma warning restore CS8618
 
     [Column(TypeName = "timestamp")]
@@ -67,28 +62,5 @@ public class User : IdentityUser
 #pragma warning disable CS8618
     [MaxLength(40)]
     public string Timezone { get; set; }
-
-    [MaxLength(80)]
-    public string UserName { get; set; }
-
-    [MaxLength(80)]
-    public string NormalizedUserName { get; set; }
-
-    [MaxLength(320)]
-    public string Email { get; set; }
-
-    [MaxLength(320)]
-    public string NormalizedEmail { get; set; }
-
-    [MaxLength(128)]
-    public string PasswordHash { get; set; }
-
-    [MaxLength(20)]
-    public string PhoneNumber { get; set; }
-
-    [ConcurrencyCheck]
-    public byte[] ConcurrencyStamp { get; set; }
-
-    public byte[] SecurityStamp { get; set; }
 #pragma warning restore CS8618
 }
