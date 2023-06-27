@@ -12,7 +12,7 @@ using PersistenceService.Data.ApplicationDb;
 namespace PersistenceService.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20230626233340_InitialEntityCreate")]
+    [Migration("20230627151331_InitialEntityCreate")]
     partial class InitialEntityCreate
     {
         /// <inheritdoc />
@@ -1105,10 +1105,11 @@ namespace PersistenceService.Migrations
                     b.Property<Guid?>("AvatarId")
                         .HasColumnType("uuid");
 
-                    b.Property<byte[]>("ConcurrencyStamp")
+                    b.Property<Guid>("ConcurrencyStamp")
                         .IsConcurrencyToken()
-                        .IsRequired()
-                        .HasColumnType("bytea");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasDefaultValueSql("gen_random_uuid()");
 
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
@@ -1126,13 +1127,15 @@ namespace PersistenceService.Migrations
                         .HasColumnType("character varying(80)");
 
                     b.Property<int>("NumMembers")
-                        .HasColumnType("integer");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValueSql("1");
 
                     b.HasKey("Id");
 
                     b.HasIndex("AvatarId");
 
-                    b.ToTable("Workspace");
+                    b.ToTable("Workspaces");
                 });
 
             modelBuilder.Entity("PersistenceService.Models.WorkspaceAdminPermissions", b =>

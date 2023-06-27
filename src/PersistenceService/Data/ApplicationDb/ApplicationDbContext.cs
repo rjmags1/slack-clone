@@ -32,6 +32,7 @@ public class ApplicationDbContext
     public DbSet<Theme> Themes { get; set; }
     public DbSet<Models.Thread> Threads { get; set; }
     public DbSet<ThreadWatch> ThreadWatches { get; set; }
+    public DbSet<Workspace> Workspaces { get; set; }
     public DbSet<WorkspaceAdminPermissions> WorkspaceAdminPermissions { get; set; }
     public DbSet<WorkspaceInvite> WorkspaceInvites { get; set; }
     public DbSet<WorkspaceMember> WorkspaceMembers { get; set; }
@@ -139,6 +140,11 @@ public class ApplicationDbContext
             .HasColumnType("timestamp")
             .HasConversion(new DateTimeOffsetTimestampConverter());
 
+        modelBuilder
+            .Entity<Workspace>()
+            .Property(e => e.NumMembers)
+            .HasDefaultValueSql("1");
+
         foreach (var entityType in modelBuilder.Model.GetEntityTypes())
         {
             string[] timestampPropertyNames =
@@ -157,6 +163,16 @@ public class ApplicationDbContext
                         .HasDefaultValueSql("now()");
                 }
                 if (p.Name == "Id" && p.PropertyType == typeof(Guid))
+                {
+                    modelBuilder
+                        .Entity(entityType.ClrType)
+                        .Property(p.Name)
+                        .HasDefaultValueSql("gen_random_uuid()");
+                }
+                if (
+                    p.Name == "ConcurrencyStamp"
+                    && p.PropertyType == typeof(Guid)
+                )
                 {
                     modelBuilder
                         .Entity(entityType.ClrType)

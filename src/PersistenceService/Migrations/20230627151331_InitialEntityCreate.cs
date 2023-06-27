@@ -644,22 +644,22 @@ namespace PersistenceService.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Workspace",
+                name: "Workspaces",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "gen_random_uuid()"),
                     AvatarId = table.Column<Guid>(type: "uuid", nullable: true),
-                    ConcurrencyStamp = table.Column<byte[]>(type: "bytea", nullable: false),
+                    ConcurrencyStamp = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "gen_random_uuid()"),
                     CreatedAt = table.Column<DateTime>(type: "timestamp", nullable: false, defaultValueSql: "now()"),
                     Description = table.Column<string>(type: "character varying(120)", maxLength: 120, nullable: false),
                     Name = table.Column<string>(type: "character varying(80)", maxLength: 80, nullable: false),
-                    NumMembers = table.Column<int>(type: "integer", nullable: false)
+                    NumMembers = table.Column<int>(type: "integer", nullable: false, defaultValueSql: "1")
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Workspace", x => x.Id);
+                    table.PrimaryKey("PK_Workspaces", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Workspace_Files_AvatarId",
+                        name: "FK_Workspaces_Files_AvatarId",
                         column: x => x.AvatarId,
                         principalTable: "Files",
                         principalColumn: "Id",
@@ -700,9 +700,9 @@ namespace PersistenceService.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_DirectMessageLaterFlags_Workspace_WorkspaceId",
+                        name: "FK_DirectMessageLaterFlags_Workspaces_WorkspaceId",
                         column: x => x.WorkspaceId,
-                        principalTable: "Workspace",
+                        principalTable: "Workspaces",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -734,9 +734,9 @@ namespace PersistenceService.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_Threads_Workspace_WorkspaceId",
+                        name: "FK_Threads_Workspaces_WorkspaceId",
                         column: x => x.WorkspaceId,
-                        principalTable: "Workspace",
+                        principalTable: "Workspaces",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -760,9 +760,9 @@ namespace PersistenceService.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_WorkspaceAdminPermissions_Workspace_WorkspaceId",
+                        name: "FK_WorkspaceAdminPermissions_Workspaces_WorkspaceId",
                         column: x => x.WorkspaceId,
-                        principalTable: "Workspace",
+                        principalTable: "Workspaces",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -794,9 +794,9 @@ namespace PersistenceService.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_WorkspaceInvites_Workspace_WorkspaceId",
+                        name: "FK_WorkspaceInvites_Workspaces_WorkspaceId",
                         column: x => x.WorkspaceId,
-                        principalTable: "Workspace",
+                        principalTable: "Workspaces",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -842,9 +842,9 @@ namespace PersistenceService.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.SetNull);
                     table.ForeignKey(
-                        name: "FK_WorkspaceMembers_Workspace_WorkspaceId",
+                        name: "FK_WorkspaceMembers_Workspaces_WorkspaceId",
                         column: x => x.WorkspaceId,
-                        principalTable: "Workspace",
+                        principalTable: "Workspaces",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -869,9 +869,9 @@ namespace PersistenceService.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_WorkspaceSearches_Workspace_WorkspaceId",
+                        name: "FK_WorkspaceSearches_Workspaces_WorkspaceId",
                         column: x => x.WorkspaceId,
-                        principalTable: "Workspace",
+                        principalTable: "Workspaces",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -1336,11 +1336,6 @@ namespace PersistenceService.Migrations
                 column: "ThreadId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Workspace_AvatarId",
-                table: "Workspace",
-                column: "AvatarId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_WorkspaceAdminPermissions_WorkspaceId",
                 table: "WorkspaceAdminPermissions",
                 column: "WorkspaceId");
@@ -1395,6 +1390,11 @@ namespace PersistenceService.Migrations
                 name: "IX_WorkspaceMembers_WorkspaceId_UserId",
                 table: "WorkspaceMembers",
                 columns: new[] { "WorkspaceId", "UserId" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Workspaces_AvatarId",
+                table: "Workspaces",
+                column: "AvatarId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_WorkspaceSearches_CreatedAt",
@@ -1452,10 +1452,10 @@ namespace PersistenceService.Migrations
                 onDelete: ReferentialAction.Cascade);
 
             migrationBuilder.AddForeignKey(
-                name: "FK_ChannelInvites_Workspace_WorkspaceId",
+                name: "FK_ChannelInvites_Workspaces_WorkspaceId",
                 table: "ChannelInvites",
                 column: "WorkspaceId",
-                principalTable: "Workspace",
+                principalTable: "Workspaces",
                 principalColumn: "Id",
                 onDelete: ReferentialAction.Cascade);
 
@@ -1484,10 +1484,10 @@ namespace PersistenceService.Migrations
                 onDelete: ReferentialAction.Cascade);
 
             migrationBuilder.AddForeignKey(
-                name: "FK_ChannelMessageLaterFlags_Workspace_WorkspaceId",
+                name: "FK_ChannelMessageLaterFlags_Workspaces_WorkspaceId",
                 table: "ChannelMessageLaterFlags",
                 column: "WorkspaceId",
-                principalTable: "Workspace",
+                principalTable: "Workspaces",
                 principalColumn: "Id",
                 onDelete: ReferentialAction.Cascade);
 
@@ -1564,10 +1564,10 @@ namespace PersistenceService.Migrations
                 onDelete: ReferentialAction.SetNull);
 
             migrationBuilder.AddForeignKey(
-                name: "FK_Channels_Workspace_WorkspaceId",
+                name: "FK_Channels_Workspaces_WorkspaceId",
                 table: "Channels",
                 column: "WorkspaceId",
-                principalTable: "Workspace",
+                principalTable: "Workspaces",
                 principalColumn: "Id",
                 onDelete: ReferentialAction.Cascade);
 
@@ -1580,10 +1580,10 @@ namespace PersistenceService.Migrations
                 onDelete: ReferentialAction.Cascade);
 
             migrationBuilder.AddForeignKey(
-                name: "FK_DirectMessageGroups_Workspace_WorkspaceId",
+                name: "FK_DirectMessageGroups_Workspaces_WorkspaceId",
                 table: "DirectMessageGroups",
                 column: "WorkspaceId",
-                principalTable: "Workspace",
+                principalTable: "Workspaces",
                 principalColumn: "Id",
                 onDelete: ReferentialAction.Cascade);
         }
@@ -1608,8 +1608,8 @@ namespace PersistenceService.Migrations
                 table: "Channels");
 
             migrationBuilder.DropForeignKey(
-                name: "FK_Workspace_Files_AvatarId",
-                table: "Workspace");
+                name: "FK_Workspaces_Files_AvatarId",
+                table: "Workspaces");
 
             migrationBuilder.DropForeignKey(
                 name: "FK_ChannelMessages_Channels_ChannelId",
@@ -1620,7 +1620,7 @@ namespace PersistenceService.Migrations
                 table: "Threads");
 
             migrationBuilder.DropForeignKey(
-                name: "FK_Threads_Workspace_WorkspaceId",
+                name: "FK_Threads_Workspaces_WorkspaceId",
                 table: "Threads");
 
             migrationBuilder.DropForeignKey(
@@ -1718,7 +1718,7 @@ namespace PersistenceService.Migrations
                 name: "Channels");
 
             migrationBuilder.DropTable(
-                name: "Workspace");
+                name: "Workspaces");
 
             migrationBuilder.DropTable(
                 name: "ChannelMessages");
