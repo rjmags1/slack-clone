@@ -381,10 +381,10 @@ namespace PersistenceService.Migrations
                     AllowedChannelPostersMask = table.Column<int>(type: "integer", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "timestamp", nullable: false, defaultValueSql: "now()"),
                     CreatedById = table.Column<Guid>(type: "uuid", nullable: false),
-                    ConcurrencyStamp = table.Column<byte[]>(type: "bytea", nullable: false),
+                    ConcurrencyStamp = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "gen_random_uuid()"),
                     Description = table.Column<string>(type: "character varying(120)", maxLength: 120, nullable: false),
                     Name = table.Column<string>(type: "character varying(40)", maxLength: 40, nullable: false),
-                    NumMembers = table.Column<int>(type: "integer", nullable: false),
+                    NumMembers = table.Column<int>(type: "integer", nullable: false, defaultValueSql: "1"),
                     Private = table.Column<bool>(type: "boolean", nullable: false),
                     Topic = table.Column<string>(type: "character varying(40)", maxLength: 40, nullable: false),
                     WorkspaceId = table.Column<Guid>(type: "uuid", nullable: false)

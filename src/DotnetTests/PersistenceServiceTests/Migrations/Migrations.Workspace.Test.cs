@@ -54,10 +54,7 @@ public class WorkspaceMigrationsTests
         var concurrencyStampProperty = _entityType.FindProperty(
             nameof(User.ConcurrencyStamp)
         )!;
-        Assert.Equal(
-            concurrencyStampProperty.GetColumnType(),
-            "character varying(36)"
-        );
+        Assert.Equal(concurrencyStampProperty.GetColumnType(), "uuid");
     }
 
     [Fact]
