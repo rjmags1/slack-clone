@@ -13,7 +13,6 @@ namespace PersistenceService.Models;
 [Index(nameof(CreatedAt))]
 public class ChannelMessageMention
 {
-    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public Guid Id { get; set; }
 
 #pragma warning disable CS8618

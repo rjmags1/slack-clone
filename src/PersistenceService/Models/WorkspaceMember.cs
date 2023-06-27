@@ -10,7 +10,6 @@ namespace PersistenceService.Models;
 [Index(nameof(WorkspaceId), nameof(UserId))]
 public class WorkspaceMember
 {
-    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public Guid Id { get; set; }
 
     [DefaultValue(false)]

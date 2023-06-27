@@ -10,7 +10,6 @@ namespace PersistenceService.Models;
 [Index(nameof(UserId))]
 public class DirectMessageReaction
 {
-    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public Guid Id { get; set; }
 
     [Column(TypeName = "timestamp")]

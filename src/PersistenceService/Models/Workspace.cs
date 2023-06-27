@@ -7,7 +7,6 @@ namespace PersistenceService.Models;
 
 public class Workspace
 {
-    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public Guid Id { get; set; }
 
     [DeleteBehavior(DeleteBehavior.SetNull)]

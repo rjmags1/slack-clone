@@ -8,7 +8,6 @@ namespace PersistenceService.Models;
 [Index(nameof(UserId))]
 public class ChannelMember
 {
-    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public Guid Id { get; set; }
 
     [DefaultValue(false)]

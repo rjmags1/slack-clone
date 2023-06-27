@@ -9,7 +9,6 @@ namespace PersistenceService.Models;
 [Index(nameof(WorkspaceId), nameof(UserId))]
 public class WorkspaceSearch
 {
-    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public Guid Id { get; set; }
 
     [Column(TypeName = "timestamp")]

@@ -12,7 +12,6 @@ namespace PersistenceService.Models;
 [Index(nameof(ChannelId))]
 public class File
 {
-    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public Guid Id { get; set; }
 
     [DeleteBehavior(DeleteBehavior.Cascade)]

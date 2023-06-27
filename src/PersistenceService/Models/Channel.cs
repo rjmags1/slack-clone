@@ -9,7 +9,6 @@ namespace PersistenceService.Models;
 [Index(nameof(Private))]
 public class Channel
 {
-    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public Guid Id { get; set; }
 
     [DefaultValue(true)]

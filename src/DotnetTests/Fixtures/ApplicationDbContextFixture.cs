@@ -1,6 +1,5 @@
 using Microsoft.EntityFrameworkCore;
 using PersistenceService.Data.ApplicationDb;
-using DotNetEnv;
 
 namespace DotnetTests.Fixtures;
 
@@ -10,10 +9,32 @@ public class ApplicationDbContextFixture : IDisposable
 
     public ApplicationDbContextFixture()
     {
-        string connectionString =
-            "Server=localhost;Port=5432;Database=slack_clone_test;Username=postgres;Password=postgres";
+        var envFilePath = Directory.GetCurrentDirectory() + "/.env";
+        if (File.Exists(envFilePath))
+        {
+            using (StreamReader reader = new StreamReader(envFilePath))
+            {
+                string? line;
+                while ((line = reader.ReadLine()) != null)
+                {
+                    int i = line.IndexOf("=");
+                    if (i == -1)
+                    {
+                        throw new InvalidOperationException(
+                            "Invalid .env file format"
+                        );
+                    }
+                    Environment.SetEnvironmentVariable(
+                        line.Substring(0, i),
+                        line.Substring(i + 1)
+                    );
+                }
+            }
+        }
         var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-            .UseNpgsql(connectionString)
+            .UseNpgsql(
+                Environment.GetEnvironmentVariable("TEST_DB_CONNECTION_STRING")
+            )
             //.EnableSensitiveDataLogging()
             //.LogTo(Console.WriteLine)
             .Options;
@@ -29,3 +50,7 @@ public class ApplicationDbContextFixture : IDisposable
         context.Dispose();
     }
 }
+
+[CollectionDefinition("Database collection")]
+public class DatabaseCollection
+    : ICollectionFixture<ApplicationDbContextFixture> { }

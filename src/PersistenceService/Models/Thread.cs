@@ -8,7 +8,6 @@ namespace PersistenceService.Models;
 [Index(nameof(FirstMessageId), IsUnique = true)]
 public class Thread
 {
-    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public Guid Id { get; set; }
 
 #pragma warning disable CS8618

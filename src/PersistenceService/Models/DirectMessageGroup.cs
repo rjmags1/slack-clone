@@ -8,7 +8,6 @@ namespace PersistenceService.Models;
 [Index(nameof(WorkspaceId))]
 public class DirectMessageGroup
 {
-    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public Guid Id { get; set; }
 
 #pragma warning disable CS8618

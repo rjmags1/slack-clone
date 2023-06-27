@@ -8,7 +8,6 @@ namespace PersistenceService.Models;
 [Index(nameof(Name), IsUnique = true)]
 public class Theme
 {
-    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public Guid Id { get; set; }
 
     [MaxLength(40)]

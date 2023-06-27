@@ -1,11 +1,15 @@
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using PersistenceService.Models;
 
 namespace PersistenceService.Data.ApplicationDb;
 
 #pragma warning disable CS8618
-public class ApplicationDbContext : DbContext
+public class ApplicationDbContext
+    : IdentityDbContext<User, IdentityRole<Guid>, Guid>
 {
     public DbSet<Channel> Channels { get; set; }
     public DbSet<ChannelInvite> ChannelInvites { get; set; }
@@ -28,20 +32,40 @@ public class ApplicationDbContext : DbContext
     public DbSet<Theme> Themes { get; set; }
     public DbSet<Models.Thread> Threads { get; set; }
     public DbSet<ThreadWatch> ThreadWatches { get; set; }
-    public DbSet<User> Users { get; set; }
-    public DbSet<Workspace> Workspaces { get; set; }
     public DbSet<WorkspaceAdminPermissions> WorkspaceAdminPermissions { get; set; }
     public DbSet<WorkspaceInvite> WorkspaceInvites { get; set; }
     public DbSet<WorkspaceMember> WorkspaceMembers { get; set; }
     public DbSet<WorkspaceSearch> WorkspaceSearches { get; set; }
 
+    private bool _test = false;
+
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
         : base(options) { }
 
+    public ApplicationDbContext(bool test)
+    {
+        _test = test;
+    }
+
     public ApplicationDbContext() { }
+
+    protected override void OnConfiguring(
+        DbContextOptionsBuilder optionsBuilder
+    )
+    {
+        DotNetEnv.Env.Load();
+        if (_test)
+        {
+            optionsBuilder.UseNpgsql(
+                Environment.GetEnvironmentVariable("TEST_DB_CONNECTION_STRING")
+            );
+        }
+    }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        base.OnModelCreating(modelBuilder);
+
         modelBuilder
             .Entity<ChannelMessage>()
             .HasMany(e => e.Replies)
@@ -63,104 +87,84 @@ public class ApplicationDbContext : DbContext
             .HasForeignKey(e => e.ThreadId);
 
         modelBuilder
-            .Entity<Channel>()
-            .Property(e => e.CreatedAt)
-            .HasDefaultValueSql("now()");
-
-        modelBuilder
-            .Entity<ChannelInvite>()
-            .Property(e => e.CreatedAt)
-            .HasDefaultValueSql("now()");
-
-        modelBuilder
-            .Entity<ChannelMessage>()
-            .Property(e => e.CreatedAt)
-            .HasDefaultValueSql("now()");
-
-        modelBuilder
-            .Entity<ChannelMessageLaterFlag>()
-            .Property(e => e.CreatedAt)
-            .HasDefaultValueSql("now()");
-
-        modelBuilder
-            .Entity<ChannelMessageMention>()
-            .Property(e => e.CreatedAt)
-            .HasDefaultValueSql("now()");
-
-        modelBuilder
-            .Entity<ChannelMessageNotification>()
-            .Property(e => e.CreatedAt)
-            .HasDefaultValueSql("now()");
-
-        modelBuilder
-            .Entity<ChannelMessageReaction>()
-            .Property(e => e.CreatedAt)
-            .HasDefaultValueSql("now()");
-
-        modelBuilder
-            .Entity<DirectMessage>()
-            .Property(e => e.CreatedAt)
-            .HasDefaultValueSql("now()");
-
-        modelBuilder
-            .Entity<DirectMessageGroup>()
-            .Property(e => e.CreatedAt)
-            .HasDefaultValueSql("now()");
-
-        modelBuilder
-            .Entity<DirectMessageLaterFlag>()
-            .Property(e => e.CreatedAt)
-            .HasDefaultValueSql("now()");
-
-        modelBuilder
-            .Entity<DirectMessageMention>()
-            .Property(e => e.CreatedAt)
-            .HasDefaultValueSql("now()");
-
-        modelBuilder
-            .Entity<DirectMessageNotification>()
-            .Property(e => e.CreatedAt)
-            .HasDefaultValueSql("now()");
-
-        modelBuilder
-            .Entity<DirectMessageReaction>()
-            .Property(e => e.CreatedAt)
-            .HasDefaultValueSql("now()");
-
-        modelBuilder
-            .Entity<DirectMessageReaction>()
-            .Property(e => e.CreatedAt)
-            .HasDefaultValueSql("now()");
-
-        modelBuilder
-            .Entity<Models.File>()
-            .Property(e => e.UploadedAt)
-            .HasDefaultValueSql("now()");
+            .Entity<User>()
+            .Property(e => e.UserName)
+            .HasMaxLength(30)
+            .IsRequired();
 
         modelBuilder
             .Entity<User>()
-            .Property(e => e.CreatedAt)
-            .HasDefaultValueSql("now()");
+            .Property(e => e.NormalizedUserName)
+            .HasMaxLength(30)
+            .IsRequired();
 
         modelBuilder
-            .Entity<Workspace>()
-            .Property(e => e.CreatedAt)
-            .HasDefaultValueSql("now()");
+            .Entity<User>()
+            .Property(e => e.Email)
+            .HasMaxLength(320)
+            .IsRequired();
 
         modelBuilder
-            .Entity<WorkspaceInvite>()
-            .Property(e => e.CreatedAt)
-            .HasDefaultValueSql("now()");
+            .Entity<User>()
+            .Property(e => e.NormalizedEmail)
+            .HasMaxLength(320)
+            .IsRequired();
 
         modelBuilder
-            .Entity<WorkspaceMember>()
-            .Property(e => e.JoinedAt)
-            .HasDefaultValueSql("now()");
+            .Entity<User>()
+            .Property(e => e.PasswordHash)
+            .HasMaxLength(128)
+            .IsRequired();
 
         modelBuilder
-            .Entity<WorkspaceSearch>()
-            .Property(e => e.CreatedAt)
-            .HasDefaultValueSql("now()");
+            .Entity<User>()
+            .Property(e => e.PhoneNumber)
+            .HasMaxLength(20);
+
+        modelBuilder
+            .Entity<User>()
+            .Property(e => e.ConcurrencyStamp)
+            .HasMaxLength(36)
+            .IsRequired();
+
+        modelBuilder
+            .Entity<User>()
+            .Property(e => e.SecurityStamp)
+            .HasMaxLength(36)
+            .IsRequired();
+
+        modelBuilder
+            .Entity<User>()
+            .Property(e => e.LockoutEnd)
+            .HasColumnType("timestamp")
+            .HasConversion(new DateTimeOffsetTimestampConverter());
+
+        foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+        {
+            string[] timestampPropertyNames =
+            {
+                "CreatedAt",
+                "JoinedAt",
+                "UploadedAt"
+            };
+            foreach (var p in entityType.ClrType.GetProperties())
+            {
+                if (timestampPropertyNames.Contains(p.Name))
+                {
+                    modelBuilder
+                        .Entity(entityType.ClrType)
+                        .Property(p.Name)
+                        .HasDefaultValueSql("now()");
+                }
+                if (p.Name == "Id" && p.PropertyType == typeof(Guid))
+                {
+                    modelBuilder
+                        .Entity(entityType.ClrType)
+                        .Property(p.Name)
+                        .HasDefaultValueSql("gen_random_uuid()");
+                }
+            }
+        }
     }
 }
 
@@ -178,4 +182,14 @@ public class ApplicationDbContextFactory
         optionsBuilder.UseNpgsql(connectionString);
         return new ApplicationDbContext(optionsBuilder.Options);
     }
+}
+
+public class DateTimeOffsetTimestampConverter
+    : ValueConverter<DateTimeOffset, DateTime>
+{
+    public DateTimeOffsetTimestampConverter()
+        : base(
+            value => value.UtcDateTime,
+            value => new DateTimeOffset(value, TimeSpan.Zero)
+        ) { }
 }

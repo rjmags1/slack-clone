@@ -10,7 +10,6 @@ namespace PersistenceService.Models;
 [Index(nameof(ChannelMessageId), IsUnique = true)]
 public class ChannelMessageReply
 {
-    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public Guid Id { get; set; }
 
 #pragma warning disable CS8618

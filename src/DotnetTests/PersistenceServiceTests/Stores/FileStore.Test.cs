@@ -8,7 +8,8 @@ using Models = PersistenceService.Models;
 
 namespace DotnetTests.PersistenceService.Stores;
 
-public class FileStoreTests : IClassFixture<ApplicationDbContextFixture>
+[Collection("Database collection")]
+public class FileStoreTests
 {
     private readonly ApplicationDbContext _dbContext;
 
@@ -17,13 +18,6 @@ public class FileStoreTests : IClassFixture<ApplicationDbContextFixture>
     )
     {
         _dbContext = applicationDbContextFixture.context;
-    }
-
-    [Fact]
-    public async Task FileDDLMigration_ShouldHaveHappened()
-    {
-        int fileRows = await _dbContext.Files.CountAsync();
-        Assert.Equal(0, fileRows);
     }
 
     [Fact]
@@ -55,10 +49,10 @@ public class FileStoreTests : IClassFixture<ApplicationDbContextFixture>
     }
 
     [Fact]
-    public async Task InsertFiles_ShouldInsertFiles()
+    public async void InsertFiles_ShouldInsertFiles()
     {
         List<Models.File> files = new List<Models.File>();
-        string testNamePrefix = "test-name-";
+        string testNamePrefix = "test-file-name-";
         string testKeyPrefix = "test-key-";
         for (int i = 0; i < 10; i++)
         {
@@ -71,12 +65,8 @@ public class FileStoreTests : IClassFixture<ApplicationDbContextFixture>
         }
 
         FileStore fileStore = new FileStore(_dbContext);
-        int numFiles1 = await _dbContext.Files.CountAsync();
-        int numInserted = await fileStore.InsertFiles(files);
-        int numFiles2 = await _dbContext.Files.CountAsync();
-        Assert.Equal(numFiles2 - numFiles1, numInserted);
 
-        List<Models.File> loaded = _dbContext.Files
+        List<Models.File> loaded = (await fileStore.InsertFiles(files))
             .OrderByDescending(f => f.UploadedAt)
             .Take(10)
             .ToList();
@@ -84,5 +74,7 @@ public class FileStoreTests : IClassFixture<ApplicationDbContextFixture>
             files.Select(f => f.Name),
             loaded.Select(f => f.Name).OrderBy(name => name)
         );
+        Assert.All(loaded, f => Assert.NotNull(f.Id));
+        Assert.All(loaded, f => Assert.NotNull(f.UploadedAt));
     }
 }
