@@ -28,7 +28,7 @@ public class ThemeMigrationsTests
         string idColumnType = idProperty.GetColumnType();
         var idColumnNullable = idProperty.IsColumnNullable();
         string defaultValueSql = idProperty.GetDefaultValueSql()!;
-        Assert.Equal(defaultValueSql, "gen_random_uuid()");
+        Assert.Equal("gen_random_uuid()", defaultValueSql);
         Assert.Equal("uuid", idColumnType);
         Assert.False(idColumnNullable);
         Assert.True(idProperty.IsPrimaryKey());

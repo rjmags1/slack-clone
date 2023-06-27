@@ -39,14 +39,14 @@ public class WorkspaceStoreTests
         );
         foreach ((Workspace iw, Workspace w) in inserted.Zip(workspaces))
         {
-            Assert.NotNull(iw.Id);
+            Assert.NotEqual(iw.Id, Guid.Empty);
             Assert.Null(iw.Avatar);
             Assert.Null(iw.AvatarId);
-            Assert.NotNull(iw.ConcurrencyStamp);
-            Assert.NotNull(iw.CreatedAt);
+            Assert.NotEqual(iw.ConcurrencyStamp, Guid.Empty);
+            Assert.NotEqual(iw.CreatedAt, default(DateTime));
             Assert.Equal(iw.Description, w.Description);
             Assert.Equal(iw.Name, w.Name);
-            Assert.Equal(iw.NumMembers, 1);
+            Assert.Equal(1, iw.NumMembers);
         }
     }
 

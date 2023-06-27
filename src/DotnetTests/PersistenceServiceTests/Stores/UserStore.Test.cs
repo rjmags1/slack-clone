@@ -63,7 +63,7 @@ public class UserStoreTests
                 .Zip(passwords)
         )
         {
-            Assert.NotNull(loadedUser.Id);
+            Assert.NotEqual(loadedUser.Id, Guid.Empty);
             Assert.Null(loadedUser.Avatar);
             Assert.Null(loadedUser.AvatarId);
             Assert.NotNull(loadedUser.CreatedAt);
@@ -88,8 +88,8 @@ public class UserStoreTests
             Assert.Equal(loadedUser.Email, user.Email);
             Assert.Equal(loadedUser.NormalizedEmail, user.NormalizedEmail);
             Assert.Equal(loadedUser.PhoneNumber, user.PhoneNumber);
-            Assert.NotNull(loadedUser.ConcurrencyStamp);
-            Assert.NotNull(loadedUser.SecurityStamp);
+            Assert.NotEqual(loadedUser.ConcurrencyStamp, Guid.Empty.ToString());
+            Assert.NotEqual(loadedUser.SecurityStamp, Guid.Empty.ToString());
             Assert.True(await _userStore.CheckPasswordAsync(user, password));
         }
     }

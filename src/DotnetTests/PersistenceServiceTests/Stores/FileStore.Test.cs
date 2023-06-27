@@ -74,7 +74,10 @@ public class FileStoreTests
             files.Select(f => f.Name),
             loaded.Select(f => f.Name).OrderBy(name => name)
         );
-        Assert.All(loaded, f => Assert.NotNull(f.Id));
-        Assert.All(loaded, f => Assert.NotNull(f.UploadedAt));
+        Assert.All(loaded, f => Assert.NotEqual(f.Id, Guid.Empty));
+        Assert.All(
+            loaded,
+            f => Assert.NotEqual(f.UploadedAt, default(DateTime))
+        );
     }
 }

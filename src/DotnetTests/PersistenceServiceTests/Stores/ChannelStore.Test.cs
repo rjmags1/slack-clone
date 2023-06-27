@@ -65,26 +65,26 @@ public class ChannelStoreTests
         List<Channel> inserted = await _channelStore.InsertChannels(channels);
 
         // navigation entities created if Ids autopopulated
-        Assert.NotNull(channelCreator.Id);
-        Assert.NotNull(channelWorkspace.Id);
+        Assert.NotEqual(channelCreator.Id, Guid.Empty);
+        Assert.NotEqual(channelWorkspace.Id, Guid.Empty);
 
         foreach ((Channel ic, Channel c) in inserted.Zip(channels))
         {
-            Assert.NotNull(ic.Id);
+            Assert.NotEqual(ic.Id, Guid.Empty);
             Assert.True(ic.AllowThreads);
             Assert.Null(ic.Avatar);
             Assert.Null(ic.AvatarId);
-            Assert.Equal(ic.AllowedChannelPostersMask, 1);
-            Assert.NotNull(ic.CreatedAt);
+            Assert.Equal(1, ic.AllowedChannelPostersMask);
+            Assert.NotEqual(ic.CreatedAt, default(DateTime));
             Assert.Equal(ic.CreatedBy, channelCreator);
             Assert.Equal(ic.CreatedById, channelCreator.Id);
-            Assert.NotNull(ic.ConcurrencyStamp);
+            Assert.NotEqual(ic.ConcurrencyStamp, Guid.Empty);
             Assert.Equal(ic.Description, c.Description);
             Assert.NotNull(ic.ChannelMembers);
             Assert.NotNull(ic.ChannelMessages);
             Assert.Equal(ic.Name, c.Name);
             Assert.False(ic.Private);
-            Assert.Equal(ic.Topic, "");
+            Assert.Equal("", ic.Topic);
             Assert.Equal(ic.Workspace, channelWorkspace);
             Assert.Equal(ic.WorkspaceId, channelWorkspace.Id);
         }

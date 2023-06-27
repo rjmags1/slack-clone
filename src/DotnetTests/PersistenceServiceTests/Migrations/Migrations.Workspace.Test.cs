@@ -26,7 +26,7 @@ public class WorkspaceMigrationsTests
     {
         var idProperty = _entityType.FindProperty(nameof(User.Id))!;
         string defaultValueSql = idProperty.GetDefaultValueSql()!;
-        Assert.Equal(defaultValueSql, "gen_random_uuid()");
+        Assert.Equal("gen_random_uuid()", defaultValueSql);
         string idColumnType = idProperty.GetColumnType();
         var idColumnNullable = idProperty.IsColumnNullable();
         Assert.Equal("uuid", idColumnType);
@@ -45,7 +45,7 @@ public class WorkspaceMigrationsTests
 
         Assert.NotNull(foreignKey);
         Assert.Equal(DeleteBehavior.SetNull, foreignKey.DeleteBehavior);
-        Assert.Equal(avatarIdColumnType, "uuid");
+        Assert.Equal("uuid", avatarIdColumnType);
     }
 
     [Fact]
@@ -54,7 +54,7 @@ public class WorkspaceMigrationsTests
         var concurrencyStampProperty = _entityType.FindProperty(
             nameof(User.ConcurrencyStamp)
         )!;
-        Assert.Equal(concurrencyStampProperty.GetColumnType(), "uuid");
+        Assert.Equal("uuid", concurrencyStampProperty.GetColumnType());
     }
 
     [Fact]
@@ -63,8 +63,8 @@ public class WorkspaceMigrationsTests
         var concurrencyStampProperty = _entityType.FindProperty(
             nameof(User.CreatedAt)
         )!;
-        Assert.Equal(concurrencyStampProperty.GetColumnType(), "timestamp");
-        Assert.Equal(concurrencyStampProperty.GetDefaultValueSql(), "now()");
+        Assert.Equal("timestamp", concurrencyStampProperty.GetColumnType());
+        Assert.Equal("now()", concurrencyStampProperty.GetDefaultValueSql());
     }
 
     [Fact]
@@ -74,8 +74,8 @@ public class WorkspaceMigrationsTests
             nameof(Workspace.Description)
         )!;
         Assert.Equal(
-            descriptionColumnProperty.GetColumnType(),
-            "character varying(120)"
+            "character varying(120)",
+            descriptionColumnProperty.GetColumnType()
         );
         Assert.False(descriptionColumnProperty.IsColumnNullable());
     }
@@ -87,8 +87,8 @@ public class WorkspaceMigrationsTests
             nameof(Workspace.Name)
         )!;
         Assert.Equal(
-            nameColumnProperty.GetColumnType(),
-            "character varying(80)"
+            "character varying(80)",
+            nameColumnProperty.GetColumnType()
         );
         Assert.False(nameColumnProperty.IsColumnNullable());
     }
@@ -99,7 +99,7 @@ public class WorkspaceMigrationsTests
         var numMembersColumnProperty = _entityType.FindProperty(
             nameof(Workspace.NumMembers)
         )!;
-        Assert.Equal(numMembersColumnProperty.GetDefaultValueSql(), "1");
+        Assert.Equal("1", numMembersColumnProperty.GetDefaultValueSql());
     }
 
     [Fact]

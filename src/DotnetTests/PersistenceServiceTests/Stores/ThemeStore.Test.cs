@@ -39,7 +39,7 @@ public class ThemeStoreTests
             themes.Select(f => f.Name),
             loaded.Select(f => f.Name).OrderBy(name => name)
         );
-        Assert.All(loaded, t => Assert.NotNull(t.Id));
+        Assert.All(loaded, t => Assert.NotEqual(t.Id, Guid.Empty));
     }
 
     [Fact]
