@@ -155,6 +155,11 @@ public class ApplicationDbContext
             .Property(e => e.ChannelInviteStatus)
             .HasDefaultValueSql("1");
 
+        modelBuilder
+            .Entity<ChannelMember>()
+            .Property(e => e.EnableNotifications)
+            .HasDefaultValueSql("true");
+
         foreach (var entityType in modelBuilder.Model.GetEntityTypes())
         {
             string[] timestampPropertyNames =

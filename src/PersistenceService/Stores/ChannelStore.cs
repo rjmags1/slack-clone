@@ -8,6 +8,44 @@ public class ChannelStore : Store
     public ChannelStore(ApplicationDbContext context)
         : base(context) { }
 
+    public async Task<List<ChannelMember>> InsertChannelMembers(
+        Guid channelId,
+        List<Guid> userIds
+    )
+    {
+        Guid workspaceId = _context.Channels
+            .First(c => c.Id == channelId)
+            .WorkspaceId;
+        bool allUsersAreWorkspaceMembers =
+            _context.WorkspaceMembers
+                .Where(member => member.WorkspaceId == workspaceId)
+                .Where(member => userIds.Contains(member.UserId))
+                .Count() == userIds.Count;
+        bool allUsersNotChannelMembers =
+            _context.ChannelMembers
+                .Where(member => userIds.Contains(member.UserId))
+                .Count() == 0;
+        if (!allUsersAreWorkspaceMembers || !allUsersNotChannelMembers)
+        {
+            throw new InvalidOperationException(
+                "Users must be workspace members and not already channel members"
+            );
+        }
+
+        List<ChannelMember> channelMembers = new List<ChannelMember>();
+        foreach (Guid userId in userIds)
+        {
+            channelMembers.Add(
+                new ChannelMember { ChannelId = channelId, UserId = userId }
+            );
+        }
+
+        _context.AddRange(channelMembers);
+        await _context.SaveChangesAsync();
+
+        return channelMembers;
+    }
+
     public async Task<ChannelInvite> InsertChannelInvite(
         Guid channelId,
         Guid adminId,
@@ -24,7 +62,8 @@ public class ChannelStore : Store
             );
         }
 
-        bool invitedExists = _context.Users.Count(u => u.Id == userId) == 1;
+        bool invitedExists =
+            _context.Users.Where(u => u.Id == userId).Count() == 1;
         if (!invitedExists)
         {
             throw new InvalidOperationException("Could not invite user");
@@ -34,10 +73,16 @@ public class ChannelStore : Store
             .First(c => c.Id == channelId)
             .WorkspaceId;
         bool invitedIsWorkspaceMember =
-            _context.WorkspaceMembers.Count(
-                wm => wm.UserId == userId && wm.WorkspaceId == workspaceId
-            ) == 1;
-        if (!invitedIsWorkspaceMember)
+            _context.WorkspaceMembers
+                .Where(wm => wm.UserId == userId)
+                .Where(wm => wm.WorkspaceId == workspaceId)
+                .Count() == 1;
+        bool invitedAlreadyChannelMember =
+            _context.ChannelMembers
+                .Where(cm => cm.ChannelId == channelId)
+                .Where(cm => cm.UserId == userId)
+                .Count() == 1;
+        if (!invitedIsWorkspaceMember || invitedAlreadyChannelMember)
         {
             throw new InvalidOperationException("Could not invite user");
         }

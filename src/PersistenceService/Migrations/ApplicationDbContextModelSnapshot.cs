@@ -282,8 +282,10 @@ namespace PersistenceService.Migrations
                     b.Property<Guid>("ChannelId")
                         .HasColumnType("uuid");
 
-                    b.Property<bool>("EnableNotifications")
-                        .HasColumnType("boolean");
+                    b.Property<bool?>("EnableNotifications")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValueSql("true");
 
                     b.Property<DateTime?>("LastViewedAt")
                         .HasColumnType("timestamp");

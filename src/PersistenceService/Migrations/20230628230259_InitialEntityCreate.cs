@@ -207,7 +207,7 @@ namespace PersistenceService.Migrations
                     Id = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "gen_random_uuid()"),
                     Admin = table.Column<bool>(type: "boolean", nullable: false),
                     ChannelId = table.Column<Guid>(type: "uuid", nullable: false),
-                    EnableNotifications = table.Column<bool>(type: "boolean", nullable: false),
+                    EnableNotifications = table.Column<bool>(type: "boolean", nullable: true, defaultValueSql: "true"),
                     LastViewedAt = table.Column<DateTime>(type: "timestamp", nullable: true),
                     Starred = table.Column<bool>(type: "boolean", nullable: false),
                     UserId = table.Column<Guid>(type: "uuid", nullable: false)

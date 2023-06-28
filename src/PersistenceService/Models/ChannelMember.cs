@@ -21,8 +21,7 @@ public class ChannelMember
     [ForeignKey(nameof(Channel))]
     public Guid ChannelId { get; set; }
 
-    [DefaultValue(true)]
-    public bool EnableNotifications { get; set; } = true;
+    public bool? EnableNotifications { get; set; }
 
     [Column(TypeName = "timestamp")]
     public DateTime? LastViewedAt { get; set; }

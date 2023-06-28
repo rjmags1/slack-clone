@@ -22,6 +22,281 @@ public class ChannelStoreTests
     }
 
     [Fact]
+    public async void InsertChannelMembers_ShouldInsertChannelMembers()
+    {
+        Workspace testWorkspace = new Workspace
+        {
+            Description = "test description",
+            Name = "test-workspace-name" + ChannelStore.GenerateRandomString(10)
+        };
+        _dbContext.Add(testWorkspace);
+
+        List<User> testMembers = new List<User>();
+        List<WorkspaceMember> testWorkspaceMemberships =
+            new List<WorkspaceMember>();
+        for (int i = 0; i < 10; i++)
+        {
+            string email = UserStore.GenerateTestEmail(10);
+            string username = UserStore.GenerateTestUserName(10);
+            User user = new User
+            {
+                FirstName = UserStore.GenerateTestFirstName(10),
+                LastName = UserStore.GenerateTestLastName(10),
+                Timezone = UserStore.timezones[1].Id,
+                UserName = username,
+                Email = email,
+                PhoneNumber = "1-234-567-8901",
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword(
+                    UserStore.testPassword,
+                    4
+                ),
+                NormalizedEmail = email.ToUpper(),
+                NormalizedUserName = username.ToUpper(),
+                SecurityStamp = Guid.NewGuid().ToString(),
+                ConcurrencyStamp = Guid.NewGuid().ToString(),
+            };
+            WorkspaceMember workspaceMembership = new WorkspaceMember
+            {
+                Title = "Member",
+                User = user,
+                Workspace = testWorkspace
+            };
+            testMembers.Add(user);
+            testWorkspaceMemberships.Add(workspaceMembership);
+        }
+        _dbContext.AddRange(testMembers);
+        _dbContext.AddRange(testWorkspaceMemberships);
+
+        Channel testChannel = new Channel
+        {
+            CreatedBy = testMembers[0],
+            Description = "test-description",
+            Name = "test-channel-name-" + ChannelStore.GenerateRandomString(5),
+            Workspace = testWorkspace
+        };
+        _dbContext.Add(testChannel);
+
+        await _dbContext.SaveChangesAsync();
+
+        List<ChannelMember> insertedMembers =
+            await _channelStore.InsertChannelMembers(
+                testChannel.Id,
+                testMembers.Select(u => u.Id).ToList()
+            );
+
+        foreach (
+            (
+                ChannelMember channelMembership,
+                User member
+            ) in insertedMembers.Zip(testMembers)
+        )
+        {
+            Assert.NotEqual(channelMembership.Id, Guid.Empty);
+            Assert.False(channelMembership.Admin);
+            Assert.Equal(channelMembership.ChannelId, testChannel.Id);
+            Assert.True(channelMembership.EnableNotifications);
+            Assert.Null(channelMembership.LastViewedAt);
+            Assert.False(channelMembership.Starred);
+            Assert.Equal(channelMembership.UserId, member.Id);
+        }
+    }
+
+    [Fact]
+    public async void InsertChannelMembers_ShouldThrowOnNonExistentIds()
+    {
+        Workspace testWorkspace = new Workspace
+        {
+            Description = "test description",
+            Name = "test-workspace-name" + ChannelStore.GenerateRandomString(10)
+        };
+        _dbContext.Add(testWorkspace);
+
+        string email = UserStore.GenerateTestEmail(10);
+        string username = UserStore.GenerateTestUserName(10);
+        User testMember = new User
+        {
+            FirstName = UserStore.GenerateTestFirstName(10),
+            LastName = UserStore.GenerateTestLastName(10),
+            Timezone = UserStore.timezones[1].Id,
+            UserName = username,
+            Email = email,
+            PhoneNumber = "1-234-567-8901",
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(
+                UserStore.testPassword,
+                4
+            ),
+            NormalizedEmail = email.ToUpper(),
+            NormalizedUserName = username.ToUpper(),
+            SecurityStamp = Guid.NewGuid().ToString(),
+            ConcurrencyStamp = Guid.NewGuid().ToString(),
+        };
+
+        WorkspaceMember testWorkspaceMembership = new WorkspaceMember
+        {
+            Title = "Member",
+            User = testMember,
+            Workspace = testWorkspace
+        };
+        _dbContext.Add(testMember);
+        _dbContext.Add(testWorkspace);
+        _dbContext.Add(testWorkspaceMembership);
+
+        Channel testChannel = new Channel
+        {
+            CreatedBy = testMember,
+            Description = "test-description",
+            Name = "test-channel-name-" + ChannelStore.GenerateRandomString(5),
+            Workspace = testWorkspace
+        };
+        _dbContext.Add(testChannel);
+
+        await _dbContext.SaveChangesAsync();
+
+        await Assert.ThrowsAsync<InvalidOperationException>(
+            async () =>
+                await _channelStore.InsertChannelMembers(
+                    testChannel.Id,
+                    new List<Guid> { Guid.Empty }
+                )
+        );
+
+        await Assert.ThrowsAsync<InvalidOperationException>(
+            async () =>
+                await _channelStore.InsertChannelMembers(
+                    Guid.Empty,
+                    new List<Guid> { testMember.Id }
+                )
+        );
+
+        Assert.NotNull(
+            await _channelStore.InsertChannelMembers(
+                testChannel.Id,
+                new List<Guid> { testMember.Id }
+            )
+        );
+    }
+
+    [Fact]
+    public async void InsertChannelMembers_ShouldThrowOnNonWorkspaceMembers()
+    {
+        Workspace testWorkspace = new Workspace
+        {
+            Description = "test description",
+            Name = "test-workspace-name" + ChannelStore.GenerateRandomString(10)
+        };
+        _dbContext.Add(testWorkspace);
+
+        string email = UserStore.GenerateTestEmail(10);
+        string username = UserStore.GenerateTestUserName(10);
+        User testMember = new User
+        {
+            FirstName = UserStore.GenerateTestFirstName(10),
+            LastName = UserStore.GenerateTestLastName(10),
+            Timezone = UserStore.timezones[1].Id,
+            UserName = username,
+            Email = email,
+            PhoneNumber = "1-234-567-8901",
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(
+                UserStore.testPassword,
+                4
+            ),
+            NormalizedEmail = email.ToUpper(),
+            NormalizedUserName = username.ToUpper(),
+            SecurityStamp = Guid.NewGuid().ToString(),
+            ConcurrencyStamp = Guid.NewGuid().ToString(),
+        };
+
+        _dbContext.Add(testMember);
+        _dbContext.Add(testWorkspace);
+
+        Channel testChannel = new Channel
+        {
+            CreatedBy = testMember,
+            Description = "test-description",
+            Name = "test-channel-name-" + ChannelStore.GenerateRandomString(5),
+            Workspace = testWorkspace
+        };
+        _dbContext.Add(testChannel);
+
+        await _dbContext.SaveChangesAsync();
+
+        await Assert.ThrowsAsync<InvalidOperationException>(
+            async () =>
+                await _channelStore.InsertChannelMembers(
+                    testChannel.Id,
+                    new List<Guid> { testMember.Id }
+                )
+        );
+    }
+
+    [Fact]
+    public async void InsertChannelMembers_ShouldThrowOnAlreadyChannelMembers()
+    {
+        Workspace testWorkspace = new Workspace
+        {
+            Description = "test description",
+            Name = "test-workspace-name" + ChannelStore.GenerateRandomString(10)
+        };
+        _dbContext.Add(testWorkspace);
+
+        string email = UserStore.GenerateTestEmail(10);
+        string username = UserStore.GenerateTestUserName(10);
+        User testMember = new User
+        {
+            FirstName = UserStore.GenerateTestFirstName(10),
+            LastName = UserStore.GenerateTestLastName(10),
+            Timezone = UserStore.timezones[1].Id,
+            UserName = username,
+            Email = email,
+            PhoneNumber = "1-234-567-8901",
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(
+                UserStore.testPassword,
+                4
+            ),
+            NormalizedEmail = email.ToUpper(),
+            NormalizedUserName = username.ToUpper(),
+            SecurityStamp = Guid.NewGuid().ToString(),
+            ConcurrencyStamp = Guid.NewGuid().ToString(),
+        };
+
+        WorkspaceMember testWorkspaceMembership = new WorkspaceMember
+        {
+            Title = "Member",
+            User = testMember,
+            Workspace = testWorkspace
+        };
+        _dbContext.Add(testMember);
+        _dbContext.Add(testWorkspace);
+        _dbContext.Add(testWorkspaceMembership);
+
+        Channel testChannel = new Channel
+        {
+            CreatedBy = testMember,
+            Description = "test-description",
+            Name = "test-channel-name-" + ChannelStore.GenerateRandomString(5),
+            Workspace = testWorkspace
+        };
+        _dbContext.Add(testChannel);
+
+        ChannelMember testChannelMembership = new ChannelMember
+        {
+            Channel = testChannel,
+            User = testMember
+        };
+        _dbContext.Add(testChannelMembership);
+
+        await _dbContext.SaveChangesAsync();
+
+        await Assert.ThrowsAsync<InvalidOperationException>(
+            async () =>
+                await _channelStore.InsertChannelMembers(
+                    testChannel.Id,
+                    new List<Guid> { testMember.Id }
+                )
+        );
+    }
+
+    [Fact]
     public async void InsertChannelInvites_ShouldInsertChannelInvites()
     {
         Workspace testWorkspace = new Workspace
