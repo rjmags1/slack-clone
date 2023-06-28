@@ -12,7 +12,7 @@ public class DirectMessageGroup
 
 #pragma warning disable CS8618
     [ConcurrencyCheck]
-    public byte[] ConcurrencyStamp { get; set; }
+    public Guid ConcurrencyStamp { get; set; }
 #pragma warning restore CS8618
 
     [Column(TypeName = "timestamp")]
@@ -26,8 +26,7 @@ public class DirectMessageGroup
 
     public ICollection<File> Files { get; } = new List<File>();
 
-    [DefaultValue(2)]
-    public int Size { get; set; }
+    public int Size { get; set; } = 2;
 
 #pragma warning disable CS8618
     [DeleteBehavior(DeleteBehavior.Cascade)]

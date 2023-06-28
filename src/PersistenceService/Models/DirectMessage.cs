@@ -16,7 +16,7 @@ public class DirectMessage
 
 #pragma warning disable CS8618
     [ConcurrencyCheck]
-    public byte[] ConcurrencyStamp { get; set; }
+    public Guid ConcurrencyStamp { get; set; }
 
     [MaxLength(2500)]
     public string Content { get; set; }

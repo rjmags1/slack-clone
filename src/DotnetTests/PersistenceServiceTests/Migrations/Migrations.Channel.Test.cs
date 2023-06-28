@@ -74,6 +74,10 @@ public class ChannelMigrationsTests
             nameof(Channel.ConcurrencyStamp)
         )!;
         Assert.Equal("uuid", concurrencyStampProperty.GetColumnType());
+        Assert.Equal(
+            "gen_random_uuid()",
+            concurrencyStampProperty.GetDefaultValueSql()
+        );
     }
 
     [Fact]

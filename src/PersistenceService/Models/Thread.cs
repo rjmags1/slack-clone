@@ -20,7 +20,7 @@ public class Thread
 
 #pragma warning disable CS8618
     [ConcurrencyCheck]
-    public byte[] ConcurrencyStamp { get; set; }
+    public Guid ConcurrencyStamp { get; set; }
 
     [DeleteBehavior(DeleteBehavior.Cascade)]
     public ChannelMessage FirstMessage { get; set; }

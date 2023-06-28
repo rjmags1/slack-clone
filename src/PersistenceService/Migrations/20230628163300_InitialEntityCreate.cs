@@ -351,7 +351,7 @@ namespace PersistenceService.Migrations
                     Id = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "gen_random_uuid()"),
                     ChannelId = table.Column<Guid>(type: "uuid", nullable: false),
                     Content = table.Column<string>(type: "character varying(2500)", maxLength: 2500, nullable: false),
-                    ConcurrencyStamp = table.Column<byte[]>(type: "bytea", nullable: false),
+                    ConcurrencyStamp = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "gen_random_uuid()"),
                     CreatedAt = table.Column<DateTime>(type: "timestamp", nullable: false, defaultValueSql: "now()"),
                     Deleted = table.Column<bool>(type: "boolean", nullable: false),
                     Draft = table.Column<bool>(type: "boolean", nullable: false),
@@ -425,7 +425,7 @@ namespace PersistenceService.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "gen_random_uuid()"),
-                    ConcurrencyStamp = table.Column<byte[]>(type: "bytea", nullable: false),
+                    ConcurrencyStamp = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "gen_random_uuid()"),
                     CreatedAt = table.Column<DateTime>(type: "timestamp", nullable: false, defaultValueSql: "now()"),
                     Size = table.Column<int>(type: "integer", nullable: false),
                     WorkspaceId = table.Column<Guid>(type: "uuid", nullable: false)
@@ -440,7 +440,7 @@ namespace PersistenceService.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "gen_random_uuid()"),
-                    ConcurrencyStamp = table.Column<byte[]>(type: "bytea", nullable: false),
+                    ConcurrencyStamp = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "gen_random_uuid()"),
                     Content = table.Column<string>(type: "character varying(2500)", maxLength: 2500, nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "timestamp", nullable: false, defaultValueSql: "now()"),
                     Deleted = table.Column<bool>(type: "boolean", nullable: false),
@@ -713,7 +713,7 @@ namespace PersistenceService.Migrations
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "gen_random_uuid()"),
                     ChannelId = table.Column<Guid>(type: "uuid", nullable: false),
-                    ConcurrencyStamp = table.Column<byte[]>(type: "bytea", nullable: false),
+                    ConcurrencyStamp = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "gen_random_uuid()"),
                     FirstMessageId = table.Column<Guid>(type: "uuid", nullable: false),
                     NumMessages = table.Column<int>(type: "integer", nullable: false),
                     WorkspaceId = table.Column<Guid>(type: "uuid", nullable: false)
@@ -747,7 +747,7 @@ namespace PersistenceService.Migrations
                 {
                     AdminId = table.Column<Guid>(type: "uuid", nullable: false),
                     WorkspaceId = table.Column<Guid>(type: "uuid", nullable: false),
-                    ConcurrencyStamp = table.Column<byte[]>(type: "bytea", nullable: false),
+                    ConcurrencyStamp = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "gen_random_uuid()"),
                     WorkspaceAdminPermissionsMask = table.Column<int>(type: "integer", nullable: false)
                 },
                 constraints: table =>
