@@ -178,7 +178,7 @@ namespace PersistenceService.Migrations
                     Id = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "gen_random_uuid()"),
                     AdminId = table.Column<Guid>(type: "uuid", nullable: false),
                     ChannelId = table.Column<Guid>(type: "uuid", nullable: false),
-                    ChannelInviteStatus = table.Column<int>(type: "integer", nullable: false),
+                    ChannelInviteStatus = table.Column<int>(type: "integer", nullable: false, defaultValueSql: "1"),
                     CreatedAt = table.Column<DateTime>(type: "timestamp", nullable: false, defaultValueSql: "now()"),
                     UserId = table.Column<Guid>(type: "uuid", nullable: false),
                     WorkspaceId = table.Column<Guid>(type: "uuid", nullable: false)

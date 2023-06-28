@@ -13,7 +13,7 @@ public class WorkspaceMember
     public Guid Id { get; set; }
 
     [DefaultValue(false)]
-    public bool Admin { get; set; }
+    public bool Admin { get; set; } = false;
 
     [DeleteBehavior(DeleteBehavior.SetNull)]
     public File? Avatar { get; set; }
@@ -34,14 +34,14 @@ public class WorkspaceMember
 #pragma warning disable CS8618
     [DefaultValue("offline")]
     [MaxLength(20)]
-    public string OnlineStatus { get; set; }
+    public string OnlineStatus { get; set; } = "offline";
 #pragma warning restore CS8618
 
     [Column(TypeName = "timestamp")]
     public DateTime? OnlineStatusUntil { get; set; }
 
     [DefaultValue(false)]
-    public bool Owner { get; set; }
+    public bool Owner { get; set; } = false;
 
     [DeleteBehavior(DeleteBehavior.SetNull)]
     public Theme? Theme { get; set; }

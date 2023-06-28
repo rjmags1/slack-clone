@@ -8,6 +8,53 @@ public class ChannelStore : Store
     public ChannelStore(ApplicationDbContext context)
         : base(context) { }
 
+    public async Task<ChannelInvite> InsertChannelInvite(
+        Guid channelId,
+        Guid adminId,
+        Guid userId
+    )
+    {
+        ChannelMember adminMembership = _context.ChannelMembers.First(
+            cm => cm.UserId == adminId
+        );
+        if (!adminMembership.Admin)
+        {
+            throw new InvalidOperationException(
+                "Only channel admins may send invites"
+            );
+        }
+
+        bool invitedExists = _context.Users.Count(u => u.Id == userId) == 1;
+        if (!invitedExists)
+        {
+            throw new InvalidOperationException("Could not invite user");
+        }
+
+        Guid workspaceId = _context.Channels
+            .First(c => c.Id == channelId)
+            .WorkspaceId;
+        bool invitedIsWorkspaceMember =
+            _context.WorkspaceMembers.Count(
+                wm => wm.UserId == userId && wm.WorkspaceId == workspaceId
+            ) == 1;
+        if (!invitedIsWorkspaceMember)
+        {
+            throw new InvalidOperationException("Could not invite user");
+        }
+
+        ChannelInvite invite = new ChannelInvite
+        {
+            AdminId = adminId,
+            ChannelId = channelId,
+            UserId = userId,
+            WorkspaceId = workspaceId
+        };
+        _context.Add(invite);
+        await _context.SaveChangesAsync();
+
+        return invite;
+    }
+
     public async Task<List<Channel>> InsertChannels(List<Channel> channels)
     {
         _context.AddRange(channels);

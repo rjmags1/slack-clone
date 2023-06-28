@@ -150,6 +150,11 @@ public class ApplicationDbContext
             .Property(e => e.NumMembers)
             .HasDefaultValueSql("1");
 
+        modelBuilder
+            .Entity<ChannelInvite>()
+            .Property(e => e.ChannelInviteStatus)
+            .HasDefaultValueSql("1");
+
         foreach (var entityType in modelBuilder.Model.GetEntityTypes())
         {
             string[] timestampPropertyNames =
