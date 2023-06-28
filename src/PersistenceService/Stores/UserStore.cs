@@ -97,16 +97,16 @@ public class UserStore : UserManager<User>
         return users;
     }
 
-    private static string GenerateTestUserName(int randsize) =>
+    public static string GenerateTestUserName(int randsize) =>
         "test_user_name" + CustomBaseStore.GenerateRandomString(randsize);
 
-    private static string GenerateTestFirstName(int randsize) =>
+    public static string GenerateTestFirstName(int randsize) =>
         "test_fname" + CustomBaseStore.GenerateRandomString(randsize);
 
-    private static string GenerateTestLastName(int randsize) =>
+    public static string GenerateTestLastName(int randsize) =>
         "test_lname" + CustomBaseStore.GenerateRandomString(randsize);
 
-    private static string GenerateTestEmail(int randsize) =>
+    public static string GenerateTestEmail(int randsize) =>
         "test-user"
         + CustomBaseStore.GenerateRandomString(randsize)
         + "@testemail.com";

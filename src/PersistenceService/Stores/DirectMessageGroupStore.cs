@@ -41,8 +41,7 @@ public class DirectMessageGroupStore : Store
         }
         catch (Exception e)
         {
-            Console.WriteLine("Failed to add direct message group(s)");
-            throw e;
+            throw new InvalidOperationException(e.Message);
         }
 
         return directMessageGroups;
