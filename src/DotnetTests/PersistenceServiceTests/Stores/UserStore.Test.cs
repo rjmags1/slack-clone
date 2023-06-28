@@ -66,7 +66,7 @@ public class UserStoreTests
             Assert.NotEqual(loadedUser.Id, Guid.Empty);
             Assert.Null(loadedUser.Avatar);
             Assert.Null(loadedUser.AvatarId);
-            Assert.NotNull(loadedUser.CreatedAt);
+            Assert.NotEqual(loadedUser.CreatedAt, default(DateTime));
             Assert.False(loadedUser.Deleted);
             Assert.Equal(loadedUser.FirstName, user.FirstName);
             Assert.Equal(loadedUser.LastName, user.LastName);
