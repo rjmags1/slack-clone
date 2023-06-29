@@ -70,15 +70,21 @@ public class ApplicationDbContext
         modelBuilder
             .Entity<ChannelMessage>()
             .HasMany(e => e.Replies)
-            .WithOne(e => e.ChannelMessage)
-            .HasForeignKey(e => e.ChannelMessageId)
+            .WithOne(e => e.MessageRepliedTo)
+            .HasForeignKey(e => e.MessageRepliedToId)
+            .IsRequired();
+
+        modelBuilder
+            .Entity<ChannelMessageReply>()
+            .HasOne(e => e.ChannelMessage)
+            .WithOne()
             .IsRequired();
 
         modelBuilder
             .Entity<DirectMessage>()
             .HasMany(e => e.Replies)
-            .WithOne(e => e.DirectMessage)
-            .HasForeignKey(e => e.DirectMessageId)
+            .WithOne(e => e.MessageRepliedTo)
+            .HasForeignKey(e => e.MessageRepliedToId)
             .IsRequired();
 
         modelBuilder
@@ -159,6 +165,11 @@ public class ApplicationDbContext
             .Entity<ChannelMember>()
             .Property(e => e.EnableNotifications)
             .HasDefaultValueSql("true");
+
+        modelBuilder
+            .Entity<Models.Thread>()
+            .Property(e => e.NumMessages)
+            .HasDefaultValueSql("2");
 
         foreach (var entityType in modelBuilder.Model.GetEntityTypes())
         {

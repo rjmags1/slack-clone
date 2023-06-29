@@ -12,7 +12,7 @@ using PersistenceService.Data.ApplicationDb;
 namespace PersistenceService.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20230628230259_InitialEntityCreate")]
+    [Migration("20230629162929_InitialEntityCreate")]
     partial class InitialEntityCreate
     {
         /// <inheritdoc />
@@ -940,7 +940,9 @@ namespace PersistenceService.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<int>("NumMessages")
-                        .HasColumnType("integer");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValueSql("2");
 
                     b.Property<Guid>("WorkspaceId")
                         .HasColumnType("uuid");
@@ -1574,13 +1576,13 @@ namespace PersistenceService.Migrations
             modelBuilder.Entity("PersistenceService.Models.ChannelMessageReply", b =>
                 {
                     b.HasOne("PersistenceService.Models.ChannelMessage", "ChannelMessage")
-                        .WithMany("Replies")
-                        .HasForeignKey("ChannelMessageId")
+                        .WithOne()
+                        .HasForeignKey("PersistenceService.Models.ChannelMessageReply", "ChannelMessageId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("PersistenceService.Models.ChannelMessage", "MessageRepliedTo")
-                        .WithMany()
+                        .WithMany("Replies")
                         .HasForeignKey("MessageRepliedToId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -1774,13 +1776,13 @@ namespace PersistenceService.Migrations
             modelBuilder.Entity("PersistenceService.Models.DirectMessageReply", b =>
                 {
                     b.HasOne("PersistenceService.Models.DirectMessage", "DirectMessage")
-                        .WithMany("Replies")
+                        .WithMany()
                         .HasForeignKey("DirectMessageId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("PersistenceService.Models.DirectMessage", "MessageRepliedTo")
-                        .WithMany()
+                        .WithMany("Replies")
                         .HasForeignKey("MessageRepliedToId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();

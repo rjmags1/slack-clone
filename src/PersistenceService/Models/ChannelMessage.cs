@@ -23,6 +23,7 @@ public class ChannelMessage
     public Guid ChannelId { get; set; }
 
     [MaxLength(2500)]
+    [MinLength(1)]
 #pragma warning disable CS8618
     public string Content { get; set; }
 
@@ -34,10 +35,10 @@ public class ChannelMessage
     public DateTime CreatedAt { get; set; }
 
     [DefaultValue(false)]
-    public bool Deleted { get; set; }
+    public bool Deleted { get; set; } = false;
 
     [DefaultValue(true)]
-    public bool Draft { get; set; }
+    public bool Draft { get; set; } = true;
 
     public ICollection<File> Files { get; } = new List<File>();
 

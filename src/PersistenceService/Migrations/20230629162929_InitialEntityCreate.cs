@@ -715,7 +715,7 @@ namespace PersistenceService.Migrations
                     ChannelId = table.Column<Guid>(type: "uuid", nullable: false),
                     ConcurrencyStamp = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "gen_random_uuid()"),
                     FirstMessageId = table.Column<Guid>(type: "uuid", nullable: false),
-                    NumMessages = table.Column<int>(type: "integer", nullable: false),
+                    NumMessages = table.Column<int>(type: "integer", nullable: false, defaultValueSql: "2"),
                     WorkspaceId = table.Column<Guid>(type: "uuid", nullable: false)
                 },
                 constraints: table =>

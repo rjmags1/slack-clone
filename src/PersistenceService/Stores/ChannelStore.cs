@@ -8,6 +8,66 @@ public class ChannelStore : Store
     public ChannelStore(ApplicationDbContext context)
         : base(context) { }
 
+    public async Task<Models.Thread> InsertThread(
+        Guid channelId,
+        Guid repliedToId,
+        ChannelMessage reply
+    )
+    {
+        ChannelMessage repliedTo;
+        Guid workspaceId;
+        try
+        {
+            repliedTo = _context.ChannelMessages
+                .Where(cm => cm.Id == repliedToId)
+                .Where(cm => cm.ChannelId == channelId)
+                .First();
+            workspaceId = _context.Channels
+                .Where(c => c.Id == channelId)
+                .First()
+                .WorkspaceId;
+        }
+        catch (Exception)
+        {
+            throw new ArgumentException("Invalid arguments");
+        }
+
+        bool replyInChannel = reply.ChannelId == channelId;
+        bool replyUserSpecified = reply.UserId != default(Guid);
+        bool replyContentSpecified = reply.Content?.Length > 0;
+        if (!replyInChannel || !replyUserSpecified || !replyContentSpecified)
+        {
+            throw new ArgumentException("Invalid arguments");
+        }
+
+        Models.Thread thread = new Models.Thread
+        {
+            ChannelId = channelId,
+            FirstMessageId = repliedToId,
+            WorkspaceId = workspaceId
+        };
+        _context.Add(thread);
+
+        repliedTo.Thread = thread;
+
+        _context.Attach(reply);
+        reply.Thread = thread;
+
+        ChannelMessageReply replyEntry = new ChannelMessageReply
+        {
+            ChannelMessage = reply,
+            MessageRepliedToId = repliedToId,
+            RepliedToId = repliedTo.UserId,
+            ReplierId = reply.UserId,
+            Thread = thread
+        };
+        _context.Add(replyEntry);
+
+        await _context.SaveChangesAsync();
+
+        return thread;
+    }
+
     public async Task<List<ChannelMember>> InsertChannelMembers(
         Guid channelId,
         List<Guid> userIds
