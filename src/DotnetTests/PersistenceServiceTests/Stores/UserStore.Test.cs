@@ -63,10 +63,10 @@ public class UserStoreTests
                 .Zip(passwords)
         )
         {
-            Assert.NotNull(loadedUser.Id);
+            Assert.NotEqual(loadedUser.Id, Guid.Empty);
             Assert.Null(loadedUser.Avatar);
             Assert.Null(loadedUser.AvatarId);
-            Assert.NotNull(loadedUser.CreatedAt);
+            Assert.NotEqual(loadedUser.CreatedAt, default(DateTime));
             Assert.False(loadedUser.Deleted);
             Assert.Equal(loadedUser.FirstName, user.FirstName);
             Assert.Equal(loadedUser.LastName, user.LastName);
@@ -88,8 +88,8 @@ public class UserStoreTests
             Assert.Equal(loadedUser.Email, user.Email);
             Assert.Equal(loadedUser.NormalizedEmail, user.NormalizedEmail);
             Assert.Equal(loadedUser.PhoneNumber, user.PhoneNumber);
-            Assert.NotNull(loadedUser.ConcurrencyStamp);
-            Assert.NotNull(loadedUser.SecurityStamp);
+            Assert.NotEqual(loadedUser.ConcurrencyStamp, Guid.Empty.ToString());
+            Assert.NotEqual(loadedUser.SecurityStamp, Guid.Empty.ToString());
             Assert.True(await _userStore.CheckPasswordAsync(user, password));
         }
     }
@@ -103,7 +103,7 @@ public class UserStoreTests
             LastName = "test-lname",
             Timezone = UserStore.timezones[0].Id,
             UserName = "",
-            Email = "test-email" + "@test.com",
+            Email = "test-email" + "@test.com" + Store.GenerateRandomString(10),
             PhoneNumber = "1-234-456-7890"
         };
         User badUser2 = new User
@@ -112,7 +112,7 @@ public class UserStoreTests
             LastName = "test-lname",
             Timezone = UserStore.timezones[0].Id,
             UserName = "!~[]?><",
-            Email = "test-email" + "@test.com",
+            Email = "test-email" + "@test.com" + Store.GenerateRandomString(10),
             PhoneNumber = "1-234-456-7890"
         };
         User goodUser = new User
@@ -121,7 +121,7 @@ public class UserStoreTests
             LastName = "test-lname",
             Timezone = UserStore.timezones[0].Id,
             UserName = "test-username",
-            Email = "test-email" + "@test.com",
+            Email = "test-email" + "@test.com" + Store.GenerateRandomString(10),
             PhoneNumber = "1-234-456-7890"
         };
         await Assert.ThrowsAsync<ArgumentException>(
@@ -156,7 +156,7 @@ public class UserStoreTests
             LastName = "test-lname",
             Timezone = UserStore.timezones[0].Id,
             UserName = "valid_username",
-            Email = "test-email" + "@test.com",
+            Email = "test-email" + "@test.com" + Store.GenerateRandomString(10),
             PhoneNumber = "1-234-456-7890"
         };
         await Assert.ThrowsAsync<ArgumentException>(
@@ -217,7 +217,7 @@ public class UserStoreTests
             Email = "test-email" + "@test.com",
             PhoneNumber = "1-234-456-7890"
         };
-        await Assert.ThrowsAsync<ArgumentException>(
+        await Assert.ThrowsAsync<InvalidOperationException>(
             async () =>
                 await _userStore.InsertUsers(
                     new List<User> { user1, duplicateEmailUser },

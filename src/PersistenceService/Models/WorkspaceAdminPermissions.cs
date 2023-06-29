@@ -18,7 +18,7 @@ public class WorkspaceAdminPermissions
 
 #pragma warning disable CS8618
     [ConcurrencyCheck]
-    public byte[] ConcurrencyStamp { get; set; }
+    public Guid ConcurrencyStamp { get; set; }
 #pragma warning restore CS8618
 
     [DefaultValue(1)]

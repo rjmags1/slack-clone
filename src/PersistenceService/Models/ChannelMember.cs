@@ -11,7 +11,7 @@ public class ChannelMember
     public Guid Id { get; set; }
 
     [DefaultValue(false)]
-    public bool Admin { get; set; }
+    public bool Admin { get; set; } = false;
 
 #pragma warning disable CS8618
     [DeleteBehavior(DeleteBehavior.Cascade)]
@@ -21,14 +21,13 @@ public class ChannelMember
     [ForeignKey(nameof(Channel))]
     public Guid ChannelId { get; set; }
 
-    [DefaultValue(true)]
-    public bool EnableNotifications { get; set; }
+    public bool? EnableNotifications { get; set; }
 
     [Column(TypeName = "timestamp")]
     public DateTime? LastViewedAt { get; set; }
 
     [DefaultValue(false)]
-    public bool Starred { get; set; }
+    public bool Starred { get; set; } = false;
 
 #pragma warning disable CS8618
     [DeleteBehavior(DeleteBehavior.Cascade)]

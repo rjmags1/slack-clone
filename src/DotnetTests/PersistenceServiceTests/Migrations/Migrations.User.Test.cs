@@ -26,7 +26,7 @@ public class UserMigrationsTests
     {
         var idProperty = _entityType.FindProperty(nameof(User.Id))!;
         string defaultValueSql = idProperty.GetDefaultValueSql()!;
-        Assert.Equal(defaultValueSql, "gen_random_uuid()");
+        Assert.Equal("gen_random_uuid()", defaultValueSql);
         string idColumnType = idProperty.GetColumnType();
         var idColumnNullable = idProperty.IsColumnNullable();
         Assert.Equal("uuid", idColumnType);
@@ -40,8 +40,8 @@ public class UserMigrationsTests
         var accessFailedCountProperty = _entityType.FindProperty(
             nameof(User.AccessFailedCount)
         )!;
-        Assert.Equal(accessFailedCountProperty.GetColumnType(), "integer");
-        Assert.Equal(accessFailedCountProperty.IsNullable, false);
+        Assert.Equal("integer", accessFailedCountProperty.GetColumnType());
+        Assert.False(accessFailedCountProperty.IsColumnNullable());
     }
 
     [Fact]
@@ -55,7 +55,7 @@ public class UserMigrationsTests
 
         Assert.NotNull(foreignKey);
         Assert.Equal(DeleteBehavior.SetNull, foreignKey.DeleteBehavior);
-        Assert.Equal(avatarIdColumnType, "uuid");
+        Assert.Equal("uuid", avatarIdColumnType);
     }
 
     [Fact]
@@ -65,8 +65,8 @@ public class UserMigrationsTests
             nameof(User.ConcurrencyStamp)
         )!;
         Assert.Equal(
-            concurrencyStampProperty.GetColumnType(),
-            "character varying(36)"
+            "character varying(36)",
+            concurrencyStampProperty.GetColumnType()
         );
     }
 
@@ -76,24 +76,24 @@ public class UserMigrationsTests
         var concurrencyStampProperty = _entityType.FindProperty(
             nameof(User.CreatedAt)
         )!;
-        Assert.Equal(concurrencyStampProperty.GetColumnType(), "timestamp");
-        Assert.Equal(concurrencyStampProperty.GetDefaultValueSql(), "now()");
+        Assert.Equal("timestamp", concurrencyStampProperty.GetColumnType());
+        Assert.Equal("now()", concurrencyStampProperty.GetDefaultValueSql());
     }
 
     [Fact]
     public void DeletedColumn()
     {
         var deletedProperty = _entityType.FindProperty(nameof(User.Deleted))!;
-        Assert.Equal(deletedProperty.GetColumnType(), "boolean");
-        Assert.False(deletedProperty.IsNullable);
-        Assert.Equal(deletedProperty.GetDefaultValue(), false);
+        Assert.Equal("boolean", deletedProperty.GetColumnType());
+        Assert.False(deletedProperty.IsColumnNullable());
+        Assert.Equal(false, deletedProperty.GetDefaultValue());
     }
 
     [Fact]
     public void EmailColumn()
     {
         var emailProperty = _entityType.FindProperty(nameof(User.Email))!;
-        Assert.Equal(emailProperty.GetColumnType(), "character varying(320)");
+        Assert.Equal("character varying(320)", emailProperty.GetColumnType());
         Assert.False(emailProperty.IsColumnNullable());
     }
 
@@ -114,8 +114,8 @@ public class UserMigrationsTests
             nameof(User.FirstName)
         )!;
         Assert.Equal(
-            firstNameProperty.GetColumnType(),
-            "character varying(20)"
+            "character varying(20)",
+            firstNameProperty.GetColumnType()
         );
         Assert.False(firstNameProperty.IsColumnNullable());
     }
@@ -124,7 +124,7 @@ public class UserMigrationsTests
     public void LastNameColumn()
     {
         var lastNameProperty = _entityType.FindProperty(nameof(User.LastName))!;
-        Assert.Equal(lastNameProperty.GetColumnType(), "character varying(50)");
+        Assert.Equal("character varying(50)", lastNameProperty.GetColumnType());
         Assert.False(lastNameProperty.IsColumnNullable());
     }
 
@@ -145,7 +145,7 @@ public class UserMigrationsTests
             nameof(User.LockoutEnd)
         )!;
         Assert.True(lockoutEndProperty.IsColumnNullable());
-        Assert.Equal(lockoutEndProperty.GetColumnType(), "timestamp");
+        Assert.Equal("timestamp", lockoutEndProperty.GetColumnType());
     }
 
     [Fact]
@@ -158,12 +158,12 @@ public class UserMigrationsTests
             userNotificationsPreferencesMaskProperty.IsColumnNullable()
         );
         Assert.Equal(
-            userNotificationsPreferencesMaskProperty.GetColumnType(),
-            "integer"
+            "integer",
+            userNotificationsPreferencesMaskProperty.GetColumnType()
         );
         Assert.Equal(
-            userNotificationsPreferencesMaskProperty.GetDefaultValue(),
-            0
+            0,
+            userNotificationsPreferencesMaskProperty.GetDefaultValue()
         );
     }
 
@@ -175,8 +175,8 @@ public class UserMigrationsTests
         )!;
         Assert.True(notificationsAllowStartTimeProperty.IsColumnNullable());
         Assert.Equal(
-            notificationsAllowStartTimeProperty.GetColumnType(),
-            "time without time zone"
+            "time without time zone",
+            notificationsAllowStartTimeProperty.GetColumnType()
         );
     }
 
@@ -188,8 +188,8 @@ public class UserMigrationsTests
         )!;
         Assert.True(notificationsAllowEndTimeProperty.IsColumnNullable());
         Assert.Equal(
-            notificationsAllowEndTimeProperty.GetColumnType(),
-            "time without time zone"
+            "time without time zone",
+            notificationsAllowEndTimeProperty.GetColumnType()
         );
     }
 
@@ -201,8 +201,8 @@ public class UserMigrationsTests
         )!;
         Assert.True(notificationsPauseUntilProperty.IsColumnNullable());
         Assert.Equal(
-            notificationsPauseUntilProperty.GetColumnType(),
-            "time without time zone"
+            "time without time zone",
+            notificationsPauseUntilProperty.GetColumnType()
         );
     }
 
@@ -213,8 +213,8 @@ public class UserMigrationsTests
             nameof(User.NotificationSound)
         )!;
         Assert.False(notificationSoundProperty.IsColumnNullable());
-        Assert.Equal(notificationSoundProperty.GetColumnType(), "integer");
-        Assert.Equal(notificationSoundProperty.GetDefaultValue(), 0);
+        Assert.Equal("integer", notificationSoundProperty.GetColumnType());
+        Assert.Equal(0, notificationSoundProperty.GetDefaultValue());
     }
 
     [Fact]
@@ -224,8 +224,8 @@ public class UserMigrationsTests
             nameof(User.NormalizedEmail)
         )!;
         Assert.Equal(
-            normalizedEmailProperty.GetColumnType(),
-            "character varying(320)"
+            "character varying(320)",
+            normalizedEmailProperty.GetColumnType()
         );
         Assert.False(normalizedEmailProperty.IsColumnNullable());
     }
@@ -237,8 +237,8 @@ public class UserMigrationsTests
             nameof(User.NormalizedUserName)
         )!;
         Assert.Equal(
-            normalizedUsernameProperty.GetColumnType(),
-            "character varying(30)"
+            "character varying(30)",
+            normalizedUsernameProperty.GetColumnType()
         );
         Assert.False(normalizedUsernameProperty.IsColumnNullable());
     }
@@ -250,8 +250,8 @@ public class UserMigrationsTests
             nameof(User.OnlineStatus)
         )!;
         Assert.Equal(
-            onlineStatusProperty.GetColumnType(),
-            "character varying(20)"
+            "character varying(20)",
+            onlineStatusProperty.GetColumnType()
         );
         Assert.True(onlineStatusProperty.IsColumnNullable());
     }
@@ -262,7 +262,7 @@ public class UserMigrationsTests
         var onlineStatusUntilProperty = _entityType.FindProperty(
             nameof(User.OnlineStatusUntil)
         )!;
-        Assert.Equal(onlineStatusUntilProperty.GetColumnType(), "timestamp");
+        Assert.Equal("timestamp", onlineStatusUntilProperty.GetColumnType());
         Assert.True(onlineStatusUntilProperty.IsColumnNullable());
     }
 
@@ -273,8 +273,8 @@ public class UserMigrationsTests
             nameof(User.PasswordHash)
         )!;
         Assert.Equal(
-            passwordHashProperty.GetColumnType(),
-            "character varying(128)"
+            "character varying(128)",
+            passwordHashProperty.GetColumnType()
         );
         Assert.False(passwordHashProperty.IsColumnNullable());
     }
@@ -286,8 +286,8 @@ public class UserMigrationsTests
             nameof(User.PhoneNumber)
         )!;
         Assert.Equal(
-            phoneNumberProperty.GetColumnType(),
-            "character varying(20)"
+            "character varying(20)",
+            phoneNumberProperty.GetColumnType()
         );
         Assert.True(phoneNumberProperty.IsColumnNullable());
     }
@@ -298,7 +298,7 @@ public class UserMigrationsTests
         var phoneNumberConfirmedProperty = _entityType.FindProperty(
             nameof(User.PhoneNumberConfirmed)
         )!;
-        Assert.Equal(phoneNumberConfirmedProperty.GetColumnType(), "boolean");
+        Assert.Equal("boolean", phoneNumberConfirmedProperty.GetColumnType());
         Assert.False(phoneNumberConfirmedProperty.IsColumnNullable());
         Assert.Equal(phoneNumberConfirmedProperty.GetDefaultValue(), false);
     }
@@ -310,8 +310,8 @@ public class UserMigrationsTests
             nameof(User.SecurityStamp)
         )!;
         Assert.Equal(
-            securityStampProperty.GetColumnType(),
-            "character varying(36)"
+            "character varying(36)",
+            securityStampProperty.GetColumnType()
         );
     }
 
@@ -326,14 +326,14 @@ public class UserMigrationsTests
 
         Assert.NotNull(foreignKey);
         Assert.Equal(DeleteBehavior.SetNull, foreignKey.DeleteBehavior);
-        Assert.Equal(avatarIdColumnType, "uuid");
+        Assert.Equal("uuid", avatarIdColumnType);
     }
 
     [Fact]
     public void TimezoneColumn()
     {
         var timezoneProperty = _entityType.FindProperty(nameof(User.Timezone))!;
-        Assert.Equal(timezoneProperty.GetColumnType(), "character varying(40)");
+        Assert.Equal("character varying(40)", timezoneProperty.GetColumnType());
         Assert.False(timezoneProperty.IsColumnNullable());
     }
 
@@ -351,27 +351,29 @@ public class UserMigrationsTests
     public void UserNameColumn()
     {
         var usernameProperty = _entityType.FindProperty(nameof(User.UserName))!;
-        Assert.Equal(usernameProperty.GetColumnType(), "character varying(30)");
+        Assert.Equal("character varying(30)", usernameProperty.GetColumnType());
         Assert.False(usernameProperty.IsColumnNullable());
     }
 
+    [Fact]
     public async void UserDDLMigration_ShouldHaveHappened()
     {
         int numUserRows = await _dbContext.Users.CountAsync();
         Assert.True(numUserRows >= 0);
     }
 
+    [Fact]
     public void Indexes()
     {
         var deletedProperty = _entityType.FindProperty(nameof(User.Deleted))!;
-        Assert.NotNull(deletedProperty.GetIndex());
+        Assert.NotNull(_entityType.FindIndex(deletedProperty));
         var normalizedEmailProperty = _entityType.FindProperty(
             nameof(User.NormalizedEmail)
         )!;
-        Assert.NotNull(normalizedEmailProperty.GetIndex());
+        Assert.NotNull(_entityType.FindIndex(normalizedEmailProperty));
         var normalizedUsernameProperty = _entityType.FindProperty(
             nameof(User.NormalizedUserName)
         )!;
-        Assert.NotNull(normalizedUsernameProperty.GetIndex());
+        Assert.NotNull(_entityType.FindIndex(normalizedUsernameProperty));
     }
 }

@@ -9,7 +9,7 @@ public class ApplicationDbContextFixture : IDisposable
 
     public ApplicationDbContextFixture()
     {
-        var envFilePath = Directory.GetCurrentDirectory() + "/.env";
+        var envFilePath = Directory.GetCurrentDirectory() + "/../../../.env";
         if (File.Exists(envFilePath))
         {
             using (StreamReader reader = new StreamReader(envFilePath))

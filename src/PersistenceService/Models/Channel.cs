@@ -11,8 +11,7 @@ public class Channel
 {
     public Guid Id { get; set; }
 
-    [DefaultValue(true)]
-    public bool AllowThreads { get; set; }
+    public bool AllowThreads { get; set; } = true;
 
     [DeleteBehavior(DeleteBehavior.SetNull)]
     public File? Avatar { get; set; }
@@ -20,8 +19,7 @@ public class Channel
     [ForeignKey(nameof(Avatar))]
     public Guid? AvatarId { get; set; }
 
-    [DefaultValue(1)]
-    public int AllowedChannelPostersMask { get; set; }
+    public int AllowedChannelPostersMask { get; set; } = 1;
 
     [Column(TypeName = "timestamp")]
     public DateTime CreatedAt { get; set; }
@@ -34,11 +32,10 @@ public class Channel
     public Guid CreatedById { get; set; }
 
     [ConcurrencyCheck]
-    public byte[] ConcurrencyStamp { get; set; }
+    public Guid ConcurrencyStamp { get; set; }
 
-    [DefaultValue("")]
     [MaxLength(120)]
-    public string Description { get; set; }
+    public string Description { get; set; } = "";
 #pragma warning restore CS8618
 
     public ICollection<ChannelMember> ChannelMembers { get; } =
@@ -48,7 +45,6 @@ public class Channel
         new List<ChannelMessage>();
 
 #pragma warning disable CS8618
-    [DefaultValue("")]
     [MaxLength(40)]
     public string Name { get; set; }
 #pragma warning restore CS8618
@@ -60,9 +56,8 @@ public class Channel
     public bool Private { get; set; }
 
 #pragma warning disable CS8618
-    [DefaultValue("")]
     [MaxLength(40)]
-    public string Topic { get; set; }
+    public string Topic { get; set; } = "";
 
     [DeleteBehavior(DeleteBehavior.Cascade)]
     public Workspace Workspace { get; set; }

@@ -27,7 +27,7 @@ public class ChannelMessage
     public string Content { get; set; }
 
     [ConcurrencyCheck]
-    public byte[] ConcurrencyStamp { get; set; }
+    public Guid ConcurrencyStamp { get; set; }
 #pragma warning restore CS8618
 
     [Column(TypeName = "timestamp")]

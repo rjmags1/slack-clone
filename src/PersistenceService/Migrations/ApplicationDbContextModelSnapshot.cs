@@ -169,10 +169,11 @@ namespace PersistenceService.Migrations
                     b.Property<Guid?>("AvatarId")
                         .HasColumnType("uuid");
 
-                    b.Property<byte[]>("ConcurrencyStamp")
+                    b.Property<Guid>("ConcurrencyStamp")
                         .IsConcurrencyToken()
-                        .IsRequired()
-                        .HasColumnType("bytea");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasDefaultValueSql("gen_random_uuid()");
 
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
@@ -193,7 +194,9 @@ namespace PersistenceService.Migrations
                         .HasColumnType("character varying(40)");
 
                     b.Property<int>("NumMembers")
-                        .HasColumnType("integer");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValueSql("1");
 
                     b.Property<bool>("Private")
                         .HasColumnType("boolean");
@@ -234,7 +237,9 @@ namespace PersistenceService.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<int>("ChannelInviteStatus")
-                        .HasColumnType("integer");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValueSql("1");
 
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
@@ -277,8 +282,10 @@ namespace PersistenceService.Migrations
                     b.Property<Guid>("ChannelId")
                         .HasColumnType("uuid");
 
-                    b.Property<bool>("EnableNotifications")
-                        .HasColumnType("boolean");
+                    b.Property<bool?>("EnableNotifications")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValueSql("true");
 
                     b.Property<DateTime?>("LastViewedAt")
                         .HasColumnType("timestamp");
@@ -309,10 +316,11 @@ namespace PersistenceService.Migrations
                     b.Property<Guid>("ChannelId")
                         .HasColumnType("uuid");
 
-                    b.Property<byte[]>("ConcurrencyStamp")
+                    b.Property<Guid>("ConcurrencyStamp")
                         .IsConcurrencyToken()
-                        .IsRequired()
-                        .HasColumnType("bytea");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasDefaultValueSql("gen_random_uuid()");
 
                     b.Property<string>("Content")
                         .IsRequired()
@@ -550,10 +558,11 @@ namespace PersistenceService.Migrations
                         .HasColumnType("uuid")
                         .HasDefaultValueSql("gen_random_uuid()");
 
-                    b.Property<byte[]>("ConcurrencyStamp")
+                    b.Property<Guid>("ConcurrencyStamp")
                         .IsConcurrencyToken()
-                        .IsRequired()
-                        .HasColumnType("bytea");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasDefaultValueSql("gen_random_uuid()");
 
                     b.Property<string>("Content")
                         .IsRequired()
@@ -610,10 +619,11 @@ namespace PersistenceService.Migrations
                         .HasColumnType("uuid")
                         .HasDefaultValueSql("gen_random_uuid()");
 
-                    b.Property<byte[]>("ConcurrencyStamp")
+                    b.Property<Guid>("ConcurrencyStamp")
                         .IsConcurrencyToken()
-                        .IsRequired()
-                        .HasColumnType("bytea");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasDefaultValueSql("gen_random_uuid()");
 
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
@@ -917,10 +927,11 @@ namespace PersistenceService.Migrations
                     b.Property<Guid>("ChannelId")
                         .HasColumnType("uuid");
 
-                    b.Property<byte[]>("ConcurrencyStamp")
+                    b.Property<Guid>("ConcurrencyStamp")
                         .IsConcurrencyToken()
-                        .IsRequired()
-                        .HasColumnType("bytea");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasDefaultValueSql("gen_random_uuid()");
 
                     b.Property<Guid>("FirstMessageId")
                         .HasColumnType("uuid");
@@ -1102,10 +1113,11 @@ namespace PersistenceService.Migrations
                     b.Property<Guid?>("AvatarId")
                         .HasColumnType("uuid");
 
-                    b.Property<byte[]>("ConcurrencyStamp")
+                    b.Property<Guid>("ConcurrencyStamp")
                         .IsConcurrencyToken()
-                        .IsRequired()
-                        .HasColumnType("bytea");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasDefaultValueSql("gen_random_uuid()");
 
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
@@ -1123,13 +1135,15 @@ namespace PersistenceService.Migrations
                         .HasColumnType("character varying(80)");
 
                     b.Property<int>("NumMembers")
-                        .HasColumnType("integer");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValueSql("1");
 
                     b.HasKey("Id");
 
                     b.HasIndex("AvatarId");
 
-                    b.ToTable("Workspace");
+                    b.ToTable("Workspaces");
                 });
 
             modelBuilder.Entity("PersistenceService.Models.WorkspaceAdminPermissions", b =>
@@ -1140,10 +1154,11 @@ namespace PersistenceService.Migrations
                     b.Property<Guid>("WorkspaceId")
                         .HasColumnType("uuid");
 
-                    b.Property<byte[]>("ConcurrencyStamp")
+                    b.Property<Guid>("ConcurrencyStamp")
                         .IsConcurrencyToken()
-                        .IsRequired()
-                        .HasColumnType("bytea");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasDefaultValueSql("gen_random_uuid()");
 
                     b.Property<int>("WorkspaceAdminPermissionsMask")
                         .HasColumnType("integer");

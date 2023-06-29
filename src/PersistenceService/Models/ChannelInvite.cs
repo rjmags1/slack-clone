@@ -28,8 +28,7 @@ public class ChannelInvite
     [ForeignKey(nameof(Channel))]
     public Guid ChannelId { get; set; }
 
-    [DefaultValue(1)]
-    public int ChannelInviteStatus { get; set; }
+    public int ChannelInviteStatus { get; set; } = 1;
 
     [Column(TypeName = "timestamp")]
     public DateTime CreatedAt { get; set; }

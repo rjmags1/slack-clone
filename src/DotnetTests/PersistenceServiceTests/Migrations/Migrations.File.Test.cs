@@ -33,7 +33,7 @@ public class FileMigrationsTests
     {
         var idProperty = _entityType.FindProperty(nameof(Models.File.Id))!;
         string defaultValueSql = idProperty.GetDefaultValueSql()!;
-        Assert.Equal(defaultValueSql, "gen_random_uuid()");
+        Assert.Equal("gen_random_uuid()", defaultValueSql);
         string idColumnType = idProperty.GetColumnType();
         var idColumnNullable = idProperty.IsColumnNullable();
         Assert.Equal("uuid", idColumnType);
@@ -92,7 +92,7 @@ public class FileMigrationsTests
 
         Assert.NotNull(foreignKey);
         Assert.Equal(DeleteBehavior.Cascade, foreignKey.DeleteBehavior);
-        Assert.Equal(directMessageIdColumnType, "uuid");
+        Assert.Equal("uuid", directMessageIdColumnType);
     }
 
     [Fact]
@@ -110,7 +110,7 @@ public class FileMigrationsTests
 
         Assert.NotNull(foreignKey);
         Assert.Equal(DeleteBehavior.Cascade, foreignKey.DeleteBehavior);
-        Assert.Equal(directMessageGroupIdColumnType, "uuid");
+        Assert.Equal("uuid", directMessageGroupIdColumnType);
     }
 
     [Fact]
@@ -128,7 +128,7 @@ public class FileMigrationsTests
 
         Assert.NotNull(foreignKey);
         Assert.Equal(DeleteBehavior.Cascade, foreignKey.DeleteBehavior);
-        Assert.Equal(channelMessageIdColumnType, "uuid");
+        Assert.Equal("uuid", channelMessageIdColumnType);
     }
 
     [Fact]
@@ -144,7 +144,7 @@ public class FileMigrationsTests
             .SingleOrDefault();
         string channelMessageIdColumnType = channelIdProperty.GetColumnType();
 
-        Assert.Equal(channelIdColumnType, "uuid");
+        Assert.Equal("uuid", channelIdColumnType);
     }
 
     [Fact]
@@ -153,22 +153,22 @@ public class FileMigrationsTests
         var channelIdProperty = _entityType.FindProperty(
             nameof(Models.File.ChannelId)
         )!;
-        Assert.NotNull(channelIdProperty.GetIndex());
+        Assert.NotNull(_entityType.FindIndex(channelIdProperty));
         var channelMessageIdProperty = _entityType.FindProperty(
             nameof(Models.File.ChannelMessageId)
         )!;
-        Assert.NotNull(channelMessageIdProperty.GetIndex());
+        Assert.NotNull(_entityType.FindIndex(channelMessageIdProperty));
         var directMessageIdProperty = _entityType.FindProperty(
             nameof(Models.File.DirectMessageId)
         )!;
-        Assert.NotNull(directMessageIdProperty.GetIndex());
+        Assert.NotNull(_entityType.FindIndex(directMessageIdProperty));
         var directMessageGroupIdProperty = _entityType.FindProperty(
             nameof(Models.File.DirectMessageGroupId)
         )!;
-        Assert.NotNull(directMessageGroupIdProperty.GetIndex());
+        Assert.NotNull(_entityType.FindIndex(directMessageGroupIdProperty));
         var uploadedAtProperty = _entityType.FindProperty(
             nameof(Models.File.UploadedAt)
         )!;
-        Assert.NotNull(uploadedAtProperty.GetIndex());
+        Assert.NotNull(_entityType.FindIndex(uploadedAtProperty));
     }
 }
