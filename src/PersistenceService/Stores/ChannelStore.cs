@@ -8,6 +8,36 @@ public class ChannelStore : Store
     public ChannelStore(ApplicationDbContext context)
         : base(context) { }
 
+    public async Task<ThreadWatch> InsertThreadWatch(Guid userId, Guid threadId)
+    {
+        try
+        {
+            Guid threadChannelId = _context.Threads
+                .Where(t => t.Id == threadId)
+                .First()
+                .ChannelId;
+            ChannelMember userInThreadChannel = _context.ChannelMembers
+                .Where(cm => cm.UserId == userId)
+                .Where(cm => cm.ChannelId == threadChannelId)
+                .First();
+        }
+        catch (Exception)
+        {
+            throw new ArgumentException("Invalid arguments");
+        }
+
+        ThreadWatch threadWatch = new ThreadWatch
+        {
+            ThreadId = threadId,
+            UserId = userId
+        };
+        _context.Add(threadWatch);
+
+        await _context.SaveChangesAsync();
+
+        return threadWatch;
+    }
+
     public async Task<Models.Thread> InsertThread(
         Guid channelId,
         Guid repliedToId,
