@@ -21,6 +21,256 @@ public class WorkspaceStoreTests
     }
 
     [Fact]
+    public async void InsertWorkspaceAdmin_ShouldInsertWorkspaceAdminAlreadyMember()
+    {
+        Workspace testWorkspace = new Workspace
+        {
+            Description = "test description",
+            Name = "test-workspace-name" + ChannelStore.GenerateRandomString(10)
+        };
+        _dbContext.Add(testWorkspace);
+
+        string username = UserStore.GenerateTestUserName(10);
+        string email = UserStore.GenerateTestEmail(10);
+        User testUser = new User
+        {
+            FirstName = UserStore.GenerateTestFirstName(10),
+            LastName = UserStore.GenerateTestLastName(10),
+            Timezone = UserStore.timezones[1].Id,
+            UserName = username,
+            Email = email,
+            PhoneNumber = "1-234-567-8901",
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(
+                UserStore.testPassword,
+                4
+            ),
+            NormalizedEmail = email.ToUpper(),
+            NormalizedUserName = username.ToUpper(),
+            SecurityStamp = Guid.NewGuid().ToString(),
+            ConcurrencyStamp = Guid.NewGuid().ToString(),
+        };
+        _dbContext.Add(testUser);
+
+        WorkspaceMember testWorkspaceMembership = new WorkspaceMember
+        {
+            Title = "Member",
+            Workspace = testWorkspace,
+            User = testUser
+        };
+        _dbContext.Add(testWorkspaceMembership);
+
+        await _dbContext.SaveChangesAsync();
+
+        WorkspaceMember updatedMember =
+            await _workspaceStore.InsertWorkspaceAdmin(
+                testUser.Id,
+                testWorkspace.Id
+            );
+
+        WorkspaceAdminPermissions insertedPermissions =
+            updatedMember.WorkspaceAdminPermissions!;
+        Assert.True(updatedMember.Admin);
+        Assert.NotEqual(updatedMember.WorkspaceAdminPermissionsId, Guid.Empty);
+        Assert.NotNull(insertedPermissions);
+        Assert.NotEqual(insertedPermissions.AdminId, Guid.Empty);
+        Assert.Equal(testUser.Id, insertedPermissions.AdminId);
+        Assert.NotEqual(insertedPermissions.ConcurrencyStamp, Guid.Empty);
+        Assert.Equal(1, insertedPermissions.WorkspaceAdminPermissionsMask);
+        Assert.Equal(testWorkspace.Id, insertedPermissions.WorkspaceId);
+    }
+
+    [Fact]
+    public async void InsertWorkspaceAdmin_ShouldInsertWorkspaceAdminNotAlreadyMember()
+    {
+        Workspace testWorkspace = new Workspace
+        {
+            Description = "test description",
+            Name = "test-workspace-name" + ChannelStore.GenerateRandomString(10)
+        };
+        _dbContext.Add(testWorkspace);
+
+        string username = UserStore.GenerateTestUserName(10);
+        string email = UserStore.GenerateTestEmail(10);
+        User testUser = new User
+        {
+            FirstName = UserStore.GenerateTestFirstName(10),
+            LastName = UserStore.GenerateTestLastName(10),
+            Timezone = UserStore.timezones[1].Id,
+            UserName = username,
+            Email = email,
+            PhoneNumber = "1-234-567-8901",
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(
+                UserStore.testPassword,
+                4
+            ),
+            NormalizedEmail = email.ToUpper(),
+            NormalizedUserName = username.ToUpper(),
+            SecurityStamp = Guid.NewGuid().ToString(),
+            ConcurrencyStamp = Guid.NewGuid().ToString(),
+        };
+        _dbContext.Add(testUser);
+
+        await _dbContext.SaveChangesAsync();
+
+        WorkspaceMember insertedMember =
+            await _workspaceStore.InsertWorkspaceAdmin(
+                testUser.Id,
+                testWorkspace.Id,
+                2
+            );
+
+        Assert.NotEqual(insertedMember.Id, Guid.Empty);
+        Assert.True(insertedMember.Admin);
+        Assert.NotEqual(insertedMember.WorkspaceAdminPermissionsId, Guid.Empty);
+        Assert.Null(insertedMember.AvatarId);
+        Assert.NotEqual(insertedMember.JoinedAt, default(DateTime));
+        Assert.Null(insertedMember.NotificationsAllowTimeStart);
+        Assert.Null(insertedMember.NotificationsAllTimeEnd);
+        Assert.Equal(0, insertedMember.NotificationSound);
+        Assert.Null(insertedMember.OnlineStatus);
+        Assert.False(insertedMember.Owner);
+        Assert.Null(insertedMember.ThemeId);
+        Assert.Equal("Admin", insertedMember.Title);
+        Assert.Equal(insertedMember.UserId, testUser.Id);
+        Assert.Equal(insertedMember.WorkspaceId, testWorkspace.Id);
+
+        WorkspaceAdminPermissions insertedPermissions =
+            insertedMember.WorkspaceAdminPermissions!;
+        Assert.NotNull(insertedPermissions);
+        Assert.NotEqual(insertedPermissions.AdminId, Guid.Empty);
+        Assert.Equal(testUser.Id, insertedPermissions.AdminId);
+        Assert.NotEqual(insertedPermissions.ConcurrencyStamp, Guid.Empty);
+        Assert.Equal(2, insertedPermissions.WorkspaceAdminPermissionsMask);
+        Assert.Equal(testWorkspace.Id, insertedPermissions.WorkspaceId);
+    }
+
+    [Fact]
+    public async void InsertWorkspaceAdmin_ShouldThrowOnNonexistentIdsInvalidMask()
+    {
+        Workspace testWorkspace = new Workspace
+        {
+            Description = "test description",
+            Name = "test-workspace-name" + ChannelStore.GenerateRandomString(10)
+        };
+        _dbContext.Add(testWorkspace);
+
+        string username = UserStore.GenerateTestUserName(10);
+        string email = UserStore.GenerateTestEmail(10);
+        User testUser = new User
+        {
+            FirstName = UserStore.GenerateTestFirstName(10),
+            LastName = UserStore.GenerateTestLastName(10),
+            Timezone = UserStore.timezones[1].Id,
+            UserName = username,
+            Email = email,
+            PhoneNumber = "1-234-567-8901",
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(
+                UserStore.testPassword,
+                4
+            ),
+            NormalizedEmail = email.ToUpper(),
+            NormalizedUserName = username.ToUpper(),
+            SecurityStamp = Guid.NewGuid().ToString(),
+            ConcurrencyStamp = Guid.NewGuid().ToString(),
+        };
+        _dbContext.Add(testUser);
+
+        await _dbContext.SaveChangesAsync();
+
+        await Assert.ThrowsAsync<InvalidOperationException>(
+            async () =>
+                await _workspaceStore.InsertWorkspaceAdmin(
+                    Guid.Empty,
+                    testWorkspace.Id
+                )
+        );
+
+        await Assert.ThrowsAsync<InvalidOperationException>(
+            async () =>
+                await _workspaceStore.InsertWorkspaceAdmin(
+                    testUser.Id,
+                    Guid.Empty
+                )
+        );
+
+        await Assert.ThrowsAsync<InvalidOperationException>(
+            async () =>
+                await _workspaceStore.InsertWorkspaceAdmin(
+                    testUser.Id,
+                    testWorkspace.Id,
+                    -100
+                )
+        );
+
+        await Assert.ThrowsAsync<InvalidOperationException>(
+            async () =>
+                await _workspaceStore.InsertWorkspaceAdmin(
+                    testUser.Id,
+                    testWorkspace.Id,
+                    2048
+                )
+        );
+
+        Assert.NotNull(
+            await _workspaceStore.InsertWorkspaceAdmin(
+                testUser.Id,
+                testWorkspace.Id
+            )
+        );
+    }
+
+    [Fact]
+    public async void InsertWorkspaceAdmin_ShouldThrowOnAlreadyAdmin()
+    {
+        Workspace testWorkspace = new Workspace
+        {
+            Description = "test description",
+            Name = "test-workspace-name" + ChannelStore.GenerateRandomString(10)
+        };
+        _dbContext.Add(testWorkspace);
+
+        string username = UserStore.GenerateTestUserName(10);
+        string email = UserStore.GenerateTestEmail(10);
+        User testUser = new User
+        {
+            FirstName = UserStore.GenerateTestFirstName(10),
+            LastName = UserStore.GenerateTestLastName(10),
+            Timezone = UserStore.timezones[1].Id,
+            UserName = username,
+            Email = email,
+            PhoneNumber = "1-234-567-8901",
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(
+                UserStore.testPassword,
+                4
+            ),
+            NormalizedEmail = email.ToUpper(),
+            NormalizedUserName = username.ToUpper(),
+            SecurityStamp = Guid.NewGuid().ToString(),
+            ConcurrencyStamp = Guid.NewGuid().ToString(),
+        };
+        _dbContext.Add(testUser);
+
+        WorkspaceMember testWorkspaceMembership = new WorkspaceMember
+        {
+            Admin = true,
+            Title = "Member",
+            Workspace = testWorkspace,
+            User = testUser
+        };
+        _dbContext.Add(testWorkspaceMembership);
+
+        await _dbContext.SaveChangesAsync();
+
+        await Assert.ThrowsAsync<InvalidOperationException>(
+            async () =>
+                await _workspaceStore.InsertWorkspaceAdmin(
+                    testUser.Id,
+                    testWorkspace.Id
+                )
+        );
+    }
+
+    [Fact]
     public async void InsertWorkspaceSearch_ShouldInsertWorkspaceSearch()
     {
         Workspace testWorkspace = new Workspace
@@ -250,6 +500,7 @@ public class WorkspaceStoreTests
             Assert.Equal(0, im.NotificationSound);
             Assert.Null(im.OnlineStatus);
             Assert.Null(im.OnlineStatusUntil);
+            Assert.False(im.Owner);
             Assert.Null(im.ThemeId);
             Assert.Equal("Member", im.Title);
             Assert.Equal(im.UserId, m.Id);

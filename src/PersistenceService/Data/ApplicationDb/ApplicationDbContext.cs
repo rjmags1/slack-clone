@@ -176,6 +176,11 @@ public class ApplicationDbContext
             .Property(e => e.WorkspaceInviteStatus)
             .HasDefaultValueSql("1");
 
+        modelBuilder
+            .Entity<WorkspaceAdminPermissions>()
+            .Property(e => e.WorkspaceAdminPermissionsMask)
+            .HasDefaultValueSql("1");
+
         foreach (var entityType in modelBuilder.Model.GetEntityTypes())
         {
             string[] timestampPropertyNames =

@@ -745,14 +745,15 @@ namespace PersistenceService.Migrations
                 name: "WorkspaceAdminPermissions",
                 columns: table => new
                 {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "gen_random_uuid()"),
                     AdminId = table.Column<Guid>(type: "uuid", nullable: false),
-                    WorkspaceId = table.Column<Guid>(type: "uuid", nullable: false),
                     ConcurrencyStamp = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "gen_random_uuid()"),
-                    WorkspaceAdminPermissionsMask = table.Column<int>(type: "integer", nullable: false)
+                    WorkspaceAdminPermissionsMask = table.Column<int>(type: "integer", nullable: false, defaultValueSql: "1"),
+                    WorkspaceId = table.Column<Guid>(type: "uuid", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_WorkspaceAdminPermissions", x => new { x.AdminId, x.WorkspaceId });
+                    table.PrimaryKey("PK_WorkspaceAdminPermissions", x => x.Id);
                     table.ForeignKey(
                         name: "FK_WorkspaceAdminPermissions_AspNetUsers_AdminId",
                         column: x => x.AdminId,
@@ -795,54 +796,6 @@ namespace PersistenceService.Migrations
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_WorkspaceInvites_Workspaces_WorkspaceId",
-                        column: x => x.WorkspaceId,
-                        principalTable: "Workspaces",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "WorkspaceMembers",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "gen_random_uuid()"),
-                    Admin = table.Column<bool>(type: "boolean", nullable: false),
-                    AvatarId = table.Column<Guid>(type: "uuid", nullable: true),
-                    JoinedAt = table.Column<DateTime>(type: "timestamp", nullable: false, defaultValueSql: "now()"),
-                    NotificationsAllowTimeStart = table.Column<TimeOnly>(type: "time without time zone", nullable: true),
-                    NotificationsAllTimeEnd = table.Column<TimeOnly>(type: "time without time zone", nullable: true),
-                    NotificationSound = table.Column<int>(type: "integer", nullable: false),
-                    OnlineStatus = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: true),
-                    OnlineStatusUntil = table.Column<DateTime>(type: "timestamp", nullable: true),
-                    Owner = table.Column<bool>(type: "boolean", nullable: false),
-                    ThemeId = table.Column<Guid>(type: "uuid", nullable: true),
-                    Title = table.Column<string>(type: "character varying(80)", maxLength: 80, nullable: false),
-                    UserId = table.Column<Guid>(type: "uuid", nullable: false),
-                    WorkspaceId = table.Column<Guid>(type: "uuid", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_WorkspaceMembers", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_WorkspaceMembers_AspNetUsers_UserId",
-                        column: x => x.UserId,
-                        principalTable: "AspNetUsers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_WorkspaceMembers_Files_AvatarId",
-                        column: x => x.AvatarId,
-                        principalTable: "Files",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.SetNull);
-                    table.ForeignKey(
-                        name: "FK_WorkspaceMembers_Themes_ThemeId",
-                        column: x => x.ThemeId,
-                        principalTable: "Themes",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.SetNull);
-                    table.ForeignKey(
-                        name: "FK_WorkspaceMembers_Workspaces_WorkspaceId",
                         column: x => x.WorkspaceId,
                         principalTable: "Workspaces",
                         principalColumn: "Id",
@@ -896,6 +849,61 @@ namespace PersistenceService.Migrations
                         name: "FK_ThreadWatches_Threads_ThreadId",
                         column: x => x.ThreadId,
                         principalTable: "Threads",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "WorkspaceMembers",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "gen_random_uuid()"),
+                    Admin = table.Column<bool>(type: "boolean", nullable: false),
+                    WorkspaceAdminPermissionsId = table.Column<Guid>(type: "uuid", nullable: true),
+                    AvatarId = table.Column<Guid>(type: "uuid", nullable: true),
+                    JoinedAt = table.Column<DateTime>(type: "timestamp", nullable: false, defaultValueSql: "now()"),
+                    NotificationsAllowTimeStart = table.Column<TimeOnly>(type: "time without time zone", nullable: true),
+                    NotificationsAllTimeEnd = table.Column<TimeOnly>(type: "time without time zone", nullable: true),
+                    NotificationSound = table.Column<int>(type: "integer", nullable: false),
+                    OnlineStatus = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: true),
+                    OnlineStatusUntil = table.Column<DateTime>(type: "timestamp", nullable: true),
+                    Owner = table.Column<bool>(type: "boolean", nullable: false),
+                    ThemeId = table.Column<Guid>(type: "uuid", nullable: true),
+                    Title = table.Column<string>(type: "character varying(80)", maxLength: 80, nullable: false),
+                    UserId = table.Column<Guid>(type: "uuid", nullable: false),
+                    WorkspaceId = table.Column<Guid>(type: "uuid", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_WorkspaceMembers", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_WorkspaceMembers_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_WorkspaceMembers_Files_AvatarId",
+                        column: x => x.AvatarId,
+                        principalTable: "Files",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.SetNull);
+                    table.ForeignKey(
+                        name: "FK_WorkspaceMembers_Themes_ThemeId",
+                        column: x => x.ThemeId,
+                        principalTable: "Themes",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.SetNull);
+                    table.ForeignKey(
+                        name: "FK_WorkspaceMembers_WorkspaceAdminPermissions_WorkspaceAdminPe~",
+                        column: x => x.WorkspaceAdminPermissionsId,
+                        principalTable: "WorkspaceAdminPermissions",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.SetNull);
+                    table.ForeignKey(
+                        name: "FK_WorkspaceMembers_Workspaces_WorkspaceId",
+                        column: x => x.WorkspaceId,
+                        principalTable: "Workspaces",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -1336,6 +1344,12 @@ namespace PersistenceService.Migrations
                 column: "ThreadId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_WorkspaceAdminPermissions_AdminId_WorkspaceId",
+                table: "WorkspaceAdminPermissions",
+                columns: new[] { "AdminId", "WorkspaceId" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "IX_WorkspaceAdminPermissions_WorkspaceId",
                 table: "WorkspaceAdminPermissions",
                 column: "WorkspaceId");
@@ -1385,6 +1399,11 @@ namespace PersistenceService.Migrations
                 table: "WorkspaceMembers",
                 columns: new[] { "UserId", "WorkspaceId" },
                 unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_WorkspaceMembers_WorkspaceAdminPermissionsId",
+                table: "WorkspaceMembers",
+                column: "WorkspaceAdminPermissionsId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_WorkspaceMembers_WorkspaceId_UserId",
@@ -1685,9 +1704,6 @@ namespace PersistenceService.Migrations
                 name: "ThreadWatches");
 
             migrationBuilder.DropTable(
-                name: "WorkspaceAdminPermissions");
-
-            migrationBuilder.DropTable(
                 name: "WorkspaceInvites");
 
             migrationBuilder.DropTable(
@@ -1698,6 +1714,9 @@ namespace PersistenceService.Migrations
 
             migrationBuilder.DropTable(
                 name: "AspNetRoles");
+
+            migrationBuilder.DropTable(
+                name: "WorkspaceAdminPermissions");
 
             migrationBuilder.DropTable(
                 name: "AspNetUsers");

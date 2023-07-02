@@ -9,6 +9,63 @@ public class WorkspaceStore : Store
     public WorkspaceStore(ApplicationDbContext dbContext)
         : base(dbContext) { }
 
+    public async Task<WorkspaceMember> InsertWorkspaceAdmin(
+        Guid userId,
+        Guid workspaceId,
+        int permissionsMask = 1
+    )
+    {
+        bool userExists =
+            _context.Users.Where(u => u.Id == userId).Count() == 1;
+        bool workspaceExists =
+            _context.Workspaces.Where(w => w.Id == workspaceId).Count() == 1;
+        bool validMask = 0 <= permissionsMask && permissionsMask <= 2047;
+        if (!userExists || !workspaceExists || !validMask)
+        {
+            throw new InvalidOperationException(
+                "Could not make the user an admin for the specified workspace"
+            );
+        }
+
+        var workspaceMembership = _context.WorkspaceMembers
+            .Where(wm => wm.UserId == userId && wm.WorkspaceId == workspaceId)
+            .FirstOrDefault();
+        if (workspaceMembership is not null)
+        {
+            if (workspaceMembership.Admin)
+            {
+                throw new InvalidOperationException(
+                    "Could not make the user admin"
+                );
+            }
+            workspaceMembership.Admin = true;
+        }
+        else
+        {
+            workspaceMembership = new WorkspaceMember
+            {
+                Admin = true,
+                Title = "Admin",
+                UserId = userId,
+                WorkspaceId = workspaceId,
+            };
+            _context.Add(workspaceMembership);
+        }
+
+        WorkspaceAdminPermissions permissions = new WorkspaceAdminPermissions
+        {
+            AdminId = userId,
+            WorkspaceId = workspaceId,
+            WorkspaceAdminPermissionsMask = permissionsMask
+        };
+        _context.Add(permissions);
+        workspaceMembership.WorkspaceAdminPermissions = permissions;
+
+        await _context.SaveChangesAsync();
+
+        return workspaceMembership;
+    }
+
     public async Task<WorkspaceSearch> InsertWorkspaceSearch(
         Guid workspaceId,
         Guid userId,

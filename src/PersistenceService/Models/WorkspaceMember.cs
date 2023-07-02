@@ -16,6 +16,12 @@ public class WorkspaceMember
     public bool Admin { get; set; } = false;
 
     [DeleteBehavior(DeleteBehavior.SetNull)]
+    public WorkspaceAdminPermissions? WorkspaceAdminPermissions { get; set; }
+
+    [ForeignKey(nameof(WorkspaceAdminPermissions))]
+    public Guid? WorkspaceAdminPermissionsId { get; set; }
+
+    [DeleteBehavior(DeleteBehavior.SetNull)]
     public File? Avatar { get; set; }
 
     [ForeignKey(nameof(Avatar))]
