@@ -9,6 +9,54 @@ public class WorkspaceStore : Store
     public WorkspaceStore(ApplicationDbContext dbContext)
         : base(dbContext) { }
 
+    public async Task<List<WorkspaceMember>> InsertWorkspaceMembers(
+        Guid workspaceId,
+        List<Guid> userIds,
+        List<string> titles
+    )
+    {
+        bool workspaceExists =
+            _context.Workspaces.Where(w => w.Id == workspaceId).Count() == 1;
+        if (!workspaceExists)
+        {
+            throw new InvalidOperationException("Could not invite users");
+        }
+        bool allUsersExist =
+            _context.Users.Where(u => userIds.Contains(u.Id)).Count()
+            == userIds.Count;
+        if (!allUsersExist)
+        {
+            throw new InvalidOperationException("Could not invite users");
+        }
+        bool allUsersNotMembers =
+            _context.WorkspaceMembers
+                .Where(wm => wm.WorkspaceId == workspaceId)
+                .Where(wm => userIds.Contains(wm.UserId))
+                .Count() == 0;
+        if (!allUsersNotMembers)
+        {
+            throw new InvalidOperationException("Could not invite users");
+        }
+
+        List<WorkspaceMember> workspaceMembers = new List<WorkspaceMember>();
+        foreach ((Guid userId, string title) in userIds.Zip(titles))
+        {
+            workspaceMembers.Add(
+                new WorkspaceMember
+                {
+                    Title = title,
+                    WorkspaceId = workspaceId,
+                    UserId = userId
+                }
+            );
+        }
+
+        _context.AddRange(workspaceMembers);
+        await _context.SaveChangesAsync();
+
+        return workspaceMembers;
+    }
+
     public async Task<List<Workspace>> InsertWorkspaces(
         List<Workspace> workspaces
     )

@@ -12,7 +12,7 @@ using PersistenceService.Data.ApplicationDb;
 namespace PersistenceService.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20230702172457_InitialEntityCreate")]
+    [Migration("20230702183200_InitialEntityCreate")]
     partial class InitialEntityCreate
     {
         /// <inheritdoc />
@@ -1244,7 +1244,6 @@ namespace PersistenceService.Migrations
                         .HasColumnType("time without time zone");
 
                     b.Property<string>("OnlineStatus")
-                        .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
 

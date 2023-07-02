@@ -812,7 +812,7 @@ namespace PersistenceService.Migrations
                     NotificationsAllowTimeStart = table.Column<TimeOnly>(type: "time without time zone", nullable: true),
                     NotificationsAllTimeEnd = table.Column<TimeOnly>(type: "time without time zone", nullable: true),
                     NotificationSound = table.Column<int>(type: "integer", nullable: false),
-                    OnlineStatus = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
+                    OnlineStatus = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: true),
                     OnlineStatusUntil = table.Column<DateTime>(type: "timestamp", nullable: true),
                     Owner = table.Column<bool>(type: "boolean", nullable: false),
                     ThemeId = table.Column<Guid>(type: "uuid", nullable: true),

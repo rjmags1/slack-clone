@@ -1241,7 +1241,6 @@ namespace PersistenceService.Migrations
                         .HasColumnType("time without time zone");
 
                     b.Property<string>("OnlineStatus")
-                        .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
 

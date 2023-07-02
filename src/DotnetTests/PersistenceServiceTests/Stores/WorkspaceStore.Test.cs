@@ -21,6 +21,180 @@ public class WorkspaceStoreTests
     }
 
     [Fact]
+    public async void InsertWorkspaceMembers_ShouldInsertWorkspaceMembers()
+    {
+        Workspace testWorkspace = new Workspace
+        {
+            Description = "test description",
+            Name = "test-workspace-name" + ChannelStore.GenerateRandomString(10)
+        };
+        _dbContext.Add(testWorkspace);
+
+        List<User> testMembers = new List<User>();
+        for (int i = 0; i < 10; i++)
+        {
+            string email = UserStore.GenerateTestEmail(10);
+            string username = UserStore.GenerateTestUserName(10);
+            User user = new User
+            {
+                FirstName = UserStore.GenerateTestFirstName(10),
+                LastName = UserStore.GenerateTestLastName(10),
+                Timezone = UserStore.timezones[1].Id,
+                UserName = username,
+                Email = email,
+                PhoneNumber = "1-234-567-8901",
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword(
+                    UserStore.testPassword,
+                    4
+                ),
+                NormalizedEmail = email.ToUpper(),
+                NormalizedUserName = username.ToUpper(),
+                SecurityStamp = Guid.NewGuid().ToString(),
+                ConcurrencyStamp = Guid.NewGuid().ToString(),
+            };
+            testMembers.Add(user);
+        }
+        _dbContext.AddRange(testMembers);
+
+        await _dbContext.SaveChangesAsync();
+
+        List<WorkspaceMember> inserted =
+            await _workspaceStore.InsertWorkspaceMembers(
+                testWorkspace.Id,
+                testMembers.Select(u => u.Id).ToList(),
+                Enumerable.Repeat("Member", testMembers.Count).ToList()
+            );
+
+        foreach ((WorkspaceMember im, User m) in inserted.Zip(testMembers))
+        {
+            Assert.NotEqual(im.Id, Guid.Empty);
+            Assert.False(im.Admin);
+            Assert.Null(im.AvatarId);
+            Assert.NotEqual(im.JoinedAt, default(DateTime));
+            Assert.Null(im.NotificationsAllowTimeStart);
+            Assert.Null(im.NotificationsAllTimeEnd);
+            Assert.Equal(0, im.NotificationSound);
+            Assert.Null(im.OnlineStatus);
+            Assert.Null(im.OnlineStatusUntil);
+            Assert.Null(im.ThemeId);
+            Assert.Equal("Member", im.Title);
+            Assert.Equal(im.UserId, m.Id);
+            Assert.Equal(im.WorkspaceId, testWorkspace.Id);
+        }
+    }
+
+    [Fact]
+    public async void InsertWorkspaceMembers_ShouldThrowOnNonExistentIds()
+    {
+        Workspace testWorkspace = new Workspace
+        {
+            Description = "test description",
+            Name = "test-workspace-name" + ChannelStore.GenerateRandomString(10)
+        };
+        _dbContext.Add(testWorkspace);
+
+        string username = UserStore.GenerateTestUserName(10);
+        string email = UserStore.GenerateTestEmail(10);
+        User testMember = new User
+        {
+            FirstName = UserStore.GenerateTestFirstName(10),
+            LastName = UserStore.GenerateTestLastName(10),
+            Timezone = UserStore.timezones[1].Id,
+            UserName = username,
+            Email = email,
+            PhoneNumber = "1-234-567-8901",
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(
+                UserStore.testPassword,
+                4
+            ),
+            NormalizedEmail = email.ToUpper(),
+            NormalizedUserName = username.ToUpper(),
+            SecurityStamp = Guid.NewGuid().ToString(),
+            ConcurrencyStamp = Guid.NewGuid().ToString(),
+        };
+
+        _dbContext.Add(testMember);
+        await _dbContext.SaveChangesAsync();
+
+        await Assert.ThrowsAsync<InvalidOperationException>(
+            async () =>
+                await _workspaceStore.InsertWorkspaceMembers(
+                    Guid.Empty,
+                    new List<Guid> { testMember.Id },
+                    new List<string> { "Member" }
+                )
+        );
+
+        await Assert.ThrowsAsync<InvalidOperationException>(
+            async () =>
+                await _workspaceStore.InsertWorkspaceMembers(
+                    testWorkspace.Id,
+                    new List<Guid> { Guid.Empty },
+                    new List<string> { "Member" }
+                )
+        );
+
+        Assert.NotNull(
+            await _workspaceStore.InsertWorkspaceMembers(
+                testWorkspace.Id,
+                new List<Guid> { testMember.Id },
+                new List<string> { "Member" }
+            )
+        );
+    }
+
+    [Fact]
+    public async void InsertWorkspaceMembers_ShouldThrowOnUsersAlreadyMembers()
+    {
+        Workspace testWorkspace = new Workspace
+        {
+            Description = "test description",
+            Name = "test-workspace-name" + ChannelStore.GenerateRandomString(10)
+        };
+        _dbContext.Add(testWorkspace);
+
+        string username = UserStore.GenerateTestUserName(10);
+        string email = UserStore.GenerateTestEmail(10);
+        User testMember = new User
+        {
+            FirstName = UserStore.GenerateTestFirstName(10),
+            LastName = UserStore.GenerateTestLastName(10),
+            Timezone = UserStore.timezones[1].Id,
+            UserName = username,
+            Email = email,
+            PhoneNumber = "1-234-567-8901",
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(
+                UserStore.testPassword,
+                4
+            ),
+            NormalizedEmail = email.ToUpper(),
+            NormalizedUserName = username.ToUpper(),
+            SecurityStamp = Guid.NewGuid().ToString(),
+            ConcurrencyStamp = Guid.NewGuid().ToString(),
+        };
+        _dbContext.Add(testMember);
+
+        WorkspaceMember testWorkspaceMembership = new WorkspaceMember
+        {
+            Title = "Member",
+            Workspace = testWorkspace,
+            User = testMember
+        };
+        _dbContext.Add(testWorkspaceMembership);
+
+        await _dbContext.SaveChangesAsync();
+
+        await Assert.ThrowsAsync<InvalidOperationException>(
+            async () =>
+                await _workspaceStore.InsertWorkspaceMembers(
+                    testWorkspace.Id,
+                    new List<Guid> { testMember.Id },
+                    new List<string> { "Member " }
+                )
+        );
+    }
+
+    [Fact]
     public async void InsertWorkspaceInvite_ShouldInsertWorkspaceInvite()
     {
         Workspace testWorkspace = new Workspace
