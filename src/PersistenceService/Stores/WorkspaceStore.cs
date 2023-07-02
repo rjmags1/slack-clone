@@ -9,6 +9,38 @@ public class WorkspaceStore : Store
     public WorkspaceStore(ApplicationDbContext dbContext)
         : base(dbContext) { }
 
+    public async Task<WorkspaceSearch> InsertWorkspaceSearch(
+        Guid workspaceId,
+        Guid userId,
+        string query
+    )
+    {
+        bool validSearch =
+            query.Length > 0
+            && _context.WorkspaceMembers
+                .Where(
+                    wm => wm.UserId == userId && wm.WorkspaceId == workspaceId
+                )
+                .Count() == 1;
+        if (!validSearch)
+        {
+            throw new InvalidOperationException(
+                "Could not insert workspace search record"
+            );
+        }
+
+        WorkspaceSearch search = new WorkspaceSearch
+        {
+            Query = query,
+            UserId = userId,
+            WorkspaceId = workspaceId
+        };
+
+        _context.Add(search);
+        await _context.SaveChangesAsync();
+        return search;
+    }
+
     public async Task<List<WorkspaceMember>> InsertWorkspaceMembers(
         Guid workspaceId,
         List<Guid> userIds,
