@@ -143,7 +143,7 @@ public class ChannelStore : Store
     )
     {
         ChannelMember adminMembership = _context.ChannelMembers.First(
-            cm => cm.UserId == adminId
+            cm => cm.UserId == adminId && cm.ChannelId == channelId
         );
         if (!adminMembership.Admin)
         {

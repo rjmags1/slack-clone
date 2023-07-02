@@ -1194,7 +1194,9 @@ namespace PersistenceService.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<int>("WorkspaceInviteStatus")
-                        .HasColumnType("integer");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValueSql("1");
 
                     b.HasKey("Id");
 

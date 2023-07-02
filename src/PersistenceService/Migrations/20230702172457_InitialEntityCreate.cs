@@ -776,7 +776,7 @@ namespace PersistenceService.Migrations
                     CreatedAt = table.Column<DateTime>(type: "timestamp", nullable: false, defaultValueSql: "now()"),
                     UserId = table.Column<Guid>(type: "uuid", nullable: false),
                     WorkspaceId = table.Column<Guid>(type: "uuid", nullable: false),
-                    WorkspaceInviteStatus = table.Column<int>(type: "integer", nullable: false)
+                    WorkspaceInviteStatus = table.Column<int>(type: "integer", nullable: false, defaultValueSql: "1")
                 },
                 constraints: table =>
                 {

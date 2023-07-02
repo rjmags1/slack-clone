@@ -171,6 +171,11 @@ public class ApplicationDbContext
             .Property(e => e.NumMessages)
             .HasDefaultValueSql("2");
 
+        modelBuilder
+            .Entity<WorkspaceInvite>()
+            .Property(e => e.WorkspaceInviteStatus)
+            .HasDefaultValueSql("1");
+
         foreach (var entityType in modelBuilder.Model.GetEntityTypes())
         {
             string[] timestampPropertyNames =
