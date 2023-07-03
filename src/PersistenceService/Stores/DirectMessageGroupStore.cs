@@ -51,7 +51,7 @@ public class DirectMessageGroupStore : Store
         int numTestDirectMessageGroups
     )
     {
-        string emailPrefix = "test-email-dmg@test.com";
+        string emailPrefix = UserStore.GenerateTestEmail(10);
         string usernamePrefix = "dgcreator-uname";
         List<List<User>> testMembers = new List<List<User>>();
         List<DirectMessageGroup> testGroups = new List<DirectMessageGroup>();

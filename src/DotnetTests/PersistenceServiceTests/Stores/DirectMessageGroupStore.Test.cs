@@ -23,7 +23,7 @@ public class DirectMessageGroupStoreTests
     [Fact]
     public async void InsertDirectMessageGroups_ShouldInsertDirectMessagesGroups()
     {
-        string emailPrefix = "test-email-dmg@test.com";
+        string emailPrefix = UserStore.GenerateTestEmail(10);
         string usernamePrefix = "dgcreator-un";
         List<List<User>> testMembers = new List<List<User>>();
         List<DirectMessageGroup> testGroups = new List<DirectMessageGroup>();

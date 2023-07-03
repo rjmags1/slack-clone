@@ -12,7 +12,7 @@ using PersistenceService.Data.ApplicationDb;
 namespace PersistenceService.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20230628230259_InitialEntityCreate")]
+    [Migration("20230703024352_InitialEntityCreate")]
     partial class InitialEntityCreate
     {
         /// <inheritdoc />
@@ -339,7 +339,9 @@ namespace PersistenceService.Migrations
                         .HasColumnType("boolean");
 
                     b.Property<bool>("Draft")
-                        .HasColumnType("boolean");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValueSql("true");
 
                     b.Property<DateTime?>("LastEdit")
                         .HasColumnType("timestamp");
@@ -940,7 +942,9 @@ namespace PersistenceService.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<int>("NumMessages")
-                        .HasColumnType("integer");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValueSql("2");
 
                     b.Property<Guid>("WorkspaceId")
                         .HasColumnType("uuid");
@@ -1151,10 +1155,12 @@ namespace PersistenceService.Migrations
 
             modelBuilder.Entity("PersistenceService.Models.WorkspaceAdminPermissions", b =>
                 {
-                    b.Property<Guid>("AdminId")
-                        .HasColumnType("uuid");
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasDefaultValueSql("gen_random_uuid()");
 
-                    b.Property<Guid>("WorkspaceId")
+                    b.Property<Guid>("AdminId")
                         .HasColumnType("uuid");
 
                     b.Property<Guid>("ConcurrencyStamp")
@@ -1164,11 +1170,19 @@ namespace PersistenceService.Migrations
                         .HasDefaultValueSql("gen_random_uuid()");
 
                     b.Property<int>("WorkspaceAdminPermissionsMask")
-                        .HasColumnType("integer");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValueSql("1");
 
-                    b.HasKey("AdminId", "WorkspaceId");
+                    b.Property<Guid>("WorkspaceId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
 
                     b.HasIndex("WorkspaceId");
+
+                    b.HasIndex("AdminId", "WorkspaceId")
+                        .IsUnique();
 
                     b.ToTable("WorkspaceAdminPermissions");
                 });
@@ -1195,7 +1209,9 @@ namespace PersistenceService.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<int>("WorkspaceInviteStatus")
-                        .HasColumnType("integer");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValueSql("1");
 
                     b.HasKey("Id");
 
@@ -1240,7 +1256,6 @@ namespace PersistenceService.Migrations
                         .HasColumnType("time without time zone");
 
                     b.Property<string>("OnlineStatus")
-                        .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
 
@@ -1261,6 +1276,9 @@ namespace PersistenceService.Migrations
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid");
 
+                    b.Property<Guid?>("WorkspaceAdminPermissionsId")
+                        .HasColumnType("uuid");
+
                     b.Property<Guid>("WorkspaceId")
                         .HasColumnType("uuid");
 
@@ -1271,6 +1289,8 @@ namespace PersistenceService.Migrations
                     b.HasIndex("JoinedAt");
 
                     b.HasIndex("ThemeId");
+
+                    b.HasIndex("WorkspaceAdminPermissionsId");
 
                     b.HasIndex("UserId", "WorkspaceId")
                         .IsUnique();
@@ -1574,13 +1594,13 @@ namespace PersistenceService.Migrations
             modelBuilder.Entity("PersistenceService.Models.ChannelMessageReply", b =>
                 {
                     b.HasOne("PersistenceService.Models.ChannelMessage", "ChannelMessage")
-                        .WithMany("Replies")
-                        .HasForeignKey("ChannelMessageId")
+                        .WithOne()
+                        .HasForeignKey("PersistenceService.Models.ChannelMessageReply", "ChannelMessageId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("PersistenceService.Models.ChannelMessage", "MessageRepliedTo")
-                        .WithMany()
+                        .WithMany("Replies")
                         .HasForeignKey("MessageRepliedToId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -1774,13 +1794,13 @@ namespace PersistenceService.Migrations
             modelBuilder.Entity("PersistenceService.Models.DirectMessageReply", b =>
                 {
                     b.HasOne("PersistenceService.Models.DirectMessage", "DirectMessage")
-                        .WithMany("Replies")
+                        .WithMany()
                         .HasForeignKey("DirectMessageId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("PersistenceService.Models.DirectMessage", "MessageRepliedTo")
-                        .WithMany()
+                        .WithMany("Replies")
                         .HasForeignKey("MessageRepliedToId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -1974,6 +1994,11 @@ namespace PersistenceService.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("PersistenceService.Models.WorkspaceAdminPermissions", "WorkspaceAdminPermissions")
+                        .WithMany()
+                        .HasForeignKey("WorkspaceAdminPermissionsId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("PersistenceService.Models.Workspace", "Workspace")
                         .WithMany()
                         .HasForeignKey("WorkspaceId")
@@ -1987,6 +2012,8 @@ namespace PersistenceService.Migrations
                     b.Navigation("User");
 
                     b.Navigation("Workspace");
+
+                    b.Navigation("WorkspaceAdminPermissions");
                 });
 
             modelBuilder.Entity("PersistenceService.Models.WorkspaceSearch", b =>

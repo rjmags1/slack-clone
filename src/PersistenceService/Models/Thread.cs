@@ -33,7 +33,7 @@ public class Thread
         new List<ChannelMessage>();
 
     [DefaultValue(2)]
-    public int NumMessages { get; set; }
+    public int NumMessages { get; set; } = 2;
 
 #pragma warning disable CS8618
     [DeleteBehavior(DeleteBehavior.Cascade)]

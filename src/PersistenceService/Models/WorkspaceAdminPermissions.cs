@@ -5,9 +5,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace PersistenceService.Models;
 
-[PrimaryKey(nameof(AdminId), nameof(WorkspaceId))]
+[Index(nameof(AdminId), nameof(WorkspaceId), IsUnique = true)]
 public class WorkspaceAdminPermissions
 {
+    public Guid Id { get; set; }
+
 #pragma warning disable CS8618
     [DeleteBehavior(DeleteBehavior.Cascade)]
     public User Admin { get; set; }
@@ -22,7 +24,7 @@ public class WorkspaceAdminPermissions
 #pragma warning restore CS8618
 
     [DefaultValue(1)]
-    public int WorkspaceAdminPermissionsMask { get; set; }
+    public int WorkspaceAdminPermissionsMask { get; set; } = 1;
 
 #pragma warning disable CS8618
     [DeleteBehavior(DeleteBehavior.Cascade)]

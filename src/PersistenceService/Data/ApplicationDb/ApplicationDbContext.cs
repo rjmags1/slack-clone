@@ -70,15 +70,21 @@ public class ApplicationDbContext
         modelBuilder
             .Entity<ChannelMessage>()
             .HasMany(e => e.Replies)
-            .WithOne(e => e.ChannelMessage)
-            .HasForeignKey(e => e.ChannelMessageId)
+            .WithOne(e => e.MessageRepliedTo)
+            .HasForeignKey(e => e.MessageRepliedToId)
+            .IsRequired();
+
+        modelBuilder
+            .Entity<ChannelMessageReply>()
+            .HasOne(e => e.ChannelMessage)
+            .WithOne()
             .IsRequired();
 
         modelBuilder
             .Entity<DirectMessage>()
             .HasMany(e => e.Replies)
-            .WithOne(e => e.DirectMessage)
-            .HasForeignKey(e => e.DirectMessageId)
+            .WithOne(e => e.MessageRepliedTo)
+            .HasForeignKey(e => e.MessageRepliedToId)
             .IsRequired();
 
         modelBuilder
@@ -158,6 +164,26 @@ public class ApplicationDbContext
         modelBuilder
             .Entity<ChannelMember>()
             .Property(e => e.EnableNotifications)
+            .HasDefaultValueSql("true");
+
+        modelBuilder
+            .Entity<Models.Thread>()
+            .Property(e => e.NumMessages)
+            .HasDefaultValueSql("2");
+
+        modelBuilder
+            .Entity<WorkspaceInvite>()
+            .Property(e => e.WorkspaceInviteStatus)
+            .HasDefaultValueSql("1");
+
+        modelBuilder
+            .Entity<WorkspaceAdminPermissions>()
+            .Property(e => e.WorkspaceAdminPermissionsMask)
+            .HasDefaultValueSql("1");
+
+        modelBuilder
+            .Entity<ChannelMessage>()
+            .Property(e => e.Draft)
             .HasDefaultValueSql("true");
 
         foreach (var entityType in modelBuilder.Model.GetEntityTypes())

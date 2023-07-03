@@ -40,5 +40,5 @@ public class WorkspaceInvite
     public Guid WorkspaceId { get; set; }
 
     [DefaultValue(1)]
-    public int WorkspaceInviteStatus { get; set; }
+    public int WorkspaceInviteStatus { get; set; } = 1;
 }

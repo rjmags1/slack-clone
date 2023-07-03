@@ -8,6 +8,179 @@ public class ChannelStore : Store
     public ChannelStore(ApplicationDbContext context)
         : base(context) { }
 
+    public async Task<ChannelMessage> InsertChannelMessage(
+        Guid channelId,
+        string content,
+        Guid userId,
+        Guid? threadId,
+        Guid? messageRepliedToId,
+        Guid? personRepliedToId,
+        bool draft = false
+    )
+    {
+        bool validMessage =
+            content.Length > 0
+            && _context.ChannelMembers
+                .Where(cm => cm.ChannelId == channelId && cm.UserId == userId)
+                .Count() == 1
+            && (
+                threadId is null
+                || _context.Threads
+                    .Where(t => t.Id == threadId && t.ChannelId == channelId)
+                    .Count() == 1
+            );
+        if (!validMessage)
+        {
+            throw new InvalidOperationException("Could not add new message");
+        }
+
+        int specifiedReplyArgs = (
+            new List<Guid?> { threadId, messageRepliedToId, personRepliedToId }
+        ).Count(id => id is not null);
+
+        bool reply = specifiedReplyArgs == 3;
+        bool topLevelMessage = specifiedReplyArgs == 0;
+        if (!reply && !topLevelMessage)
+        {
+            throw new ArgumentException("Invalid arguments");
+        }
+
+        if (reply)
+        {
+            bool validReply =
+                _context.ChannelMessages
+                    .Where(
+                        cm =>
+                            cm.Id == messageRepliedToId
+                            && cm.ThreadId == threadId
+                            && cm.UserId == personRepliedToId
+                    )
+                    .Count() == 1;
+            if (!validReply)
+            {
+                throw new InvalidOperationException("Could not add reply");
+            }
+        }
+
+        ChannelMessage message = new ChannelMessage
+        {
+            ChannelId = channelId,
+            Content = content,
+            ThreadId = threadId,
+            UserId = userId,
+            Draft = draft,
+            SentAt = draft ? null : DateTime.Now,
+        };
+        _context.Add(message);
+
+        if (reply)
+        {
+            ChannelMessageReply replyRecord = new ChannelMessageReply
+            {
+                ChannelMessage = message,
+                MessageRepliedToId = (Guid)messageRepliedToId!,
+                RepliedToId = (Guid)personRepliedToId!,
+                ThreadId = (Guid)threadId!,
+                ReplierId = userId
+            };
+            _context.Add(replyRecord);
+        }
+
+        await _context.SaveChangesAsync();
+
+        return message;
+    }
+
+    public async Task<ThreadWatch> InsertThreadWatch(Guid userId, Guid threadId)
+    {
+        try
+        {
+            Guid threadChannelId = _context.Threads
+                .Where(t => t.Id == threadId)
+                .First()
+                .ChannelId;
+            ChannelMember userInThreadChannel = _context.ChannelMembers
+                .Where(cm => cm.UserId == userId)
+                .Where(cm => cm.ChannelId == threadChannelId)
+                .First();
+        }
+        catch (Exception)
+        {
+            throw new ArgumentException("Invalid arguments");
+        }
+
+        ThreadWatch threadWatch = new ThreadWatch
+        {
+            ThreadId = threadId,
+            UserId = userId
+        };
+        _context.Add(threadWatch);
+
+        await _context.SaveChangesAsync();
+
+        return threadWatch;
+    }
+
+    public async Task<Models.Thread> InsertThread(
+        Guid channelId,
+        Guid repliedToId,
+        ChannelMessage reply
+    )
+    {
+        ChannelMessage repliedTo;
+        Guid workspaceId;
+        try
+        {
+            repliedTo = _context.ChannelMessages
+                .Where(cm => cm.Id == repliedToId)
+                .Where(cm => cm.ChannelId == channelId)
+                .First();
+            workspaceId = _context.Channels
+                .Where(c => c.Id == channelId)
+                .First()
+                .WorkspaceId;
+        }
+        catch (Exception)
+        {
+            throw new ArgumentException("Invalid arguments");
+        }
+
+        bool replyInChannel = reply.ChannelId == channelId;
+        bool replyUserSpecified = reply.UserId != default(Guid);
+        bool replyContentSpecified = reply.Content?.Length > 0;
+        if (!replyInChannel || !replyUserSpecified || !replyContentSpecified)
+        {
+            throw new ArgumentException("Invalid arguments");
+        }
+
+        Models.Thread thread = new Models.Thread
+        {
+            ChannelId = channelId,
+            FirstMessageId = repliedToId,
+            WorkspaceId = workspaceId
+        };
+        _context.Add(thread);
+
+        repliedTo.Thread = thread;
+
+        _context.Attach(reply);
+        reply.Thread = thread;
+
+        ChannelMessageReply replyEntry = new ChannelMessageReply
+        {
+            ChannelMessage = reply,
+            MessageRepliedToId = repliedToId,
+            RepliedToId = repliedTo.UserId,
+            ReplierId = reply.UserId,
+            Thread = thread
+        };
+        _context.Add(replyEntry);
+
+        await _context.SaveChangesAsync();
+
+        return thread;
+    }
+
     public async Task<List<ChannelMember>> InsertChannelMembers(
         Guid channelId,
         List<Guid> userIds
@@ -53,7 +226,7 @@ public class ChannelStore : Store
     )
     {
         ChannelMember adminMembership = _context.ChannelMembers.First(
-            cm => cm.UserId == adminId
+            cm => cm.UserId == adminId && cm.ChannelId == channelId
         );
         if (!adminMembership.Admin)
         {
@@ -109,7 +282,7 @@ public class ChannelStore : Store
 
     public async Task<List<Channel>> InsertTestChannels(int numTestChannels)
     {
-        string email = "test-email@test.com";
+        string email = UserStore.GenerateTestEmail(10);
         string username =
             "tccreator-uname" + ChannelStore.GenerateRandomString(15);
         User channelCreator = new User

@@ -16,6 +16,12 @@ public class WorkspaceMember
     public bool Admin { get; set; } = false;
 
     [DeleteBehavior(DeleteBehavior.SetNull)]
+    public WorkspaceAdminPermissions? WorkspaceAdminPermissions { get; set; }
+
+    [ForeignKey(nameof(WorkspaceAdminPermissions))]
+    public Guid? WorkspaceAdminPermissionsId { get; set; }
+
+    [DeleteBehavior(DeleteBehavior.SetNull)]
     public File? Avatar { get; set; }
 
     [ForeignKey(nameof(Avatar))]
@@ -29,12 +35,11 @@ public class WorkspaceMember
     public TimeOnly? NotificationsAllTimeEnd { get; set; }
 
     [DefaultValue(0)]
-    public int NotificationSound { get; set; }
+    public int NotificationSound { get; set; } = 0;
 
 #pragma warning disable CS8618
-    [DefaultValue("offline")]
     [MaxLength(20)]
-    public string OnlineStatus { get; set; } = "offline";
+    public string? OnlineStatus { get; set; }
 #pragma warning restore CS8618
 
     [Column(TypeName = "timestamp")]
