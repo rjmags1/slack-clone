@@ -12,7 +12,7 @@ using PersistenceService.Data.ApplicationDb;
 namespace PersistenceService.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20230702200753_InitialEntityCreate")]
+    [Migration("20230703024352_InitialEntityCreate")]
     partial class InitialEntityCreate
     {
         /// <inheritdoc />
@@ -339,7 +339,9 @@ namespace PersistenceService.Migrations
                         .HasColumnType("boolean");
 
                     b.Property<bool>("Draft")
-                        .HasColumnType("boolean");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValueSql("true");
 
                     b.Property<DateTime?>("LastEdit")
                         .HasColumnType("timestamp");

@@ -336,7 +336,9 @@ namespace PersistenceService.Migrations
                         .HasColumnType("boolean");
 
                     b.Property<bool>("Draft")
-                        .HasColumnType("boolean");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValueSql("true");
 
                     b.Property<DateTime?>("LastEdit")
                         .HasColumnType("timestamp");

@@ -181,6 +181,11 @@ public class ApplicationDbContext
             .Property(e => e.WorkspaceAdminPermissionsMask)
             .HasDefaultValueSql("1");
 
+        modelBuilder
+            .Entity<ChannelMessage>()
+            .Property(e => e.Draft)
+            .HasDefaultValueSql("true");
+
         foreach (var entityType in modelBuilder.Model.GetEntityTypes())
         {
             string[] timestampPropertyNames =

@@ -37,8 +37,7 @@ public class ChannelMessage
     [DefaultValue(false)]
     public bool Deleted { get; set; } = false;
 
-    [DefaultValue(true)]
-    public bool Draft { get; set; } = true;
+    public bool Draft { get; set; }
 
     public ICollection<File> Files { get; } = new List<File>();
 

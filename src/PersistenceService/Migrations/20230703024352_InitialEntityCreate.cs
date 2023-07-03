@@ -354,7 +354,7 @@ namespace PersistenceService.Migrations
                     ConcurrencyStamp = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "gen_random_uuid()"),
                     CreatedAt = table.Column<DateTime>(type: "timestamp", nullable: false, defaultValueSql: "now()"),
                     Deleted = table.Column<bool>(type: "boolean", nullable: false),
-                    Draft = table.Column<bool>(type: "boolean", nullable: false),
+                    Draft = table.Column<bool>(type: "boolean", nullable: false, defaultValueSql: "true"),
                     LastEdit = table.Column<DateTime>(type: "timestamp", nullable: true),
                     SentAt = table.Column<DateTime>(type: "timestamp", nullable: true),
                     ThreadId = table.Column<Guid>(type: "uuid", nullable: true),

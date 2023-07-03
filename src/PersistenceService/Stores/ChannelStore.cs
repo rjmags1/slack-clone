@@ -8,6 +8,89 @@ public class ChannelStore : Store
     public ChannelStore(ApplicationDbContext context)
         : base(context) { }
 
+    public async Task<ChannelMessage> InsertChannelMessage(
+        Guid channelId,
+        string content,
+        Guid userId,
+        Guid? threadId,
+        Guid? messageRepliedToId,
+        Guid? personRepliedToId,
+        bool draft = false
+    )
+    {
+        bool validMessage =
+            content.Length > 0
+            && _context.ChannelMembers
+                .Where(cm => cm.ChannelId == channelId && cm.UserId == userId)
+                .Count() == 1
+            && (
+                threadId is null
+                || _context.Threads
+                    .Where(t => t.Id == threadId && t.ChannelId == channelId)
+                    .Count() == 1
+            );
+        if (!validMessage)
+        {
+            throw new InvalidOperationException("Could not add new message");
+        }
+
+        int specifiedReplyArgs = (
+            new List<Guid?> { threadId, messageRepliedToId, personRepliedToId }
+        ).Count(id => id is not null);
+
+        bool reply = specifiedReplyArgs == 3;
+        bool topLevelMessage = specifiedReplyArgs == 0;
+        if (!reply && !topLevelMessage)
+        {
+            throw new ArgumentException("Invalid arguments");
+        }
+
+        if (reply)
+        {
+            bool validReply =
+                _context.ChannelMessages
+                    .Where(
+                        cm =>
+                            cm.Id == messageRepliedToId
+                            && cm.ThreadId == threadId
+                            && cm.UserId == personRepliedToId
+                    )
+                    .Count() == 1;
+            if (!validReply)
+            {
+                throw new InvalidOperationException("Could not add reply");
+            }
+        }
+
+        ChannelMessage message = new ChannelMessage
+        {
+            ChannelId = channelId,
+            Content = content,
+            ThreadId = threadId,
+            UserId = userId,
+            Draft = draft,
+            SentAt = draft ? null : DateTime.Now,
+        };
+        _context.Add(message);
+
+        if (reply)
+        {
+            ChannelMessageReply replyRecord = new ChannelMessageReply
+            {
+                ChannelMessage = message,
+                MessageRepliedToId = (Guid)messageRepliedToId!,
+                RepliedToId = (Guid)personRepliedToId!,
+                ThreadId = (Guid)threadId!,
+                ReplierId = userId
+            };
+            _context.Add(replyRecord);
+        }
+
+        await _context.SaveChangesAsync();
+
+        return message;
+    }
+
     public async Task<ThreadWatch> InsertThreadWatch(Guid userId, Guid threadId)
     {
         try
@@ -199,7 +282,7 @@ public class ChannelStore : Store
 
     public async Task<List<Channel>> InsertTestChannels(int numTestChannels)
     {
-        string email = "test-email@test.com";
+        string email = UserStore.GenerateTestEmail(10);
         string username =
             "tccreator-uname" + ChannelStore.GenerateRandomString(15);
         User channelCreator = new User
