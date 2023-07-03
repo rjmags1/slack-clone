@@ -19,7 +19,7 @@ public class ChannelMessageLaterFlag
     public Guid ChannelId { get; set; }
 
     [DefaultValue(1)]
-    public int ChannelLaterFlagStatus { get; set; }
+    public int? ChannelLaterFlagStatus { get; set; }
 
 #pragma warning disable CS8618
     [DeleteBehavior(DeleteBehavior.Cascade)]

@@ -186,6 +186,11 @@ public class ApplicationDbContext
             .Property(e => e.Draft)
             .HasDefaultValueSql("true");
 
+        modelBuilder
+            .Entity<ChannelMessageLaterFlag>()
+            .Property(e => e.ChannelLaterFlagStatus)
+            .HasDefaultValueSql("1");
+
         foreach (var entityType in modelBuilder.Model.GetEntityTypes())
         {
             string[] timestampPropertyNames =

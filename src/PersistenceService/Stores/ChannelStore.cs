@@ -8,6 +8,44 @@ public class ChannelStore : Store
     public ChannelStore(ApplicationDbContext context)
         : base(context) { }
 
+    public async Task<ChannelMessageLaterFlag> InsertChannelMessageLaterFlag(
+        Guid channelMessageId,
+        Guid userId
+    )
+    {
+        ChannelMessage? channelMessage = _context.ChannelMessages
+            .Where(cm => cm.Id == channelMessageId)
+            .FirstOrDefault();
+        if (channelMessage is null)
+        {
+            throw new ArgumentException("Invalid arguments");
+        }
+
+        Guid channelId = channelMessage.ChannelId;
+        bool isChannelMember =
+            _context.ChannelMembers
+                .Where(cm => cm.UserId == userId && cm.ChannelId == channelId)
+                .Count() == 1;
+        if (!isChannelMember)
+        {
+            throw new ArgumentException("Invalid arguments");
+        }
+
+        Guid workspaceId = channelMessage.Channel.WorkspaceId;
+        ChannelMessageLaterFlag laterFlag = new ChannelMessageLaterFlag
+        {
+            ChannelId = channelId,
+            ChannelMessageId = channelMessageId,
+            UserId = userId,
+            WorkspaceId = workspaceId
+        };
+        _context.Add(laterFlag);
+
+        await _context.SaveChangesAsync();
+
+        return laterFlag;
+    }
+
     public async Task<ChannelMessage> InsertChannelMessage(
         Guid channelId,
         string content,
