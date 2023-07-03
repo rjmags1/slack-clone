@@ -50,6 +50,7 @@ public class ChannelStore : Store
         Guid channelId,
         string content,
         Guid userId,
+        List<Guid>? mentionedPeople,
         Guid? threadId,
         Guid? messageRepliedToId,
         Guid? personRepliedToId,
@@ -81,6 +82,24 @@ public class ChannelStore : Store
         if (!reply && !topLevelMessage)
         {
             throw new ArgumentException("Invalid arguments");
+        }
+
+        bool needRecordMentions =
+            !draft && mentionedPeople is not null && mentionedPeople.Count > 0;
+        if (needRecordMentions)
+        {
+            bool mentionedAllMembers =
+                _context.ChannelMembers
+                    .Where(
+                        cm =>
+                            cm.ChannelId == channelId
+                            && mentionedPeople!.Contains(cm.UserId)
+                    )
+                    .Count() == mentionedPeople!.Count;
+            if (!mentionedAllMembers)
+            {
+                throw new ArgumentException("Invalid arguments");
+            }
         }
 
         if (reply)
@@ -122,6 +141,21 @@ public class ChannelStore : Store
                 ReplierId = userId
             };
             _context.Add(replyRecord);
+        }
+
+        if (needRecordMentions)
+        {
+            foreach (Guid mentionedId in mentionedPeople!)
+            {
+                _context.Add(
+                    new ChannelMessageMention
+                    {
+                        ChannelMessage = message,
+                        MentionedId = mentionedId,
+                        MentionerId = userId
+                    }
+                );
+            }
         }
 
         await _context.SaveChangesAsync();
