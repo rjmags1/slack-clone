@@ -8,10 +8,49 @@ public class ChannelStore : Store
     public ChannelStore(ApplicationDbContext context)
         : base(context) { }
 
+    public async Task<ChannelMessageLaterFlag> InsertChannelMessageLaterFlag(
+        Guid channelMessageId,
+        Guid userId
+    )
+    {
+        ChannelMessage? channelMessage = _context.ChannelMessages
+            .Where(cm => cm.Id == channelMessageId)
+            .FirstOrDefault();
+        if (channelMessage is null)
+        {
+            throw new ArgumentException("Invalid arguments");
+        }
+
+        Guid channelId = channelMessage.ChannelId;
+        bool isChannelMember =
+            _context.ChannelMembers
+                .Where(cm => cm.UserId == userId && cm.ChannelId == channelId)
+                .Count() == 1;
+        if (!isChannelMember)
+        {
+            throw new ArgumentException("Invalid arguments");
+        }
+
+        Guid workspaceId = channelMessage.Channel.WorkspaceId;
+        ChannelMessageLaterFlag laterFlag = new ChannelMessageLaterFlag
+        {
+            ChannelId = channelId,
+            ChannelMessageId = channelMessageId,
+            UserId = userId,
+            WorkspaceId = workspaceId
+        };
+        _context.Add(laterFlag);
+
+        await _context.SaveChangesAsync();
+
+        return laterFlag;
+    }
+
     public async Task<ChannelMessage> InsertChannelMessage(
         Guid channelId,
         string content,
         Guid userId,
+        List<Guid>? mentionedPeople,
         Guid? threadId,
         Guid? messageRepliedToId,
         Guid? personRepliedToId,
@@ -43,6 +82,24 @@ public class ChannelStore : Store
         if (!reply && !topLevelMessage)
         {
             throw new ArgumentException("Invalid arguments");
+        }
+
+        bool needRecordMentions =
+            !draft && mentionedPeople is not null && mentionedPeople.Count > 0;
+        if (needRecordMentions)
+        {
+            bool mentionedAllMembers =
+                _context.ChannelMembers
+                    .Where(
+                        cm =>
+                            cm.ChannelId == channelId
+                            && mentionedPeople!.Contains(cm.UserId)
+                    )
+                    .Count() == mentionedPeople!.Count;
+            if (!mentionedAllMembers)
+            {
+                throw new ArgumentException("Invalid arguments");
+            }
         }
 
         if (reply)
@@ -84,6 +141,21 @@ public class ChannelStore : Store
                 ReplierId = userId
             };
             _context.Add(replyRecord);
+        }
+
+        if (needRecordMentions)
+        {
+            foreach (Guid mentionedId in mentionedPeople!)
+            {
+                _context.Add(
+                    new ChannelMessageMention
+                    {
+                        ChannelMessage = message,
+                        MentionedId = mentionedId,
+                        MentionerId = userId
+                    }
+                );
+            }
         }
 
         await _context.SaveChangesAsync();

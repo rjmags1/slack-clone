@@ -23,6 +23,258 @@ public class ChannelStoreTests
     }
 
     [Fact]
+    public async void InsertChannelMessageLaterFlag_ShouldInsertChannelMessageLaterFlag()
+    {
+        Workspace testWorkspace = new Workspace
+        {
+            Description = "test description",
+            Name = "test-workspace-name" + ChannelStore.GenerateRandomString(10)
+        };
+        _dbContext.Add(testWorkspace);
+
+        string email = UserStore.GenerateTestEmail(10);
+        string username = UserStore.GenerateTestUserName(10);
+        User testUser = new User
+        {
+            FirstName = UserStore.GenerateTestFirstName(10),
+            LastName = UserStore.GenerateTestLastName(10),
+            Timezone = UserStore.timezones[1].Id,
+            UserName = username,
+            Email = email,
+            PhoneNumber = "1-234-567-8901",
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(
+                UserStore.testPassword,
+                4
+            ),
+            NormalizedEmail = email.ToUpper(),
+            NormalizedUserName = username.ToUpper(),
+            SecurityStamp = Guid.NewGuid().ToString(),
+            ConcurrencyStamp = Guid.NewGuid().ToString(),
+        };
+        _dbContext.Add(testUser);
+
+        await _dbContext.SaveChangesAsync();
+
+        WorkspaceMember testWorkspaceMembership = new WorkspaceMember
+        {
+            Title = "Member",
+            User = testUser,
+            Workspace = testWorkspace
+        };
+        _dbContext.Add(testWorkspaceMembership);
+
+        await _dbContext.SaveChangesAsync();
+
+        Channel testChannel = new Channel
+        {
+            CreatedBy = testUser,
+            Description = "test-description",
+            Name = "test-channel-name-" + ChannelStore.GenerateRandomString(5),
+            Workspace = testWorkspace
+        };
+        _dbContext.Add(testChannel);
+        await _dbContext.SaveChangesAsync();
+
+        ChannelMember testChannelMembership = new ChannelMember
+        {
+            User = testUser,
+            Channel = testChannel
+        };
+        _dbContext.Add(testChannelMembership);
+
+        await _dbContext.SaveChangesAsync();
+
+        ChannelMessage testMessage = new ChannelMessage
+        {
+            ChannelId = testChannel.Id,
+            Content = "test message",
+            UserId = testUser.Id
+        };
+        _dbContext.Add(testMessage);
+        await _dbContext.SaveChangesAsync();
+
+        ChannelMessageLaterFlag insertedLaterFlag =
+            await _channelStore.InsertChannelMessageLaterFlag(
+                testMessage.Id,
+                testUser.Id
+            );
+
+        Assert.NotEqual(insertedLaterFlag.Id, Guid.Empty);
+        Assert.Equal(testChannel.Id, insertedLaterFlag.ChannelId);
+        Assert.Equal(1, insertedLaterFlag.ChannelLaterFlagStatus);
+        Assert.Equal(testMessage.Id, insertedLaterFlag.ChannelMessageId);
+        Assert.NotEqual(insertedLaterFlag.CreatedAt, default(DateTime));
+        Assert.Equal(testUser.Id, insertedLaterFlag.UserId);
+        Assert.Equal(testWorkspace.Id, insertedLaterFlag.WorkspaceId);
+    }
+
+    [Fact]
+    public async void InsertChannelMessageLaterFlag_ShouldThrowOnNonexistentIds()
+    {
+        Workspace testWorkspace = new Workspace
+        {
+            Description = "test description",
+            Name = "test-workspace-name" + ChannelStore.GenerateRandomString(10)
+        };
+        _dbContext.Add(testWorkspace);
+
+        string email = UserStore.GenerateTestEmail(10);
+        string username = UserStore.GenerateTestUserName(10);
+        User testUser = new User
+        {
+            FirstName = UserStore.GenerateTestFirstName(10),
+            LastName = UserStore.GenerateTestLastName(10),
+            Timezone = UserStore.timezones[1].Id,
+            UserName = username,
+            Email = email,
+            PhoneNumber = "1-234-567-8901",
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(
+                UserStore.testPassword,
+                4
+            ),
+            NormalizedEmail = email.ToUpper(),
+            NormalizedUserName = username.ToUpper(),
+            SecurityStamp = Guid.NewGuid().ToString(),
+            ConcurrencyStamp = Guid.NewGuid().ToString(),
+        };
+        _dbContext.Add(testUser);
+
+        await _dbContext.SaveChangesAsync();
+
+        WorkspaceMember testWorkspaceMembership = new WorkspaceMember
+        {
+            Title = "Member",
+            User = testUser,
+            Workspace = testWorkspace
+        };
+        _dbContext.Add(testWorkspaceMembership);
+
+        await _dbContext.SaveChangesAsync();
+
+        Channel testChannel = new Channel
+        {
+            CreatedBy = testUser,
+            Description = "test-description",
+            Name = "test-channel-name-" + ChannelStore.GenerateRandomString(5),
+            Workspace = testWorkspace
+        };
+        _dbContext.Add(testChannel);
+        await _dbContext.SaveChangesAsync();
+
+        ChannelMember testChannelMembership = new ChannelMember
+        {
+            User = testUser,
+            Channel = testChannel
+        };
+        _dbContext.Add(testChannelMembership);
+
+        await _dbContext.SaveChangesAsync();
+
+        ChannelMessage testMessage = new ChannelMessage
+        {
+            ChannelId = testChannel.Id,
+            Content = "test message",
+            UserId = testUser.Id
+        };
+        _dbContext.Add(testMessage);
+        await _dbContext.SaveChangesAsync();
+
+        Assert.NotNull(
+            await _channelStore.InsertChannelMessageLaterFlag(
+                testMessage.Id,
+                testUser.Id
+            )
+        );
+
+        await Assert.ThrowsAsync<ArgumentException>(
+            async () =>
+                await _channelStore.InsertChannelMessageLaterFlag(
+                    Guid.Empty,
+                    testUser.Id
+                )
+        );
+
+        await Assert.ThrowsAsync<ArgumentException>(
+            async () =>
+                await _channelStore.InsertChannelMessageLaterFlag(
+                    testMessage.Id,
+                    Guid.Empty
+                )
+        );
+    }
+
+    [Fact]
+    public async void InsertChannelMessageLaterFlag_ShouldThrowOnNonChannelMember()
+    {
+        Workspace testWorkspace = new Workspace
+        {
+            Description = "test description",
+            Name = "test-workspace-name" + ChannelStore.GenerateRandomString(10)
+        };
+        _dbContext.Add(testWorkspace);
+
+        string email = UserStore.GenerateTestEmail(10);
+        string username = UserStore.GenerateTestUserName(10);
+        User testUser = new User
+        {
+            FirstName = UserStore.GenerateTestFirstName(10),
+            LastName = UserStore.GenerateTestLastName(10),
+            Timezone = UserStore.timezones[1].Id,
+            UserName = username,
+            Email = email,
+            PhoneNumber = "1-234-567-8901",
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(
+                UserStore.testPassword,
+                4
+            ),
+            NormalizedEmail = email.ToUpper(),
+            NormalizedUserName = username.ToUpper(),
+            SecurityStamp = Guid.NewGuid().ToString(),
+            ConcurrencyStamp = Guid.NewGuid().ToString(),
+        };
+        _dbContext.Add(testUser);
+
+        await _dbContext.SaveChangesAsync();
+
+        WorkspaceMember testWorkspaceMembership = new WorkspaceMember
+        {
+            Title = "Member",
+            User = testUser,
+            Workspace = testWorkspace
+        };
+        _dbContext.Add(testWorkspaceMembership);
+
+        await _dbContext.SaveChangesAsync();
+
+        Channel testChannel = new Channel
+        {
+            CreatedBy = testUser,
+            Description = "test-description",
+            Name = "test-channel-name-" + ChannelStore.GenerateRandomString(5),
+            Workspace = testWorkspace
+        };
+        _dbContext.Add(testChannel);
+        await _dbContext.SaveChangesAsync();
+
+        ChannelMessage testMessage = new ChannelMessage
+        {
+            ChannelId = testChannel.Id,
+            Content = "test message",
+            UserId = testUser.Id
+        };
+        _dbContext.Add(testMessage);
+        await _dbContext.SaveChangesAsync();
+
+        await Assert.ThrowsAsync<ArgumentException>(
+            async () =>
+                await _channelStore.InsertChannelMessageLaterFlag(
+                    testMessage.Id,
+                    testUser.Id
+                )
+        );
+    }
+
+    [Fact]
     public async void InsertChannelMessage_ShouldInsertChannelMessage()
     {
         Workspace testWorkspace = new Workspace
@@ -111,6 +363,7 @@ public class ChannelStoreTests
                 testUser.Id,
                 null,
                 null,
+                null,
                 null
             );
 
@@ -135,6 +388,7 @@ public class ChannelStoreTests
                 testChannel.Id,
                 "test content",
                 testUser.Id,
+                null,
                 testThread.Id,
                 testFirstMessage.Id,
                 testUser.Id,
@@ -256,6 +510,7 @@ public class ChannelStoreTests
                 testUser.Id,
                 null,
                 null,
+                null,
                 null
             )
         );
@@ -265,6 +520,7 @@ public class ChannelStoreTests
                 testChannel.Id,
                 "test content",
                 testUser.Id,
+                null,
                 testThread.Id,
                 testFirstMessage.Id,
                 testUser.Id
@@ -279,6 +535,7 @@ public class ChannelStoreTests
                     testUser.Id,
                     null,
                     null,
+                    null,
                     null
                 )
         );
@@ -291,6 +548,7 @@ public class ChannelStoreTests
                     testUser.Id,
                     null,
                     null,
+                    null,
                     null
                 )
         );
@@ -303,6 +561,7 @@ public class ChannelStoreTests
                     Guid.Empty,
                     null,
                     null,
+                    null,
                     null
                 )
         );
@@ -313,6 +572,7 @@ public class ChannelStoreTests
                     testChannel.Id,
                     "test content",
                     testUser.Id,
+                    null,
                     Guid.Empty,
                     testFirstMessage.Id,
                     testUser.Id
@@ -325,6 +585,7 @@ public class ChannelStoreTests
                     testChannel.Id,
                     "test content",
                     testUser.Id,
+                    null,
                     testThread.Id,
                     Guid.Empty,
                     testUser.Id
@@ -337,6 +598,7 @@ public class ChannelStoreTests
                     testChannel.Id,
                     "test content",
                     testUser.Id,
+                    null,
                     testThread.Id,
                     testFirstMessage.Id,
                     Guid.Empty
@@ -432,6 +694,7 @@ public class ChannelStoreTests
                 testChannel.Id,
                 "test content",
                 testUser.Id,
+                null,
                 testThread.Id,
                 testFirstMessage.Id,
                 testUser.Id
@@ -445,6 +708,7 @@ public class ChannelStoreTests
                     "test content",
                     testUser.Id,
                     null,
+                    null,
                     testFirstMessage.Id,
                     testUser.Id
                 )
@@ -456,6 +720,7 @@ public class ChannelStoreTests
                     testChannel.Id,
                     "test content",
                     testUser.Id,
+                    null,
                     testThread.Id,
                     null,
                     testUser.Id
@@ -468,10 +733,296 @@ public class ChannelStoreTests
                     testChannel.Id,
                     "test content",
                     testUser.Id,
+                    null,
                     testThread.Id,
                     testFirstMessage.Id,
                     null
                 )
+        );
+    }
+
+    [Fact]
+    public async void InsertChannelMessage_ShouldInsertMentionsOnSend()
+    {
+        Workspace testWorkspace = new Workspace
+        {
+            Description = "test description",
+            Name = "test-workspace-name" + ChannelStore.GenerateRandomString(10)
+        };
+        _dbContext.Add(testWorkspace);
+
+        string email = UserStore.GenerateTestEmail(10);
+        string username = UserStore.GenerateTestUserName(10);
+        User testUser = new User
+        {
+            FirstName = UserStore.GenerateTestFirstName(10),
+            LastName = UserStore.GenerateTestLastName(10),
+            Timezone = UserStore.timezones[1].Id,
+            UserName = username,
+            Email = email,
+            PhoneNumber = "1-234-567-8901",
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(
+                UserStore.testPassword,
+                4
+            ),
+            NormalizedEmail = email.ToUpper(),
+            NormalizedUserName = username.ToUpper(),
+            SecurityStamp = Guid.NewGuid().ToString(),
+            ConcurrencyStamp = Guid.NewGuid().ToString(),
+        };
+        _dbContext.Add(testUser);
+
+        await _dbContext.SaveChangesAsync();
+
+        WorkspaceMember testWorkspaceMembership = new WorkspaceMember
+        {
+            Title = "Member",
+            User = testUser,
+            Workspace = testWorkspace
+        };
+        _dbContext.Add(testWorkspaceMembership);
+
+        await _dbContext.SaveChangesAsync();
+
+        Channel testChannel = new Channel
+        {
+            CreatedBy = testUser,
+            Description = "test-description",
+            Name = "test-channel-name-" + ChannelStore.GenerateRandomString(5),
+            Workspace = testWorkspace
+        };
+        _dbContext.Add(testChannel);
+        await _dbContext.SaveChangesAsync();
+
+        ChannelMember testChannelMembership = new ChannelMember
+        {
+            User = testUser,
+            Channel = testChannel
+        };
+        _dbContext.Add(testChannelMembership);
+        await _dbContext.SaveChangesAsync();
+
+        ChannelMessage insertedMessage =
+            await _channelStore.InsertChannelMessage(
+                testChannel.Id,
+                "test content",
+                testUser.Id,
+                new List<Guid> { testUser.Id },
+                null,
+                null,
+                null
+            );
+
+        Assert.Equal(1, insertedMessage.Mentions.Count);
+
+        ChannelMessageMention navMention = insertedMessage.Mentions.First();
+        ChannelMessageMention? insertedMention =
+            _dbContext.ChannelMessageMentions
+                .Where(
+                    m =>
+                        m.ChannelMessageId == insertedMessage.Id
+                        && m.MentionedId == testUser.Id
+                        && m.MentionerId == testUser.Id
+                )
+                .FirstOrDefault();
+        Assert.NotNull(insertedMention);
+        Assert.Equal(navMention.Id, insertedMention.Id);
+        Assert.Equal(insertedMention.ChannelMessageId, insertedMessage.Id);
+        Assert.NotEqual(insertedMention.CreatedAt, default(DateTime));
+        Assert.Equal(insertedMention.MentionedId, testUser.Id);
+        Assert.Equal(insertedMention.MentionerId, testUser.Id);
+    }
+
+    [Fact]
+    public async void InsertChannelMessage_ShouldNotInsertDraftMentions()
+    {
+        Workspace testWorkspace = new Workspace
+        {
+            Description = "test description",
+            Name = "test-workspace-name" + ChannelStore.GenerateRandomString(10)
+        };
+        _dbContext.Add(testWorkspace);
+
+        string email = UserStore.GenerateTestEmail(10);
+        string username = UserStore.GenerateTestUserName(10);
+        User testUser = new User
+        {
+            FirstName = UserStore.GenerateTestFirstName(10),
+            LastName = UserStore.GenerateTestLastName(10),
+            Timezone = UserStore.timezones[1].Id,
+            UserName = username,
+            Email = email,
+            PhoneNumber = "1-234-567-8901",
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(
+                UserStore.testPassword,
+                4
+            ),
+            NormalizedEmail = email.ToUpper(),
+            NormalizedUserName = username.ToUpper(),
+            SecurityStamp = Guid.NewGuid().ToString(),
+            ConcurrencyStamp = Guid.NewGuid().ToString(),
+        };
+        _dbContext.Add(testUser);
+
+        await _dbContext.SaveChangesAsync();
+
+        WorkspaceMember testWorkspaceMembership = new WorkspaceMember
+        {
+            Title = "Member",
+            User = testUser,
+            Workspace = testWorkspace
+        };
+        _dbContext.Add(testWorkspaceMembership);
+
+        await _dbContext.SaveChangesAsync();
+
+        Channel testChannel = new Channel
+        {
+            CreatedBy = testUser,
+            Description = "test-description",
+            Name = "test-channel-name-" + ChannelStore.GenerateRandomString(5),
+            Workspace = testWorkspace
+        };
+        _dbContext.Add(testChannel);
+        await _dbContext.SaveChangesAsync();
+
+        ChannelMessage testFirstMessage = new ChannelMessage
+        {
+            ChannelId = testChannel.Id,
+            Content = "test message",
+            UserId = testUser.Id
+        };
+        _dbContext.Add(testFirstMessage);
+        await _dbContext.SaveChangesAsync();
+
+        Thread testThread = new Thread
+        {
+            ChannelId = testChannel.Id,
+            FirstMessageId = testFirstMessage.Id,
+            WorkspaceId = testWorkspace.Id
+        };
+        _dbContext.Add(testThread);
+        testFirstMessage.Thread = testThread;
+
+        await _dbContext.SaveChangesAsync();
+
+        ChannelMember testChannelMembership = new ChannelMember
+        {
+            User = testUser,
+            Channel = testChannel
+        };
+        _dbContext.Add(testChannelMembership);
+
+        await _dbContext.SaveChangesAsync();
+
+        ChannelMessage inserted = await _channelStore.InsertChannelMessage(
+            testChannel.Id,
+            "test content",
+            testUser.Id,
+            new List<Guid> { testUser.Id },
+            testThread.Id,
+            testFirstMessage.Id,
+            testUser.Id,
+            true
+        );
+
+        Assert.Equal(
+            0,
+            _dbContext.ChannelMessageMentions
+                .Where(
+                    m =>
+                        m.ChannelMessageId == inserted.Id
+                        && m.MentionedId == testUser.Id
+                        && m.MentionerId == testUser.Id
+                )
+                .Count()
+        );
+    }
+
+    [Fact]
+    public async void InsertChannelMessage_ShouldThrowOnInvalidMentions()
+    {
+        Workspace testWorkspace = new Workspace
+        {
+            Description = "test description",
+            Name = "test-workspace-name" + ChannelStore.GenerateRandomString(10)
+        };
+        _dbContext.Add(testWorkspace);
+
+        string email = UserStore.GenerateTestEmail(10);
+        string username = UserStore.GenerateTestUserName(10);
+        User testUser = new User
+        {
+            FirstName = UserStore.GenerateTestFirstName(10),
+            LastName = UserStore.GenerateTestLastName(10),
+            Timezone = UserStore.timezones[1].Id,
+            UserName = username,
+            Email = email,
+            PhoneNumber = "1-234-567-8901",
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(
+                UserStore.testPassword,
+                4
+            ),
+            NormalizedEmail = email.ToUpper(),
+            NormalizedUserName = username.ToUpper(),
+            SecurityStamp = Guid.NewGuid().ToString(),
+            ConcurrencyStamp = Guid.NewGuid().ToString(),
+        };
+        _dbContext.Add(testUser);
+
+        await _dbContext.SaveChangesAsync();
+
+        WorkspaceMember testWorkspaceMembership = new WorkspaceMember
+        {
+            Title = "Member",
+            User = testUser,
+            Workspace = testWorkspace
+        };
+        _dbContext.Add(testWorkspaceMembership);
+
+        await _dbContext.SaveChangesAsync();
+
+        Channel testChannel = new Channel
+        {
+            CreatedBy = testUser,
+            Description = "test-description",
+            Name = "test-channel-name-" + ChannelStore.GenerateRandomString(5),
+            Workspace = testWorkspace
+        };
+        _dbContext.Add(testChannel);
+        await _dbContext.SaveChangesAsync();
+
+        ChannelMember testChannelMembership = new ChannelMember
+        {
+            User = testUser,
+            Channel = testChannel
+        };
+        _dbContext.Add(testChannelMembership);
+        await _dbContext.SaveChangesAsync();
+
+        await Assert.ThrowsAsync<ArgumentException>(
+            async () =>
+                await _channelStore.InsertChannelMessage(
+                    testChannel.Id,
+                    "test content",
+                    testUser.Id,
+                    new List<Guid> { Guid.Empty },
+                    null,
+                    null,
+                    null
+                )
+        );
+
+        Assert.NotNull(
+            await _channelStore.InsertChannelMessage(
+                testChannel.Id,
+                "test content",
+                testUser.Id,
+                new List<Guid> { testUser.Id },
+                null,
+                null,
+                null
+            )
         );
     }
 

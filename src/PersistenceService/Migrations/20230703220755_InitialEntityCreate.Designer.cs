@@ -12,7 +12,7 @@ using PersistenceService.Data.ApplicationDb;
 namespace PersistenceService.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20230703024352_InitialEntityCreate")]
+    [Migration("20230703220755_InitialEntityCreate")]
     partial class InitialEntityCreate
     {
         /// <inheritdoc />
@@ -382,8 +382,10 @@ namespace PersistenceService.Migrations
                     b.Property<Guid>("ChannelId")
                         .HasColumnType("uuid");
 
-                    b.Property<int>("ChannelLaterFlagStatus")
-                        .HasColumnType("integer");
+                    b.Property<int?>("ChannelLaterFlagStatus")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValueSql("1");
 
                     b.Property<Guid>("ChannelMessageId")
                         .HasColumnType("uuid");

@@ -379,8 +379,10 @@ namespace PersistenceService.Migrations
                     b.Property<Guid>("ChannelId")
                         .HasColumnType("uuid");
 
-                    b.Property<int>("ChannelLaterFlagStatus")
-                        .HasColumnType("integer");
+                    b.Property<int?>("ChannelLaterFlagStatus")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValueSql("1");
 
                     b.Property<Guid>("ChannelMessageId")
                         .HasColumnType("uuid");

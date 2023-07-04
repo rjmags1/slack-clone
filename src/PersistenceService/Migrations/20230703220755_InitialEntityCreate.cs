@@ -229,7 +229,7 @@ namespace PersistenceService.Migrations
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "gen_random_uuid()"),
                     ChannelId = table.Column<Guid>(type: "uuid", nullable: false),
-                    ChannelLaterFlagStatus = table.Column<int>(type: "integer", nullable: false),
+                    ChannelLaterFlagStatus = table.Column<int>(type: "integer", nullable: true, defaultValueSql: "1"),
                     ChannelMessageId = table.Column<Guid>(type: "uuid", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "timestamp", nullable: false, defaultValueSql: "now()"),
                     UserId = table.Column<Guid>(type: "uuid", nullable: false),
