@@ -962,15 +962,23 @@ namespace PersistenceService.Migrations
 
             modelBuilder.Entity("PersistenceService.Models.ThreadWatch", b =>
                 {
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasDefaultValueSql("gen_random_uuid()");
 
                     b.Property<Guid>("ThreadId")
                         .HasColumnType("uuid");
 
-                    b.HasKey("UserId", "ThreadId");
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
 
                     b.HasIndex("ThreadId");
+
+                    b.HasIndex("UserId", "ThreadId")
+                        .IsUnique();
 
                     b.ToTable("ThreadWatches");
                 });

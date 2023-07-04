@@ -5,10 +5,12 @@ using Microsoft.EntityFrameworkCore;
 
 namespace PersistenceService.Models;
 
-[PrimaryKey(nameof(UserId), nameof(ThreadId))]
+[Index(nameof(UserId), nameof(ThreadId), IsUnique = true)]
 [Index(nameof(ThreadId))]
 public class ThreadWatch
 {
+    public Guid Id { get; set; }
+
 #pragma warning disable CS8618
     [DeleteBehavior(DeleteBehavior.Cascade)]
     public Thread Thread { get; set; }

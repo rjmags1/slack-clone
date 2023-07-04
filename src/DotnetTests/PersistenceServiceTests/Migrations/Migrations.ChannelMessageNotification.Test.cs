@@ -1,0 +1,132 @@
+using DotnetTests.Fixtures;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata;
+using PersistenceService.Data.ApplicationDb;
+using PersistenceService.Models;
+
+[Collection("Database collection")]
+public class ChannelMessageNotificationMigrationsTests
+{
+    private readonly ApplicationDbContext _dbContext;
+    private readonly IEntityType _entityType;
+
+    public ChannelMessageNotificationMigrationsTests(
+        ApplicationDbContextFixture applicationDbContextFixture
+    )
+    {
+        _dbContext = applicationDbContextFixture.context;
+        _entityType = _dbContext.Model.FindEntityType(
+            typeof(ChannelMessageNotification)
+        )!;
+    }
+
+    [Fact]
+    public void IdColumn()
+    {
+        var idProperty = _entityType.FindProperty(
+            nameof(ChannelMessageNotification.Id)
+        )!;
+        string defaultValueSql = idProperty.GetDefaultValueSql()!;
+        Assert.Equal("gen_random_uuid()", defaultValueSql);
+        string idColumnType = idProperty.GetColumnType();
+        var idColumnNullable = idProperty.IsColumnNullable();
+        Assert.Equal("uuid", idColumnType);
+        Assert.False(idColumnNullable);
+        Assert.True(idProperty.IsPrimaryKey());
+    }
+
+    [Fact]
+    public void ChannelMessageIdColumn()
+    {
+        var channelMessageIdProperty = _entityType.FindProperty(
+            nameof(ChannelMessageNotification.ChannelMessageId)
+        )!;
+        string channelMessageIdColumnType =
+            channelMessageIdProperty.GetColumnType();
+        var foreignKey = channelMessageIdProperty
+            .GetContainingForeignKeys()
+            .SingleOrDefault();
+
+        Assert.NotNull(foreignKey);
+        Assert.Equal(DeleteBehavior.Cascade, foreignKey.DeleteBehavior);
+        Assert.Equal("uuid", channelMessageIdColumnType);
+    }
+
+    [Fact]
+    public void CreatedAtColumn()
+    {
+        var createdAtProperty = _entityType.FindProperty(
+            nameof(ChannelMessageNotification.CreatedAt)
+        )!;
+        Assert.Equal("timestamp", createdAtProperty.GetColumnType());
+        Assert.Equal("now()", createdAtProperty.GetDefaultValueSql());
+    }
+
+    [Fact]
+    public void ChannelMessageNotificationTypeColumn()
+    {
+        var notifTypeProperty = _entityType.FindProperty(
+            nameof(ChannelMessageNotification.ChannelMessageNotificationType)
+        )!;
+        Assert.False(notifTypeProperty.IsColumnNullable());
+        Assert.Equal("integer", notifTypeProperty.GetColumnType());
+    }
+
+    [Fact]
+    public void SeenColumn()
+    {
+        var seenProperty = _entityType.FindProperty(
+            nameof(ChannelMessageNotification.Seen)
+        )!;
+        Assert.Equal(false, seenProperty.GetDefaultValue());
+    }
+
+    [Fact]
+    public void UserIdColumn()
+    {
+        var userIdProperty = _entityType.FindProperty(
+            nameof(ChannelMessageNotification.UserId)
+        )!;
+        string userIdColumnType = userIdProperty.GetColumnType();
+        var foreignKey = userIdProperty
+            .GetContainingForeignKeys()
+            .SingleOrDefault();
+
+        Assert.NotNull(foreignKey);
+        Assert.Equal(DeleteBehavior.Cascade, foreignKey.DeleteBehavior);
+        Assert.Equal("uuid", userIdColumnType);
+    }
+
+    [Fact]
+    public async Task ChannelMessageNotificationDDLMigration_ShouldHaveHappened()
+    {
+        int numChannelMessageNotificationRows =
+            await _dbContext.ChannelMessageNotifications.CountAsync();
+        Assert.True(numChannelMessageNotificationRows >= 0);
+    }
+
+    [Fact]
+    public void Indexes()
+    {
+        var userIdChannelMessageIdIndex = _entityType.FindIndex(
+            new List<IReadOnlyProperty>
+            {
+                _entityType.FindProperty(
+                    nameof(ChannelMessageNotification.UserId)
+                )!,
+                _entityType.FindProperty(
+                    nameof(ChannelMessageNotification.ChannelMessageId)
+                )!,
+            }
+        );
+        Assert.NotNull(userIdChannelMessageIdIndex);
+        Assert.True(userIdChannelMessageIdIndex.IsUnique);
+
+        var createdAtIndex = _entityType.FindIndex(
+            _entityType.FindProperty(
+                nameof(ChannelMessageNotification.CreatedAt)
+            )!
+        );
+        Assert.NotNull(createdAtIndex);
+    }
+}

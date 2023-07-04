@@ -833,12 +833,13 @@ namespace PersistenceService.Migrations
                 name: "ThreadWatches",
                 columns: table => new
                 {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "gen_random_uuid()"),
                     ThreadId = table.Column<Guid>(type: "uuid", nullable: false),
                     UserId = table.Column<Guid>(type: "uuid", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_ThreadWatches", x => new { x.UserId, x.ThreadId });
+                    table.PrimaryKey("PK_ThreadWatches", x => x.Id);
                     table.ForeignKey(
                         name: "FK_ThreadWatches_AspNetUsers_UserId",
                         column: x => x.UserId,
@@ -1342,6 +1343,12 @@ namespace PersistenceService.Migrations
                 name: "IX_ThreadWatches_ThreadId",
                 table: "ThreadWatches",
                 column: "ThreadId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ThreadWatches_UserId_ThreadId",
+                table: "ThreadWatches",
+                columns: new[] { "UserId", "ThreadId" },
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_WorkspaceAdminPermissions_AdminId_WorkspaceId",
