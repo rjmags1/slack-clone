@@ -1,6 +1,7 @@
 using PersistenceService.Data.ApplicationDb;
 using PersistenceService.Models;
 using PersistenceService.Constants;
+using PersistenceService.Utils;
 
 namespace PersistenceService.Stores;
 
@@ -8,6 +9,51 @@ public class ChannelStore : Store
 {
     public ChannelStore(ApplicationDbContext context)
         : base(context) { }
+
+    public async Task<ChannelMessageReaction> InsertMessageReaction(
+        Guid channelMessageId,
+        Guid userId,
+        string emoji
+    )
+    {
+        bool invalidEmoji =
+            emoji.Any(c => char.IsWhiteSpace(c)) || !EmojiUtils.IsEmoji(emoji);
+        if (invalidEmoji)
+        {
+            throw new ArgumentException("Invalid arguments");
+        }
+        ChannelMessage? channelMessage = _context.ChannelMessages
+            .Where(cm => cm.Id == channelMessageId)
+            .FirstOrDefault();
+        if (channelMessage is null)
+        {
+            throw new ArgumentException("Invalid arguments");
+        }
+        bool isMember =
+            _context.ChannelMembers
+                .Where(
+                    cm =>
+                        cm.UserId == userId
+                        && cm.ChannelId == channelMessage.ChannelId
+                )
+                .Count() == 1;
+        if (!isMember)
+        {
+            throw new ArgumentException("Invalid arguments");
+        }
+
+        ChannelMessageReaction reaction = new ChannelMessageReaction
+        {
+            ChannelMessageId = channelMessageId,
+            Emoji = emoji,
+            UserId = userId
+        };
+        _context.Add(reaction);
+
+        await _context.SaveChangesAsync();
+
+        return reaction;
+    }
 
     public async Task<ChannelMessageNotification> InsertReplyNotification(
         ChannelMessageReply replyRecord
