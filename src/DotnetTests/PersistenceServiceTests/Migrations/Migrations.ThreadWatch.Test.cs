@@ -64,9 +64,14 @@ public class ThreadWatchMigrationsTests
             nameof(ThreadWatch.UserId)
         )!;
         var threadIdProperty = _entityType.FindProperty(
-            nameof(ThreadWatch.UserId)
+            nameof(ThreadWatch.ThreadId)
         )!;
-        Assert.True(userIdProperty.IsPrimaryKey());
-        Assert.True(threadIdProperty.IsPrimaryKey());
+        Assert.NotNull(_entityType.FindIndex(threadIdProperty));
+
+        var userIdThreadIdIndex = _entityType.FindIndex(
+            new List<IReadOnlyProperty> { userIdProperty, threadIdProperty }
+        );
+        Assert.NotNull(userIdThreadIdIndex);
+        Assert.True(userIdThreadIdIndex.IsUnique);
     }
 }

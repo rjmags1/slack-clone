@@ -1,5 +1,7 @@
 using PersistenceService.Data.ApplicationDb;
 using PersistenceService.Models;
+using PersistenceService.Constants;
+using PersistenceService.Utils;
 
 namespace PersistenceService.Stores;
 
@@ -7,6 +9,197 @@ public class ChannelStore : Store
 {
     public ChannelStore(ApplicationDbContext context)
         : base(context) { }
+
+    public async Task<ChannelMessageReaction> InsertMessageReaction(
+        Guid channelMessageId,
+        Guid userId,
+        string emoji
+    )
+    {
+        bool invalidEmoji =
+            emoji.Any(c => char.IsWhiteSpace(c)) || !EmojiUtils.IsEmoji(emoji);
+        if (invalidEmoji)
+        {
+            throw new ArgumentException("Invalid arguments");
+        }
+        ChannelMessage? channelMessage = _context.ChannelMessages
+            .Where(cm => cm.Id == channelMessageId)
+            .FirstOrDefault();
+        if (channelMessage is null)
+        {
+            throw new ArgumentException("Invalid arguments");
+        }
+        bool isMember =
+            _context.ChannelMembers
+                .Where(
+                    cm =>
+                        cm.UserId == userId
+                        && cm.ChannelId == channelMessage.ChannelId
+                )
+                .Count() == 1;
+        if (!isMember)
+        {
+            throw new ArgumentException("Invalid arguments");
+        }
+
+        ChannelMessageReaction reaction = new ChannelMessageReaction
+        {
+            ChannelMessageId = channelMessageId,
+            Emoji = emoji,
+            UserId = userId
+        };
+        _context.Add(reaction);
+
+        await _context.SaveChangesAsync();
+
+        return reaction;
+    }
+
+    public async Task<ChannelMessageNotification> InsertReplyNotification(
+        ChannelMessageReply replyRecord
+    )
+    {
+        bool recordExists =
+            _context.ChannelMessageReplies
+                .Where(r => r.Id == replyRecord.Id)
+                .Count() == 1;
+        if (!recordExists)
+        {
+            throw new ArgumentException("Invalid arguments");
+        }
+
+        ChannelMessageNotification notification = new ChannelMessageNotification
+        {
+            ChannelMessageId = replyRecord.ChannelMessageId,
+            ChannelMessageNotificationType = MaskEnumDefs.NotificationTypes[
+                MaskEnumDefs.REPLY
+            ],
+            UserId = replyRecord.RepliedToId
+        };
+        _context.Add(notification);
+
+        await _context.SaveChangesAsync();
+
+        return notification;
+    }
+
+    public async Task<
+        List<ChannelMessageNotification>
+    > InsertMentionNotifications(List<ChannelMessageMention> mentionRecords)
+    {
+        List<Guid> mentionRecordIds = mentionRecords.Select(m => m.Id).ToList();
+        bool validArgs =
+            _context.ChannelMessageMentions
+                .Where(cm => mentionRecordIds.Contains(cm.Id))
+                .Count() == mentionRecordIds.Count;
+        if (!validArgs)
+        {
+            throw new ArgumentException("Invalid arguments");
+        }
+
+        List<ChannelMessageNotification> notifications =
+            new List<ChannelMessageNotification>();
+        foreach (ChannelMessageMention mentionRecord in mentionRecords)
+        {
+            notifications.Add(
+                new ChannelMessageNotification
+                {
+                    ChannelMessageId = mentionRecord.ChannelMessageId,
+                    ChannelMessageNotificationType =
+                        MaskEnumDefs.NotificationTypes[MaskEnumDefs.MENTION],
+                    UserId = mentionRecord.MentionedId
+                }
+            );
+        }
+        _context.AddRange(notifications);
+
+        await _context.SaveChangesAsync();
+
+        return notifications;
+    }
+
+    public async Task<ChannelMessageNotification> InsertReactionNotification(
+        ChannelMessageReaction reactionRecord
+    )
+    {
+        bool validArgs =
+            _context.ChannelMessageReactions
+                .Where(cmr => cmr.Id == reactionRecord.Id)
+                .Count() == 1;
+        if (!validArgs)
+        {
+            throw new ArgumentException("Invalid arguments");
+        }
+
+        ChannelMessageNotification notification = new ChannelMessageNotification
+        {
+            ChannelMessageId = reactionRecord.ChannelMessageId,
+            ChannelMessageNotificationType = MaskEnumDefs.NotificationTypes[
+                MaskEnumDefs.REACTION
+            ],
+            UserId = reactionRecord.ChannelMessage.UserId
+        };
+        _context.Add(notification);
+
+        await _context.SaveChangesAsync();
+
+        return notification;
+    }
+
+    public async Task<
+        List<ChannelMessageNotification>
+    > InsertThreadWatchNotifications(
+        List<ThreadWatch> threadWatches,
+        Guid channelMessageId
+    )
+    {
+        List<Guid> threadWatchIds = threadWatches.Select(tw => tw.Id).ToList();
+        List<Guid> threadIds = threadWatches
+            .Select(tw => tw.ThreadId)
+            .Distinct()
+            .ToList();
+        bool validThreadWatches =
+            threadIds.Count() == 1
+            && _context.ThreadWatches
+                .Where(tw => threadWatchIds.Contains(tw.Id))
+                .Count() == threadWatches.Count();
+        if (!validThreadWatches)
+        {
+            throw new ArgumentException("Invalid arguments");
+        }
+        bool messageInThread =
+            threadIds[0]
+            == _context.ChannelMessages
+                .Where(cm => cm.Id == channelMessageId)
+                .Select(cm => cm.ThreadId)
+                .FirstOrDefault();
+        if (!messageInThread)
+        {
+            throw new ArgumentException("Invalid arguments");
+        }
+
+        List<ChannelMessageNotification> notifications =
+            new List<ChannelMessageNotification>();
+        foreach (ThreadWatch threadWatch in threadWatches)
+        {
+            notifications.Add(
+                new ChannelMessageNotification
+                {
+                    ChannelMessageId = channelMessageId,
+                    ChannelMessageNotificationType =
+                        MaskEnumDefs.NotificationTypes[
+                            MaskEnumDefs.THREAD_WATCH
+                        ],
+                    UserId = threadWatch.UserId
+                }
+            );
+        }
+        _context.AddRange(notifications);
+
+        await _context.SaveChangesAsync();
+
+        return notifications;
+    }
 
     public async Task<ChannelMessageLaterFlag> InsertChannelMessageLaterFlag(
         Guid channelMessageId,
