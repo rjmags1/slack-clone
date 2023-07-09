@@ -689,7 +689,9 @@ namespace PersistenceService.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<int>("DirectMessageLaterFlagStatus")
-                        .HasColumnType("integer");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValueSql("1");
 
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid");

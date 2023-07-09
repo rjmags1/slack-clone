@@ -21,6 +21,184 @@ public class DirectMessageGroupStoreTests
     }
 
     [Fact]
+    public async void InsertDirectMessageLaterFlag_ShouldInsertDirectMessageLaterFlag()
+    {
+        Workspace testWorkspace = new Workspace
+        {
+            Description = "test description",
+            Name = "test-workspace-name" + ChannelStore.GenerateRandomString(10)
+        };
+        _dbContext.Add(testWorkspace);
+
+        string email = UserStore.GenerateTestEmail(10);
+        string username = UserStore.GenerateTestUserName(10);
+        User testUser = new User
+        {
+            FirstName = UserStore.GenerateTestFirstName(10),
+            LastName = UserStore.GenerateTestLastName(10),
+            Timezone = UserStore.timezones[1].Id,
+            UserName = username,
+            Email = email,
+            PhoneNumber = "1-234-567-8901",
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(
+                UserStore.testPassword,
+                4
+            ),
+            NormalizedEmail = email.ToUpper(),
+            NormalizedUserName = username.ToUpper(),
+            SecurityStamp = Guid.NewGuid().ToString(),
+            ConcurrencyStamp = Guid.NewGuid().ToString(),
+        };
+        _dbContext.Add(testUser);
+
+        await _dbContext.SaveChangesAsync();
+
+        WorkspaceMember testWorkspaceMembership = new WorkspaceMember
+        {
+            Title = "Member",
+            User = testUser,
+            Workspace = testWorkspace
+        };
+        _dbContext.Add(testWorkspaceMembership);
+
+        DirectMessageGroup testGroup = new DirectMessageGroup
+        {
+            WorkspaceId = testWorkspace.Id
+        };
+        _dbContext.Add(testGroup);
+
+        await _dbContext.SaveChangesAsync();
+
+        DirectMessageGroupMember testDmgMembership =
+            new DirectMessageGroupMember
+            {
+                DirectMessageGroupId = testGroup.Id,
+                UserId = testUser.Id
+            };
+        _dbContext.Add(testDmgMembership);
+
+        await _dbContext.SaveChangesAsync();
+
+        DirectMessage testMessage = new DirectMessage
+        {
+            Content = "test content",
+            DirectMessageGroupId = testGroup.Id,
+            SentAt = DateTime.Now,
+            UserId = testUser.Id
+        };
+        _dbContext.Add(testMessage);
+
+        await _dbContext.SaveChangesAsync();
+
+        DirectMessageLaterFlag insertedLaterFlag =
+            await _directMessageGroupStore.InsertDirectMessageLaterFlag(
+                testMessage.Id,
+                testUser.Id
+            );
+
+        Assert.NotEqual(Guid.Empty, insertedLaterFlag.Id);
+        Assert.NotEqual(default(DateTime), insertedLaterFlag.CreatedAt);
+        Assert.Equal(1, insertedLaterFlag.DirectMessageLaterFlagStatus);
+        Assert.Equal(testGroup.Id, insertedLaterFlag.DirectMessageGroupId);
+        Assert.Equal(testMessage.Id, insertedLaterFlag.DirectMessageId);
+        Assert.Equal(testUser.Id, insertedLaterFlag.UserId);
+        Assert.Equal(testWorkspace.Id, insertedLaterFlag.WorkspaceId);
+    }
+
+    [Fact]
+    public async void InsertDirectMessageLaterFlag_ShouldThrowOnInvalidIds()
+    {
+        Workspace testWorkspace = new Workspace
+        {
+            Description = "test description",
+            Name = "test-workspace-name" + ChannelStore.GenerateRandomString(10)
+        };
+        _dbContext.Add(testWorkspace);
+
+        string email = UserStore.GenerateTestEmail(10);
+        string username = UserStore.GenerateTestUserName(10);
+        User testUser = new User
+        {
+            FirstName = UserStore.GenerateTestFirstName(10),
+            LastName = UserStore.GenerateTestLastName(10),
+            Timezone = UserStore.timezones[1].Id,
+            UserName = username,
+            Email = email,
+            PhoneNumber = "1-234-567-8901",
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(
+                UserStore.testPassword,
+                4
+            ),
+            NormalizedEmail = email.ToUpper(),
+            NormalizedUserName = username.ToUpper(),
+            SecurityStamp = Guid.NewGuid().ToString(),
+            ConcurrencyStamp = Guid.NewGuid().ToString(),
+        };
+        _dbContext.Add(testUser);
+
+        await _dbContext.SaveChangesAsync();
+
+        WorkspaceMember testWorkspaceMembership = new WorkspaceMember
+        {
+            Title = "Member",
+            User = testUser,
+            Workspace = testWorkspace
+        };
+        _dbContext.Add(testWorkspaceMembership);
+
+        DirectMessageGroup testGroup = new DirectMessageGroup
+        {
+            WorkspaceId = testWorkspace.Id
+        };
+        _dbContext.Add(testGroup);
+
+        await _dbContext.SaveChangesAsync();
+
+        DirectMessageGroupMember testDmgMembership =
+            new DirectMessageGroupMember
+            {
+                DirectMessageGroupId = testGroup.Id,
+                UserId = testUser.Id
+            };
+        _dbContext.Add(testDmgMembership);
+
+        await _dbContext.SaveChangesAsync();
+
+        DirectMessage testMessage = new DirectMessage
+        {
+            Content = "test content",
+            DirectMessageGroupId = testGroup.Id,
+            SentAt = DateTime.Now,
+            UserId = testUser.Id
+        };
+        _dbContext.Add(testMessage);
+
+        await _dbContext.SaveChangesAsync();
+
+        await Assert.ThrowsAsync<ArgumentException>(
+            async () =>
+                await _directMessageGroupStore.InsertDirectMessageLaterFlag(
+                    Guid.Empty,
+                    testUser.Id
+                )
+        );
+        await Assert.ThrowsAsync<ArgumentException>(
+            async () =>
+                await _directMessageGroupStore.InsertDirectMessageLaterFlag(
+                    testMessage.Id,
+                    Guid.Empty
+                )
+        );
+
+        Assert.NotNull(
+            await _directMessageGroupStore.InsertDirectMessageLaterFlag(
+                testMessage.Id,
+                testUser.Id
+            )
+        );
+    }
+
+    [Fact]
     public async void InsertDirectMessage_ShouldInsertDirectMessage()
     {
         Workspace testWorkspace = new Workspace

@@ -8,6 +8,48 @@ public class DirectMessageGroupStore : Store
     public DirectMessageGroupStore(ApplicationDbContext context)
         : base(context) { }
 
+    public async Task<DirectMessageLaterFlag> InsertDirectMessageLaterFlag(
+        Guid directMessageId,
+        Guid userId
+    )
+    {
+        DirectMessage? directMessage = _context.DirectMessages
+            .Where(dm => dm.Id == directMessageId)
+            .FirstOrDefault();
+        if (directMessage is null)
+        {
+            throw new ArgumentException("Invalid arguments");
+        }
+
+        Guid groupId = directMessage.DirectMessageGroupId;
+        bool isGroupMember =
+            _context.DirectMessageGroupMembers
+                .Where(
+                    dm =>
+                        dm.UserId == userId
+                        && dm.DirectMessageGroupId == groupId
+                )
+                .Count() == 1;
+        if (!isGroupMember)
+        {
+            throw new ArgumentException("Invalid arguments");
+        }
+
+        Guid workspaceId = directMessage.DirectMessageGroup.WorkspaceId;
+        DirectMessageLaterFlag laterFlag = new DirectMessageLaterFlag
+        {
+            DirectMessageGroupId = groupId,
+            DirectMessageId = directMessageId,
+            UserId = userId,
+            WorkspaceId = workspaceId
+        };
+        _context.Add(laterFlag);
+
+        await _context.SaveChangesAsync();
+
+        return laterFlag;
+    }
+
     public async Task<DirectMessage> InsertDirectMessage(
         Guid directMessageGroupId,
         string content,

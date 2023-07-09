@@ -665,7 +665,7 @@ namespace PersistenceService.Migrations
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "gen_random_uuid()"),
                     CreatedAt = table.Column<DateTime>(type: "timestamp", nullable: false, defaultValueSql: "now()"),
-                    DirectMessageLaterFlagStatus = table.Column<int>(type: "integer", nullable: false),
+                    DirectMessageLaterFlagStatus = table.Column<int>(type: "integer", nullable: false, defaultValueSql: "1"),
                     DirectMessageGroupId = table.Column<Guid>(type: "uuid", nullable: false),
                     DirectMessageId = table.Column<Guid>(type: "uuid", nullable: false),
                     UserId = table.Column<Guid>(type: "uuid", nullable: false),
