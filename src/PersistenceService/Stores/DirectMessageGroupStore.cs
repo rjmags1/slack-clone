@@ -8,6 +8,115 @@ public class DirectMessageGroupStore : Store
     public DirectMessageGroupStore(ApplicationDbContext context)
         : base(context) { }
 
+    public async Task<DirectMessage> InsertDirectMessage(
+        Guid directMessageGroupId,
+        string content,
+        Guid userId,
+        List<Guid>? mentionedPeople,
+        Guid? messageRepliedToId,
+        Guid? personRepliedToId,
+        bool draft = false
+    )
+    {
+        bool validMessage =
+            content.Length > 0
+            && _context.DirectMessageGroupMembers
+                .Where(
+                    dmgm =>
+                        dmgm.DirectMessageGroupId == directMessageGroupId
+                        && dmgm.UserId == userId
+                )
+                .Count() == 1;
+        if (!validMessage)
+        {
+            throw new InvalidOperationException("Could not add new message");
+        }
+
+        bool reply =
+            messageRepliedToId is not null && personRepliedToId is not null;
+        bool regularMessage =
+            messageRepliedToId is null && personRepliedToId is null;
+        if (!reply && !regularMessage)
+        {
+            throw new ArgumentException("Invalid arguments");
+        }
+
+        bool needRecordMentions =
+            !draft && mentionedPeople is not null && mentionedPeople.Count > 0;
+        if (needRecordMentions)
+        {
+            bool mentionedAllMembers =
+                _context.DirectMessageGroupMembers
+                    .Where(
+                        dmgm =>
+                            dmgm.DirectMessageGroupId == directMessageGroupId
+                            && mentionedPeople!.Contains(dmgm.UserId)
+                    )
+                    .Count() == mentionedPeople!.Count;
+            if (!mentionedAllMembers)
+            {
+                throw new ArgumentException("Invalid arguments");
+            }
+        }
+
+        if (reply)
+        {
+            bool validReply =
+                _context.DirectMessages
+                    .Where(
+                        dm =>
+                            dm.Id == messageRepliedToId
+                            && dm.UserId == personRepliedToId
+                    )
+                    .Count() == 1;
+            if (!validReply)
+            {
+                throw new InvalidOperationException("Could not add reply");
+            }
+        }
+
+        DirectMessage message = new DirectMessage
+        {
+            Content = content,
+            DirectMessageGroupId = directMessageGroupId,
+            Draft = draft,
+            SentAt = draft ? null : DateTime.Now,
+            UserId = userId
+        };
+        _context.Add(message);
+
+        if (reply)
+        {
+            DirectMessageReply replyRecord = new DirectMessageReply
+            {
+                DirectMessage = message,
+                MessageRepliedToId = (Guid)messageRepliedToId!,
+                RepliedToId = (Guid)personRepliedToId!,
+                ReplierId = userId
+            };
+            _context.Add(replyRecord);
+        }
+
+        if (needRecordMentions)
+        {
+            foreach (Guid mentionedId in mentionedPeople!)
+            {
+                _context.Add(
+                    new DirectMessageMention
+                    {
+                        DirectMessage = message,
+                        MentionedId = mentionedId,
+                        MentionerId = userId
+                    }
+                );
+            }
+        }
+
+        await _context.SaveChangesAsync();
+
+        return message;
+    }
+
     public async Task<List<DirectMessageGroup>> InsertDirectMessageGroups(
         List<DirectMessageGroup> directMessageGroups,
         List<List<Guid>> members
