@@ -1380,7 +1380,7 @@ public class ChannelStoreTests
         Assert.NotEqual(insertedChannelMessage.ConcurrencyStamp, Guid.Empty);
         Assert.NotEqual(insertedChannelMessage.CreatedAt, default(DateTime));
         Assert.False(insertedChannelMessage.Deleted);
-        Assert.True(insertedChannelMessage.Draft);
+        Assert.False(insertedChannelMessage.Draft);
         Assert.Null(insertedChannelMessage.LastEdit);
         Assert.NotNull(insertedChannelMessage.SentAt);
         Assert.NotEqual(insertedChannelMessage.SentAt, default(DateTime));
