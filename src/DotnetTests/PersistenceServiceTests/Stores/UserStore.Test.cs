@@ -2,7 +2,6 @@ using DotnetTests.Fixtures;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Moq;
 using PersistenceService.Data.ApplicationDb;
 using PersistenceService.Models;
 using PersistenceService.Stores;
@@ -228,15 +227,6 @@ public class UserStoreTests
                     }
                 )
         );
-    }
-
-    [Fact]
-    public async void InsertTestUsers_ShouldInsertTestUsers()
-    {
-        int initialUsers = _dbContext.Users.Count();
-        await _userStore.InsertTestUsers(100);
-        int currentUsers = _dbContext.Users.Count();
-        Assert.Equal(initialUsers + 100, currentUsers);
     }
 
     private static UserStore GetUserStore()

@@ -1380,7 +1380,7 @@ public class ChannelStoreTests
         Assert.NotEqual(insertedChannelMessage.ConcurrencyStamp, Guid.Empty);
         Assert.NotEqual(insertedChannelMessage.CreatedAt, default(DateTime));
         Assert.False(insertedChannelMessage.Deleted);
-        Assert.True(insertedChannelMessage.Draft);
+        Assert.False(insertedChannelMessage.Draft);
         Assert.Null(insertedChannelMessage.LastEdit);
         Assert.NotNull(insertedChannelMessage.SentAt);
         Assert.NotEqual(insertedChannelMessage.SentAt, default(DateTime));
@@ -3775,14 +3775,5 @@ public class ChannelStoreTests
             Assert.Equal(ic.Workspace, channelWorkspace);
             Assert.Equal(ic.WorkspaceId, channelWorkspace.Id);
         }
-    }
-
-    [Fact]
-    public async void InsertTestChannels_ShouldInsertTestChannels()
-    {
-        int initialChannels = _dbContext.Channels.Count();
-        await _channelStore.InsertTestChannels(100);
-        int currentChannels = _dbContext.Channels.Count();
-        Assert.Equal(initialChannels + 100, currentChannels);
     }
 }

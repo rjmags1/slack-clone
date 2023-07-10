@@ -36,8 +36,7 @@ public class DirectMessage
     [ForeignKey(nameof(DirectMessageGroup))]
     public Guid DirectMessageGroupId { get; set; }
 
-    [DefaultValue(true)]
-    public bool Draft { get; set; }
+    public bool? Draft { get; set; }
 
     [Column(TypeName = "timestamp")]
     public DateTime? LastEdit { get; set; }
@@ -52,14 +51,6 @@ public class DirectMessage
 
     public ICollection<DirectMessageReply> Replies { get; } =
         new List<DirectMessageReply>();
-
-#pragma warning disable CS8618
-    [DeleteBehavior(DeleteBehavior.Cascade)]
-    public DirectMessage ReplyTo { get; set; }
-#pragma warning restore CS8618
-
-    [ForeignKey(nameof(ReplyTo))]
-    public Guid ReplyToId { get; set; }
 
     [Column(TypeName = "timestamp")]
     public DateTime? SentAt { get; set; }

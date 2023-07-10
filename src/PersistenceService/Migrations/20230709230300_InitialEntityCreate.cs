@@ -354,7 +354,7 @@ namespace PersistenceService.Migrations
                     ConcurrencyStamp = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "gen_random_uuid()"),
                     CreatedAt = table.Column<DateTime>(type: "timestamp", nullable: false, defaultValueSql: "now()"),
                     Deleted = table.Column<bool>(type: "boolean", nullable: false),
-                    Draft = table.Column<bool>(type: "boolean", nullable: false, defaultValueSql: "true"),
+                    Draft = table.Column<bool>(type: "boolean", nullable: true, defaultValueSql: "true"),
                     LastEdit = table.Column<DateTime>(type: "timestamp", nullable: true),
                     SentAt = table.Column<DateTime>(type: "timestamp", nullable: true),
                     ThreadId = table.Column<Guid>(type: "uuid", nullable: true),
@@ -445,9 +445,8 @@ namespace PersistenceService.Migrations
                     CreatedAt = table.Column<DateTime>(type: "timestamp", nullable: false, defaultValueSql: "now()"),
                     Deleted = table.Column<bool>(type: "boolean", nullable: false),
                     DirectMessageGroupId = table.Column<Guid>(type: "uuid", nullable: false),
-                    Draft = table.Column<bool>(type: "boolean", nullable: false),
+                    Draft = table.Column<bool>(type: "boolean", nullable: true, defaultValueSql: "true"),
                     LastEdit = table.Column<DateTime>(type: "timestamp", nullable: true),
-                    ReplyToId = table.Column<Guid>(type: "uuid", nullable: false),
                     SentAt = table.Column<DateTime>(type: "timestamp", nullable: true),
                     UserId = table.Column<Guid>(type: "uuid", nullable: false)
                 },
@@ -464,12 +463,6 @@ namespace PersistenceService.Migrations
                         name: "FK_DirectMessages_DirectMessageGroups_DirectMessageGroupId",
                         column: x => x.DirectMessageGroupId,
                         principalTable: "DirectMessageGroups",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_DirectMessages_DirectMessages_ReplyToId",
-                        column: x => x.ReplyToId,
-                        principalTable: "DirectMessages",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -672,7 +665,7 @@ namespace PersistenceService.Migrations
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "gen_random_uuid()"),
                     CreatedAt = table.Column<DateTime>(type: "timestamp", nullable: false, defaultValueSql: "now()"),
-                    DirectMessageLaterFlagStatus = table.Column<int>(type: "integer", nullable: false),
+                    DirectMessageLaterFlagStatus = table.Column<int>(type: "integer", nullable: false, defaultValueSql: "1"),
                     DirectMessageGroupId = table.Column<Guid>(type: "uuid", nullable: false),
                     DirectMessageId = table.Column<Guid>(type: "uuid", nullable: false),
                     UserId = table.Column<Guid>(type: "uuid", nullable: false),
@@ -1276,11 +1269,6 @@ namespace PersistenceService.Migrations
                 name: "IX_DirectMessages_Draft",
                 table: "DirectMessages",
                 column: "Draft");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_DirectMessages_ReplyToId",
-                table: "DirectMessages",
-                column: "ReplyToId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_DirectMessages_SentAt",

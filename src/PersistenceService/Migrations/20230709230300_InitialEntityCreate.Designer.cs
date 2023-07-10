@@ -12,7 +12,7 @@ using PersistenceService.Data.ApplicationDb;
 namespace PersistenceService.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20230704230941_InitialEntityCreate")]
+    [Migration("20230709230300_InitialEntityCreate")]
     partial class InitialEntityCreate
     {
         /// <inheritdoc />
@@ -338,7 +338,7 @@ namespace PersistenceService.Migrations
                     b.Property<bool>("Deleted")
                         .HasColumnType("boolean");
 
-                    b.Property<bool>("Draft")
+                    b.Property<bool?>("Draft")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")
                         .HasDefaultValueSql("true");
@@ -587,14 +587,13 @@ namespace PersistenceService.Migrations
                     b.Property<Guid>("DirectMessageGroupId")
                         .HasColumnType("uuid");
 
-                    b.Property<bool>("Draft")
-                        .HasColumnType("boolean");
+                    b.Property<bool?>("Draft")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValueSql("true");
 
                     b.Property<DateTime?>("LastEdit")
                         .HasColumnType("timestamp");
-
-                    b.Property<Guid>("ReplyToId")
-                        .HasColumnType("uuid");
 
                     b.Property<DateTime?>("SentAt")
                         .HasColumnType("timestamp");
@@ -609,8 +608,6 @@ namespace PersistenceService.Migrations
                     b.HasIndex("DirectMessageGroupId");
 
                     b.HasIndex("Draft");
-
-                    b.HasIndex("ReplyToId");
 
                     b.HasIndex("SentAt");
 
@@ -695,7 +692,9 @@ namespace PersistenceService.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<int>("DirectMessageLaterFlagStatus")
-                        .HasColumnType("integer");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValueSql("1");
 
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid");
@@ -1652,12 +1651,6 @@ namespace PersistenceService.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("PersistenceService.Models.DirectMessage", "ReplyTo")
-                        .WithMany()
-                        .HasForeignKey("ReplyToId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("PersistenceService.Models.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
@@ -1665,8 +1658,6 @@ namespace PersistenceService.Migrations
                         .IsRequired();
 
                     b.Navigation("DirectMessageGroup");
-
-                    b.Navigation("ReplyTo");
 
                     b.Navigation("User");
                 });

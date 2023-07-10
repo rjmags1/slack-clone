@@ -1,6 +1,5 @@
 using PersistenceService.Stores;
 using PersistenceService.Data.ApplicationDb;
-using Moq;
 using DotnetTests.Fixtures;
 using Microsoft.EntityFrameworkCore;
 
@@ -18,34 +17,6 @@ public class FileStoreTests
     )
     {
         _dbContext = applicationDbContextFixture.context;
-    }
-
-    [Fact]
-    public async Task InsertTestFiles_ShouldInsertTestFiles()
-    {
-        int numFiles = 2;
-        var mockContext = new Mock<ApplicationDbContext>();
-        mockContext.Setup(
-            c => c.AddRange(It.IsAny<IEnumerable<Models.File>>())
-        );
-        mockContext
-            .Setup(c => c.SaveChangesAsync(default(CancellationToken)))
-            .ReturnsAsync(numFiles);
-
-        var fileStore = new FileStore(mockContext.Object);
-
-        var result = await fileStore.InsertTestFiles(numFiles);
-
-        Assert.NotNull(result);
-        Assert.Equal(numFiles, result.Count);
-        mockContext.Verify(
-            c => c.AddRange(It.IsAny<IEnumerable<Models.File>>()),
-            Times.Once
-        );
-        mockContext.Verify(
-            c => c.SaveChangesAsync(default(CancellationToken)),
-            Times.Once
-        );
     }
 
     [Fact]

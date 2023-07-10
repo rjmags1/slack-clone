@@ -63,40 +63,6 @@ public class UserStore : UserManager<User>
         return users;
     }
 
-    public async Task<List<User>> InsertTestUsers(int numTestUsers)
-    {
-        ApplicationDbContext dbContext = new ApplicationDbContext(true);
-        List<User> users = new List<User>();
-        for (int i = 0; i < numTestUsers; i++)
-        {
-            string email = GenerateTestEmail(10);
-            string username = GenerateTestUserName(10);
-            User u = new User
-            {
-                FirstName = GenerateTestFirstName(10),
-                LastName = GenerateTestLastName(10),
-                Timezone = timezones[i % timezones.Count].Id,
-                UserName = username,
-                Email = email,
-                PhoneNumber = testPhoneNumber,
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword(
-                    UserStore.testPassword,
-                    4
-                ),
-                NormalizedEmail = KeyNormalizer.NormalizeEmail(email),
-                NormalizedUserName = KeyNormalizer.NormalizeName(username),
-                SecurityStamp = Guid.NewGuid().ToString(),
-                ConcurrencyStamp = Guid.NewGuid().ToString(),
-            };
-            users.Add(u);
-        }
-
-        dbContext.AddRange(users);
-        await dbContext.SaveChangesAsync();
-
-        return users;
-    }
-
     public static string GenerateTestUserName(int randsize) =>
         "test_user_name" + CustomBaseStore.GenerateRandomString(randsize);
 
