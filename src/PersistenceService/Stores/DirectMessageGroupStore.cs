@@ -1,3 +1,4 @@
+using PersistenceService.Constants;
 using PersistenceService.Data.ApplicationDb;
 using PersistenceService.Models;
 
@@ -7,6 +8,97 @@ public class DirectMessageGroupStore : Store
 {
     public DirectMessageGroupStore(ApplicationDbContext context)
         : base(context) { }
+
+    public async Task<DirectMessageNotification> InsertReplyNotification(
+        DirectMessageReply replyRecord
+    )
+    {
+        bool recordExists =
+            _context.DirectMessageReplies
+                .Where(r => r.Id == replyRecord.Id)
+                .Count() == 1;
+        if (!recordExists)
+        {
+            throw new ArgumentException("Invalid arguments");
+        }
+
+        DirectMessageNotification notification = new DirectMessageNotification
+        {
+            DirectMessageId = replyRecord.DirectMessageId,
+            DirectMessageNotificationType = MaskEnumDefs.NotificationTypes[
+                MaskEnumDefs.REPLY
+            ],
+            UserId = replyRecord.RepliedToId
+        };
+        _context.Add(notification);
+
+        await _context.SaveChangesAsync();
+
+        return notification;
+    }
+
+    public async Task<
+        List<DirectMessageNotification>
+    > InsertMentionNotifications(List<DirectMessageMention> mentionRecords)
+    {
+        List<Guid> mentionRecordIds = mentionRecords.Select(m => m.Id).ToList();
+        bool validArgs =
+            _context.DirectMessageMentions
+                .Where(dm => mentionRecordIds.Contains(dm.Id))
+                .Count() == mentionRecordIds.Count;
+        if (!validArgs)
+        {
+            throw new ArgumentException("Invalid arguments");
+        }
+
+        List<DirectMessageNotification> notifications =
+            new List<DirectMessageNotification>();
+        foreach (DirectMessageMention mentionRecord in mentionRecords)
+        {
+            notifications.Add(
+                new DirectMessageNotification
+                {
+                    DirectMessageId = mentionRecord.DirectMessageId,
+                    DirectMessageNotificationType =
+                        MaskEnumDefs.NotificationTypes[MaskEnumDefs.MENTION],
+                    UserId = mentionRecord.MentionedId
+                }
+            );
+        }
+        _context.AddRange(notifications);
+
+        await _context.SaveChangesAsync();
+
+        return notifications;
+    }
+
+    public async Task<DirectMessageNotification> InsertReactionNotification(
+        DirectMessageReaction reactionRecord
+    )
+    {
+        bool validArgs =
+            _context.DirectMessageReactions
+                .Where(dmr => dmr.Id == reactionRecord.Id)
+                .Count() == 1;
+        if (!validArgs)
+        {
+            throw new ArgumentException("Invalid arguments");
+        }
+
+        DirectMessageNotification notification = new DirectMessageNotification
+        {
+            DirectMessageId = reactionRecord.DirectMessageId,
+            DirectMessageNotificationType = MaskEnumDefs.NotificationTypes[
+                MaskEnumDefs.REACTION
+            ],
+            UserId = reactionRecord.DirectMessage.UserId
+        };
+        _context.Add(notification);
+
+        await _context.SaveChangesAsync();
+
+        return notification;
+    }
 
     public async Task<DirectMessageLaterFlag> InsertDirectMessageLaterFlag(
         Guid directMessageId,
