@@ -21,6 +21,223 @@ public class DirectMessageGroupStoreTests
     }
 
     [Fact]
+    public async void InsertMessageReaction_ShouldInsertMessageReaction()
+    {
+        Workspace testWorkspace = new Workspace
+        {
+            Description = "test description",
+            Name = "test-workspace-name" + ChannelStore.GenerateRandomString(10)
+        };
+        _dbContext.Add(testWorkspace);
+
+        string email = UserStore.GenerateTestEmail(10);
+        string username = UserStore.GenerateTestUserName(10);
+        User testUser = new User
+        {
+            FirstName = UserStore.GenerateTestFirstName(10),
+            LastName = UserStore.GenerateTestLastName(10),
+            Timezone = UserStore.timezones[1].Id,
+            UserName = username,
+            Email = email,
+            PhoneNumber = "1-234-567-8901",
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(
+                UserStore.testPassword,
+                4
+            ),
+            NormalizedEmail = email.ToUpper(),
+            NormalizedUserName = username.ToUpper(),
+            SecurityStamp = Guid.NewGuid().ToString(),
+            ConcurrencyStamp = Guid.NewGuid().ToString(),
+        };
+        _dbContext.Add(testUser);
+
+        await _dbContext.SaveChangesAsync();
+
+        WorkspaceMember testWorkspaceMembership = new WorkspaceMember
+        {
+            Title = "Member",
+            User = testUser,
+            Workspace = testWorkspace
+        };
+        _dbContext.Add(testWorkspaceMembership);
+
+        DirectMessageGroup testGroup = new DirectMessageGroup
+        {
+            WorkspaceId = testWorkspace.Id
+        };
+        _dbContext.Add(testGroup);
+
+        await _dbContext.SaveChangesAsync();
+
+        DirectMessageGroupMember testDmgMembership =
+            new DirectMessageGroupMember
+            {
+                DirectMessageGroupId = testGroup.Id,
+                UserId = testUser.Id
+            };
+        _dbContext.Add(testDmgMembership);
+
+        await _dbContext.SaveChangesAsync();
+
+        DirectMessage testMessage = new DirectMessage
+        {
+            Content = "test content",
+            DirectMessageGroupId = testGroup.Id,
+            SentAt = DateTime.Now,
+            UserId = testUser.Id
+        };
+        _dbContext.Add(testMessage);
+
+        await _dbContext.SaveChangesAsync();
+
+        DirectMessageReaction insertedReaction =
+            await _directMessageGroupStore.InsertMessageReaction(
+                testMessage.Id,
+                testUser.Id,
+                "🇺🇸"
+            );
+
+        Assert.NotEqual(Guid.Empty, insertedReaction.Id);
+        Assert.NotEqual(default(DateTime), insertedReaction.CreatedAt);
+        Assert.Equal(testMessage.Id, insertedReaction.DirectMessageId);
+        Assert.Equal("🇺🇸", insertedReaction.Emoji);
+        Assert.Equal(testUser.Id, insertedReaction.UserId);
+    }
+
+    [Fact]
+    public async void InsertMessageReaction_ShouldThrowOnInvalidArgs()
+    {
+        Workspace testWorkspace = new Workspace
+        {
+            Description = "test description",
+            Name = "test-workspace-name" + ChannelStore.GenerateRandomString(10)
+        };
+        _dbContext.Add(testWorkspace);
+
+        string email = UserStore.GenerateTestEmail(10);
+        string username = UserStore.GenerateTestUserName(10);
+        User testUser = new User
+        {
+            FirstName = UserStore.GenerateTestFirstName(10),
+            LastName = UserStore.GenerateTestLastName(10),
+            Timezone = UserStore.timezones[1].Id,
+            UserName = username,
+            Email = email,
+            PhoneNumber = "1-234-567-8901",
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(
+                UserStore.testPassword,
+                4
+            ),
+            NormalizedEmail = email.ToUpper(),
+            NormalizedUserName = username.ToUpper(),
+            SecurityStamp = Guid.NewGuid().ToString(),
+            ConcurrencyStamp = Guid.NewGuid().ToString(),
+        };
+        _dbContext.Add(testUser);
+
+        await _dbContext.SaveChangesAsync();
+
+        WorkspaceMember testWorkspaceMembership = new WorkspaceMember
+        {
+            Title = "Member",
+            User = testUser,
+            Workspace = testWorkspace
+        };
+        _dbContext.Add(testWorkspaceMembership);
+
+        DirectMessageGroup testGroup = new DirectMessageGroup
+        {
+            WorkspaceId = testWorkspace.Id
+        };
+        _dbContext.Add(testGroup);
+
+        await _dbContext.SaveChangesAsync();
+
+        DirectMessageGroupMember testDmgMembership =
+            new DirectMessageGroupMember
+            {
+                DirectMessageGroupId = testGroup.Id,
+                UserId = testUser.Id
+            };
+        _dbContext.Add(testDmgMembership);
+
+        await _dbContext.SaveChangesAsync();
+
+        DirectMessage testMessage = new DirectMessage
+        {
+            Content = "test content",
+            DirectMessageGroupId = testGroup.Id,
+            SentAt = DateTime.Now,
+            UserId = testUser.Id
+        };
+        _dbContext.Add(testMessage);
+
+        await _dbContext.SaveChangesAsync();
+
+        await Assert.ThrowsAsync<ArgumentException>(
+            async () =>
+                await _directMessageGroupStore.InsertMessageReaction(
+                    Guid.Empty,
+                    testUser.Id,
+                    "🇺🇸"
+                )
+        );
+
+        await Assert.ThrowsAsync<ArgumentException>(
+            async () =>
+                await _directMessageGroupStore.InsertMessageReaction(
+                    testMessage.Id,
+                    Guid.Empty,
+                    "🇺🇸"
+                )
+        );
+
+        await Assert.ThrowsAsync<ArgumentException>(
+            async () =>
+                await _directMessageGroupStore.InsertMessageReaction(
+                    testMessage.Id,
+                    Guid.Empty,
+                    ""
+                )
+        );
+
+        await Assert.ThrowsAsync<ArgumentException>(
+            async () =>
+                await _directMessageGroupStore.InsertMessageReaction(
+                    testMessage.Id,
+                    Guid.Empty,
+                    " 🇺🇸"
+                )
+        );
+
+        await Assert.ThrowsAsync<ArgumentException>(
+            async () =>
+                await _directMessageGroupStore.InsertMessageReaction(
+                    testMessage.Id,
+                    Guid.Empty,
+                    "a"
+                )
+        );
+
+        await Assert.ThrowsAsync<ArgumentException>(
+            async () =>
+                await _directMessageGroupStore.InsertMessageReaction(
+                    testMessage.Id,
+                    Guid.Empty,
+                    "a🇺🇸"
+                )
+        );
+
+        Assert.NotNull(
+            await _directMessageGroupStore.InsertMessageReaction(
+                testMessage.Id,
+                testUser.Id,
+                "🇺🇸"
+            )
+        );
+    }
+
+    [Fact]
     public async void InsertReplyNotification_ShouldInsertReplyNotification()
     {
         Workspace testWorkspace = new Workspace

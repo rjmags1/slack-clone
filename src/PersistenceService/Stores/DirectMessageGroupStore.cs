@@ -1,6 +1,7 @@
 using PersistenceService.Constants;
 using PersistenceService.Data.ApplicationDb;
 using PersistenceService.Models;
+using PersistenceService.Utils;
 
 namespace PersistenceService.Stores;
 
@@ -8,6 +9,52 @@ public class DirectMessageGroupStore : Store
 {
     public DirectMessageGroupStore(ApplicationDbContext context)
         : base(context) { }
+
+    public async Task<DirectMessageReaction> InsertMessageReaction(
+        Guid directMessageId,
+        Guid userId,
+        string emoji
+    )
+    {
+        bool invalidEmoji =
+            emoji.Any(c => char.IsWhiteSpace(c)) || !EmojiUtils.IsEmoji(emoji);
+        if (invalidEmoji)
+        {
+            throw new ArgumentException("Invalid arguments");
+        }
+        DirectMessage? directMessage = _context.DirectMessages
+            .Where(dm => dm.Id == directMessageId)
+            .FirstOrDefault();
+        if (directMessage is null)
+        {
+            throw new ArgumentException("Invalid arguments");
+        }
+        bool isMember =
+            _context.DirectMessageGroupMembers
+                .Where(
+                    dm =>
+                        dm.UserId == userId
+                        && dm.DirectMessageGroupId
+                            == directMessage.DirectMessageGroupId
+                )
+                .Count() == 1;
+        if (!isMember)
+        {
+            throw new ArgumentException("Invalid arguments");
+        }
+
+        DirectMessageReaction reaction = new DirectMessageReaction
+        {
+            DirectMessageId = directMessageId,
+            Emoji = emoji,
+            UserId = userId
+        };
+        _context.Add(reaction);
+
+        await _context.SaveChangesAsync();
+
+        return reaction;
+    }
 
     public async Task<DirectMessageNotification> InsertReplyNotification(
         DirectMessageReply replyRecord
