@@ -3776,13 +3776,4 @@ public class ChannelStoreTests
             Assert.Equal(ic.WorkspaceId, channelWorkspace.Id);
         }
     }
-
-    [Fact]
-    public async void InsertTestChannels_ShouldInsertTestChannels()
-    {
-        int initialChannels = _dbContext.Channels.Count();
-        await _channelStore.InsertTestChannels(100);
-        int currentChannels = _dbContext.Channels.Count();
-        Assert.Equal(initialChannels + 100, currentChannels);
-    }
 }

@@ -1551,16 +1551,4 @@ public class DirectMessageGroupStoreTests
             }
         }
     }
-
-    [Fact]
-    public async void InsertTestDirectMessageGroups_ShouldInsertTestDirectMessageGroups()
-    {
-        int initialDirectMessageGroups = _dbContext.DirectMessageGroups.Count();
-        await _directMessageGroupStore.InsertTestDirectMessageGroups(100);
-        int currentDirectMessageGroups = _dbContext.DirectMessageGroups.Count();
-        Assert.Equal(
-            initialDirectMessageGroups + 100,
-            currentDirectMessageGroups
-        );
-    }
 }

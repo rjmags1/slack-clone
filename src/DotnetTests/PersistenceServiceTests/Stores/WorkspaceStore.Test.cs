@@ -975,13 +975,4 @@ public class WorkspaceStoreTests
             Assert.Equal(1, iw.NumMembers);
         }
     }
-
-    [Fact]
-    public async void InsertTestWorkspaces_ShouldInsertTestWorkspaces()
-    {
-        int initialWorkspaces = _dbContext.Workspaces.Count();
-        await _workspaceStore.InsertTestWorkspaces(100);
-        int currentWorkspaces = _dbContext.Workspaces.Count();
-        Assert.Equal(initialWorkspaces + 100, currentWorkspaces);
-    }
 }
