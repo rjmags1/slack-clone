@@ -5,7 +5,7 @@ namespace PersistenceService.Stores;
 
 public class Store : IDisposable
 {
-    public static Random _random { get; set; } = new Random();
+    public static Random random { get; set; } = new Random();
     private static string _letters { get; set; } =
         Enumerable
             .Range('A', 26)
@@ -24,7 +24,7 @@ public class Store : IDisposable
         StringBuilder builder = new StringBuilder();
         for (int i = 0; i < length; i++)
         {
-            int index = _random.Next(_letters.Length);
+            int index = random.Next(_letters.Length);
             builder.Append(_letters[index]);
         }
 
