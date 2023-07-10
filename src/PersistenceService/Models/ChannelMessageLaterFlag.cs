@@ -1,4 +1,3 @@
-using System.ComponentModel;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 
@@ -18,8 +17,7 @@ public class ChannelMessageLaterFlag
     [ForeignKey(nameof(Channel))]
     public Guid ChannelId { get; set; }
 
-    [DefaultValue(1)]
-    public int? ChannelLaterFlagStatus { get; set; }
+    public int ChannelLaterFlagStatus { get; set; } = 1;
 
 #pragma warning disable CS8618
     [DeleteBehavior(DeleteBehavior.Cascade)]

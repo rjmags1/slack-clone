@@ -37,14 +37,14 @@ public class WorkspaceInviteMigrationsTests
         var adminIdProperty = _entityType.FindProperty(
             nameof(WorkspaceInvite.AdminId)
         )!;
-        string avatarIdColumnType = adminIdProperty.GetColumnType();
         var foreignKey = adminIdProperty
             .GetContainingForeignKeys()
             .SingleOrDefault();
 
         Assert.NotNull(foreignKey);
         Assert.Equal(DeleteBehavior.Cascade, foreignKey.DeleteBehavior);
-        Assert.Equal("uuid", avatarIdColumnType);
+        Assert.Equal("uuid", adminIdProperty.GetColumnType());
+        Assert.False(adminIdProperty.IsColumnNullable());
     }
 
     [Fact]
@@ -69,18 +69,17 @@ public class WorkspaceInviteMigrationsTests
     [Fact]
     public void UserIdColumn()
     {
-        var createdByIdProperty = _entityType.FindProperty(
+        var userIdProperty = _entityType.FindProperty(
             nameof(WorkspaceInvite.UserId)
         )!;
-        string createdByIdPropertyColumnType =
-            createdByIdProperty.GetColumnType();
-        var foreignKey = createdByIdProperty
+        var foreignKey = userIdProperty
             .GetContainingForeignKeys()
             .SingleOrDefault();
 
         Assert.NotNull(foreignKey);
         Assert.Equal(DeleteBehavior.Cascade, foreignKey.DeleteBehavior);
-        Assert.Equal("uuid", createdByIdPropertyColumnType);
+        Assert.Equal("uuid", userIdProperty.GetColumnType());
+        Assert.False(userIdProperty.IsColumnNullable());
     }
 
     [Fact]
@@ -89,15 +88,14 @@ public class WorkspaceInviteMigrationsTests
         var workspaceIdProperty = _entityType.FindProperty(
             nameof(WorkspaceInvite.WorkspaceId)
         )!;
-        string workspaceIdPropertyColumnType =
-            workspaceIdProperty.GetColumnType();
         var foreignKey = workspaceIdProperty
             .GetContainingForeignKeys()
             .SingleOrDefault();
 
         Assert.NotNull(foreignKey);
         Assert.Equal(DeleteBehavior.Cascade, foreignKey.DeleteBehavior);
-        Assert.Equal("uuid", workspaceIdPropertyColumnType);
+        Assert.Equal("uuid", workspaceIdProperty.GetColumnType());
+        Assert.False(workspaceIdProperty.IsColumnNullable());
     }
 
     [Fact]

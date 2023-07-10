@@ -1,4 +1,3 @@
-using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
@@ -25,8 +24,7 @@ public class DirectMessage
     [Column(TypeName = "timestamp")]
     public DateTime CreatedAt { get; set; }
 
-    [DefaultValue(false)]
-    public bool Deleted { get; set; }
+    public bool Deleted { get; set; } = false;
 
 #pragma warning disable CS8618
     [DeleteBehavior(DeleteBehavior.Cascade)]

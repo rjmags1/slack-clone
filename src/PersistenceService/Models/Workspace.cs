@@ -1,4 +1,3 @@
-using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
@@ -31,6 +30,5 @@ public class Workspace
     public string Name { get; set; }
 #pragma warning restore CS8618
 
-    [DefaultValue(1)]
-    public int NumMembers { get; set; }
+    public int NumMembers { get; set; } = 1;
 }

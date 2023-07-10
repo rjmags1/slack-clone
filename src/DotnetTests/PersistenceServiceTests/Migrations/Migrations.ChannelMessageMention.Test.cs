@@ -41,15 +41,14 @@ public class ChannelMessageMentionMigrationsTests
         var channelMessageIdProperty = _entityType.FindProperty(
             nameof(ChannelMessageMention.ChannelMessageId)
         )!;
-        string channelMessageIdColumnType =
-            channelMessageIdProperty.GetColumnType();
         var foreignKey = channelMessageIdProperty
             .GetContainingForeignKeys()
             .SingleOrDefault();
 
         Assert.NotNull(foreignKey);
         Assert.Equal(DeleteBehavior.Cascade, foreignKey.DeleteBehavior);
-        Assert.Equal("uuid", channelMessageIdColumnType);
+        Assert.Equal("uuid", channelMessageIdProperty.GetColumnType());
+        Assert.False(channelMessageIdProperty.IsColumnNullable());
     }
 
     [Fact]
@@ -68,14 +67,14 @@ public class ChannelMessageMentionMigrationsTests
         var mentionedIdProperty = _entityType.FindProperty(
             nameof(ChannelMessageMention.MentionedId)
         )!;
-        string mentionedIdColumnType = mentionedIdProperty.GetColumnType();
         var foreignKey = mentionedIdProperty
             .GetContainingForeignKeys()
             .SingleOrDefault();
 
         Assert.NotNull(foreignKey);
         Assert.Equal(DeleteBehavior.Cascade, foreignKey.DeleteBehavior);
-        Assert.Equal("uuid", mentionedIdColumnType);
+        Assert.Equal("uuid", mentionedIdProperty.GetColumnType());
+        Assert.False(mentionedIdProperty.IsColumnNullable());
     }
 
     [Fact]
@@ -84,21 +83,21 @@ public class ChannelMessageMentionMigrationsTests
         var mentionerIdProperty = _entityType.FindProperty(
             nameof(ChannelMessageMention.MentionerId)
         )!;
-        string mentionerIdColumnType = mentionerIdProperty.GetColumnType();
         var foreignKey = mentionerIdProperty
             .GetContainingForeignKeys()
             .SingleOrDefault();
 
         Assert.NotNull(foreignKey);
         Assert.Equal(DeleteBehavior.Cascade, foreignKey.DeleteBehavior);
-        Assert.Equal("uuid", mentionerIdColumnType);
+        Assert.Equal("uuid", mentionerIdProperty.GetColumnType());
+        Assert.False(mentionerIdProperty.IsColumnNullable());
     }
 
     [Fact]
     public async Task ChannelMessageMentionDDLMigration_ShouldHaveHappened()
     {
         int numChannelMessageMentionRows =
-            await _dbContext.ChannelMessageLaterFlags.CountAsync();
+            await _dbContext.ChannelMessageMentions.CountAsync();
         Assert.True(numChannelMessageMentionRows >= 0);
     }
 

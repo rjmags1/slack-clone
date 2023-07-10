@@ -23,8 +23,7 @@ public class ChannelMessageNotification
     [Column(TypeName = "timestamp")]
     public DateTime CreatedAt { get; set; }
 
-    [DefaultValue(false)]
-    public bool Seen { get; set; }
+    public bool Seen { get; set; } = false;
 
 #pragma warning disable CS8618
     [DeleteBehavior(DeleteBehavior.Cascade)]

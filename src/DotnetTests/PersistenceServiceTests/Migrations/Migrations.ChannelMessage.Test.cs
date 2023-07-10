@@ -37,14 +37,14 @@ public class ChannelMessageMigrationsTests
         var channelIdProperty = _entityType.FindProperty(
             nameof(ChannelMessage.ChannelId)
         )!;
-        string avatarIdColumnType = channelIdProperty.GetColumnType();
         var foreignKey = channelIdProperty
             .GetContainingForeignKeys()
             .SingleOrDefault();
 
         Assert.NotNull(foreignKey);
         Assert.Equal(DeleteBehavior.Cascade, foreignKey.DeleteBehavior);
-        Assert.Equal("uuid", avatarIdColumnType);
+        Assert.Equal("uuid", channelIdProperty.GetColumnType());
+        Assert.False(channelIdProperty.IsColumnNullable());
     }
 
     [Fact]
@@ -54,6 +54,7 @@ public class ChannelMessageMigrationsTests
             nameof(ChannelMessage.Content)
         )!;
         Assert.Equal(2500, contentProperty.GetMaxLength());
+        Assert.False(contentProperty.IsColumnNullable());
     }
 
     [Fact]
@@ -72,11 +73,11 @@ public class ChannelMessageMigrationsTests
     [Fact]
     public void CreatedAtColumn()
     {
-        var concurrencyStampProperty = _entityType.FindProperty(
+        var createdAtProperty = _entityType.FindProperty(
             nameof(ChannelMessage.CreatedAt)
         )!;
-        Assert.Equal("timestamp", concurrencyStampProperty.GetColumnType());
-        Assert.Equal("now()", concurrencyStampProperty.GetDefaultValueSql());
+        Assert.Equal("timestamp", createdAtProperty.GetColumnType());
+        Assert.Equal("now()", createdAtProperty.GetDefaultValueSql());
     }
 
     [Fact]
@@ -131,6 +132,7 @@ public class ChannelMessageMigrationsTests
         Assert.NotNull(foreignKey);
         Assert.Equal(DeleteBehavior.Cascade, foreignKey.DeleteBehavior);
         Assert.Equal("uuid", threadIdPropertyColumnType);
+        Assert.True(threadIdProperty.IsColumnNullable());
     }
 
     [Fact]
@@ -147,6 +149,7 @@ public class ChannelMessageMigrationsTests
         Assert.NotNull(foreignKey);
         Assert.Equal(DeleteBehavior.Cascade, foreignKey.DeleteBehavior);
         Assert.Equal("uuid", userIdPropertyColumnType);
+        Assert.False(userIdProperty.IsColumnNullable());
     }
 
     [Fact]

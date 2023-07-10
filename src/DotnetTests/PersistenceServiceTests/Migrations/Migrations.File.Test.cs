@@ -71,10 +71,8 @@ public class FileMigrationsTests
         )!;
         string uploadedAtColumnType = uploadedAtProperty.GetColumnType();
         string defaultValueSql = uploadedAtProperty.GetDefaultValueSql()!;
-        var uploadedAtColumnNullable = uploadedAtProperty.IsColumnNullable();
         Assert.Equal("timestamp", uploadedAtColumnType);
         Assert.Equal("now()", defaultValueSql);
-        Assert.False(uploadedAtColumnNullable);
     }
 
     [Fact]
@@ -83,8 +81,6 @@ public class FileMigrationsTests
         var directMessageIdProperty = _entityType.FindProperty(
             nameof(Models.File.DirectMessageId)
         )!;
-        string directMessageIdColumnType =
-            directMessageIdProperty.GetColumnType();
         var foreignKey = _entityType
             .FindProperty(nameof(Models.File.DirectMessageId))!
             .GetContainingForeignKeys()
@@ -92,7 +88,8 @@ public class FileMigrationsTests
 
         Assert.NotNull(foreignKey);
         Assert.Equal(DeleteBehavior.Cascade, foreignKey.DeleteBehavior);
-        Assert.Equal("uuid", directMessageIdColumnType);
+        Assert.Equal("uuid", directMessageIdProperty.GetColumnType());
+        Assert.True(directMessageIdProperty.IsColumnNullable());
     }
 
     [Fact]
@@ -101,8 +98,6 @@ public class FileMigrationsTests
         var directMessageGroupIdProperty = _entityType.FindProperty(
             nameof(Models.File.DirectMessageGroupId)
         )!;
-        var directMessageGroupIdColumnType =
-            directMessageGroupIdProperty.GetColumnType();
         var foreignKey = _entityType
             .FindProperty(nameof(Models.File.DirectMessageGroupId))!
             .GetContainingForeignKeys()
@@ -110,7 +105,8 @@ public class FileMigrationsTests
 
         Assert.NotNull(foreignKey);
         Assert.Equal(DeleteBehavior.Cascade, foreignKey.DeleteBehavior);
-        Assert.Equal("uuid", directMessageGroupIdColumnType);
+        Assert.Equal("uuid", directMessageGroupIdProperty.GetColumnType());
+        Assert.True(directMessageGroupIdProperty.IsColumnNullable());
     }
 
     [Fact]
@@ -123,12 +119,11 @@ public class FileMigrationsTests
             .FindProperty(nameof(Models.File.ChannelMessageId))!
             .GetContainingForeignKeys()
             .SingleOrDefault();
-        string channelMessageIdColumnType =
-            channelMessageIdProperty.GetColumnType();
 
         Assert.NotNull(foreignKey);
         Assert.Equal(DeleteBehavior.Cascade, foreignKey.DeleteBehavior);
-        Assert.Equal("uuid", channelMessageIdColumnType);
+        Assert.Equal("uuid", channelMessageIdProperty.GetColumnType());
+        Assert.True(channelMessageIdProperty.IsColumnNullable());
     }
 
     [Fact]
@@ -137,14 +132,15 @@ public class FileMigrationsTests
         var channelIdProperty = _entityType.FindProperty(
             nameof(Models.File.ChannelId)
         )!;
-        string channelIdColumnType = channelIdProperty.GetColumnType();
         var foreignKey = _entityType
             .FindProperty(nameof(Models.File.ChannelId))!
             .GetContainingForeignKeys()
             .SingleOrDefault();
-        string channelMessageIdColumnType = channelIdProperty.GetColumnType();
 
-        Assert.Equal("uuid", channelIdColumnType);
+        Assert.NotNull(foreignKey);
+        Assert.Equal(DeleteBehavior.Cascade, foreignKey.DeleteBehavior);
+        Assert.Equal("uuid", channelIdProperty.GetColumnType());
+        Assert.True(channelIdProperty.IsColumnNullable());
     }
 
     [Fact]

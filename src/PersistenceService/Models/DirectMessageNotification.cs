@@ -1,5 +1,3 @@
-using System.ComponentModel;
-using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 
@@ -24,8 +22,7 @@ public class DirectMessageNotification
 
     public int DirectMessageNotificationType { get; set; }
 
-    [DefaultValue(false)]
-    public bool Seen { get; set; }
+    public bool Seen { get; set; } = false;
 
 #pragma warning disable CS8618
     [DeleteBehavior(DeleteBehavior.Cascade)]

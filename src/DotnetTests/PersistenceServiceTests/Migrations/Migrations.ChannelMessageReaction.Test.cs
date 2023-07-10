@@ -41,15 +41,14 @@ public class ChannelMessageReactionMigrationsTests
         var channelMessageIdProperty = _entityType.FindProperty(
             nameof(ChannelMessageReaction.ChannelMessageId)
         )!;
-        string channelMessageIdColumnType =
-            channelMessageIdProperty.GetColumnType();
         var foreignKey = channelMessageIdProperty
             .GetContainingForeignKeys()
             .SingleOrDefault();
 
         Assert.NotNull(foreignKey);
         Assert.Equal(DeleteBehavior.Cascade, foreignKey.DeleteBehavior);
-        Assert.Equal("uuid", channelMessageIdColumnType);
+        Assert.Equal("uuid", channelMessageIdProperty.GetColumnType());
+        Assert.False(channelMessageIdProperty.IsColumnNullable());
     }
 
     [Fact]
@@ -69,6 +68,7 @@ public class ChannelMessageReactionMigrationsTests
             nameof(ChannelMessageReaction.Emoji)
         )!;
         Assert.Equal(4, emojiProperty.GetMaxLength());
+        Assert.False(emojiProperty.IsColumnNullable());
     }
 
     [Fact]
@@ -77,14 +77,14 @@ public class ChannelMessageReactionMigrationsTests
         var userIdProperty = _entityType.FindProperty(
             nameof(ChannelMessageReaction.UserId)
         )!;
-        string userIdColumnType = userIdProperty.GetColumnType();
         var foreignKey = userIdProperty
             .GetContainingForeignKeys()
             .SingleOrDefault();
 
         Assert.NotNull(foreignKey);
         Assert.Equal(DeleteBehavior.Cascade, foreignKey.DeleteBehavior);
-        Assert.Equal("uuid", userIdColumnType);
+        Assert.Equal("uuid", userIdProperty.GetColumnType());
+        Assert.False(userIdProperty.IsColumnNullable());
     }
 
     [Fact]

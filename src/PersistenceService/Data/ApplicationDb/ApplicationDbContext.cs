@@ -96,8 +96,23 @@ public class ApplicationDbContext
         modelBuilder
             .Entity<User>()
             .Property(e => e.UserName)
-            .HasMaxLength(30)
+            .HasMaxLength(40)
             .IsRequired();
+
+        modelBuilder
+            .Entity<User>()
+            .Property(e => e.Deleted)
+            .HasDefaultValueSql("false");
+
+        modelBuilder
+            .Entity<User>()
+            .Property(e => e.UserNotificationsPreferencesMask)
+            .HasDefaultValueSql("0");
+
+        modelBuilder
+            .Entity<User>()
+            .Property(e => e.NotificationSound)
+            .HasDefaultValueSql("0");
 
         modelBuilder
             .Entity<User>()
@@ -157,6 +172,21 @@ public class ApplicationDbContext
             .HasDefaultValueSql("1");
 
         modelBuilder
+            .Entity<Channel>()
+            .Property(e => e.Private)
+            .HasDefaultValueSql("false");
+
+        modelBuilder
+            .Entity<Channel>()
+            .Property(e => e.AllowThreads)
+            .HasDefaultValueSql("true");
+
+        modelBuilder
+            .Entity<Channel>()
+            .Property(e => e.AllowedChannelPostersMask)
+            .HasDefaultValueSql("1");
+
+        modelBuilder
             .Entity<ChannelInvite>()
             .Property(e => e.ChannelInviteStatus)
             .HasDefaultValueSql("1");
@@ -165,6 +195,16 @@ public class ApplicationDbContext
             .Entity<ChannelMember>()
             .Property(e => e.EnableNotifications)
             .HasDefaultValueSql("true");
+
+        modelBuilder
+            .Entity<ChannelMember>()
+            .Property(e => e.Admin)
+            .HasDefaultValueSql("false");
+
+        modelBuilder
+            .Entity<ChannelMember>()
+            .Property(e => e.Starred)
+            .HasDefaultValueSql("false");
 
         modelBuilder
             .Entity<Models.Thread>()
@@ -187,6 +227,16 @@ public class ApplicationDbContext
             .HasDefaultValueSql("true");
 
         modelBuilder
+            .Entity<ChannelMessage>()
+            .Property(e => e.Deleted)
+            .HasDefaultValueSql("false");
+
+        modelBuilder
+            .Entity<ChannelMessageNotification>()
+            .Property(e => e.Seen)
+            .HasDefaultValueSql("false");
+
+        modelBuilder
             .Entity<ChannelMessageLaterFlag>()
             .Property(e => e.ChannelLaterFlagStatus)
             .HasDefaultValueSql("1");
@@ -197,9 +247,39 @@ public class ApplicationDbContext
             .HasDefaultValueSql("true");
 
         modelBuilder
+            .Entity<DirectMessage>()
+            .Property(e => e.Deleted)
+            .HasDefaultValueSql("false");
+
+        modelBuilder
+            .Entity<DirectMessageNotification>()
+            .Property(e => e.Seen)
+            .HasDefaultValueSql("false");
+
+        modelBuilder
             .Entity<DirectMessageLaterFlag>()
             .Property(e => e.DirectMessageLaterFlagStatus)
             .HasDefaultValueSql("1");
+
+        modelBuilder
+            .Entity<DirectMessageGroup>()
+            .Property(e => e.Size)
+            .HasDefaultValueSql("2");
+
+        modelBuilder
+            .Entity<WorkspaceMember>()
+            .Property(e => e.Admin)
+            .HasDefaultValueSql("false");
+
+        modelBuilder
+            .Entity<WorkspaceMember>()
+            .Property(e => e.NotificationSound)
+            .HasDefaultValueSql("0");
+
+        modelBuilder
+            .Entity<WorkspaceMember>()
+            .Property(e => e.Owner)
+            .HasDefaultValueSql("false");
 
         foreach (var entityType in modelBuilder.Model.GetEntityTypes())
         {

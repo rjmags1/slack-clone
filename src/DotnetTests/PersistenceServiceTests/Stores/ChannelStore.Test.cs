@@ -3771,7 +3771,7 @@ public class ChannelStoreTests
             Assert.NotNull(ic.ChannelMessages);
             Assert.Equal(ic.Name, c.Name);
             Assert.False(ic.Private);
-            Assert.Equal("", ic.Topic);
+            Assert.Null(ic.Topic);
             Assert.Equal(ic.Workspace, channelWorkspace);
             Assert.Equal(ic.WorkspaceId, channelWorkspace.Id);
         }

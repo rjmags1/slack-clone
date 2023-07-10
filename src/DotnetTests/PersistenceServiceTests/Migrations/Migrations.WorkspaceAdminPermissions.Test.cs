@@ -41,14 +41,14 @@ public class WorkspaceAdminPermissionsMigrationsTests
         var adminIdProperty = _entityType.FindProperty(
             nameof(WorkspaceAdminPermissions.AdminId)
         )!;
-        string avatarIdColumnType = adminIdProperty.GetColumnType();
         var foreignKey = adminIdProperty
             .GetContainingForeignKeys()
             .SingleOrDefault();
 
         Assert.NotNull(foreignKey);
         Assert.Equal(DeleteBehavior.Cascade, foreignKey.DeleteBehavior);
-        Assert.Equal("uuid", avatarIdColumnType);
+        Assert.Equal("uuid", adminIdProperty.GetColumnType());
+        Assert.False(adminIdProperty.IsColumnNullable());
     }
 
     [Fact]
@@ -78,15 +78,14 @@ public class WorkspaceAdminPermissionsMigrationsTests
         var workspaceIdProperty = _entityType.FindProperty(
             nameof(WorkspaceAdminPermissions.WorkspaceId)
         )!;
-        string workspaceIdPropertyColumnType =
-            workspaceIdProperty.GetColumnType();
         var foreignKey = workspaceIdProperty
             .GetContainingForeignKeys()
             .SingleOrDefault();
 
         Assert.NotNull(foreignKey);
         Assert.Equal(DeleteBehavior.Cascade, foreignKey.DeleteBehavior);
-        Assert.Equal("uuid", workspaceIdPropertyColumnType);
+        Assert.Equal("uuid", workspaceIdProperty.GetColumnType());
+        Assert.False(workspaceIdProperty.IsColumnNullable());
     }
 
     [Fact]

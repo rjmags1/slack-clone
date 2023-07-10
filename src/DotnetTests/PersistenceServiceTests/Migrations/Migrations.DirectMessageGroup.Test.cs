@@ -64,8 +64,7 @@ public class DirectMessageGroupMigrationsTests
         var sizeColumnProperty = _entityType.FindProperty(
             nameof(DirectMessageGroup.Size)
         )!;
-        Assert.False(sizeColumnProperty.IsColumnNullable());
-        Assert.Equal("integer", sizeColumnProperty.GetColumnType());
+        Assert.Equal("2", sizeColumnProperty.GetDefaultValueSql());
     }
 
     [Fact]
@@ -74,15 +73,14 @@ public class DirectMessageGroupMigrationsTests
         var workspaceIdProperty = _entityType.FindProperty(
             nameof(DirectMessageGroup.WorkspaceId)
         )!;
-        string workspaceIdPropertyColumnType =
-            workspaceIdProperty.GetColumnType();
         var foreignKey = workspaceIdProperty
             .GetContainingForeignKeys()
             .SingleOrDefault();
 
         Assert.NotNull(foreignKey);
         Assert.Equal(DeleteBehavior.Cascade, foreignKey.DeleteBehavior);
-        Assert.Equal("uuid", workspaceIdPropertyColumnType);
+        Assert.Equal("uuid", workspaceIdProperty.GetColumnType());
+        Assert.False(workspaceIdProperty.IsColumnNullable());
     }
 
     [Fact]

@@ -48,14 +48,14 @@ public class UserMigrationsTests
     public void AvatarIdColumn()
     {
         var avatarIdProperty = _entityType.FindProperty(nameof(User.AvatarId))!;
-        string avatarIdColumnType = avatarIdProperty.GetColumnType();
         var foreignKey = avatarIdProperty
             .GetContainingForeignKeys()
             .SingleOrDefault();
 
         Assert.NotNull(foreignKey);
         Assert.Equal(DeleteBehavior.SetNull, foreignKey.DeleteBehavior);
-        Assert.Equal("uuid", avatarIdColumnType);
+        Assert.Equal("uuid", avatarIdProperty.GetColumnType());
+        Assert.True(avatarIdProperty.IsColumnNullable());
     }
 
     [Fact]
@@ -68,6 +68,7 @@ public class UserMigrationsTests
             "character varying(36)",
             concurrencyStampProperty.GetColumnType()
         );
+        Assert.False(concurrencyStampProperty.IsColumnNullable());
     }
 
     [Fact]
@@ -84,9 +85,7 @@ public class UserMigrationsTests
     public void DeletedColumn()
     {
         var deletedProperty = _entityType.FindProperty(nameof(User.Deleted))!;
-        Assert.Equal("boolean", deletedProperty.GetColumnType());
-        Assert.False(deletedProperty.IsColumnNullable());
-        Assert.Equal(false, deletedProperty.GetDefaultValue());
+        Assert.Equal("false", deletedProperty.GetDefaultValueSql());
     }
 
     [Fact]
@@ -154,16 +153,9 @@ public class UserMigrationsTests
         var userNotificationsPreferencesMaskProperty = _entityType.FindProperty(
             nameof(User.UserNotificationsPreferencesMask)
         )!;
-        Assert.False(
-            userNotificationsPreferencesMaskProperty.IsColumnNullable()
-        );
         Assert.Equal(
-            "integer",
-            userNotificationsPreferencesMaskProperty.GetColumnType()
-        );
-        Assert.Equal(
-            0,
-            userNotificationsPreferencesMaskProperty.GetDefaultValue()
+            "0",
+            userNotificationsPreferencesMaskProperty.GetDefaultValueSql()
         );
     }
 
@@ -197,7 +189,7 @@ public class UserMigrationsTests
     public void NotificationsPauseUntilColumn()
     {
         var notificationsPauseUntilProperty = _entityType.FindProperty(
-            nameof(User.NotificationsAllowEndTime)
+            nameof(User.NotificationsPauseUntil)
         )!;
         Assert.True(notificationsPauseUntilProperty.IsColumnNullable());
         Assert.Equal(
@@ -212,9 +204,7 @@ public class UserMigrationsTests
         var notificationSoundProperty = _entityType.FindProperty(
             nameof(User.NotificationSound)
         )!;
-        Assert.False(notificationSoundProperty.IsColumnNullable());
-        Assert.Equal("integer", notificationSoundProperty.GetColumnType());
-        Assert.Equal(0, notificationSoundProperty.GetDefaultValue());
+        Assert.Equal("0", notificationSoundProperty.GetDefaultValueSql());
     }
 
     [Fact]
@@ -319,14 +309,14 @@ public class UserMigrationsTests
     public void ThemeColumn()
     {
         var themeIdProperty = _entityType.FindProperty(nameof(User.ThemeId))!;
-        string avatarIdColumnType = themeIdProperty.GetColumnType();
         var foreignKey = themeIdProperty
             .GetContainingForeignKeys()
             .SingleOrDefault();
 
         Assert.NotNull(foreignKey);
         Assert.Equal(DeleteBehavior.SetNull, foreignKey.DeleteBehavior);
-        Assert.Equal("uuid", avatarIdColumnType);
+        Assert.Equal("uuid", themeIdProperty.GetColumnType());
+        Assert.True(themeIdProperty.IsColumnNullable());
     }
 
     [Fact]
@@ -351,7 +341,7 @@ public class UserMigrationsTests
     public void UserNameColumn()
     {
         var usernameProperty = _entityType.FindProperty(nameof(User.UserName))!;
-        Assert.Equal("character varying(30)", usernameProperty.GetColumnType());
+        Assert.Equal("character varying(40)", usernameProperty.GetColumnType());
         Assert.False(usernameProperty.IsColumnNullable());
     }
 

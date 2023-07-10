@@ -37,14 +37,14 @@ public class ThreadMigrationsTests
         var channelIdProperty = _entityType.FindProperty(
             nameof(Thread.ChannelId)
         )!;
-        string channelIdColumnType = channelIdProperty.GetColumnType();
         var foreignKey = channelIdProperty
             .GetContainingForeignKeys()
             .SingleOrDefault();
 
         Assert.NotNull(foreignKey);
         Assert.Equal(DeleteBehavior.Cascade, foreignKey.DeleteBehavior);
-        Assert.Equal("uuid", channelIdColumnType);
+        Assert.Equal("uuid", channelIdProperty.GetColumnType());
+        Assert.False(channelIdProperty.IsColumnNullable());
     }
 
     [Fact]
@@ -66,15 +66,14 @@ public class ThreadMigrationsTests
         var firstMessageIdProperty = _entityType.FindProperty(
             nameof(Thread.FirstMessageId)
         )!;
-        string firstMessageIdColumnType =
-            firstMessageIdProperty.GetColumnType();
         var foreignKey = firstMessageIdProperty
             .GetContainingForeignKeys()
             .SingleOrDefault();
 
         Assert.NotNull(foreignKey);
         Assert.Equal(DeleteBehavior.Cascade, foreignKey.DeleteBehavior);
-        Assert.Equal("uuid", firstMessageIdColumnType);
+        Assert.Equal("uuid", firstMessageIdProperty.GetColumnType());
+        Assert.False(firstMessageIdProperty.IsColumnNullable());
     }
 
     [Fact]
@@ -92,15 +91,14 @@ public class ThreadMigrationsTests
         var workspaceIdProperty = _entityType.FindProperty(
             nameof(Thread.WorkspaceId)
         )!;
-        string createdByIdPropertyColumnType =
-            workspaceIdProperty.GetColumnType();
         var foreignKey = workspaceIdProperty
             .GetContainingForeignKeys()
             .SingleOrDefault();
 
         Assert.NotNull(foreignKey);
         Assert.Equal(DeleteBehavior.Cascade, foreignKey.DeleteBehavior);
-        Assert.Equal("uuid", createdByIdPropertyColumnType);
+        Assert.Equal("uuid", workspaceIdProperty.GetColumnType());
+        Assert.False(workspaceIdProperty.IsColumnNullable());
     }
 
     [Fact]

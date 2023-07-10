@@ -41,15 +41,14 @@ public class DirectMessageGroupMemberMigrationsTests
         var directMessageGroupIdProperty = _entityType.FindProperty(
             nameof(DirectMessageGroupMember.DirectMessageGroupId)
         )!;
-        string directMessageGroupIdColumnType =
-            directMessageGroupIdProperty.GetColumnType();
         var foreignKey = directMessageGroupIdProperty
             .GetContainingForeignKeys()
             .SingleOrDefault();
 
         Assert.NotNull(foreignKey);
         Assert.Equal(DeleteBehavior.Cascade, foreignKey.DeleteBehavior);
-        Assert.Equal("uuid", directMessageGroupIdColumnType);
+        Assert.Equal("uuid", directMessageGroupIdProperty.GetColumnType());
+        Assert.False(directMessageGroupIdProperty.IsColumnNullable());
     }
 
     [Fact]
@@ -71,14 +70,14 @@ public class DirectMessageGroupMemberMigrationsTests
         var userIdProperty = _entityType.FindProperty(
             nameof(DirectMessageGroupMember.UserId)
         )!;
-        string userIdColumnType = userIdProperty.GetColumnType();
         var foreignKey = userIdProperty
             .GetContainingForeignKeys()
             .SingleOrDefault();
 
         Assert.NotNull(foreignKey);
         Assert.Equal(DeleteBehavior.Cascade, foreignKey.DeleteBehavior);
-        Assert.Equal("uuid", userIdColumnType);
+        Assert.Equal("uuid", userIdProperty.GetColumnType());
+        Assert.False(userIdProperty.IsColumnNullable());
     }
 
     [Fact]

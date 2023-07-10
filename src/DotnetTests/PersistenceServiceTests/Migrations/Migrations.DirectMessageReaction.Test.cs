@@ -38,18 +38,17 @@ public class DirectMessageReactionMigrationsTests
     [Fact]
     public void DirectMessageIdColumn()
     {
-        var channelMessageIdProperty = _entityType.FindProperty(
+        var directMessageIdProperty = _entityType.FindProperty(
             nameof(DirectMessageReaction.DirectMessageId)
         )!;
-        string channelMessageIdColumnType =
-            channelMessageIdProperty.GetColumnType();
-        var foreignKey = channelMessageIdProperty
+        var foreignKey = directMessageIdProperty
             .GetContainingForeignKeys()
             .SingleOrDefault();
 
         Assert.NotNull(foreignKey);
         Assert.Equal(DeleteBehavior.Cascade, foreignKey.DeleteBehavior);
-        Assert.Equal("uuid", channelMessageIdColumnType);
+        Assert.Equal("uuid", directMessageIdProperty.GetColumnType());
+        Assert.False(directMessageIdProperty.IsColumnNullable());
     }
 
     [Fact]
@@ -69,6 +68,7 @@ public class DirectMessageReactionMigrationsTests
             nameof(DirectMessageReaction.Emoji)
         )!;
         Assert.Equal(4, emojiProperty.GetMaxLength());
+        Assert.False(emojiProperty.IsColumnNullable());
     }
 
     [Fact]
@@ -77,14 +77,14 @@ public class DirectMessageReactionMigrationsTests
         var userIdProperty = _entityType.FindProperty(
             nameof(DirectMessageReaction.UserId)
         )!;
-        string userIdColumnType = userIdProperty.GetColumnType();
         var foreignKey = userIdProperty
             .GetContainingForeignKeys()
             .SingleOrDefault();
 
         Assert.NotNull(foreignKey);
         Assert.Equal(DeleteBehavior.Cascade, foreignKey.DeleteBehavior);
-        Assert.Equal("uuid", userIdColumnType);
+        Assert.Equal("uuid", userIdProperty.GetColumnType());
+        Assert.False(userIdProperty.IsColumnNullable());
     }
 
     [Fact]
@@ -99,23 +99,21 @@ public class DirectMessageReactionMigrationsTests
     public void Indexes()
     {
         var userIdProperty = _entityType.FindProperty(
-            nameof(DirectMessageNotification.UserId)
+            nameof(DirectMessageReaction.UserId)
         )!;
         Assert.NotNull(_entityType.FindIndex(userIdProperty));
         var directMessageIdUserIdIndex = _entityType.FindIndex(
             new List<IReadOnlyProperty>
             {
                 _entityType.FindProperty(
-                    nameof(DirectMessageNotification.DirectMessageId)
+                    nameof(DirectMessageReaction.DirectMessageId)
                 )!,
                 userIdProperty
             }
         );
         Assert.NotNull(directMessageIdUserIdIndex);
         var createdAtIndex = _entityType.FindIndex(
-            _entityType.FindProperty(
-                nameof(DirectMessageNotification.CreatedAt)
-            )!
+            _entityType.FindProperty(nameof(DirectMessageReaction.CreatedAt))!
         );
         Assert.NotNull(createdAtIndex);
     }

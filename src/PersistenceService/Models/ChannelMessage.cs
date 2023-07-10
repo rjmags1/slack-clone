@@ -1,4 +1,3 @@
-using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
@@ -23,7 +22,6 @@ public class ChannelMessage
     public Guid ChannelId { get; set; }
 
     [MaxLength(2500)]
-    [MinLength(1)]
 #pragma warning disable CS8618
     public string Content { get; set; }
 
@@ -34,8 +32,7 @@ public class ChannelMessage
     [Column(TypeName = "timestamp")]
     public DateTime CreatedAt { get; set; }
 
-    [DefaultValue(false)]
-    public bool Deleted { get; set; } = false;
+    public bool Deleted { get; set; }
 
     public bool? Draft { get; set; }
 
