@@ -37,8 +37,7 @@ public class ChannelMigrationsTests
         var allowThreadsProperty = _entityType.FindProperty(
             nameof(Channel.AllowThreads)
         )!;
-        Assert.Equal("boolean", allowThreadsProperty.GetColumnType());
-        Assert.False(allowThreadsProperty.IsColumnNullable());
+        Assert.Equal("true", allowThreadsProperty.GetDefaultValueSql());
     }
 
     [Fact]
@@ -47,8 +46,7 @@ public class ChannelMigrationsTests
         var allowedChannelPostersMask = _entityType.FindProperty(
             nameof(Channel.AllowedChannelPostersMask)
         )!;
-        Assert.Equal("integer", allowedChannelPostersMask.GetColumnType());
-        Assert.False(allowedChannelPostersMask.IsColumnNullable());
+        Assert.Equal("1", allowedChannelPostersMask.GetDefaultValueSql());
     }
 
     [Fact]
@@ -57,14 +55,14 @@ public class ChannelMigrationsTests
         var avatarIdProperty = _entityType.FindProperty(
             nameof(Channel.AvatarId)
         )!;
-        string avatarIdColumnType = avatarIdProperty.GetColumnType();
         var foreignKey = avatarIdProperty
             .GetContainingForeignKeys()
             .SingleOrDefault();
 
         Assert.NotNull(foreignKey);
         Assert.Equal(DeleteBehavior.SetNull, foreignKey.DeleteBehavior);
-        Assert.Equal("uuid", avatarIdColumnType);
+        Assert.Equal("uuid", avatarIdProperty.GetColumnType());
+        Assert.True(avatarIdProperty.IsColumnNullable());
     }
 
     [Fact]
@@ -96,15 +94,14 @@ public class ChannelMigrationsTests
         var createdByIdProperty = _entityType.FindProperty(
             nameof(Channel.CreatedById)
         )!;
-        string createdByIdPropertyColumnType =
-            createdByIdProperty.GetColumnType();
         var foreignKey = createdByIdProperty
             .GetContainingForeignKeys()
             .SingleOrDefault();
 
         Assert.NotNull(foreignKey);
         Assert.Equal(DeleteBehavior.Cascade, foreignKey.DeleteBehavior);
-        Assert.Equal("uuid", createdByIdPropertyColumnType);
+        Assert.Equal("uuid", createdByIdProperty.GetColumnType());
+        Assert.False(createdByIdProperty.IsColumnNullable());
     }
 
     [Fact]
@@ -117,7 +114,7 @@ public class ChannelMigrationsTests
             "character varying(120)",
             descriptionColumnProperty.GetColumnType()
         );
-        Assert.False(descriptionColumnProperty.IsColumnNullable());
+        Assert.True(descriptionColumnProperty.IsColumnNullable());
     }
 
     [Fact]
@@ -148,8 +145,7 @@ public class ChannelMigrationsTests
         var privateColumnProperty = _entityType.FindProperty(
             nameof(Channel.Private)
         )!;
-        Assert.Equal("boolean", privateColumnProperty.GetColumnType());
-        Assert.False(privateColumnProperty.IsColumnNullable());
+        Assert.Equal("false", privateColumnProperty.GetDefaultValueSql());
     }
 
     [Fact]
@@ -162,7 +158,7 @@ public class ChannelMigrationsTests
             "character varying(40)",
             topicColumnProperty.GetColumnType()
         );
-        Assert.False(topicColumnProperty.IsColumnNullable());
+        Assert.True(topicColumnProperty.IsColumnNullable());
     }
 
     [Fact]
@@ -171,15 +167,13 @@ public class ChannelMigrationsTests
         var workspaceIdProperty = _entityType.FindProperty(
             nameof(Channel.WorkspaceId)
         )!;
-        string createdByIdPropertyColumnType =
-            workspaceIdProperty.GetColumnType();
         var foreignKey = workspaceIdProperty
             .GetContainingForeignKeys()
             .SingleOrDefault();
 
         Assert.NotNull(foreignKey);
         Assert.Equal(DeleteBehavior.Cascade, foreignKey.DeleteBehavior);
-        Assert.Equal("uuid", createdByIdPropertyColumnType);
+        Assert.Equal("uuid", workspaceIdProperty.GetColumnType());
     }
 
     [Fact]

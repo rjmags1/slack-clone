@@ -38,18 +38,17 @@ public class DirectMessageReplyMigrationsTests
     [Fact]
     public void DirectMessageIdColumn()
     {
-        var channelMessageIdProperty = _entityType.FindProperty(
+        var directMessageIdProperty = _entityType.FindProperty(
             nameof(DirectMessageReply.DirectMessageId)
         )!;
-        string channelMessageIdColumnType =
-            channelMessageIdProperty.GetColumnType();
-        var foreignKey = channelMessageIdProperty
+        var foreignKey = directMessageIdProperty
             .GetContainingForeignKeys()
             .SingleOrDefault();
 
         Assert.NotNull(foreignKey);
         Assert.Equal(DeleteBehavior.Cascade, foreignKey.DeleteBehavior);
-        Assert.Equal("uuid", channelMessageIdColumnType);
+        Assert.Equal("uuid", directMessageIdProperty.GetColumnType());
+        Assert.False(directMessageIdProperty.IsColumnNullable());
     }
 
     [Fact]
@@ -58,15 +57,14 @@ public class DirectMessageReplyMigrationsTests
         var messageRepliedToIdProperty = _entityType.FindProperty(
             nameof(DirectMessageReply.MessageRepliedToId)
         )!;
-        string messageRepliedToIdColumnType =
-            messageRepliedToIdProperty.GetColumnType();
         var foreignKey = messageRepliedToIdProperty
             .GetContainingForeignKeys()
             .SingleOrDefault();
 
         Assert.NotNull(foreignKey);
         Assert.Equal(DeleteBehavior.Cascade, foreignKey.DeleteBehavior);
-        Assert.Equal("uuid", messageRepliedToIdColumnType);
+        Assert.Equal("uuid", messageRepliedToIdProperty.GetColumnType());
+        Assert.False(messageRepliedToIdProperty.IsColumnNullable());
     }
 
     [Fact]
@@ -75,14 +73,14 @@ public class DirectMessageReplyMigrationsTests
         var repliedToIdProperty = _entityType.FindProperty(
             nameof(DirectMessageReply.RepliedToId)
         )!;
-        string repliedToIdColumnType = repliedToIdProperty.GetColumnType();
         var foreignKey = repliedToIdProperty
             .GetContainingForeignKeys()
             .SingleOrDefault();
 
         Assert.NotNull(foreignKey);
         Assert.Equal(DeleteBehavior.Cascade, foreignKey.DeleteBehavior);
-        Assert.Equal("uuid", repliedToIdColumnType);
+        Assert.Equal("uuid", repliedToIdProperty.GetColumnType());
+        Assert.False(repliedToIdProperty.IsColumnNullable());
     }
 
     [Fact]
@@ -91,14 +89,14 @@ public class DirectMessageReplyMigrationsTests
         var replierIdProperty = _entityType.FindProperty(
             nameof(DirectMessageReply.ReplierId)
         )!;
-        string replierIdColumnType = replierIdProperty.GetColumnType();
         var foreignKey = replierIdProperty
             .GetContainingForeignKeys()
             .SingleOrDefault();
 
         Assert.NotNull(foreignKey);
         Assert.Equal(DeleteBehavior.Cascade, foreignKey.DeleteBehavior);
-        Assert.Equal("uuid", replierIdColumnType);
+        Assert.Equal("uuid", replierIdProperty.GetColumnType());
+        Assert.False(replierIdProperty.IsColumnNullable());
     }
 
     [Fact]

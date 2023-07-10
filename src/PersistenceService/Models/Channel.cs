@@ -35,7 +35,7 @@ public class Channel
     public Guid ConcurrencyStamp { get; set; }
 
     [MaxLength(120)]
-    public string Description { get; set; } = "";
+    public string? Description { get; set; }
 #pragma warning restore CS8618
 
     public ICollection<ChannelMember> ChannelMembers { get; } =
@@ -52,12 +52,11 @@ public class Channel
     [DefaultValue(1)]
     public int NumMembers { get; set; }
 
-    [DefaultValue(false)]
-    public bool Private { get; set; }
+    public bool Private { get; set; } = false;
 
 #pragma warning disable CS8618
     [MaxLength(40)]
-    public string Topic { get; set; } = "";
+    public string? Topic { get; set; }
 
     [DeleteBehavior(DeleteBehavior.Cascade)]
     public Workspace Workspace { get; set; }

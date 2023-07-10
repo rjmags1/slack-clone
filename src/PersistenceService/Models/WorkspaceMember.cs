@@ -1,4 +1,3 @@
-using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
@@ -12,7 +11,6 @@ public class WorkspaceMember
 {
     public Guid Id { get; set; }
 
-    [DefaultValue(false)]
     public bool Admin { get; set; } = false;
 
     [DeleteBehavior(DeleteBehavior.SetNull)]
@@ -34,7 +32,6 @@ public class WorkspaceMember
 
     public TimeOnly? NotificationsAllTimeEnd { get; set; }
 
-    [DefaultValue(0)]
     public int NotificationSound { get; set; } = 0;
 
 #pragma warning disable CS8618
@@ -45,7 +42,6 @@ public class WorkspaceMember
     [Column(TypeName = "timestamp")]
     public DateTime? OnlineStatusUntil { get; set; }
 
-    [DefaultValue(false)]
     public bool Owner { get; set; } = false;
 
     [DeleteBehavior(DeleteBehavior.SetNull)]

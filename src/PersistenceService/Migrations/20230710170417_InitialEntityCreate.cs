@@ -113,19 +113,19 @@ namespace PersistenceService.Migrations
                     Id = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "gen_random_uuid()"),
                     AvatarId = table.Column<Guid>(type: "uuid", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "timestamp", nullable: false, defaultValueSql: "now()"),
-                    Deleted = table.Column<bool>(type: "boolean", nullable: false),
+                    Deleted = table.Column<bool>(type: "boolean", nullable: false, defaultValueSql: "false"),
                     FirstName = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
                     LastName = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
-                    UserNotificationsPreferencesMask = table.Column<int>(type: "integer", nullable: false),
+                    UserNotificationsPreferencesMask = table.Column<int>(type: "integer", nullable: false, defaultValueSql: "0"),
                     NotificationsAllowStartTime = table.Column<TimeOnly>(type: "time without time zone", nullable: true),
                     NotificationsAllowEndTime = table.Column<TimeOnly>(type: "time without time zone", nullable: true),
                     NotificationsPauseUntil = table.Column<TimeOnly>(type: "time without time zone", nullable: true),
-                    NotificationSound = table.Column<int>(type: "integer", nullable: false),
+                    NotificationSound = table.Column<int>(type: "integer", nullable: false, defaultValueSql: "0"),
                     OnlineStatus = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: true),
                     OnlineStatusUntil = table.Column<DateTime>(type: "timestamp", nullable: true),
                     ThemeId = table.Column<Guid>(type: "uuid", nullable: true),
                     Timezone = table.Column<string>(type: "character varying(40)", maxLength: 40, nullable: false),
-                    UserName = table.Column<string>(type: "character varying(30)", maxLength: 30, nullable: false),
+                    UserName = table.Column<string>(type: "character varying(40)", maxLength: 40, nullable: false),
                     NormalizedUserName = table.Column<string>(type: "character varying(30)", maxLength: 30, nullable: false),
                     Email = table.Column<string>(type: "character varying(320)", maxLength: 320, nullable: false),
                     NormalizedEmail = table.Column<string>(type: "character varying(320)", maxLength: 320, nullable: false),
@@ -205,11 +205,11 @@ namespace PersistenceService.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "gen_random_uuid()"),
-                    Admin = table.Column<bool>(type: "boolean", nullable: false),
+                    Admin = table.Column<bool>(type: "boolean", nullable: false, defaultValueSql: "false"),
                     ChannelId = table.Column<Guid>(type: "uuid", nullable: false),
                     EnableNotifications = table.Column<bool>(type: "boolean", nullable: true, defaultValueSql: "true"),
                     LastViewedAt = table.Column<DateTime>(type: "timestamp", nullable: true),
-                    Starred = table.Column<bool>(type: "boolean", nullable: false),
+                    Starred = table.Column<bool>(type: "boolean", nullable: false, defaultValueSql: "false"),
                     UserId = table.Column<Guid>(type: "uuid", nullable: false)
                 },
                 constraints: table =>
@@ -229,7 +229,7 @@ namespace PersistenceService.Migrations
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "gen_random_uuid()"),
                     ChannelId = table.Column<Guid>(type: "uuid", nullable: false),
-                    ChannelLaterFlagStatus = table.Column<int>(type: "integer", nullable: true, defaultValueSql: "1"),
+                    ChannelLaterFlagStatus = table.Column<int>(type: "integer", nullable: false, defaultValueSql: "1"),
                     ChannelMessageId = table.Column<Guid>(type: "uuid", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "timestamp", nullable: false, defaultValueSql: "now()"),
                     UserId = table.Column<Guid>(type: "uuid", nullable: false),
@@ -281,7 +281,7 @@ namespace PersistenceService.Migrations
                     ChannelMessageId = table.Column<Guid>(type: "uuid", nullable: false),
                     ChannelMessageNotificationType = table.Column<int>(type: "integer", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "timestamp", nullable: false, defaultValueSql: "now()"),
-                    Seen = table.Column<bool>(type: "boolean", nullable: false),
+                    Seen = table.Column<bool>(type: "boolean", nullable: false, defaultValueSql: "false"),
                     UserId = table.Column<Guid>(type: "uuid", nullable: false)
                 },
                 constraints: table =>
@@ -353,7 +353,7 @@ namespace PersistenceService.Migrations
                     Content = table.Column<string>(type: "character varying(2500)", maxLength: 2500, nullable: false),
                     ConcurrencyStamp = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "gen_random_uuid()"),
                     CreatedAt = table.Column<DateTime>(type: "timestamp", nullable: false, defaultValueSql: "now()"),
-                    Deleted = table.Column<bool>(type: "boolean", nullable: false),
+                    Deleted = table.Column<bool>(type: "boolean", nullable: false, defaultValueSql: "false"),
                     Draft = table.Column<bool>(type: "boolean", nullable: true, defaultValueSql: "true"),
                     LastEdit = table.Column<DateTime>(type: "timestamp", nullable: true),
                     SentAt = table.Column<DateTime>(type: "timestamp", nullable: true),
@@ -376,17 +376,17 @@ namespace PersistenceService.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "gen_random_uuid()"),
-                    AllowThreads = table.Column<bool>(type: "boolean", nullable: false),
+                    AllowThreads = table.Column<bool>(type: "boolean", nullable: false, defaultValueSql: "true"),
                     AvatarId = table.Column<Guid>(type: "uuid", nullable: true),
-                    AllowedChannelPostersMask = table.Column<int>(type: "integer", nullable: false),
+                    AllowedChannelPostersMask = table.Column<int>(type: "integer", nullable: false, defaultValueSql: "1"),
                     CreatedAt = table.Column<DateTime>(type: "timestamp", nullable: false, defaultValueSql: "now()"),
                     CreatedById = table.Column<Guid>(type: "uuid", nullable: false),
                     ConcurrencyStamp = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "gen_random_uuid()"),
-                    Description = table.Column<string>(type: "character varying(120)", maxLength: 120, nullable: false),
+                    Description = table.Column<string>(type: "character varying(120)", maxLength: 120, nullable: true),
                     Name = table.Column<string>(type: "character varying(40)", maxLength: 40, nullable: false),
                     NumMembers = table.Column<int>(type: "integer", nullable: false, defaultValueSql: "1"),
-                    Private = table.Column<bool>(type: "boolean", nullable: false),
-                    Topic = table.Column<string>(type: "character varying(40)", maxLength: 40, nullable: false),
+                    Private = table.Column<bool>(type: "boolean", nullable: false, defaultValueSql: "false"),
+                    Topic = table.Column<string>(type: "character varying(40)", maxLength: 40, nullable: true),
                     WorkspaceId = table.Column<Guid>(type: "uuid", nullable: false)
                 },
                 constraints: table =>
@@ -427,7 +427,7 @@ namespace PersistenceService.Migrations
                     Id = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "gen_random_uuid()"),
                     ConcurrencyStamp = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "gen_random_uuid()"),
                     CreatedAt = table.Column<DateTime>(type: "timestamp", nullable: false, defaultValueSql: "now()"),
-                    Size = table.Column<int>(type: "integer", nullable: false),
+                    Size = table.Column<int>(type: "integer", nullable: false, defaultValueSql: "2"),
                     WorkspaceId = table.Column<Guid>(type: "uuid", nullable: false)
                 },
                 constraints: table =>
@@ -443,7 +443,7 @@ namespace PersistenceService.Migrations
                     ConcurrencyStamp = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "gen_random_uuid()"),
                     Content = table.Column<string>(type: "character varying(2500)", maxLength: 2500, nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "timestamp", nullable: false, defaultValueSql: "now()"),
-                    Deleted = table.Column<bool>(type: "boolean", nullable: false),
+                    Deleted = table.Column<bool>(type: "boolean", nullable: false, defaultValueSql: "false"),
                     DirectMessageGroupId = table.Column<Guid>(type: "uuid", nullable: false),
                     Draft = table.Column<bool>(type: "boolean", nullable: true, defaultValueSql: "true"),
                     LastEdit = table.Column<DateTime>(type: "timestamp", nullable: true),
@@ -508,7 +508,7 @@ namespace PersistenceService.Migrations
                     CreatedAt = table.Column<DateTime>(type: "timestamp", nullable: false, defaultValueSql: "now()"),
                     DirectMessageId = table.Column<Guid>(type: "uuid", nullable: false),
                     DirectMessageNotificationType = table.Column<int>(type: "integer", nullable: false),
-                    Seen = table.Column<bool>(type: "boolean", nullable: false),
+                    Seen = table.Column<bool>(type: "boolean", nullable: false, defaultValueSql: "false"),
                     UserId = table.Column<Guid>(type: "uuid", nullable: false)
                 },
                 constraints: table =>
@@ -852,16 +852,16 @@ namespace PersistenceService.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "gen_random_uuid()"),
-                    Admin = table.Column<bool>(type: "boolean", nullable: false),
+                    Admin = table.Column<bool>(type: "boolean", nullable: false, defaultValueSql: "false"),
                     WorkspaceAdminPermissionsId = table.Column<Guid>(type: "uuid", nullable: true),
                     AvatarId = table.Column<Guid>(type: "uuid", nullable: true),
                     JoinedAt = table.Column<DateTime>(type: "timestamp", nullable: false, defaultValueSql: "now()"),
                     NotificationsAllowTimeStart = table.Column<TimeOnly>(type: "time without time zone", nullable: true),
                     NotificationsAllTimeEnd = table.Column<TimeOnly>(type: "time without time zone", nullable: true),
-                    NotificationSound = table.Column<int>(type: "integer", nullable: false),
+                    NotificationSound = table.Column<int>(type: "integer", nullable: false, defaultValueSql: "0"),
                     OnlineStatus = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: true),
                     OnlineStatusUntil = table.Column<DateTime>(type: "timestamp", nullable: true),
-                    Owner = table.Column<bool>(type: "boolean", nullable: false),
+                    Owner = table.Column<bool>(type: "boolean", nullable: false, defaultValueSql: "false"),
                     ThemeId = table.Column<Guid>(type: "uuid", nullable: true),
                     Title = table.Column<string>(type: "character varying(80)", maxLength: 80, nullable: false),
                     UserId = table.Column<Guid>(type: "uuid", nullable: false),

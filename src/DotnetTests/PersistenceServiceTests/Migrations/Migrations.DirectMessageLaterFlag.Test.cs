@@ -41,14 +41,14 @@ public class DirectMessageLaterFlagMigrationsTests
         var directMessageGroupId = _entityType.FindProperty(
             nameof(DirectMessageLaterFlag.DirectMessageGroupId)
         )!;
-        string columnType = directMessageGroupId.GetColumnType();
         var foreignKey = directMessageGroupId
             .GetContainingForeignKeys()
             .SingleOrDefault();
 
         Assert.NotNull(foreignKey);
         Assert.Equal(DeleteBehavior.Cascade, foreignKey.DeleteBehavior);
-        Assert.Equal("uuid", columnType);
+        Assert.Equal("uuid", directMessageGroupId.GetColumnType());
+        Assert.False(directMessageGroupId.IsColumnNullable());
     }
 
     [Fact]
@@ -66,14 +66,14 @@ public class DirectMessageLaterFlagMigrationsTests
         var directMessageIdProperty = _entityType.FindProperty(
             nameof(DirectMessageLaterFlag.DirectMessageId)
         )!;
-        string columnType = directMessageIdProperty.GetColumnType();
         var foreignKey = directMessageIdProperty
             .GetContainingForeignKeys()
             .SingleOrDefault();
 
         Assert.NotNull(foreignKey);
         Assert.Equal(DeleteBehavior.Cascade, foreignKey.DeleteBehavior);
-        Assert.Equal("uuid", columnType);
+        Assert.Equal("uuid", directMessageIdProperty.GetColumnType());
+        Assert.False(directMessageIdProperty.IsColumnNullable());
     }
 
     [Fact]
@@ -82,14 +82,14 @@ public class DirectMessageLaterFlagMigrationsTests
         var userIdProperty = _entityType.FindProperty(
             nameof(DirectMessageLaterFlag.UserId)
         )!;
-        string createdByIdPropertyColumnType = userIdProperty.GetColumnType();
         var foreignKey = userIdProperty
             .GetContainingForeignKeys()
             .SingleOrDefault();
 
         Assert.NotNull(foreignKey);
         Assert.Equal(DeleteBehavior.Cascade, foreignKey.DeleteBehavior);
-        Assert.Equal("uuid", createdByIdPropertyColumnType);
+        Assert.Equal("uuid", userIdProperty.GetColumnType());
+        Assert.False(userIdProperty.IsColumnNullable());
     }
 
     [Fact]
@@ -98,15 +98,14 @@ public class DirectMessageLaterFlagMigrationsTests
         var workspaceIdProperty = _entityType.FindProperty(
             nameof(DirectMessageLaterFlag.WorkspaceId)
         )!;
-        string workspaceIdPropertyColumnType =
-            workspaceIdProperty.GetColumnType();
         var foreignKey = workspaceIdProperty
             .GetContainingForeignKeys()
             .SingleOrDefault();
 
         Assert.NotNull(foreignKey);
         Assert.Equal(DeleteBehavior.Cascade, foreignKey.DeleteBehavior);
-        Assert.Equal("uuid", workspaceIdPropertyColumnType);
+        Assert.Equal("uuid", workspaceIdProperty.GetColumnType());
+        Assert.False(workspaceIdProperty.IsColumnNullable());
     }
 
     [Fact]

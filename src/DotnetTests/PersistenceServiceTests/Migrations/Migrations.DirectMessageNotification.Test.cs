@@ -41,14 +41,14 @@ public class DirectMessageNotificationMigrationsTests
         var directMessageIdProperty = _entityType.FindProperty(
             nameof(DirectMessageNotification.DirectMessageId)
         )!;
-        string columnType = directMessageIdProperty.GetColumnType();
         var foreignKey = directMessageIdProperty
             .GetContainingForeignKeys()
             .SingleOrDefault();
 
         Assert.NotNull(foreignKey);
         Assert.Equal(DeleteBehavior.Cascade, foreignKey.DeleteBehavior);
-        Assert.Equal("uuid", columnType);
+        Assert.Equal("uuid", directMessageIdProperty.GetColumnType());
+        Assert.False(directMessageIdProperty.IsColumnNullable());
     }
 
     [Fact]
@@ -77,7 +77,7 @@ public class DirectMessageNotificationMigrationsTests
         var seenProperty = _entityType.FindProperty(
             nameof(DirectMessageNotification.Seen)
         )!;
-        Assert.Equal(false, seenProperty.GetDefaultValue());
+        Assert.Equal("false", seenProperty.GetDefaultValueSql());
     }
 
     [Fact]
@@ -86,14 +86,14 @@ public class DirectMessageNotificationMigrationsTests
         var userIdProperty = _entityType.FindProperty(
             nameof(DirectMessageNotification.UserId)
         )!;
-        string userIdColumnType = userIdProperty.GetColumnType();
         var foreignKey = userIdProperty
             .GetContainingForeignKeys()
             .SingleOrDefault();
 
         Assert.NotNull(foreignKey);
         Assert.Equal(DeleteBehavior.Cascade, foreignKey.DeleteBehavior);
-        Assert.Equal("uuid", userIdColumnType);
+        Assert.Equal("uuid", userIdProperty.GetColumnType());
+        Assert.False(userIdProperty.IsColumnNullable());
     }
 
     [Fact]

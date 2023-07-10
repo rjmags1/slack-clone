@@ -41,15 +41,14 @@ public class DirectMessageMentionMigrationsTests
         var directMessageIdProperty = _entityType.FindProperty(
             nameof(DirectMessageMention.DirectMessageId)
         )!;
-        string directMessageIdColumnType =
-            directMessageIdProperty.GetColumnType();
         var foreignKey = directMessageIdProperty
             .GetContainingForeignKeys()
             .SingleOrDefault();
 
         Assert.NotNull(foreignKey);
         Assert.Equal(DeleteBehavior.Cascade, foreignKey.DeleteBehavior);
-        Assert.Equal("uuid", directMessageIdColumnType);
+        Assert.Equal("uuid", directMessageIdProperty.GetColumnType());
+        Assert.False(directMessageIdProperty.IsColumnNullable());
     }
 
     [Fact]
@@ -68,14 +67,14 @@ public class DirectMessageMentionMigrationsTests
         var mentionedIdProperty = _entityType.FindProperty(
             nameof(DirectMessageMention.MentionedId)
         )!;
-        string mentionedIdColumnType = mentionedIdProperty.GetColumnType();
         var foreignKey = mentionedIdProperty
             .GetContainingForeignKeys()
             .SingleOrDefault();
 
         Assert.NotNull(foreignKey);
         Assert.Equal(DeleteBehavior.Cascade, foreignKey.DeleteBehavior);
-        Assert.Equal("uuid", mentionedIdColumnType);
+        Assert.Equal("uuid", mentionedIdProperty.GetColumnType());
+        Assert.False(mentionedIdProperty.IsColumnNullable());
     }
 
     [Fact]
@@ -84,21 +83,21 @@ public class DirectMessageMentionMigrationsTests
         var mentionerIdProperty = _entityType.FindProperty(
             nameof(DirectMessageMention.MentionerId)
         )!;
-        string mentionerIdColumnType = mentionerIdProperty.GetColumnType();
         var foreignKey = mentionerIdProperty
             .GetContainingForeignKeys()
             .SingleOrDefault();
 
         Assert.NotNull(foreignKey);
         Assert.Equal(DeleteBehavior.Cascade, foreignKey.DeleteBehavior);
-        Assert.Equal("uuid", mentionerIdColumnType);
+        Assert.Equal("uuid", mentionerIdProperty.GetColumnType());
+        Assert.False(mentionerIdProperty.IsColumnNullable());
     }
 
     [Fact]
     public async Task DirectMessageMentionDDLMigration_ShouldHaveHappened()
     {
         int numDirectMessageMentionRows =
-            await _dbContext.DirectMessageLaterFlags.CountAsync();
+            await _dbContext.DirectMessageMentions.CountAsync();
         Assert.True(numDirectMessageMentionRows >= 0);
     }
 

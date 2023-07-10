@@ -41,15 +41,14 @@ public class ChannelMessageNotificationMigrationsTests
         var channelMessageIdProperty = _entityType.FindProperty(
             nameof(ChannelMessageNotification.ChannelMessageId)
         )!;
-        string channelMessageIdColumnType =
-            channelMessageIdProperty.GetColumnType();
         var foreignKey = channelMessageIdProperty
             .GetContainingForeignKeys()
             .SingleOrDefault();
 
         Assert.NotNull(foreignKey);
         Assert.Equal(DeleteBehavior.Cascade, foreignKey.DeleteBehavior);
-        Assert.Equal("uuid", channelMessageIdColumnType);
+        Assert.Equal("uuid", channelMessageIdProperty.GetColumnType());
+        Assert.False(channelMessageIdProperty.IsColumnNullable());
     }
 
     [Fact]
@@ -78,7 +77,7 @@ public class ChannelMessageNotificationMigrationsTests
         var seenProperty = _entityType.FindProperty(
             nameof(ChannelMessageNotification.Seen)
         )!;
-        Assert.Equal(false, seenProperty.GetDefaultValue());
+        Assert.Equal("false", seenProperty.GetDefaultValueSql());
     }
 
     [Fact]
@@ -87,14 +86,14 @@ public class ChannelMessageNotificationMigrationsTests
         var userIdProperty = _entityType.FindProperty(
             nameof(ChannelMessageNotification.UserId)
         )!;
-        string userIdColumnType = userIdProperty.GetColumnType();
         var foreignKey = userIdProperty
             .GetContainingForeignKeys()
             .SingleOrDefault();
 
         Assert.NotNull(foreignKey);
         Assert.Equal(DeleteBehavior.Cascade, foreignKey.DeleteBehavior);
-        Assert.Equal("uuid", userIdColumnType);
+        Assert.Equal("uuid", userIdProperty.GetColumnType());
+        Assert.False(userIdProperty.IsColumnNullable());
     }
 
     [Fact]

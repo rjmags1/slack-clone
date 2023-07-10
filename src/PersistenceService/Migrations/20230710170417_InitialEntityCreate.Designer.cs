@@ -12,7 +12,7 @@ using PersistenceService.Data.ApplicationDb;
 namespace PersistenceService.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20230709230300_InitialEntityCreate")]
+    [Migration("20230710170417_InitialEntityCreate")]
     partial class InitialEntityCreate
     {
         /// <inheritdoc />
@@ -164,10 +164,14 @@ namespace PersistenceService.Migrations
                         .HasDefaultValueSql("gen_random_uuid()");
 
                     b.Property<bool>("AllowThreads")
-                        .HasColumnType("boolean");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValueSql("true");
 
                     b.Property<int>("AllowedChannelPostersMask")
-                        .HasColumnType("integer");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValueSql("1");
 
                     b.Property<Guid?>("AvatarId")
                         .HasColumnType("uuid");
@@ -187,7 +191,6 @@ namespace PersistenceService.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<string>("Description")
-                        .IsRequired()
                         .HasMaxLength(120)
                         .HasColumnType("character varying(120)");
 
@@ -202,10 +205,11 @@ namespace PersistenceService.Migrations
                         .HasDefaultValueSql("1");
 
                     b.Property<bool>("Private")
-                        .HasColumnType("boolean");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValueSql("false");
 
                     b.Property<string>("Topic")
-                        .IsRequired()
                         .HasMaxLength(40)
                         .HasColumnType("character varying(40)");
 
@@ -280,7 +284,9 @@ namespace PersistenceService.Migrations
                         .HasDefaultValueSql("gen_random_uuid()");
 
                     b.Property<bool>("Admin")
-                        .HasColumnType("boolean");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValueSql("false");
 
                     b.Property<Guid>("ChannelId")
                         .HasColumnType("uuid");
@@ -294,7 +300,9 @@ namespace PersistenceService.Migrations
                         .HasColumnType("timestamp");
 
                     b.Property<bool>("Starred")
-                        .HasColumnType("boolean");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValueSql("false");
 
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid");
@@ -336,7 +344,9 @@ namespace PersistenceService.Migrations
                         .HasDefaultValueSql("now()");
 
                     b.Property<bool>("Deleted")
-                        .HasColumnType("boolean");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValueSql("false");
 
                     b.Property<bool?>("Draft")
                         .ValueGeneratedOnAdd()
@@ -382,7 +392,7 @@ namespace PersistenceService.Migrations
                     b.Property<Guid>("ChannelId")
                         .HasColumnType("uuid");
 
-                    b.Property<int?>("ChannelLaterFlagStatus")
+                    b.Property<int>("ChannelLaterFlagStatus")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer")
                         .HasDefaultValueSql("1");
@@ -469,7 +479,9 @@ namespace PersistenceService.Migrations
                         .HasDefaultValueSql("now()");
 
                     b.Property<bool>("Seen")
-                        .HasColumnType("boolean");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValueSql("false");
 
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid");
@@ -582,7 +594,9 @@ namespace PersistenceService.Migrations
                         .HasDefaultValueSql("now()");
 
                     b.Property<bool>("Deleted")
-                        .HasColumnType("boolean");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValueSql("false");
 
                     b.Property<Guid>("DirectMessageGroupId")
                         .HasColumnType("uuid");
@@ -635,7 +649,9 @@ namespace PersistenceService.Migrations
                         .HasDefaultValueSql("now()");
 
                     b.Property<int>("Size")
-                        .HasColumnType("integer");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValueSql("2");
 
                     b.Property<Guid>("WorkspaceId")
                         .HasColumnType("uuid");
@@ -770,7 +786,9 @@ namespace PersistenceService.Migrations
                         .HasColumnType("integer");
 
                     b.Property<bool>("Seen")
-                        .HasColumnType("boolean");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValueSql("false");
 
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid");
@@ -1010,7 +1028,9 @@ namespace PersistenceService.Migrations
                         .HasDefaultValueSql("now()");
 
                     b.Property<bool>("Deleted")
-                        .HasColumnType("boolean");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValueSql("false");
 
                     b.Property<string>("Email")
                         .IsRequired()
@@ -1047,7 +1067,9 @@ namespace PersistenceService.Migrations
                         .HasColumnType("character varying(30)");
 
                     b.Property<int>("NotificationSound")
-                        .HasColumnType("integer");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValueSql("0");
 
                     b.Property<TimeOnly?>("NotificationsAllowEndTime")
                         .HasColumnType("time without time zone");
@@ -1095,11 +1117,13 @@ namespace PersistenceService.Migrations
 
                     b.Property<string>("UserName")
                         .IsRequired()
-                        .HasMaxLength(30)
-                        .HasColumnType("character varying(30)");
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
 
                     b.Property<int>("UserNotificationsPreferencesMask")
-                        .HasColumnType("integer");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValueSql("0");
 
                     b.HasKey("Id");
 
@@ -1245,7 +1269,9 @@ namespace PersistenceService.Migrations
                         .HasDefaultValueSql("gen_random_uuid()");
 
                     b.Property<bool>("Admin")
-                        .HasColumnType("boolean");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValueSql("false");
 
                     b.Property<Guid?>("AvatarId")
                         .HasColumnType("uuid");
@@ -1256,7 +1282,9 @@ namespace PersistenceService.Migrations
                         .HasDefaultValueSql("now()");
 
                     b.Property<int>("NotificationSound")
-                        .HasColumnType("integer");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValueSql("0");
 
                     b.Property<TimeOnly?>("NotificationsAllTimeEnd")
                         .HasColumnType("time without time zone");
@@ -1272,7 +1300,9 @@ namespace PersistenceService.Migrations
                         .HasColumnType("timestamp");
 
                     b.Property<bool>("Owner")
-                        .HasColumnType("boolean");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValueSql("false");
 
                     b.Property<Guid?>("ThemeId")
                         .HasColumnType("uuid");

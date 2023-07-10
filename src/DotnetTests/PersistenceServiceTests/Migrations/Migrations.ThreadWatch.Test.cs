@@ -19,19 +19,32 @@ public class ThreadWatchMigrationsTests
     }
 
     [Fact]
+    public void IdColumn()
+    {
+        var idProperty = _entityType.FindProperty(nameof(ThreadWatch.Id))!;
+        string defaultValueSql = idProperty.GetDefaultValueSql()!;
+        Assert.Equal("gen_random_uuid()", defaultValueSql);
+        string idColumnType = idProperty.GetColumnType();
+        var idColumnNullable = idProperty.IsColumnNullable();
+        Assert.Equal("uuid", idColumnType);
+        Assert.False(idColumnNullable);
+        Assert.True(idProperty.IsPrimaryKey());
+    }
+
+    [Fact]
     public void ThreadIdColumn()
     {
         var threadIdProperty = _entityType.FindProperty(
             nameof(ThreadWatch.ThreadId)
         )!;
-        string channelIdColumnType = threadIdProperty.GetColumnType();
         var foreignKey = threadIdProperty
             .GetContainingForeignKeys()
             .SingleOrDefault();
 
         Assert.NotNull(foreignKey);
         Assert.Equal(DeleteBehavior.Cascade, foreignKey.DeleteBehavior);
-        Assert.Equal("uuid", channelIdColumnType);
+        Assert.Equal("uuid", threadIdProperty.GetColumnType());
+        Assert.False(threadIdProperty.IsColumnNullable());
     }
 
     [Fact]
@@ -40,14 +53,14 @@ public class ThreadWatchMigrationsTests
         var userIdProperty = _entityType.FindProperty(
             nameof(ThreadWatch.UserId)
         )!;
-        string channelIdColumnType = userIdProperty.GetColumnType();
         var foreignKey = userIdProperty
             .GetContainingForeignKeys()
             .SingleOrDefault();
 
         Assert.NotNull(foreignKey);
         Assert.Equal(DeleteBehavior.Cascade, foreignKey.DeleteBehavior);
-        Assert.Equal("uuid", channelIdColumnType);
+        Assert.Equal("uuid", userIdProperty.GetColumnType());
+        Assert.False(userIdProperty.IsColumnNullable());
     }
 
     [Fact]

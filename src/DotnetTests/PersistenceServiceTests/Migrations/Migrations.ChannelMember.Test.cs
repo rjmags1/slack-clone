@@ -34,10 +34,10 @@ public class ChannelMemberMigrationsTests
     [Fact]
     public void AdminColumn()
     {
-        var adminIdProperty = _entityType.FindProperty(
+        var adminProperty = _entityType.FindProperty(
             nameof(ChannelMember.Admin)
         )!;
-        Assert.Equal(false, adminIdProperty.GetDefaultValue());
+        Assert.Equal("false", adminProperty.GetDefaultValueSql());
     }
 
     [Fact]
@@ -46,14 +46,14 @@ public class ChannelMemberMigrationsTests
         var channelIdProperty = _entityType.FindProperty(
             nameof(ChannelMember.ChannelId)
         )!;
-        string channelIdColumnType = channelIdProperty.GetColumnType();
         var foreignKey = channelIdProperty
             .GetContainingForeignKeys()
             .SingleOrDefault();
 
         Assert.NotNull(foreignKey);
         Assert.Equal(DeleteBehavior.Cascade, foreignKey.DeleteBehavior);
-        Assert.Equal("uuid", channelIdColumnType);
+        Assert.Equal("uuid", channelIdProperty.GetColumnType());
+        Assert.False(channelIdProperty.IsColumnNullable());
     }
 
     [Fact]
@@ -81,7 +81,7 @@ public class ChannelMemberMigrationsTests
         var starredProperty = _entityType.FindProperty(
             nameof(ChannelMember.Starred)
         )!;
-        Assert.Equal(false, starredProperty.GetDefaultValue());
+        Assert.Equal("false", starredProperty.GetDefaultValueSql());
     }
 
     [Fact]
@@ -98,6 +98,7 @@ public class ChannelMemberMigrationsTests
         Assert.NotNull(foreignKey);
         Assert.Equal(DeleteBehavior.Cascade, foreignKey.DeleteBehavior);
         Assert.Equal("uuid", createdByIdPropertyColumnType);
+        Assert.False(userIdProperty.IsColumnNullable());
     }
 
     [Fact]

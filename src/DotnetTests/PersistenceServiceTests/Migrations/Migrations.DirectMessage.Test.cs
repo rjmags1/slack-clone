@@ -38,6 +38,7 @@ public class DirectMessageMigrationsTests
             nameof(DirectMessage.Content)
         )!;
         Assert.Equal(2500, contentProperty.GetMaxLength());
+        Assert.False(contentProperty.IsColumnNullable());
     }
 
     [Fact]
@@ -69,7 +70,7 @@ public class DirectMessageMigrationsTests
         var deletedProperty = _entityType.FindProperty(
             nameof(DirectMessage.Deleted)
         )!;
-        Assert.Equal(false, deletedProperty.GetDefaultValue());
+        Assert.Equal("false", deletedProperty.GetDefaultValueSql());
     }
 
     [Fact]
@@ -107,14 +108,14 @@ public class DirectMessageMigrationsTests
         var userIdProperty = _entityType.FindProperty(
             nameof(DirectMessage.UserId)
         )!;
-        string userIdPropertyColumnType = userIdProperty.GetColumnType();
         var foreignKey = userIdProperty
             .GetContainingForeignKeys()
             .SingleOrDefault();
 
         Assert.NotNull(foreignKey);
         Assert.Equal(DeleteBehavior.Cascade, foreignKey.DeleteBehavior);
-        Assert.Equal("uuid", userIdPropertyColumnType);
+        Assert.Equal("uuid", userIdProperty.GetColumnType());
+        Assert.False(userIdProperty.IsColumnNullable());
     }
 
     [Fact]

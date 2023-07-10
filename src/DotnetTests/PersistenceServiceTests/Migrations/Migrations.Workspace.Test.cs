@@ -24,7 +24,7 @@ public class WorkspaceMigrationsTests
     [Fact]
     public void IdColumn()
     {
-        var idProperty = _entityType.FindProperty(nameof(User.Id))!;
+        var idProperty = _entityType.FindProperty(nameof(Workspace.Id))!;
         string defaultValueSql = idProperty.GetDefaultValueSql()!;
         Assert.Equal("gen_random_uuid()", defaultValueSql);
         string idColumnType = idProperty.GetColumnType();
@@ -38,14 +38,14 @@ public class WorkspaceMigrationsTests
     public void AvatarIdColumn()
     {
         var avatarIdProperty = _entityType.FindProperty(nameof(User.AvatarId))!;
-        string avatarIdColumnType = avatarIdProperty.GetColumnType();
         var foreignKey = avatarIdProperty
             .GetContainingForeignKeys()
             .SingleOrDefault();
 
         Assert.NotNull(foreignKey);
         Assert.Equal(DeleteBehavior.SetNull, foreignKey.DeleteBehavior);
-        Assert.Equal("uuid", avatarIdColumnType);
+        Assert.Equal("uuid", avatarIdProperty.GetColumnType());
+        Assert.True(avatarIdProperty.IsColumnNullable());
     }
 
     [Fact]

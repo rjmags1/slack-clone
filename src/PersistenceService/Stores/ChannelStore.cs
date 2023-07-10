@@ -16,9 +16,7 @@ public class ChannelStore : Store
         string emoji
     )
     {
-        bool invalidEmoji =
-            emoji.Any(c => char.IsWhiteSpace(c)) || !EmojiUtils.IsEmoji(emoji);
-        if (invalidEmoji)
+        if (!EmojiUtils.IsEmoji(emoji))
         {
             throw new ArgumentException("Invalid arguments");
         }

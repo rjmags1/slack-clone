@@ -1,5 +1,3 @@
-using System.ComponentModel;
-using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 
@@ -14,8 +12,7 @@ public class DirectMessageLaterFlag
     [Column(TypeName = "timestamp")]
     public DateTime CreatedAt { get; set; }
 
-    [DefaultValue(1)]
-    public int DirectMessageLaterFlagStatus { get; set; }
+    public int DirectMessageLaterFlagStatus { get; set; } = 1;
 
 #pragma warning disable CS8618
     [DeleteBehavior(DeleteBehavior.Cascade)]

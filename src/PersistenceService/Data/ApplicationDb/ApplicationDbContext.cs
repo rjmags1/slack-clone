@@ -67,21 +67,99 @@ public class ApplicationDbContext
     {
         base.OnModelCreating(modelBuilder);
 
+        ConfigureChannelModel(modelBuilder);
+        ConfigureChannelMessageModel(modelBuilder);
+        ConfigureChannelInvite(modelBuilder);
+        ConfigureChannelMember(modelBuilder);
+        ConfigureChannelMessageReply(modelBuilder);
+        ConfigureChannelMessageLaterFlag(modelBuilder);
+        ConfigureChannelMessageNotification(modelBuilder);
+        ConfigureDirectMessage(modelBuilder);
+        ConfigureDirectMessageGroup(modelBuilder);
+        ConfigureDirectMessageLaterFlag(modelBuilder);
+        ConfigureDirectMessageNotification(modelBuilder);
+        ConfigureThread(modelBuilder);
+        ConfigureUser(modelBuilder);
+        ConfigureWorkspace(modelBuilder);
+        ConfigureWorkspaceAdminPermissions(modelBuilder);
+        ConfigureWorkspaceInvite(modelBuilder);
+        ConfigureWorkspaceMember(modelBuilder);
+
+        foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+        {
+            string[] timestampPropertyNames =
+            {
+                "CreatedAt",
+                "JoinedAt",
+                "UploadedAt"
+            };
+            foreach (var p in entityType.ClrType.GetProperties())
+            {
+                if (timestampPropertyNames.Contains(p.Name))
+                {
+                    modelBuilder
+                        .Entity(entityType.ClrType)
+                        .Property(p.Name)
+                        .HasDefaultValueSql("now()");
+                }
+                if (p.Name == "Id" && p.PropertyType == typeof(Guid))
+                {
+                    modelBuilder
+                        .Entity(entityType.ClrType)
+                        .Property(p.Name)
+                        .HasDefaultValueSql("gen_random_uuid()");
+                }
+                if (
+                    p.Name == "ConcurrencyStamp"
+                    && p.PropertyType == typeof(Guid)
+                )
+                {
+                    modelBuilder
+                        .Entity(entityType.ClrType)
+                        .Property(p.Name)
+                        .HasDefaultValueSql("gen_random_uuid()");
+                }
+            }
+        }
+    }
+
+    private void ConfigureChannelModel(ModelBuilder modelBuilder)
+    {
+        modelBuilder
+            .Entity<Channel>()
+            .Property(e => e.NumMembers)
+            .HasDefaultValueSql("1");
+
+        modelBuilder
+            .Entity<Channel>()
+            .Property(e => e.Private)
+            .HasDefaultValueSql("false");
+
+        modelBuilder
+            .Entity<Channel>()
+            .Property(e => e.AllowThreads)
+            .HasDefaultValueSql("true");
+
+        modelBuilder
+            .Entity<Channel>()
+            .Property(e => e.AllowedChannelPostersMask)
+            .HasDefaultValueSql("1");
+    }
+
+    private void ConfigureChannelMessageModel(ModelBuilder modelBuilder)
+    {
         modelBuilder
             .Entity<ChannelMessage>()
-            .HasMany(e => e.Replies)
-            .WithOne(e => e.MessageRepliedTo)
-            .HasForeignKey(e => e.MessageRepliedToId)
-            .IsRequired();
+            .Property(e => e.Draft)
+            .HasDefaultValueSql("true");
 
         modelBuilder
-            .Entity<ChannelMessageReply>()
-            .HasOne(e => e.ChannelMessage)
-            .WithOne()
-            .IsRequired();
+            .Entity<ChannelMessage>()
+            .Property(e => e.Deleted)
+            .HasDefaultValueSql("false");
 
         modelBuilder
-            .Entity<DirectMessage>()
+            .Entity<ChannelMessage>()
             .HasMany(e => e.Replies)
             .WithOne(e => e.MessageRepliedTo)
             .HasForeignKey(e => e.MessageRepliedToId)
@@ -92,12 +170,133 @@ public class ApplicationDbContext
             .HasOne(e => e.Thread)
             .WithMany(e => e.Messages)
             .HasForeignKey(e => e.ThreadId);
+    }
 
+    private void ConfigureChannelInvite(ModelBuilder modelBuilder)
+    {
+        modelBuilder
+            .Entity<ChannelInvite>()
+            .Property(e => e.ChannelInviteStatus)
+            .HasDefaultValueSql("1");
+    }
+
+    private void ConfigureChannelMember(ModelBuilder modelBuilder)
+    {
+        modelBuilder
+            .Entity<ChannelMember>()
+            .Property(e => e.EnableNotifications)
+            .HasDefaultValueSql("true");
+
+        modelBuilder
+            .Entity<ChannelMember>()
+            .Property(e => e.Admin)
+            .HasDefaultValueSql("false");
+
+        modelBuilder
+            .Entity<ChannelMember>()
+            .Property(e => e.Starred)
+            .HasDefaultValueSql("false");
+    }
+
+    private void ConfigureChannelMessageReply(ModelBuilder modelBuilder)
+    {
+        modelBuilder
+            .Entity<ChannelMessageReply>()
+            .HasOne(e => e.ChannelMessage)
+            .WithOne()
+            .IsRequired();
+    }
+
+    private void ConfigureChannelMessageLaterFlag(ModelBuilder modelBuilder)
+    {
+        modelBuilder
+            .Entity<ChannelMessageLaterFlag>()
+            .Property(e => e.ChannelLaterFlagStatus)
+            .HasDefaultValueSql("1");
+    }
+
+    private void ConfigureChannelMessageNotification(ModelBuilder modelBuilder)
+    {
+        modelBuilder
+            .Entity<ChannelMessageNotification>()
+            .Property(e => e.Seen)
+            .HasDefaultValueSql("false");
+    }
+
+    private void ConfigureDirectMessage(ModelBuilder modelBuilder)
+    {
+        modelBuilder
+            .Entity<DirectMessage>()
+            .HasMany(e => e.Replies)
+            .WithOne(e => e.MessageRepliedTo)
+            .HasForeignKey(e => e.MessageRepliedToId)
+            .IsRequired();
+
+        modelBuilder
+            .Entity<DirectMessage>()
+            .Property(e => e.Draft)
+            .HasDefaultValueSql("true");
+
+        modelBuilder
+            .Entity<DirectMessage>()
+            .Property(e => e.Deleted)
+            .HasDefaultValueSql("false");
+    }
+
+    private void ConfigureDirectMessageGroup(ModelBuilder modelBuilder)
+    {
+        modelBuilder
+            .Entity<DirectMessageGroup>()
+            .Property(e => e.Size)
+            .HasDefaultValueSql("2");
+    }
+
+    private void ConfigureDirectMessageLaterFlag(ModelBuilder modelBuilder)
+    {
+        modelBuilder
+            .Entity<DirectMessageLaterFlag>()
+            .Property(e => e.DirectMessageLaterFlagStatus)
+            .HasDefaultValueSql("1");
+    }
+
+    private void ConfigureDirectMessageNotification(ModelBuilder modelBuilder)
+    {
+        modelBuilder
+            .Entity<DirectMessageNotification>()
+            .Property(e => e.Seen)
+            .HasDefaultValueSql("false");
+    }
+
+    private void ConfigureThread(ModelBuilder modelBuilder)
+    {
+        modelBuilder
+            .Entity<Models.Thread>()
+            .Property(e => e.NumMessages)
+            .HasDefaultValueSql("2");
+    }
+
+    private void ConfigureUser(ModelBuilder modelBuilder)
+    {
         modelBuilder
             .Entity<User>()
             .Property(e => e.UserName)
-            .HasMaxLength(30)
+            .HasMaxLength(40)
             .IsRequired();
+
+        modelBuilder
+            .Entity<User>()
+            .Property(e => e.Deleted)
+            .HasDefaultValueSql("false");
+
+        modelBuilder
+            .Entity<User>()
+            .Property(e => e.UserNotificationsPreferencesMask)
+            .HasDefaultValueSql("0");
+
+        modelBuilder
+            .Entity<User>()
+            .Property(e => e.NotificationSound)
+            .HasDefaultValueSql("0");
 
         modelBuilder
             .Entity<User>()
@@ -145,98 +344,48 @@ public class ApplicationDbContext
             .Property(e => e.LockoutEnd)
             .HasColumnType("timestamp")
             .HasConversion(new DateTimeOffsetTimestampConverter());
+    }
 
+    private void ConfigureWorkspace(ModelBuilder modelBuilder)
+    {
         modelBuilder
             .Entity<Workspace>()
             .Property(e => e.NumMembers)
             .HasDefaultValueSql("1");
+    }
 
-        modelBuilder
-            .Entity<Channel>()
-            .Property(e => e.NumMembers)
-            .HasDefaultValueSql("1");
-
-        modelBuilder
-            .Entity<ChannelInvite>()
-            .Property(e => e.ChannelInviteStatus)
-            .HasDefaultValueSql("1");
-
-        modelBuilder
-            .Entity<ChannelMember>()
-            .Property(e => e.EnableNotifications)
-            .HasDefaultValueSql("true");
-
-        modelBuilder
-            .Entity<Models.Thread>()
-            .Property(e => e.NumMessages)
-            .HasDefaultValueSql("2");
-
-        modelBuilder
-            .Entity<WorkspaceInvite>()
-            .Property(e => e.WorkspaceInviteStatus)
-            .HasDefaultValueSql("1");
-
+    private void ConfigureWorkspaceAdminPermissions(ModelBuilder modelBuilder)
+    {
         modelBuilder
             .Entity<WorkspaceAdminPermissions>()
             .Property(e => e.WorkspaceAdminPermissionsMask)
             .HasDefaultValueSql("1");
+    }
 
+    private void ConfigureWorkspaceInvite(ModelBuilder modelBuilder)
+    {
         modelBuilder
-            .Entity<ChannelMessage>()
-            .Property(e => e.Draft)
-            .HasDefaultValueSql("true");
-
-        modelBuilder
-            .Entity<ChannelMessageLaterFlag>()
-            .Property(e => e.ChannelLaterFlagStatus)
+            .Entity<WorkspaceInvite>()
+            .Property(e => e.WorkspaceInviteStatus)
             .HasDefaultValueSql("1");
+    }
+
+    private void ConfigureWorkspaceMember(ModelBuilder modelBuilder)
+    {
+        modelBuilder
+            .Entity<WorkspaceMember>()
+            .Property(e => e.Admin)
+            .HasDefaultValueSql("false");
 
         modelBuilder
-            .Entity<DirectMessage>()
-            .Property(e => e.Draft)
-            .HasDefaultValueSql("true");
+            .Entity<WorkspaceMember>()
+            .Property(e => e.NotificationSound)
+            .HasDefaultValueSql("0");
 
         modelBuilder
-            .Entity<DirectMessageLaterFlag>()
-            .Property(e => e.DirectMessageLaterFlagStatus)
-            .HasDefaultValueSql("1");
-
-        foreach (var entityType in modelBuilder.Model.GetEntityTypes())
-        {
-            string[] timestampPropertyNames =
-            {
-                "CreatedAt",
-                "JoinedAt",
-                "UploadedAt"
-            };
-            foreach (var p in entityType.ClrType.GetProperties())
-            {
-                if (timestampPropertyNames.Contains(p.Name))
-                {
-                    modelBuilder
-                        .Entity(entityType.ClrType)
-                        .Property(p.Name)
-                        .HasDefaultValueSql("now()");
-                }
-                if (p.Name == "Id" && p.PropertyType == typeof(Guid))
-                {
-                    modelBuilder
-                        .Entity(entityType.ClrType)
-                        .Property(p.Name)
-                        .HasDefaultValueSql("gen_random_uuid()");
-                }
-                if (
-                    p.Name == "ConcurrencyStamp"
-                    && p.PropertyType == typeof(Guid)
-                )
-                {
-                    modelBuilder
-                        .Entity(entityType.ClrType)
-                        .Property(p.Name)
-                        .HasDefaultValueSql("gen_random_uuid()");
-                }
-            }
-        }
+            .Entity<WorkspaceMember>()
+            .Property(e => e.Owner)
+            .HasDefaultValueSql("false");
     }
 }
 

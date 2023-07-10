@@ -1,4 +1,3 @@
-using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
@@ -23,7 +22,6 @@ public class WorkspaceAdminPermissions
     public Guid ConcurrencyStamp { get; set; }
 #pragma warning restore CS8618
 
-    [DefaultValue(1)]
     public int WorkspaceAdminPermissionsMask { get; set; } = 1;
 
 #pragma warning disable CS8618

@@ -1,4 +1,3 @@
-using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
@@ -22,8 +21,7 @@ public class User : IdentityUser<Guid>
     [Column(TypeName = "timestamp")]
     public DateTime CreatedAt { get; set; }
 
-    [DefaultValue(false)]
-    public bool Deleted { get; set; }
+    public bool Deleted { get; set; } = false;
 
 #pragma warning disable CS8618
     [MaxLength(20)]
@@ -33,8 +31,7 @@ public class User : IdentityUser<Guid>
     public string LastName { get; set; }
 #pragma warning restore CS8618
 
-    [DefaultValue(0)]
-    public int UserNotificationsPreferencesMask { get; set; }
+    public int UserNotificationsPreferencesMask { get; set; } = 0;
 
     public TimeOnly? NotificationsAllowStartTime { get; set; }
 
@@ -42,8 +39,7 @@ public class User : IdentityUser<Guid>
 
     public TimeOnly? NotificationsPauseUntil { get; set; }
 
-    [DefaultValue(0)]
-    public int NotificationSound { get; set; }
+    public int NotificationSound { get; set; } = 0;
 
 #pragma warning disable CS8618
     [MaxLength(20)]
