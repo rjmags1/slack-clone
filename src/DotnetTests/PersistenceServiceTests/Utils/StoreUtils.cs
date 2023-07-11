@@ -1,5 +1,6 @@
 using PersistenceService.Models;
 using PersistenceService.Stores;
+using File = PersistenceService.Models.File;
 using Thread = PersistenceService.Models.Thread;
 
 namespace DotnetTests.PersistenceService.Utils;
@@ -228,6 +229,15 @@ public class StoreTestUtils
             DirectMessage = testMessage,
             Emoji = "🌍",
             User = testUser
+        };
+    }
+
+    public static File CreateTestFileRecord()
+    {
+        return new File
+        {
+            Name = "test-file-name" + Store.GenerateRandomString(15),
+            StoreKey = "test-store-key" + Store.GenerateRandomString(15)
         };
     }
 }
