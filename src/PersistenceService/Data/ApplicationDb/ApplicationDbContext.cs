@@ -100,7 +100,8 @@ public class ApplicationDbContext
                     modelBuilder
                         .Entity(entityType.ClrType)
                         .Property(p.Name)
-                        .HasDefaultValueSql("now()");
+                        .HasDefaultValueSql("now()")
+                        .HasConversion<DateTimeTimestampConverter>();
                 }
                 if (p.Name == "Id" && p.PropertyType == typeof(Guid))
                 {
@@ -413,4 +414,10 @@ public class DateTimeOffsetTimestampConverter
             value => value.UtcDateTime,
             value => new DateTimeOffset(value, TimeSpan.Zero)
         ) { }
+}
+
+public class DateTimeTimestampConverter : ValueConverter<DateTime, DateTime>
+{
+    public DateTimeTimestampConverter()
+        : base(value => value.ToUniversalTime(), value => value) { }
 }
