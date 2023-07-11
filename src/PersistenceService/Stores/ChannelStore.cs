@@ -31,8 +31,8 @@ public class ChannelStore : Store
             _context.ChannelMembers
                 .Where(
                     cm =>
-                        cm.UserId == userId
-                        && cm.ChannelId == channelMessage.ChannelId
+                        cm.ChannelId == channelMessage.ChannelId
+                        && cm.UserId == userId
                 )
                 .Count() == 1;
         if (!isMember)
@@ -215,7 +215,7 @@ public class ChannelStore : Store
         Guid channelId = channelMessage.ChannelId;
         bool isChannelMember =
             _context.ChannelMembers
-                .Where(cm => cm.UserId == userId && cm.ChannelId == channelId)
+                .Where(cm => cm.ChannelId == channelId && cm.UserId == userId)
                 .Count() == 1;
         if (!isChannelMember)
         {
@@ -300,8 +300,8 @@ public class ChannelStore : Store
                     .Where(
                         cm =>
                             cm.Id == messageRepliedToId
-                            && cm.ThreadId == threadId
                             && cm.UserId == personRepliedToId
+                            && cm.ThreadId == threadId
                     )
                     .Count() == 1;
             if (!validReply)
@@ -332,6 +332,8 @@ public class ChannelStore : Store
                 ReplierId = userId
             };
             _context.Add(replyRecord);
+            _context.Threads.Where(t => t.Id == threadId).First().NumMessages +=
+                1;
         }
 
         if (needRecordMentions)
@@ -363,8 +365,8 @@ public class ChannelStore : Store
                 .First()
                 .ChannelId;
             ChannelMember userInThreadChannel = _context.ChannelMembers
-                .Where(cm => cm.UserId == userId)
                 .Where(cm => cm.ChannelId == threadChannelId)
+                .Where(cm => cm.UserId == userId)
                 .First();
         }
         catch (Exception)
@@ -449,12 +451,13 @@ public class ChannelStore : Store
         List<Guid> userIds
     )
     {
-        Guid workspaceId = _context.Channels
-            .First(c => c.Id == channelId)
-            .WorkspaceId;
+        Channel? channel = _context.Channels.FirstOrDefault(
+            c => c.Id == channelId
+        );
         bool allUsersAreWorkspaceMembers =
-            _context.WorkspaceMembers
-                .Where(member => member.WorkspaceId == workspaceId)
+            channel is not null
+            && _context.WorkspaceMembers
+                .Where(member => member.WorkspaceId == channel.WorkspaceId)
                 .Where(member => userIds.Contains(member.UserId))
                 .Count() == userIds.Count;
         bool allUsersNotChannelMembers =
@@ -477,6 +480,7 @@ public class ChannelStore : Store
         }
 
         _context.AddRange(channelMembers);
+        channel!.NumMembers += channelMembers.Count;
         await _context.SaveChangesAsync();
 
         return channelMembers;
@@ -489,7 +493,7 @@ public class ChannelStore : Store
     )
     {
         ChannelMember adminMembership = _context.ChannelMembers.First(
-            cm => cm.UserId == adminId && cm.ChannelId == channelId
+            cm => cm.ChannelId == channelId && cm.UserId == adminId
         );
         if (!adminMembership.Admin)
         {

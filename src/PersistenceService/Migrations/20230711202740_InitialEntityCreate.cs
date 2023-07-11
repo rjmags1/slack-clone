@@ -646,7 +646,7 @@ namespace PersistenceService.Migrations
                     CreatedAt = table.Column<DateTime>(type: "timestamp", nullable: false, defaultValueSql: "now()"),
                     Description = table.Column<string>(type: "character varying(120)", maxLength: 120, nullable: false),
                     Name = table.Column<string>(type: "character varying(80)", maxLength: 80, nullable: false),
-                    NumMembers = table.Column<int>(type: "integer", nullable: false, defaultValueSql: "1")
+                    NumMembers = table.Column<int>(type: "integer", nullable: false, defaultValueSql: "0")
                 },
                 constraints: table =>
                 {

@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 namespace PersistenceService.Models;
 
 [Index(nameof(FirstMessageId), IsUnique = true)]
+[Index(nameof(ChannelId))]
 public class Thread
 {
     public Guid Id { get; set; }

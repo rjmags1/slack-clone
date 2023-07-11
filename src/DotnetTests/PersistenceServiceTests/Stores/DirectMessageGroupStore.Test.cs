@@ -22,6 +22,91 @@ public class DirectMessageGroupStoreTests
     }
 
     [Fact]
+    public async void InsertDirectMessageGroupMembers_ShouldInsertDirectMessageGroupMembers()
+    {
+        Workspace testWorkspace = StoreTestUtils.CreateTestWorkspace();
+        _dbContext.Add(testWorkspace);
+
+        User testUser = StoreTestUtils.CreateTestUser();
+        _dbContext.Add(testUser);
+
+        WorkspaceMember testWorkspaceMembership =
+            StoreTestUtils.CreateTestWorkspaceMember(testUser, testWorkspace);
+        _dbContext.Add(testWorkspaceMembership);
+
+        DirectMessageGroup testGroup =
+            StoreTestUtils.CreateTestDirectMessageGroup(testWorkspace);
+        _dbContext.Add(testGroup);
+
+        await _dbContext.SaveChangesAsync();
+
+        DirectMessageGroupMember? insertedMember = (
+            await _directMessageGroupStore.InsertDirectMessageGroupMembers(
+                testGroup.Id,
+                new List<Guid> { testUser.Id }
+            )
+        ).FirstOrDefault();
+
+        Assert.NotNull(insertedMember);
+        Assert.NotEqual(insertedMember.Id, Guid.Empty);
+        Assert.Equal(insertedMember.DirectMessageGroupId, testGroup.Id);
+        Assert.Null(insertedMember.LastViewedGroupMessagesAt);
+        Assert.Equal(insertedMember.UserId, testUser.Id);
+    }
+
+    [Fact]
+    public async void InsertDirectMessageGroupMembers_ShouldThrowOnInvalidIds()
+    {
+        Workspace testWorkspace = StoreTestUtils.CreateTestWorkspace();
+        _dbContext.Add(testWorkspace);
+
+        User testUser = StoreTestUtils.CreateTestUser();
+        _dbContext.Add(testUser);
+
+        WorkspaceMember testWorkspaceMembership =
+            StoreTestUtils.CreateTestWorkspaceMember(testUser, testWorkspace);
+        _dbContext.Add(testWorkspaceMembership);
+
+        DirectMessageGroup testGroup =
+            StoreTestUtils.CreateTestDirectMessageGroup(testWorkspace);
+        _dbContext.Add(testGroup);
+
+        await _dbContext.SaveChangesAsync();
+
+        await Assert.ThrowsAsync<InvalidOperationException>(
+            async () =>
+                await _directMessageGroupStore.InsertDirectMessageGroupMembers(
+                    Guid.Empty,
+                    new List<Guid> { testUser.Id }
+                )
+        );
+
+        await Assert.ThrowsAsync<InvalidOperationException>(
+            async () =>
+                await _directMessageGroupStore.InsertDirectMessageGroupMembers(
+                    testGroup.Id,
+                    new List<Guid> { Guid.Empty }
+                )
+        );
+
+        DirectMessageGroupMember testGroupMember =
+            StoreTestUtils.CreateTestDirectMessageGroupMember(
+                testUser,
+                testGroup
+            );
+        _dbContext.Add(testGroupMember);
+        await _dbContext.SaveChangesAsync();
+
+        await Assert.ThrowsAsync<InvalidOperationException>(
+            async () =>
+                await _directMessageGroupStore.InsertDirectMessageGroupMembers(
+                    testGroup.Id,
+                    new List<Guid> { testUser.Id }
+                )
+        );
+    }
+
+    [Fact]
     public async void InsertMessageReaction_ShouldInsertMessageReaction()
     {
         Workspace testWorkspace = StoreTestUtils.CreateTestWorkspace();

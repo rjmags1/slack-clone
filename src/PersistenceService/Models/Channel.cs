@@ -49,7 +49,6 @@ public class Channel
     public string Name { get; set; }
 #pragma warning restore CS8618
 
-    [DefaultValue(1)]
     public int NumMembers { get; set; }
 
     public bool Private { get; set; } = false;

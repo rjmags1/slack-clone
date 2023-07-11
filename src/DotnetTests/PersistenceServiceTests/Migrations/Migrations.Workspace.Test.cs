@@ -103,7 +103,7 @@ public class WorkspaceMigrationsTests
         var numMembersColumnProperty = _entityType.FindProperty(
             nameof(Workspace.NumMembers)
         )!;
-        Assert.Equal("1", numMembersColumnProperty.GetDefaultValueSql());
+        Assert.Equal("0", numMembersColumnProperty.GetDefaultValueSql());
     }
 
     [Fact]

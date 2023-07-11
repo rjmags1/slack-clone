@@ -351,7 +351,7 @@ public class ApplicationDbContext
         modelBuilder
             .Entity<Workspace>()
             .Property(e => e.NumMembers)
-            .HasDefaultValueSql("1");
+            .HasDefaultValueSql("0");
     }
 
     private void ConfigureWorkspaceAdminPermissions(ModelBuilder modelBuilder)

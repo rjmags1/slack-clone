@@ -300,6 +300,7 @@ public class WorkspaceStoreTests
                 Enumerable.Repeat("Member", testMembers.Count).ToList()
             );
 
+        Assert.Equal(testMembers.Count, testWorkspace.NumMembers);
         foreach ((WorkspaceMember im, User m) in inserted.Zip(testMembers))
         {
             Assert.NotEqual(im.Id, Guid.Empty);
@@ -546,7 +547,7 @@ public class WorkspaceStoreTests
             Assert.NotEqual(iw.CreatedAt, default(DateTime));
             Assert.Equal(iw.Description, w.Description);
             Assert.Equal(iw.Name, w.Name);
-            Assert.Equal(1, iw.NumMembers);
+            Assert.Equal(0, iw.NumMembers);
         }
     }
 }

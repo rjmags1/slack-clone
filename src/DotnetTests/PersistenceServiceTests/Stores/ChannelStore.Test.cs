@@ -839,6 +839,8 @@ public class ChannelStoreTests
                 true
             );
 
+        Assert.Equal(3, testThread.NumMessages);
+
         Assert.NotEqual(insertedChannelMessage2.Id, Guid.Empty);
         Assert.Equal(insertedChannelMessage2.ChannelId, testChannel.Id);
         Assert.Equal("test content", insertedChannelMessage2.Content);
@@ -1825,17 +1827,19 @@ public class ChannelStoreTests
 
         await _dbContext.SaveChangesAsync();
 
+        List<User> nonCreators = testMembers.TakeLast(9).ToList();
         List<ChannelMember> insertedMembers =
             await _channelStore.InsertChannelMembers(
                 testChannel.Id,
-                testMembers.Select(u => u.Id).ToList()
+                nonCreators.Select(u => u.Id).ToList()
             );
 
+        Assert.Equal(testMembers.Count, testChannel.NumMembers);
         foreach (
             (
                 ChannelMember channelMembership,
                 User member
-            ) in insertedMembers.Zip(testMembers)
+            ) in insertedMembers.Zip(nonCreators)
         )
         {
             Assert.NotEqual(channelMembership.Id, Guid.Empty);

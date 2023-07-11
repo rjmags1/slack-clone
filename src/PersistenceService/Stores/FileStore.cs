@@ -1,5 +1,4 @@
 using PersistenceService.Data.ApplicationDb;
-using PersistenceService.Models;
 
 namespace PersistenceService.Stores;
 

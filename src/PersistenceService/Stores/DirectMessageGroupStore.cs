@@ -10,6 +10,53 @@ public class DirectMessageGroupStore : Store
     public DirectMessageGroupStore(ApplicationDbContext context)
         : base(context) { }
 
+    public async Task<
+        List<DirectMessageGroupMember>
+    > InsertDirectMessageGroupMembers(
+        Guid directMessageGroupId,
+        List<Guid> userIds
+    )
+    {
+        DirectMessageGroup? group = _context.DirectMessageGroups.FirstOrDefault(
+            dmg => dmg.Id == directMessageGroupId
+        );
+        bool allUsersAreWorkspaceMembers =
+            group is not null
+            && _context.WorkspaceMembers
+                .Where(member => member.WorkspaceId == group.WorkspaceId)
+                .Where(member => userIds.Contains(member.UserId))
+                .Count() == userIds.Count;
+        bool allUsersNotGroupMembers =
+            _context.DirectMessageGroupMembers
+                .Where(member => userIds.Contains(member.UserId))
+                .Count() == 0;
+        if (!allUsersAreWorkspaceMembers || !allUsersNotGroupMembers)
+        {
+            throw new InvalidOperationException(
+                "Users must be workspace members and not already group members"
+            );
+        }
+
+        List<DirectMessageGroupMember> groupMembers =
+            new List<DirectMessageGroupMember>();
+        foreach (Guid userId in userIds)
+        {
+            groupMembers.Add(
+                new DirectMessageGroupMember
+                {
+                    DirectMessageGroupId = directMessageGroupId,
+                    UserId = userId
+                }
+            );
+        }
+
+        _context.AddRange(groupMembers);
+        group!.Size += groupMembers.Count;
+        await _context.SaveChangesAsync();
+
+        return groupMembers;
+    }
+
     public async Task<DirectMessageReaction> InsertMessageReaction(
         Guid directMessageId,
         Guid userId,
@@ -204,8 +251,8 @@ public class DirectMessageGroupStore : Store
             && _context.DirectMessageGroupMembers
                 .Where(
                     dmgm =>
-                        dmgm.DirectMessageGroupId == directMessageGroupId
-                        && dmgm.UserId == userId
+                        dmgm.UserId == userId
+                        && dmgm.DirectMessageGroupId == directMessageGroupId
                 )
                 .Count() == 1;
         if (!validMessage)
@@ -230,8 +277,8 @@ public class DirectMessageGroupStore : Store
                 _context.DirectMessageGroupMembers
                     .Where(
                         dmgm =>
-                            dmgm.DirectMessageGroupId == directMessageGroupId
-                            && mentionedPeople!.Contains(dmgm.UserId)
+                            mentionedPeople!.Contains(dmgm.UserId)
+                            && dmgm.DirectMessageGroupId == directMessageGroupId
                     )
                     .Count() == mentionedPeople!.Count;
             if (!mentionedAllMembers)
