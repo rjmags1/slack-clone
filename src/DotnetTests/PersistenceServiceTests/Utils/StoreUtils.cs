@@ -240,4 +240,12 @@ public class StoreTestUtils
             StoreKey = "test-store-key" + Store.GenerateRandomString(15)
         };
     }
+
+    public static Theme CreateTestTheme()
+    {
+        return new Theme
+        {
+            Name = "test-theme-name-" + Store.GenerateRandomString(10)
+        };
+    }
 }
