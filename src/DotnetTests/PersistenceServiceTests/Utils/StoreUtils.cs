@@ -154,4 +154,80 @@ public class StoreTestUtils
     {
         return new ThreadWatch { Thread = testThread, User = testUser };
     }
+
+    public static DirectMessageGroup CreateTestDirectMessageGroup(
+        Workspace testWorkspace
+    )
+    {
+        return new DirectMessageGroup { Workspace = testWorkspace };
+    }
+
+    public static DirectMessageGroupMember CreateTestDirectMessageGroupMember(
+        User testUser,
+        DirectMessageGroup testGroup
+    )
+    {
+        return new DirectMessageGroupMember
+        {
+            DirectMessageGroup = testGroup,
+            User = testUser
+        };
+    }
+
+    public static DirectMessage CreateTestDirectMessage(
+        DirectMessageGroup testGroup,
+        User testAuthor
+    )
+    {
+        return new DirectMessage
+        {
+            Content = "test content",
+            DirectMessageGroup = testGroup,
+            SentAt = DateTime.Now,
+            User = testAuthor
+        };
+    }
+
+    public static DirectMessageReply CreateTestDirectMessageReplyRecord(
+        DirectMessage testReply,
+        DirectMessage testMessageRepliedTo,
+        User testReplier,
+        User testRepliedTo
+    )
+    {
+        return new DirectMessageReply
+        {
+            DirectMessage = testReply,
+            MessageRepliedTo = testMessageRepliedTo,
+            RepliedTo = testRepliedTo,
+            Replier = testReplier
+        };
+    }
+
+    public static DirectMessageMention CreateTestDirectMessageMention(
+        DirectMessage testMessage,
+        User testMentioned,
+        User testMentioner
+    )
+    {
+        return new DirectMessageMention
+        {
+            DirectMessage = testMessage,
+            Mentioned = testMentioned,
+            Mentioner = testMentioner
+        };
+    }
+
+    public static DirectMessageReaction CreateTestDirectMessageReaction(
+        DirectMessage testMessage,
+        User testUser
+    )
+    {
+        return new DirectMessageReaction
+        {
+            DirectMessage = testMessage,
+            Emoji = "🌍",
+            User = testUser
+        };
+    }
 }
