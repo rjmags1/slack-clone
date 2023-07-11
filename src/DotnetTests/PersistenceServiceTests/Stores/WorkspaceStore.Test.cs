@@ -1,6 +1,5 @@
 using DotnetTests.Fixtures;
 using DotnetTests.PersistenceService.Utils;
-using Microsoft.EntityFrameworkCore;
 using PersistenceService.Data.ApplicationDb;
 using PersistenceService.Models;
 using PersistenceService.Stores;
@@ -24,40 +23,14 @@ public class WorkspaceStoreTests
     [Fact]
     public async void InsertWorkspaceAdmin_ShouldInsertWorkspaceAdminAlreadyMember()
     {
-        Workspace testWorkspace = new Workspace
-        {
-            Description = "test description",
-            Name = "test-workspace-name" + ChannelStore.GenerateRandomString(10)
-        };
+        Workspace testWorkspace = StoreTestUtils.CreateTestWorkspace();
         _dbContext.Add(testWorkspace);
 
-        string username = UserStore.GenerateTestUserName(10);
-        string email = UserStore.GenerateTestEmail(10);
-        User testUser = new User
-        {
-            FirstName = UserStore.GenerateTestFirstName(10),
-            LastName = UserStore.GenerateTestLastName(10),
-            Timezone = UserStore.timezones[1].Id,
-            UserName = username,
-            Email = email,
-            PhoneNumber = "1-234-567-8901",
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword(
-                StoreTestUtils.testPassword,
-                4
-            ),
-            NormalizedEmail = email.ToUpper(),
-            NormalizedUserName = username.ToUpper(),
-            SecurityStamp = Guid.NewGuid().ToString(),
-            ConcurrencyStamp = Guid.NewGuid().ToString(),
-        };
+        User testUser = StoreTestUtils.CreateTestUser();
         _dbContext.Add(testUser);
 
-        WorkspaceMember testWorkspaceMembership = new WorkspaceMember
-        {
-            Title = "Member",
-            Workspace = testWorkspace,
-            User = testUser
-        };
+        WorkspaceMember testWorkspaceMembership =
+            StoreTestUtils.CreateTestWorkspaceMember(testUser, testWorkspace);
         _dbContext.Add(testWorkspaceMembership);
 
         await _dbContext.SaveChangesAsync();
@@ -83,32 +56,10 @@ public class WorkspaceStoreTests
     [Fact]
     public async void InsertWorkspaceAdmin_ShouldInsertWorkspaceAdminNotAlreadyMember()
     {
-        Workspace testWorkspace = new Workspace
-        {
-            Description = "test description",
-            Name = "test-workspace-name" + ChannelStore.GenerateRandomString(10)
-        };
+        Workspace testWorkspace = StoreTestUtils.CreateTestWorkspace();
         _dbContext.Add(testWorkspace);
 
-        string username = UserStore.GenerateTestUserName(10);
-        string email = UserStore.GenerateTestEmail(10);
-        User testUser = new User
-        {
-            FirstName = UserStore.GenerateTestFirstName(10),
-            LastName = UserStore.GenerateTestLastName(10),
-            Timezone = UserStore.timezones[1].Id,
-            UserName = username,
-            Email = email,
-            PhoneNumber = "1-234-567-8901",
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword(
-                StoreTestUtils.testPassword,
-                4
-            ),
-            NormalizedEmail = email.ToUpper(),
-            NormalizedUserName = username.ToUpper(),
-            SecurityStamp = Guid.NewGuid().ToString(),
-            ConcurrencyStamp = Guid.NewGuid().ToString(),
-        };
+        User testUser = StoreTestUtils.CreateTestUser();
         _dbContext.Add(testUser);
 
         await _dbContext.SaveChangesAsync();
@@ -148,32 +99,10 @@ public class WorkspaceStoreTests
     [Fact]
     public async void InsertWorkspaceAdmin_ShouldThrowOnNonexistentIdsInvalidMask()
     {
-        Workspace testWorkspace = new Workspace
-        {
-            Description = "test description",
-            Name = "test-workspace-name" + ChannelStore.GenerateRandomString(10)
-        };
+        Workspace testWorkspace = StoreTestUtils.CreateTestWorkspace();
         _dbContext.Add(testWorkspace);
 
-        string username = UserStore.GenerateTestUserName(10);
-        string email = UserStore.GenerateTestEmail(10);
-        User testUser = new User
-        {
-            FirstName = UserStore.GenerateTestFirstName(10),
-            LastName = UserStore.GenerateTestLastName(10),
-            Timezone = UserStore.timezones[1].Id,
-            UserName = username,
-            Email = email,
-            PhoneNumber = "1-234-567-8901",
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword(
-                StoreTestUtils.testPassword,
-                4
-            ),
-            NormalizedEmail = email.ToUpper(),
-            NormalizedUserName = username.ToUpper(),
-            SecurityStamp = Guid.NewGuid().ToString(),
-            ConcurrencyStamp = Guid.NewGuid().ToString(),
-        };
+        User testUser = StoreTestUtils.CreateTestUser();
         _dbContext.Add(testUser);
 
         await _dbContext.SaveChangesAsync();
@@ -223,32 +152,10 @@ public class WorkspaceStoreTests
     [Fact]
     public async void InsertWorkspaceAdmin_ShouldThrowOnAlreadyAdmin()
     {
-        Workspace testWorkspace = new Workspace
-        {
-            Description = "test description",
-            Name = "test-workspace-name" + ChannelStore.GenerateRandomString(10)
-        };
+        Workspace testWorkspace = StoreTestUtils.CreateTestWorkspace();
         _dbContext.Add(testWorkspace);
 
-        string username = UserStore.GenerateTestUserName(10);
-        string email = UserStore.GenerateTestEmail(10);
-        User testUser = new User
-        {
-            FirstName = UserStore.GenerateTestFirstName(10),
-            LastName = UserStore.GenerateTestLastName(10),
-            Timezone = UserStore.timezones[1].Id,
-            UserName = username,
-            Email = email,
-            PhoneNumber = "1-234-567-8901",
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword(
-                StoreTestUtils.testPassword,
-                4
-            ),
-            NormalizedEmail = email.ToUpper(),
-            NormalizedUserName = username.ToUpper(),
-            SecurityStamp = Guid.NewGuid().ToString(),
-            ConcurrencyStamp = Guid.NewGuid().ToString(),
-        };
+        User testUser = StoreTestUtils.CreateTestUser();
         _dbContext.Add(testUser);
 
         WorkspaceMember testWorkspaceMembership = new WorkspaceMember
@@ -274,40 +181,14 @@ public class WorkspaceStoreTests
     [Fact]
     public async void InsertWorkspaceSearch_ShouldInsertWorkspaceSearch()
     {
-        Workspace testWorkspace = new Workspace
-        {
-            Description = "test description",
-            Name = "test-workspace-name" + ChannelStore.GenerateRandomString(10)
-        };
+        Workspace testWorkspace = StoreTestUtils.CreateTestWorkspace();
         _dbContext.Add(testWorkspace);
 
-        string username = UserStore.GenerateTestUserName(10);
-        string email = UserStore.GenerateTestEmail(10);
-        User testUser = new User
-        {
-            FirstName = UserStore.GenerateTestFirstName(10),
-            LastName = UserStore.GenerateTestLastName(10),
-            Timezone = UserStore.timezones[1].Id,
-            UserName = username,
-            Email = email,
-            PhoneNumber = "1-234-567-8901",
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword(
-                StoreTestUtils.testPassword,
-                4
-            ),
-            NormalizedEmail = email.ToUpper(),
-            NormalizedUserName = username.ToUpper(),
-            SecurityStamp = Guid.NewGuid().ToString(),
-            ConcurrencyStamp = Guid.NewGuid().ToString(),
-        };
+        User testUser = StoreTestUtils.CreateTestUser();
         _dbContext.Add(testUser);
 
-        WorkspaceMember testWorkspaceMembership = new WorkspaceMember
-        {
-            Title = "Member",
-            Workspace = testWorkspace,
-            User = testUser
-        };
+        WorkspaceMember testWorkspaceMembership =
+            StoreTestUtils.CreateTestWorkspaceMember(testUser, testWorkspace);
         _dbContext.Add(testWorkspaceMembership);
 
         await _dbContext.SaveChangesAsync();
@@ -328,40 +209,14 @@ public class WorkspaceStoreTests
     [Fact]
     public async void InsertWorkspaceSearch_ShouldThrowOnNonexistentIdsEmptySearch()
     {
-        Workspace testWorkspace = new Workspace
-        {
-            Description = "test description",
-            Name = "test-workspace-name" + ChannelStore.GenerateRandomString(10)
-        };
+        Workspace testWorkspace = StoreTestUtils.CreateTestWorkspace();
         _dbContext.Add(testWorkspace);
 
-        string username = UserStore.GenerateTestUserName(10);
-        string email = UserStore.GenerateTestEmail(10);
-        User testUser = new User
-        {
-            FirstName = UserStore.GenerateTestFirstName(10),
-            LastName = UserStore.GenerateTestLastName(10),
-            Timezone = UserStore.timezones[1].Id,
-            UserName = username,
-            Email = email,
-            PhoneNumber = "1-234-567-8901",
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword(
-                StoreTestUtils.testPassword,
-                4
-            ),
-            NormalizedEmail = email.ToUpper(),
-            NormalizedUserName = username.ToUpper(),
-            SecurityStamp = Guid.NewGuid().ToString(),
-            ConcurrencyStamp = Guid.NewGuid().ToString(),
-        };
+        User testUser = StoreTestUtils.CreateTestUser();
         _dbContext.Add(testUser);
 
-        WorkspaceMember testWorkspaceMembership = new WorkspaceMember
-        {
-            Title = "Member",
-            Workspace = testWorkspace,
-            User = testUser
-        };
+        WorkspaceMember testWorkspaceMembership =
+            StoreTestUtils.CreateTestWorkspaceMember(testUser, testWorkspace);
         _dbContext.Add(testWorkspaceMembership);
 
         await _dbContext.SaveChangesAsync();
@@ -405,32 +260,10 @@ public class WorkspaceStoreTests
     [Fact]
     public async void InsertWorkspaceSearch_ShouldThrowOnNotWorkspaceMember()
     {
-        Workspace testWorkspace = new Workspace
-        {
-            Description = "test description",
-            Name = "test-workspace-name" + ChannelStore.GenerateRandomString(10)
-        };
+        Workspace testWorkspace = StoreTestUtils.CreateTestWorkspace();
         _dbContext.Add(testWorkspace);
 
-        string username = UserStore.GenerateTestUserName(10);
-        string email = UserStore.GenerateTestEmail(10);
-        User testUser = new User
-        {
-            FirstName = UserStore.GenerateTestFirstName(10),
-            LastName = UserStore.GenerateTestLastName(10),
-            Timezone = UserStore.timezones[1].Id,
-            UserName = username,
-            Email = email,
-            PhoneNumber = "1-234-567-8901",
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword(
-                StoreTestUtils.testPassword,
-                4
-            ),
-            NormalizedEmail = email.ToUpper(),
-            NormalizedUserName = username.ToUpper(),
-            SecurityStamp = Guid.NewGuid().ToString(),
-            ConcurrencyStamp = Guid.NewGuid().ToString(),
-        };
+        User testUser = StoreTestUtils.CreateTestUser();
         _dbContext.Add(testUser);
 
         await _dbContext.SaveChangesAsync();
@@ -448,36 +281,13 @@ public class WorkspaceStoreTests
     [Fact]
     public async void InsertWorkspaceMembers_ShouldInsertWorkspaceMembers()
     {
-        Workspace testWorkspace = new Workspace
-        {
-            Description = "test description",
-            Name = "test-workspace-name" + ChannelStore.GenerateRandomString(10)
-        };
+        Workspace testWorkspace = StoreTestUtils.CreateTestWorkspace();
         _dbContext.Add(testWorkspace);
 
         List<User> testMembers = new List<User>();
         for (int i = 0; i < 10; i++)
         {
-            string email = UserStore.GenerateTestEmail(10);
-            string username = UserStore.GenerateTestUserName(10);
-            User user = new User
-            {
-                FirstName = UserStore.GenerateTestFirstName(10),
-                LastName = UserStore.GenerateTestLastName(10),
-                Timezone = UserStore.timezones[1].Id,
-                UserName = username,
-                Email = email,
-                PhoneNumber = "1-234-567-8901",
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword(
-                    StoreTestUtils.testPassword,
-                    4
-                ),
-                NormalizedEmail = email.ToUpper(),
-                NormalizedUserName = username.ToUpper(),
-                SecurityStamp = Guid.NewGuid().ToString(),
-                ConcurrencyStamp = Guid.NewGuid().ToString(),
-            };
-            testMembers.Add(user);
+            testMembers.Add(StoreTestUtils.CreateTestUser());
         }
         _dbContext.AddRange(testMembers);
 
@@ -512,34 +322,12 @@ public class WorkspaceStoreTests
     [Fact]
     public async void InsertWorkspaceMembers_ShouldThrowOnNonExistentIds()
     {
-        Workspace testWorkspace = new Workspace
-        {
-            Description = "test description",
-            Name = "test-workspace-name" + ChannelStore.GenerateRandomString(10)
-        };
+        Workspace testWorkspace = StoreTestUtils.CreateTestWorkspace();
         _dbContext.Add(testWorkspace);
 
-        string username = UserStore.GenerateTestUserName(10);
-        string email = UserStore.GenerateTestEmail(10);
-        User testMember = new User
-        {
-            FirstName = UserStore.GenerateTestFirstName(10),
-            LastName = UserStore.GenerateTestLastName(10),
-            Timezone = UserStore.timezones[1].Id,
-            UserName = username,
-            Email = email,
-            PhoneNumber = "1-234-567-8901",
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword(
-                StoreTestUtils.testPassword,
-                4
-            ),
-            NormalizedEmail = email.ToUpper(),
-            NormalizedUserName = username.ToUpper(),
-            SecurityStamp = Guid.NewGuid().ToString(),
-            ConcurrencyStamp = Guid.NewGuid().ToString(),
-        };
-
+        User testMember = StoreTestUtils.CreateTestUser();
         _dbContext.Add(testMember);
+
         await _dbContext.SaveChangesAsync();
 
         await Assert.ThrowsAsync<InvalidOperationException>(
@@ -572,40 +360,14 @@ public class WorkspaceStoreTests
     [Fact]
     public async void InsertWorkspaceMembers_ShouldThrowOnUsersAlreadyMembers()
     {
-        Workspace testWorkspace = new Workspace
-        {
-            Description = "test description",
-            Name = "test-workspace-name" + ChannelStore.GenerateRandomString(10)
-        };
+        Workspace testWorkspace = StoreTestUtils.CreateTestWorkspace();
         _dbContext.Add(testWorkspace);
 
-        string username = UserStore.GenerateTestUserName(10);
-        string email = UserStore.GenerateTestEmail(10);
-        User testMember = new User
-        {
-            FirstName = UserStore.GenerateTestFirstName(10),
-            LastName = UserStore.GenerateTestLastName(10),
-            Timezone = UserStore.timezones[1].Id,
-            UserName = username,
-            Email = email,
-            PhoneNumber = "1-234-567-8901",
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword(
-                StoreTestUtils.testPassword,
-                4
-            ),
-            NormalizedEmail = email.ToUpper(),
-            NormalizedUserName = username.ToUpper(),
-            SecurityStamp = Guid.NewGuid().ToString(),
-            ConcurrencyStamp = Guid.NewGuid().ToString(),
-        };
-        _dbContext.Add(testMember);
+        User testUser = StoreTestUtils.CreateTestUser();
+        _dbContext.Add(testUser);
 
-        WorkspaceMember testWorkspaceMembership = new WorkspaceMember
-        {
-            Title = "Member",
-            Workspace = testWorkspace,
-            User = testMember
-        };
+        WorkspaceMember testWorkspaceMembership =
+            StoreTestUtils.CreateTestWorkspaceMember(testUser, testWorkspace);
         _dbContext.Add(testWorkspaceMembership);
 
         await _dbContext.SaveChangesAsync();
@@ -614,7 +376,7 @@ public class WorkspaceStoreTests
             async () =>
                 await _workspaceStore.InsertWorkspaceMembers(
                     testWorkspace.Id,
-                    new List<Guid> { testMember.Id },
+                    new List<Guid> { testUser.Id },
                     new List<string> { "Member " }
                 )
         );
@@ -623,61 +385,17 @@ public class WorkspaceStoreTests
     [Fact]
     public async void InsertWorkspaceInvite_ShouldInsertWorkspaceInvite()
     {
-        Workspace testWorkspace = new Workspace
-        {
-            Description = "test description",
-            Name = "test-workspace-name" + ChannelStore.GenerateRandomString(10)
-        };
+        Workspace testWorkspace = StoreTestUtils.CreateTestWorkspace();
         _dbContext.Add(testWorkspace);
 
-        string email1 = UserStore.GenerateTestEmail(10);
-        string username1 = UserStore.GenerateTestUserName(10);
-        string email2 = UserStore.GenerateTestEmail(10);
-        string username2 = UserStore.GenerateTestUserName(10);
-        User testUser1 = new User
-        {
-            FirstName = UserStore.GenerateTestFirstName(10),
-            LastName = UserStore.GenerateTestLastName(10),
-            Timezone = UserStore.timezones[1].Id,
-            UserName = username1,
-            Email = email1,
-            PhoneNumber = "1-234-567-8901",
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword(
-                StoreTestUtils.testPassword,
-                4
-            ),
-            NormalizedEmail = email1.ToUpper(),
-            NormalizedUserName = username1.ToUpper(),
-            SecurityStamp = Guid.NewGuid().ToString(),
-            ConcurrencyStamp = Guid.NewGuid().ToString(),
-        };
-        User testUser2 = new User
-        {
-            FirstName = UserStore.GenerateTestFirstName(10),
-            LastName = UserStore.GenerateTestLastName(10),
-            Timezone = UserStore.timezones[1].Id,
-            UserName = username2,
-            Email = email2,
-            PhoneNumber = "1-234-567-8901",
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword(
-                StoreTestUtils.testPassword,
-                4
-            ),
-            NormalizedEmail = email2.ToUpper(),
-            NormalizedUserName = username2.ToUpper(),
-            SecurityStamp = Guid.NewGuid().ToString(),
-            ConcurrencyStamp = Guid.NewGuid().ToString(),
-        };
+        User testUser1 = StoreTestUtils.CreateTestUser();
+        User testUser2 = StoreTestUtils.CreateTestUser();
         _dbContext.Add(testUser1);
         _dbContext.Add(testUser2);
 
-        WorkspaceMember testWorkspaceMembership1 = new WorkspaceMember
-        {
-            Title = "Member",
-            User = testUser1,
-            Workspace = testWorkspace,
-            Admin = true
-        };
+        WorkspaceMember testWorkspaceMembership1 =
+            StoreTestUtils.CreateTestWorkspaceMember(testUser1, testWorkspace);
+        testWorkspaceMembership1.Admin = true;
 
         _dbContext.Add(testWorkspaceMembership1);
         await _dbContext.SaveChangesAsync();
@@ -699,61 +417,17 @@ public class WorkspaceStoreTests
     [Fact]
     public async void InsertWorkspaceInvite_ShouldThrowOnNonexistentIds()
     {
-        Workspace testWorkspace = new Workspace
-        {
-            Description = "test description",
-            Name = "test-workspace-name" + ChannelStore.GenerateRandomString(10)
-        };
+        Workspace testWorkspace = StoreTestUtils.CreateTestWorkspace();
         _dbContext.Add(testWorkspace);
 
-        string email1 = UserStore.GenerateTestEmail(10);
-        string username1 = UserStore.GenerateTestUserName(10);
-        string email2 = UserStore.GenerateTestEmail(10);
-        string username2 = UserStore.GenerateTestUserName(10);
-        User testUser1 = new User
-        {
-            FirstName = UserStore.GenerateTestFirstName(10),
-            LastName = UserStore.GenerateTestLastName(10),
-            Timezone = UserStore.timezones[1].Id,
-            UserName = username1,
-            Email = email1,
-            PhoneNumber = "1-234-567-8901",
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword(
-                StoreTestUtils.testPassword,
-                4
-            ),
-            NormalizedEmail = email1.ToUpper(),
-            NormalizedUserName = username1.ToUpper(),
-            SecurityStamp = Guid.NewGuid().ToString(),
-            ConcurrencyStamp = Guid.NewGuid().ToString(),
-        };
-        User testUser2 = new User
-        {
-            FirstName = UserStore.GenerateTestFirstName(10),
-            LastName = UserStore.GenerateTestLastName(10),
-            Timezone = UserStore.timezones[1].Id,
-            UserName = username2,
-            Email = email2,
-            PhoneNumber = "1-234-567-8901",
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword(
-                StoreTestUtils.testPassword,
-                4
-            ),
-            NormalizedEmail = email2.ToUpper(),
-            NormalizedUserName = username2.ToUpper(),
-            SecurityStamp = Guid.NewGuid().ToString(),
-            ConcurrencyStamp = Guid.NewGuid().ToString(),
-        };
+        User testUser1 = StoreTestUtils.CreateTestUser();
+        User testUser2 = StoreTestUtils.CreateTestUser();
         _dbContext.Add(testUser1);
         _dbContext.Add(testUser2);
 
-        WorkspaceMember testWorkspaceMembership1 = new WorkspaceMember
-        {
-            Title = "Member",
-            User = testUser1,
-            Workspace = testWorkspace,
-            Admin = true
-        };
+        WorkspaceMember testWorkspaceMembership1 =
+            StoreTestUtils.CreateTestWorkspaceMember(testUser1, testWorkspace);
+        testWorkspaceMembership1.Admin = true;
 
         _dbContext.Add(testWorkspaceMembership1);
         await _dbContext.SaveChangesAsync();
@@ -797,63 +471,18 @@ public class WorkspaceStoreTests
     [Fact]
     public async void InsertWorkspaceInvite_ShouldThrowOnNonAdminInvite()
     {
-        Workspace testWorkspace = new Workspace
-        {
-            Description = "test description",
-            Name = "test-workspace-name" + ChannelStore.GenerateRandomString(10)
-        };
+        Workspace testWorkspace = StoreTestUtils.CreateTestWorkspace();
         _dbContext.Add(testWorkspace);
 
-        string email1 = UserStore.GenerateTestEmail(10);
-        string username1 = UserStore.GenerateTestUserName(10);
-        string email2 = UserStore.GenerateTestEmail(10);
-        string username2 = UserStore.GenerateTestUserName(10);
-        User testUser1 = new User
-        {
-            FirstName = UserStore.GenerateTestFirstName(10),
-            LastName = UserStore.GenerateTestLastName(10),
-            Timezone = UserStore.timezones[1].Id,
-            UserName = username1,
-            Email = email1,
-            PhoneNumber = "1-234-567-8901",
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword(
-                StoreTestUtils.testPassword,
-                4
-            ),
-            NormalizedEmail = email1.ToUpper(),
-            NormalizedUserName = username1.ToUpper(),
-            SecurityStamp = Guid.NewGuid().ToString(),
-            ConcurrencyStamp = Guid.NewGuid().ToString(),
-        };
-        User testUser2 = new User
-        {
-            FirstName = UserStore.GenerateTestFirstName(10),
-            LastName = UserStore.GenerateTestLastName(10),
-            Timezone = UserStore.timezones[1].Id,
-            UserName = username2,
-            Email = email2,
-            PhoneNumber = "1-234-567-8901",
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword(
-                StoreTestUtils.testPassword,
-                4
-            ),
-            NormalizedEmail = email2.ToUpper(),
-            NormalizedUserName = username2.ToUpper(),
-            SecurityStamp = Guid.NewGuid().ToString(),
-            ConcurrencyStamp = Guid.NewGuid().ToString(),
-        };
+        User testUser1 = StoreTestUtils.CreateTestUser();
+        User testUser2 = StoreTestUtils.CreateTestUser();
         _dbContext.Add(testUser1);
         _dbContext.Add(testUser2);
 
-        WorkspaceMember testWorkspaceMembership1 = new WorkspaceMember
-        {
-            Title = "Member",
-            User = testUser1,
-            Workspace = testWorkspace,
-            Admin = false
-        };
-
+        WorkspaceMember testWorkspaceMembership1 =
+            StoreTestUtils.CreateTestWorkspaceMember(testUser1, testWorkspace);
         _dbContext.Add(testWorkspaceMembership1);
+
         await _dbContext.SaveChangesAsync();
 
         await Assert.ThrowsAsync<InvalidOperationException>(
@@ -869,71 +498,21 @@ public class WorkspaceStoreTests
     [Fact]
     public async void InsertWorkspaceInvite_ShouldThrowOnUserAlreadyMember()
     {
-        Workspace testWorkspace = new Workspace
-        {
-            Description = "test description",
-            Name = "test-workspace-name" + ChannelStore.GenerateRandomString(10)
-        };
+        Workspace testWorkspace = StoreTestUtils.CreateTestWorkspace();
         _dbContext.Add(testWorkspace);
 
-        string email1 = UserStore.GenerateTestEmail(10);
-        string username1 = UserStore.GenerateTestUserName(10);
-        string email2 = UserStore.GenerateTestEmail(10);
-        string username2 = UserStore.GenerateTestUserName(10);
-        User testUser1 = new User
-        {
-            FirstName = UserStore.GenerateTestFirstName(10),
-            LastName = UserStore.GenerateTestLastName(10),
-            Timezone = UserStore.timezones[1].Id,
-            UserName = username1,
-            Email = email1,
-            PhoneNumber = "1-234-567-8901",
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword(
-                StoreTestUtils.testPassword,
-                4
-            ),
-            NormalizedEmail = email1.ToUpper(),
-            NormalizedUserName = username1.ToUpper(),
-            SecurityStamp = Guid.NewGuid().ToString(),
-            ConcurrencyStamp = Guid.NewGuid().ToString(),
-        };
-        User testUser2 = new User
-        {
-            FirstName = UserStore.GenerateTestFirstName(10),
-            LastName = UserStore.GenerateTestLastName(10),
-            Timezone = UserStore.timezones[1].Id,
-            UserName = username2,
-            Email = email2,
-            PhoneNumber = "1-234-567-8901",
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword(
-                StoreTestUtils.testPassword,
-                4
-            ),
-            NormalizedEmail = email2.ToUpper(),
-            NormalizedUserName = username2.ToUpper(),
-            SecurityStamp = Guid.NewGuid().ToString(),
-            ConcurrencyStamp = Guid.NewGuid().ToString(),
-        };
+        User testUser1 = StoreTestUtils.CreateTestUser();
+        User testUser2 = StoreTestUtils.CreateTestUser();
         _dbContext.Add(testUser1);
         _dbContext.Add(testUser2);
 
-        WorkspaceMember testWorkspaceMembership1 = new WorkspaceMember
-        {
-            Title = "Member",
-            User = testUser1,
-            Workspace = testWorkspace,
-            Admin = true
-        };
-
-        WorkspaceMember testWorkspaceMembership2 = new WorkspaceMember
-        {
-            Title = "Member",
-            User = testUser2,
-            Workspace = testWorkspace,
-        };
-
+        WorkspaceMember testWorkspaceMembership1 =
+            StoreTestUtils.CreateTestWorkspaceMember(testUser1, testWorkspace);
         _dbContext.Add(testWorkspaceMembership1);
+        WorkspaceMember testWorkspaceMembership2 =
+            StoreTestUtils.CreateTestWorkspaceMember(testUser2, testWorkspace);
         _dbContext.Add(testWorkspaceMembership2);
+
         await _dbContext.SaveChangesAsync();
 
         await Assert.ThrowsAsync<InvalidOperationException>(
@@ -952,13 +531,7 @@ public class WorkspaceStoreTests
         List<Workspace> workspaces = new List<Workspace>();
         for (int i = 0; i < 10; i++)
         {
-            workspaces.Add(
-                new Workspace
-                {
-                    Description = "test description" + i.ToString(),
-                    Name = "test-workspace-name" + i.ToString()
-                }
-            );
+            workspaces.Add(StoreTestUtils.CreateTestWorkspace());
         }
 
         List<Workspace> inserted = await _workspaceStore.InsertWorkspaces(
