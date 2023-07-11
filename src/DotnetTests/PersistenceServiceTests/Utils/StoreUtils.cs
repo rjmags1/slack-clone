@@ -7,6 +7,8 @@ namespace DotnetTests.PersistenceService.Utils;
 
 public class StoreTestUtils
 {
+    public const string testPassword = "Test_password1";
+
     public static Workspace CreateTestWorkspace()
     {
         return new Workspace
@@ -30,10 +32,7 @@ public class StoreTestUtils
             UserName = username,
             Email = email,
             PhoneNumber = "1-234-567-8901",
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword(
-                UserStore.testPassword,
-                4
-            ),
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(testPassword, 4),
             NormalizedEmail = email.ToUpper(),
             NormalizedUserName = username.ToUpper(),
             SecurityStamp = Guid.NewGuid().ToString(),
@@ -246,6 +245,21 @@ public class StoreTestUtils
         return new Theme
         {
             Name = "test-theme-name-" + Store.GenerateRandomString(10)
+        };
+    }
+
+    public static User CreateTestUnregisteredUser()
+    {
+        return new User
+        {
+            FirstName = UserStore.GenerateTestFirstName(10),
+            LastName = UserStore.GenerateTestLastName(10),
+            Timezone = UserStore.timezones[
+                Store.random.Next(UserStore.timezones.Count)
+            ].Id,
+            UserName = UserStore.GenerateTestUserName(10),
+            Email = UserStore.GenerateTestEmail(10),
+            PhoneNumber = "1-234-456-789"
         };
     }
 }

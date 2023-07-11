@@ -1,4 +1,5 @@
 using DotnetTests.Fixtures;
+using DotnetTests.PersistenceService.Utils;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -31,19 +32,9 @@ public class UserStoreTests
         List<string> passwords = new List<string>();
         for (int i = 0; i < expectedInserted; i++)
         {
-            User u = new User
-            {
-                FirstName = "test-fname-" + i.ToString(),
-                LastName = "test-lname-" + i.ToString(),
-                Timezone = UserStore.timezones[
-                    i % UserStore.timezones.Count
-                ].Id,
-                UserName = "test-username-" + i.ToString(),
-                Email = UserStore.GenerateTestEmail(10),
-                PhoneNumber = "1-234-456-789" + i.ToString()
-            };
+            User u = StoreTestUtils.CreateTestUnregisteredUser();
             users.Add(u);
-            passwords.Add(UserStore.testPassword);
+            passwords.Add(StoreTestUtils.testPassword);
         }
 
         List<User> loaded = (await _userStore.InsertUsers(users, passwords))
@@ -58,7 +49,7 @@ public class UserStoreTests
 
         foreach (
             ((User loadedUser, User user), string password) in loaded
-                .Zip(users)
+                .Zip(users.OrderBy(u => u.UserName))
                 .Zip(passwords)
         )
         {
@@ -96,52 +87,30 @@ public class UserStoreTests
     [Fact]
     public async void InsertUsers_RejectsInvalidUserName()
     {
-        User badUser1 = new User
-        {
-            FirstName = "test-fname",
-            LastName = "test-lname",
-            Timezone = UserStore.timezones[0].Id,
-            UserName = "",
-            Email = UserStore.GenerateTestEmail(10),
-            PhoneNumber = "1-234-456-7890"
-        };
-        User badUser2 = new User
-        {
-            FirstName = "test-fname",
-            LastName = "test-lname",
-            Timezone = UserStore.timezones[0].Id,
-            UserName = "!~[]?><",
-            Email = UserStore.GenerateTestEmail(10),
-            PhoneNumber = "1-234-456-7890"
-        };
-        User goodUser = new User
-        {
-            FirstName = "test-fname",
-            LastName = "test-lname",
-            Timezone = UserStore.timezones[0].Id,
-            UserName = "test-username",
-            Email = UserStore.GenerateTestEmail(10),
-            PhoneNumber = "1-234-456-7890"
-        };
+        User badUser1 = StoreTestUtils.CreateTestUnregisteredUser();
+        badUser1.UserName = "";
+        User badUser2 = StoreTestUtils.CreateTestUnregisteredUser();
+        badUser2.UserName = "!~[]?><";
+        User goodUser = StoreTestUtils.CreateTestUnregisteredUser();
         await Assert.ThrowsAsync<ArgumentException>(
             () =>
                 _userStore.InsertUsers(
                     new List<User> { badUser1 },
-                    new List<string> { UserStore.testPassword }
+                    new List<string> { StoreTestUtils.testPassword }
                 )
         );
         await Assert.ThrowsAsync<ArgumentException>(
             () =>
                 _userStore.InsertUsers(
                     new List<User> { badUser2 },
-                    new List<string> { UserStore.testPassword }
+                    new List<string> { StoreTestUtils.testPassword }
                 )
         );
         Assert.Contains(
             goodUser,
             await _userStore.InsertUsers(
                 new List<User> { goodUser },
-                new List<string> { UserStore.testPassword }
+                new List<string> { StoreTestUtils.testPassword }
             )
         );
     }
@@ -149,15 +118,7 @@ public class UserStoreTests
     [Fact]
     public async void InsertUsers_ShouldThrowExceptionOnInvalidPassword()
     {
-        User goodUser = new User
-        {
-            FirstName = "test-fname",
-            LastName = "test-lname",
-            Timezone = UserStore.timezones[0].Id,
-            UserName = "valid_username",
-            Email = UserStore.GenerateTestEmail(10),
-            PhoneNumber = "1-234-456-7890"
-        };
+        User goodUser = StoreTestUtils.CreateTestUnregisteredUser();
         await Assert.ThrowsAsync<ArgumentException>(
             () =>
                 _userStore.InsertUsers(
@@ -198,32 +159,17 @@ public class UserStoreTests
     [Fact]
     public async void InsertUsers_ShouldThrowExceptionOnNonUniqueEmail()
     {
-        User user1 = new User
-        {
-            FirstName = "test-fname",
-            LastName = "test-lname",
-            Timezone = UserStore.timezones[0].Id,
-            UserName = "valid_username_1",
-            Email = "test-email@test.com",
-            PhoneNumber = "1-234-456-7890"
-        };
-        User duplicateEmailUser = new User
-        {
-            FirstName = "test-fname",
-            LastName = "test-lname",
-            Timezone = UserStore.timezones[0].Id,
-            UserName = "valid_username_2",
-            Email = "test-email@test.com",
-            PhoneNumber = "1-234-456-7890"
-        };
+        User user1 = StoreTestUtils.CreateTestUnregisteredUser();
+        User duplicateEmailUser = StoreTestUtils.CreateTestUnregisteredUser();
+        duplicateEmailUser.Email = user1.Email;
         await Assert.ThrowsAsync<ArgumentException>(
             async () =>
                 await _userStore.InsertUsers(
                     new List<User> { user1, duplicateEmailUser },
                     new List<string>
                     {
-                        UserStore.testPassword,
-                        UserStore.testPassword
+                        StoreTestUtils.testPassword,
+                        StoreTestUtils.testPassword
                     }
                 )
         );

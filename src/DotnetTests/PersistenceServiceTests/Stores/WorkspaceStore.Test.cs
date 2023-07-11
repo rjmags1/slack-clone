@@ -1,4 +1,5 @@
 using DotnetTests.Fixtures;
+using DotnetTests.PersistenceService.Utils;
 using Microsoft.EntityFrameworkCore;
 using PersistenceService.Data.ApplicationDb;
 using PersistenceService.Models;
@@ -41,7 +42,7 @@ public class WorkspaceStoreTests
             Email = email,
             PhoneNumber = "1-234-567-8901",
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(
-                UserStore.testPassword,
+                StoreTestUtils.testPassword,
                 4
             ),
             NormalizedEmail = email.ToUpper(),
@@ -100,7 +101,7 @@ public class WorkspaceStoreTests
             Email = email,
             PhoneNumber = "1-234-567-8901",
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(
-                UserStore.testPassword,
+                StoreTestUtils.testPassword,
                 4
             ),
             NormalizedEmail = email.ToUpper(),
@@ -165,7 +166,7 @@ public class WorkspaceStoreTests
             Email = email,
             PhoneNumber = "1-234-567-8901",
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(
-                UserStore.testPassword,
+                StoreTestUtils.testPassword,
                 4
             ),
             NormalizedEmail = email.ToUpper(),
@@ -240,7 +241,7 @@ public class WorkspaceStoreTests
             Email = email,
             PhoneNumber = "1-234-567-8901",
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(
-                UserStore.testPassword,
+                StoreTestUtils.testPassword,
                 4
             ),
             NormalizedEmail = email.ToUpper(),
@@ -291,7 +292,7 @@ public class WorkspaceStoreTests
             Email = email,
             PhoneNumber = "1-234-567-8901",
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(
-                UserStore.testPassword,
+                StoreTestUtils.testPassword,
                 4
             ),
             NormalizedEmail = email.ToUpper(),
@@ -345,7 +346,7 @@ public class WorkspaceStoreTests
             Email = email,
             PhoneNumber = "1-234-567-8901",
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(
-                UserStore.testPassword,
+                StoreTestUtils.testPassword,
                 4
             ),
             NormalizedEmail = email.ToUpper(),
@@ -422,7 +423,7 @@ public class WorkspaceStoreTests
             Email = email,
             PhoneNumber = "1-234-567-8901",
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(
-                UserStore.testPassword,
+                StoreTestUtils.testPassword,
                 4
             ),
             NormalizedEmail = email.ToUpper(),
@@ -468,7 +469,7 @@ public class WorkspaceStoreTests
                 Email = email,
                 PhoneNumber = "1-234-567-8901",
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword(
-                    UserStore.testPassword,
+                    StoreTestUtils.testPassword,
                     4
                 ),
                 NormalizedEmail = email.ToUpper(),
@@ -529,7 +530,7 @@ public class WorkspaceStoreTests
             Email = email,
             PhoneNumber = "1-234-567-8901",
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(
-                UserStore.testPassword,
+                StoreTestUtils.testPassword,
                 4
             ),
             NormalizedEmail = email.ToUpper(),
@@ -589,7 +590,7 @@ public class WorkspaceStoreTests
             Email = email,
             PhoneNumber = "1-234-567-8901",
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(
-                UserStore.testPassword,
+                StoreTestUtils.testPassword,
                 4
             ),
             NormalizedEmail = email.ToUpper(),
@@ -642,7 +643,7 @@ public class WorkspaceStoreTests
             Email = email1,
             PhoneNumber = "1-234-567-8901",
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(
-                UserStore.testPassword,
+                StoreTestUtils.testPassword,
                 4
             ),
             NormalizedEmail = email1.ToUpper(),
@@ -659,7 +660,7 @@ public class WorkspaceStoreTests
             Email = email2,
             PhoneNumber = "1-234-567-8901",
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(
-                UserStore.testPassword,
+                StoreTestUtils.testPassword,
                 4
             ),
             NormalizedEmail = email2.ToUpper(),
@@ -718,7 +719,7 @@ public class WorkspaceStoreTests
             Email = email1,
             PhoneNumber = "1-234-567-8901",
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(
-                UserStore.testPassword,
+                StoreTestUtils.testPassword,
                 4
             ),
             NormalizedEmail = email1.ToUpper(),
@@ -735,7 +736,7 @@ public class WorkspaceStoreTests
             Email = email2,
             PhoneNumber = "1-234-567-8901",
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(
-                UserStore.testPassword,
+                StoreTestUtils.testPassword,
                 4
             ),
             NormalizedEmail = email2.ToUpper(),
@@ -816,7 +817,7 @@ public class WorkspaceStoreTests
             Email = email1,
             PhoneNumber = "1-234-567-8901",
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(
-                UserStore.testPassword,
+                StoreTestUtils.testPassword,
                 4
             ),
             NormalizedEmail = email1.ToUpper(),
@@ -833,7 +834,7 @@ public class WorkspaceStoreTests
             Email = email2,
             PhoneNumber = "1-234-567-8901",
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(
-                UserStore.testPassword,
+                StoreTestUtils.testPassword,
                 4
             ),
             NormalizedEmail = email2.ToUpper(),
@@ -888,7 +889,7 @@ public class WorkspaceStoreTests
             Email = email1,
             PhoneNumber = "1-234-567-8901",
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(
-                UserStore.testPassword,
+                StoreTestUtils.testPassword,
                 4
             ),
             NormalizedEmail = email1.ToUpper(),
@@ -905,7 +906,7 @@ public class WorkspaceStoreTests
             Email = email2,
             PhoneNumber = "1-234-567-8901",
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(
-                UserStore.testPassword,
+                StoreTestUtils.testPassword,
                 4
             ),
             NormalizedEmail = email2.ToUpper(),
