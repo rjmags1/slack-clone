@@ -4,7 +4,8 @@ using Microsoft.EntityFrameworkCore.Metadata;
 using PersistenceService.Data.ApplicationDb;
 using PersistenceService.Models;
 
-[Collection("Database collection")]
+[Trait("Category", "Order 1")]
+[Collection("Database collection 1")]
 public class ChannelMessageNotificationMigrationsTests
 {
     private readonly ApplicationDbContext _dbContext;

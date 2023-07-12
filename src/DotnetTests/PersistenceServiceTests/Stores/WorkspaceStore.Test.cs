@@ -6,7 +6,8 @@ using PersistenceService.Stores;
 
 namespace DotnetTest.PersistenceService.Stores;
 
-[Collection("Database collection")]
+[Trait("Category", "Order 1")]
+[Collection("Database collection 1")]
 public class WorkspaceStoreTests
 {
     private readonly ApplicationDbContext _dbContext;

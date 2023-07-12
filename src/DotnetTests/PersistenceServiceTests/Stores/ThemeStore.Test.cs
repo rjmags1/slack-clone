@@ -8,7 +8,8 @@ using PersistenceService.Stores;
 
 namespace DotnetTests.PersistenceService.Stores;
 
-[Collection("Database collection")]
+[Trait("Category", "Order 1")]
+[Collection("Database collection 1")]
 public class ThemeStoreTests
 {
     private readonly ApplicationDbContext _dbContext;
@@ -88,5 +89,27 @@ public class ThemeStoreTests
         await Assert.ThrowsAsync<DbUpdateException>(
             async () => await _themeStore.InsertThemes(themes)
         );
+    }
+}
+
+[Trait("Category", "Order 2")]
+[Collection("Database collection 2")]
+public class ThemeStoreTests2
+{
+    private readonly ApplicationDbContext _dbContext;
+    private readonly ThemeStore _themeStore;
+
+    public ThemeStoreTests2(
+        FilledApplicationDbContextFixture filledApplicationDbContextFixture
+    )
+    {
+        _dbContext = filledApplicationDbContextFixture.context;
+        _themeStore = new ThemeStore(_dbContext);
+    }
+
+    [Fact]
+    public void TestOrderer()
+    {
+        Assert.Equal(2, _dbContext.Themes.Count());
     }
 }

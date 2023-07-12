@@ -6,7 +6,8 @@ using PersistenceService.Models;
 
 namespace DotnetTests.PersistenceService.Migrations;
 
-[Collection("Database collection")]
+[Trait("Category", "Order 1")]
+[Collection("Database collection 1")]
 public class WorkspaceMigrationsTests
 {
     private readonly ApplicationDbContext _dbContext;

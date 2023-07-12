@@ -7,7 +7,8 @@ using DotnetTests.PersistenceService.Utils;
 
 namespace DotnetTests.PersistenceService.Stores;
 
-[Collection("Database collection")]
+[Trait("Category", "Order 1")]
+[Collection("Database collection 1")]
 public class FileStoreTests
 {
     private readonly ApplicationDbContext _dbContext;

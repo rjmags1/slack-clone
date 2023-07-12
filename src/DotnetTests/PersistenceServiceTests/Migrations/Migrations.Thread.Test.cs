@@ -4,7 +4,8 @@ using Microsoft.EntityFrameworkCore.Metadata;
 using PersistenceService.Data.ApplicationDb;
 using Thread = PersistenceService.Models.Thread;
 
-[Collection("Database collection")]
+[Trait("Category", "Order 1")]
+[Collection("Database collection 1")]
 public class ThreadMigrationsTests
 {
     private readonly ApplicationDbContext _dbContext;

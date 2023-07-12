@@ -6,7 +6,8 @@ using PersistenceService.Stores;
 
 namespace DotnetTests.PersistenceService.Stores;
 
-[Collection("Database collection")]
+[Trait("Category", "Order 1")]
+[Collection("Database collection 1")]
 public class DirectMessageGroupStoreTests
 {
     private readonly ApplicationDbContext _dbContext;

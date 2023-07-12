@@ -1,13 +1,16 @@
 using Microsoft.EntityFrameworkCore;
 using PersistenceService.Data.ApplicationDb;
+using PersistenceService.Stores;
 
 namespace DotnetTests.Fixtures;
 
-public class ApplicationDbContextFixture : IDisposable
+public class FilledApplicationDbContextFixture : IAsyncLifetime
 {
     public ApplicationDbContext context { get; private set; }
 
-    public ApplicationDbContextFixture()
+    private readonly ThemeStore _themeStore;
+
+    public FilledApplicationDbContextFixture()
     {
         var envFilePath = Directory.GetCurrentDirectory() + "/../../../.env";
         if (File.Exists(envFilePath))
@@ -42,15 +45,21 @@ public class ApplicationDbContextFixture : IDisposable
         ApplicationDbContext c = new ApplicationDbContext(options);
         c.Database.Migrate();
         context = c;
+        _themeStore = new ThemeStore(context);
     }
 
-    public void Dispose()
+    public async Task InitializeAsync()
+    {
+        await _themeStore.InsertShippedThemes();
+    }
+
+    public async Task DisposeAsync()
     {
         context.Database.EnsureDeleted();
-        context.Dispose();
+        await context.DisposeAsync();
     }
 }
 
-[CollectionDefinition("Database collection 1")]
-public class DatabaseCollection1
-    : ICollectionFixture<ApplicationDbContextFixture> { }
+[CollectionDefinition("Database collection 2")]
+public class DatabaseCollection2
+    : ICollectionFixture<FilledApplicationDbContextFixture> { }
