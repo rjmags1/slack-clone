@@ -1174,7 +1174,7 @@ namespace PersistenceService.Migrations
                     b.Property<int>("NumMembers")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer")
-                        .HasDefaultValueSql("1");
+                        .HasDefaultValueSql("0");
 
                     b.HasKey("Id");
 

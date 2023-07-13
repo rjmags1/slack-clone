@@ -1,4 +1,5 @@
 using DotnetTests.Fixtures;
+using DotnetTests.PersistenceService.Utils;
 using Microsoft.EntityFrameworkCore;
 using Moq;
 using PersistenceService.Data.ApplicationDb;
@@ -7,36 +8,33 @@ using PersistenceService.Stores;
 
 namespace DotnetTests.PersistenceService.Stores;
 
-[Collection("Database collection")]
+[Trait("Category", "Order 1")]
+[Collection("Database collection 1")]
 public class ThemeStoreTests
 {
     private readonly ApplicationDbContext _dbContext;
+    private readonly ThemeStore _themeStore;
 
     public ThemeStoreTests(
         ApplicationDbContextFixture applicationDbContextFixture
     )
     {
         _dbContext = applicationDbContextFixture.context;
+        _themeStore = new ThemeStore(_dbContext);
     }
 
     [Fact]
     public async void InsertThemes_ShouldInsertThemes()
     {
         List<Theme> themes = new List<Theme>();
-        string testNamePrefix = "test-theme-name-";
         for (int i = 0; i < 10; i++)
         {
-            Theme f = new Theme { Name = testNamePrefix + i.ToString(), };
-            themes.Add(f);
+            themes.Add(StoreTestUtils.CreateTestTheme());
         }
 
-        ThemeStore themeStore = new ThemeStore(_dbContext);
-        List<Theme> loaded = (await themeStore.InsertThemes(themes))
-            .OrderByDescending(f => f.Name)
-            .Take(10)
-            .ToList();
+        List<Theme> loaded = await _themeStore.InsertThemes(themes);
         Assert.Equal(
-            themes.Select(f => f.Name),
+            themes.Select(f => f.Name).OrderBy(name => name),
             loaded.Select(f => f.Name).OrderBy(name => name)
         );
         Assert.All(loaded, t => Assert.NotEqual(t.Id, Guid.Empty));
@@ -83,13 +81,35 @@ public class ThemeStoreTests
     [Fact]
     public async void InsertThemes_ShouldRaiseDbUpdateExceptionOnNonUniqueName()
     {
-        Theme theme1 = new Theme { Name = "test-theme-name" };
-        Theme theme2 = new Theme { Name = "test-theme-name" };
+        Theme theme1 = StoreTestUtils.CreateTestTheme();
+        Theme theme2 = StoreTestUtils.CreateTestTheme();
+        theme2.Name = theme1.Name;
         List<Theme> themes = new List<Theme> { theme1, theme2 };
-        ThemeStore themeStore = new ThemeStore(_dbContext);
 
         await Assert.ThrowsAsync<DbUpdateException>(
-            async () => await themeStore.InsertThemes(themes)
+            async () => await _themeStore.InsertThemes(themes)
         );
+    }
+}
+
+[Trait("Category", "Order 2")]
+[Collection("Database collection 2")]
+public class ThemeStoreTests2
+{
+    private readonly ApplicationDbContext _dbContext;
+    private readonly ThemeStore _themeStore;
+
+    public ThemeStoreTests2(
+        FilledApplicationDbContextFixture filledApplicationDbContextFixture
+    )
+    {
+        _dbContext = filledApplicationDbContextFixture.context;
+        _themeStore = new ThemeStore(_dbContext);
+    }
+
+    [Fact]
+    public void TestOrderer()
+    {
+        Assert.Equal(2, _dbContext.Themes.Count());
     }
 }

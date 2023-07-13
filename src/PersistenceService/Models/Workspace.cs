@@ -30,5 +30,5 @@ public class Workspace
     public string Name { get; set; }
 #pragma warning restore CS8618
 
-    public int NumMembers { get; set; } = 1;
+    public int NumMembers { get; set; } = 0;
 }

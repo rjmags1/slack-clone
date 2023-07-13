@@ -1,48 +1,41 @@
 using PersistenceService.Stores;
 using PersistenceService.Data.ApplicationDb;
 using DotnetTests.Fixtures;
-using Microsoft.EntityFrameworkCore;
 
 using Models = PersistenceService.Models;
+using DotnetTests.PersistenceService.Utils;
 
 namespace DotnetTests.PersistenceService.Stores;
 
-[Collection("Database collection")]
+[Trait("Category", "Order 1")]
+[Collection("Database collection 1")]
 public class FileStoreTests
 {
     private readonly ApplicationDbContext _dbContext;
+    private readonly FileStore _fileStore;
 
     public FileStoreTests(
         ApplicationDbContextFixture applicationDbContextFixture
     )
     {
         _dbContext = applicationDbContextFixture.context;
+        _fileStore = new FileStore(_dbContext);
     }
 
     [Fact]
     public async void InsertFiles_ShouldInsertFiles()
     {
         List<Models.File> files = new List<Models.File>();
-        string testNamePrefix = "test-file-name-";
-        string testKeyPrefix = "test-key-";
         for (int i = 0; i < 10; i++)
         {
-            Models.File f = new Models.File
-            {
-                Name = testNamePrefix + i.ToString(),
-                StoreKey = testKeyPrefix + i.ToString()
-            };
-            files.Add(f);
+            files.Add(StoreTestUtils.CreateTestFileRecord());
         }
 
         FileStore fileStore = new FileStore(_dbContext);
 
-        List<Models.File> loaded = (await fileStore.InsertFiles(files))
-            .OrderByDescending(f => f.UploadedAt)
-            .Take(10)
-            .ToList();
+        List<Models.File> loaded = await fileStore.InsertFiles(files);
         Assert.Equal(
-            files.Select(f => f.Name),
+            files.Select(f => f.Name).OrderBy(name => name),
             loaded.Select(f => f.Name).OrderBy(name => name)
         );
         Assert.All(loaded, f => Assert.NotEqual(f.Id, Guid.Empty));

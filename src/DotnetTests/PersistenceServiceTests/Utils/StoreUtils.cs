@@ -1,11 +1,14 @@
 using PersistenceService.Models;
 using PersistenceService.Stores;
+using File = PersistenceService.Models.File;
 using Thread = PersistenceService.Models.Thread;
 
 namespace DotnetTests.PersistenceService.Utils;
 
 public class StoreTestUtils
 {
+    public const string testPassword = "Test_password1";
+
     public static Workspace CreateTestWorkspace()
     {
         return new Workspace
@@ -29,10 +32,7 @@ public class StoreTestUtils
             UserName = username,
             Email = email,
             PhoneNumber = "1-234-567-8901",
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword(
-                UserStore.testPassword,
-                4
-            ),
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(testPassword, 4),
             NormalizedEmail = email.ToUpper(),
             NormalizedUserName = username.ToUpper(),
             SecurityStamp = Guid.NewGuid().ToString(),
@@ -153,5 +153,113 @@ public class StoreTestUtils
     )
     {
         return new ThreadWatch { Thread = testThread, User = testUser };
+    }
+
+    public static DirectMessageGroup CreateTestDirectMessageGroup(
+        Workspace testWorkspace
+    )
+    {
+        return new DirectMessageGroup { Workspace = testWorkspace };
+    }
+
+    public static DirectMessageGroupMember CreateTestDirectMessageGroupMember(
+        User testUser,
+        DirectMessageGroup testGroup
+    )
+    {
+        return new DirectMessageGroupMember
+        {
+            DirectMessageGroup = testGroup,
+            User = testUser
+        };
+    }
+
+    public static DirectMessage CreateTestDirectMessage(
+        DirectMessageGroup testGroup,
+        User testAuthor
+    )
+    {
+        return new DirectMessage
+        {
+            Content = "test content",
+            DirectMessageGroup = testGroup,
+            SentAt = DateTime.Now,
+            User = testAuthor
+        };
+    }
+
+    public static DirectMessageReply CreateTestDirectMessageReplyRecord(
+        DirectMessage testReply,
+        DirectMessage testMessageRepliedTo,
+        User testReplier,
+        User testRepliedTo
+    )
+    {
+        return new DirectMessageReply
+        {
+            DirectMessage = testReply,
+            MessageRepliedTo = testMessageRepliedTo,
+            RepliedTo = testRepliedTo,
+            Replier = testReplier
+        };
+    }
+
+    public static DirectMessageMention CreateTestDirectMessageMention(
+        DirectMessage testMessage,
+        User testMentioned,
+        User testMentioner
+    )
+    {
+        return new DirectMessageMention
+        {
+            DirectMessage = testMessage,
+            Mentioned = testMentioned,
+            Mentioner = testMentioner
+        };
+    }
+
+    public static DirectMessageReaction CreateTestDirectMessageReaction(
+        DirectMessage testMessage,
+        User testUser
+    )
+    {
+        return new DirectMessageReaction
+        {
+            DirectMessage = testMessage,
+            Emoji = "🌍",
+            User = testUser
+        };
+    }
+
+    public static File CreateTestFileRecord()
+    {
+        return new File
+        {
+            Name = "test-file-name" + Store.GenerateRandomString(15),
+            StoreKey = "test-store-key" + Store.GenerateRandomString(15)
+        };
+    }
+
+    public static Theme CreateTestTheme()
+    {
+        return new Theme
+        {
+            Name = "test-theme-name-" + Store.GenerateRandomString(10)
+        };
+    }
+
+    public static User CreateTestUnregisteredUser()
+    {
+        return new User
+        {
+            FirstName = UserStore.GenerateTestFirstName(10),
+            LastName = UserStore.GenerateTestLastName(10),
+            Timezone = UserStore.timezones[
+                Store.random.Next(UserStore.timezones.Count)
+            ].Id,
+            UserName = UserStore.GenerateTestUserName(10),
+            Email = UserStore.GenerateTestEmail(10),
+            PhoneNumber = "1-234-456-789"
+        };
     }
 }

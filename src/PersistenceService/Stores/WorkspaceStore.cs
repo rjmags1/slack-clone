@@ -1,6 +1,5 @@
 using PersistenceService.Data.ApplicationDb;
 using PersistenceService.Models;
-using PersistenceService.Stores;
 
 namespace PersistenceService.Stores;
 
@@ -17,10 +16,11 @@ public class WorkspaceStore : Store
     {
         bool userExists =
             _context.Users.Where(u => u.Id == userId).Count() == 1;
-        bool workspaceExists =
-            _context.Workspaces.Where(w => w.Id == workspaceId).Count() == 1;
+        Workspace? workspace = _context.Workspaces
+            .Where(w => w.Id == workspaceId)
+            .FirstOrDefault();
         bool validMask = 0 <= permissionsMask && permissionsMask <= 2047;
-        if (!userExists || !workspaceExists || !validMask)
+        if (!userExists || workspace is null || !validMask)
         {
             throw new InvalidOperationException(
                 "Could not make the user an admin for the specified workspace"
@@ -60,7 +60,7 @@ public class WorkspaceStore : Store
         };
         _context.Add(permissions);
         workspaceMembership.WorkspaceAdminPermissions = permissions;
-
+        workspace.NumMembers += 1;
         await _context.SaveChangesAsync();
 
         return workspaceMembership;
@@ -104,9 +104,10 @@ public class WorkspaceStore : Store
         List<string> titles
     )
     {
-        bool workspaceExists =
-            _context.Workspaces.Where(w => w.Id == workspaceId).Count() == 1;
-        if (!workspaceExists)
+        Workspace? workspace = _context.Workspaces
+            .Where(w => w.Id == workspaceId)
+            .FirstOrDefault();
+        if (workspace is null)
         {
             throw new InvalidOperationException("Could not invite users");
         }
@@ -140,6 +141,7 @@ public class WorkspaceStore : Store
             );
         }
 
+        workspace.NumMembers += workspaceMembers.Count;
         _context.AddRange(workspaceMembers);
         await _context.SaveChangesAsync();
 
@@ -183,8 +185,11 @@ public class WorkspaceStore : Store
         bool invitedExists =
             _context.Users.Where(u => u.Id == userId).Count() == 1;
         bool invitedAlreadyWorkspaceMember =
-            _context.WorkspaceMembers.Where(wm => wm.UserId == userId).Count()
-            == 1;
+            _context.WorkspaceMembers
+                .Where(
+                    wm => wm.UserId == userId && wm.WorkspaceId == workspaceId
+                )
+                .Count() == 1;
         if (!invitedExists || invitedAlreadyWorkspaceMember)
         {
             throw new InvalidOperationException("Could not invite user");

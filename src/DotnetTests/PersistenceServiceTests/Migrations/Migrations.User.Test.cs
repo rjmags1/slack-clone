@@ -6,7 +6,8 @@ using Microsoft.EntityFrameworkCore.Metadata;
 
 namespace DotnetTests.PersistenceService.Migrations;
 
-[Collection("Database collection")]
+[Trait("Category", "Order 1")]
+[Collection("Database collection 1")]
 public class UserMigrationsTests
 {
     private readonly ApplicationDbContext _dbContext;

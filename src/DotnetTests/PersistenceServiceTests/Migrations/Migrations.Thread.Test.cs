@@ -4,7 +4,8 @@ using Microsoft.EntityFrameworkCore.Metadata;
 using PersistenceService.Data.ApplicationDb;
 using Thread = PersistenceService.Models.Thread;
 
-[Collection("Database collection")]
+[Trait("Category", "Order 1")]
+[Collection("Database collection 1")]
 public class ThreadMigrationsTests
 {
     private readonly ApplicationDbContext _dbContext;
@@ -117,5 +118,9 @@ public class ThreadMigrationsTests
         var firstMessageIdIndex = _entityType.FindIndex(firstMessageIdProperty);
         Assert.NotNull(firstMessageIdIndex);
         Assert.True(firstMessageIdIndex.IsUnique);
+        var channelIdIndex = _entityType.FindIndex(
+            _entityType.FindProperty(nameof(Thread.ChannelId))!
+        );
+        Assert.NotNull(channelIdIndex);
     }
 }

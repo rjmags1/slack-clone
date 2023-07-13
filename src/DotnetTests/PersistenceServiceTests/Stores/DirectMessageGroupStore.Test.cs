@@ -1,11 +1,13 @@
 using DotnetTests.Fixtures;
+using DotnetTests.PersistenceService.Utils;
 using PersistenceService.Data.ApplicationDb;
 using PersistenceService.Models;
 using PersistenceService.Stores;
 
 namespace DotnetTests.PersistenceService.Stores;
 
-[Collection("Database collection")]
+[Trait("Category", "Order 1")]
+[Collection("Database collection 1")]
 public class DirectMessageGroupStoreTests
 {
     private readonly ApplicationDbContext _dbContext;
@@ -21,71 +23,118 @@ public class DirectMessageGroupStoreTests
     }
 
     [Fact]
-    public async void InsertMessageReaction_ShouldInsertMessageReaction()
+    public async void InsertDirectMessageGroupMembers_ShouldInsertDirectMessageGroupMembers()
     {
-        Workspace testWorkspace = new Workspace
-        {
-            Description = "test description",
-            Name = "test-workspace-name" + ChannelStore.GenerateRandomString(10)
-        };
+        Workspace testWorkspace = StoreTestUtils.CreateTestWorkspace();
         _dbContext.Add(testWorkspace);
 
-        string email = UserStore.GenerateTestEmail(10);
-        string username = UserStore.GenerateTestUserName(10);
-        User testUser = new User
-        {
-            FirstName = UserStore.GenerateTestFirstName(10),
-            LastName = UserStore.GenerateTestLastName(10),
-            Timezone = UserStore.timezones[1].Id,
-            UserName = username,
-            Email = email,
-            PhoneNumber = "1-234-567-8901",
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword(
-                UserStore.testPassword,
-                4
-            ),
-            NormalizedEmail = email.ToUpper(),
-            NormalizedUserName = username.ToUpper(),
-            SecurityStamp = Guid.NewGuid().ToString(),
-            ConcurrencyStamp = Guid.NewGuid().ToString(),
-        };
+        User testUser = StoreTestUtils.CreateTestUser();
         _dbContext.Add(testUser);
 
-        await _dbContext.SaveChangesAsync();
-
-        WorkspaceMember testWorkspaceMembership = new WorkspaceMember
-        {
-            Title = "Member",
-            User = testUser,
-            Workspace = testWorkspace
-        };
+        WorkspaceMember testWorkspaceMembership =
+            StoreTestUtils.CreateTestWorkspaceMember(testUser, testWorkspace);
         _dbContext.Add(testWorkspaceMembership);
 
-        DirectMessageGroup testGroup = new DirectMessageGroup
-        {
-            WorkspaceId = testWorkspace.Id
-        };
+        DirectMessageGroup testGroup =
+            StoreTestUtils.CreateTestDirectMessageGroup(testWorkspace);
         _dbContext.Add(testGroup);
 
         await _dbContext.SaveChangesAsync();
 
-        DirectMessageGroupMember testDmgMembership =
-            new DirectMessageGroupMember
-            {
-                DirectMessageGroupId = testGroup.Id,
-                UserId = testUser.Id
-            };
-        _dbContext.Add(testDmgMembership);
+        DirectMessageGroupMember? insertedMember = (
+            await _directMessageGroupStore.InsertDirectMessageGroupMembers(
+                testGroup.Id,
+                new List<Guid> { testUser.Id }
+            )
+        ).FirstOrDefault();
+
+        Assert.NotNull(insertedMember);
+        Assert.NotEqual(insertedMember.Id, Guid.Empty);
+        Assert.Equal(insertedMember.DirectMessageGroupId, testGroup.Id);
+        Assert.Null(insertedMember.LastViewedGroupMessagesAt);
+        Assert.Equal(insertedMember.UserId, testUser.Id);
+    }
+
+    [Fact]
+    public async void InsertDirectMessageGroupMembers_ShouldThrowOnInvalidIds()
+    {
+        Workspace testWorkspace = StoreTestUtils.CreateTestWorkspace();
+        _dbContext.Add(testWorkspace);
+
+        User testUser = StoreTestUtils.CreateTestUser();
+        _dbContext.Add(testUser);
+
+        WorkspaceMember testWorkspaceMembership =
+            StoreTestUtils.CreateTestWorkspaceMember(testUser, testWorkspace);
+        _dbContext.Add(testWorkspaceMembership);
+
+        DirectMessageGroup testGroup =
+            StoreTestUtils.CreateTestDirectMessageGroup(testWorkspace);
+        _dbContext.Add(testGroup);
 
         await _dbContext.SaveChangesAsync();
 
-        DirectMessage testMessage = new DirectMessage
-        {
-            Content = "test content",
-            DirectMessageGroupId = testGroup.Id,
-            SentAt = DateTime.Now,
-            UserId = testUser.Id
-        };
+        await Assert.ThrowsAsync<InvalidOperationException>(
+            async () =>
+                await _directMessageGroupStore.InsertDirectMessageGroupMembers(
+                    Guid.Empty,
+                    new List<Guid> { testUser.Id }
+                )
+        );
+
+        await Assert.ThrowsAsync<InvalidOperationException>(
+            async () =>
+                await _directMessageGroupStore.InsertDirectMessageGroupMembers(
+                    testGroup.Id,
+                    new List<Guid> { Guid.Empty }
+                )
+        );
+
+        DirectMessageGroupMember testGroupMember =
+            StoreTestUtils.CreateTestDirectMessageGroupMember(
+                testUser,
+                testGroup
+            );
+        _dbContext.Add(testGroupMember);
+        await _dbContext.SaveChangesAsync();
+
+        await Assert.ThrowsAsync<InvalidOperationException>(
+            async () =>
+                await _directMessageGroupStore.InsertDirectMessageGroupMembers(
+                    testGroup.Id,
+                    new List<Guid> { testUser.Id }
+                )
+        );
+    }
+
+    [Fact]
+    public async void InsertMessageReaction_ShouldInsertMessageReaction()
+    {
+        Workspace testWorkspace = StoreTestUtils.CreateTestWorkspace();
+        _dbContext.Add(testWorkspace);
+
+        User testUser = StoreTestUtils.CreateTestUser();
+        _dbContext.Add(testUser);
+
+        WorkspaceMember testWorkspaceMembership =
+            StoreTestUtils.CreateTestWorkspaceMember(testUser, testWorkspace);
+        _dbContext.Add(testWorkspaceMembership);
+
+        DirectMessageGroup testGroup =
+            StoreTestUtils.CreateTestDirectMessageGroup(testWorkspace);
+        _dbContext.Add(testGroup);
+
+        DirectMessageGroupMember testDmgMembership =
+            StoreTestUtils.CreateTestDirectMessageGroupMember(
+                testUser,
+                testGroup
+            );
+        _dbContext.Add(testDmgMembership);
+
+        DirectMessage testMessage = StoreTestUtils.CreateTestDirectMessage(
+            testGroup,
+            testUser
+        );
         _dbContext.Add(testMessage);
 
         await _dbContext.SaveChangesAsync();
@@ -107,69 +156,31 @@ public class DirectMessageGroupStoreTests
     [Fact]
     public async void InsertMessageReaction_ShouldThrowOnInvalidArgs()
     {
-        Workspace testWorkspace = new Workspace
-        {
-            Description = "test description",
-            Name = "test-workspace-name" + ChannelStore.GenerateRandomString(10)
-        };
+        Workspace testWorkspace = StoreTestUtils.CreateTestWorkspace();
         _dbContext.Add(testWorkspace);
 
-        string email = UserStore.GenerateTestEmail(10);
-        string username = UserStore.GenerateTestUserName(10);
-        User testUser = new User
-        {
-            FirstName = UserStore.GenerateTestFirstName(10),
-            LastName = UserStore.GenerateTestLastName(10),
-            Timezone = UserStore.timezones[1].Id,
-            UserName = username,
-            Email = email,
-            PhoneNumber = "1-234-567-8901",
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword(
-                UserStore.testPassword,
-                4
-            ),
-            NormalizedEmail = email.ToUpper(),
-            NormalizedUserName = username.ToUpper(),
-            SecurityStamp = Guid.NewGuid().ToString(),
-            ConcurrencyStamp = Guid.NewGuid().ToString(),
-        };
+        User testUser = StoreTestUtils.CreateTestUser();
         _dbContext.Add(testUser);
 
-        await _dbContext.SaveChangesAsync();
-
-        WorkspaceMember testWorkspaceMembership = new WorkspaceMember
-        {
-            Title = "Member",
-            User = testUser,
-            Workspace = testWorkspace
-        };
+        WorkspaceMember testWorkspaceMembership =
+            StoreTestUtils.CreateTestWorkspaceMember(testUser, testWorkspace);
         _dbContext.Add(testWorkspaceMembership);
 
-        DirectMessageGroup testGroup = new DirectMessageGroup
-        {
-            WorkspaceId = testWorkspace.Id
-        };
+        DirectMessageGroup testGroup =
+            StoreTestUtils.CreateTestDirectMessageGroup(testWorkspace);
         _dbContext.Add(testGroup);
 
-        await _dbContext.SaveChangesAsync();
-
         DirectMessageGroupMember testDmgMembership =
-            new DirectMessageGroupMember
-            {
-                DirectMessageGroupId = testGroup.Id,
-                UserId = testUser.Id
-            };
+            StoreTestUtils.CreateTestDirectMessageGroupMember(
+                testUser,
+                testGroup
+            );
         _dbContext.Add(testDmgMembership);
 
-        await _dbContext.SaveChangesAsync();
-
-        DirectMessage testMessage = new DirectMessage
-        {
-            Content = "test content",
-            DirectMessageGroupId = testGroup.Id,
-            SentAt = DateTime.Now,
-            UserId = testUser.Id
-        };
+        DirectMessage testMessage = StoreTestUtils.CreateTestDirectMessage(
+            testGroup,
+            testUser
+        );
         _dbContext.Add(testMessage);
 
         await _dbContext.SaveChangesAsync();
@@ -240,91 +251,46 @@ public class DirectMessageGroupStoreTests
     [Fact]
     public async void InsertReplyNotification_ShouldInsertReplyNotification()
     {
-        Workspace testWorkspace = new Workspace
-        {
-            Description = "test description",
-            Name = "test-workspace-name" + ChannelStore.GenerateRandomString(10)
-        };
+        Workspace testWorkspace = StoreTestUtils.CreateTestWorkspace();
         _dbContext.Add(testWorkspace);
 
-        string email = UserStore.GenerateTestEmail(10);
-        string username = UserStore.GenerateTestUserName(10);
-        User testUser = new User
-        {
-            FirstName = UserStore.GenerateTestFirstName(10),
-            LastName = UserStore.GenerateTestLastName(10),
-            Timezone = UserStore.timezones[1].Id,
-            UserName = username,
-            Email = email,
-            PhoneNumber = "1-234-567-8901",
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword(
-                UserStore.testPassword,
-                4
-            ),
-            NormalizedEmail = email.ToUpper(),
-            NormalizedUserName = username.ToUpper(),
-            SecurityStamp = Guid.NewGuid().ToString(),
-            ConcurrencyStamp = Guid.NewGuid().ToString(),
-        };
+        User testUser = StoreTestUtils.CreateTestUser();
         _dbContext.Add(testUser);
 
-        await _dbContext.SaveChangesAsync();
-
-        WorkspaceMember testWorkspaceMembership = new WorkspaceMember
-        {
-            Title = "Member",
-            User = testUser,
-            Workspace = testWorkspace
-        };
+        WorkspaceMember testWorkspaceMembership =
+            StoreTestUtils.CreateTestWorkspaceMember(testUser, testWorkspace);
         _dbContext.Add(testWorkspaceMembership);
 
-        DirectMessageGroup testGroup = new DirectMessageGroup
-        {
-            WorkspaceId = testWorkspace.Id
-        };
+        DirectMessageGroup testGroup =
+            StoreTestUtils.CreateTestDirectMessageGroup(testWorkspace);
         _dbContext.Add(testGroup);
 
-        await _dbContext.SaveChangesAsync();
-
         DirectMessageGroupMember testDmgMembership =
-            new DirectMessageGroupMember
-            {
-                DirectMessageGroupId = testGroup.Id,
-                UserId = testUser.Id
-            };
+            StoreTestUtils.CreateTestDirectMessageGroupMember(
+                testUser,
+                testGroup
+            );
         _dbContext.Add(testDmgMembership);
 
-        await _dbContext.SaveChangesAsync();
-
-        DirectMessage testMessage = new DirectMessage
-        {
-            Content = "test content",
-            DirectMessageGroupId = testGroup.Id,
-            SentAt = DateTime.Now,
-            UserId = testUser.Id
-        };
+        DirectMessage testMessage = StoreTestUtils.CreateTestDirectMessage(
+            testGroup,
+            testUser
+        );
         _dbContext.Add(testMessage);
 
-        await _dbContext.SaveChangesAsync();
-
-        DirectMessage testReply = new DirectMessage
-        {
-            Content = "test content",
-            DirectMessageGroupId = testGroup.Id,
-            SentAt = DateTime.Now,
-            UserId = testUser.Id
-        };
+        DirectMessage testReply = StoreTestUtils.CreateTestDirectMessage(
+            testGroup,
+            testUser
+        );
         _dbContext.Add(testReply);
 
-        await _dbContext.SaveChangesAsync();
-
-        DirectMessageReply testReplyRecord = new DirectMessageReply
-        {
-            DirectMessageId = testReply.Id,
-            MessageRepliedToId = testMessage.Id,
-            RepliedToId = testUser.Id,
-            ReplierId = testUser.Id,
-        };
+        DirectMessageReply testReplyRecord =
+            StoreTestUtils.CreateTestDirectMessageReplyRecord(
+                testReply,
+                testMessage,
+                testUser,
+                testUser
+            );
         _dbContext.Add(testReplyRecord);
 
         await _dbContext.SaveChangesAsync();
@@ -345,91 +311,48 @@ public class DirectMessageGroupStoreTests
     [Fact]
     public async void InsertReplyNotification_ShouldThrowOnInvalidReplyRecord()
     {
-        Workspace testWorkspace = new Workspace
-        {
-            Description = "test description",
-            Name = "test-workspace-name" + ChannelStore.GenerateRandomString(10)
-        };
+        Workspace testWorkspace = StoreTestUtils.CreateTestWorkspace();
         _dbContext.Add(testWorkspace);
 
-        string email = UserStore.GenerateTestEmail(10);
-        string username = UserStore.GenerateTestUserName(10);
-        User testUser = new User
-        {
-            FirstName = UserStore.GenerateTestFirstName(10),
-            LastName = UserStore.GenerateTestLastName(10),
-            Timezone = UserStore.timezones[1].Id,
-            UserName = username,
-            Email = email,
-            PhoneNumber = "1-234-567-8901",
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword(
-                UserStore.testPassword,
-                4
-            ),
-            NormalizedEmail = email.ToUpper(),
-            NormalizedUserName = username.ToUpper(),
-            SecurityStamp = Guid.NewGuid().ToString(),
-            ConcurrencyStamp = Guid.NewGuid().ToString(),
-        };
+        User testUser = StoreTestUtils.CreateTestUser();
         _dbContext.Add(testUser);
 
-        await _dbContext.SaveChangesAsync();
-
-        WorkspaceMember testWorkspaceMembership = new WorkspaceMember
-        {
-            Title = "Member",
-            User = testUser,
-            Workspace = testWorkspace
-        };
+        WorkspaceMember testWorkspaceMembership =
+            StoreTestUtils.CreateTestWorkspaceMember(testUser, testWorkspace);
         _dbContext.Add(testWorkspaceMembership);
 
-        DirectMessageGroup testGroup = new DirectMessageGroup
-        {
-            WorkspaceId = testWorkspace.Id
-        };
+        DirectMessageGroup testGroup =
+            StoreTestUtils.CreateTestDirectMessageGroup(testWorkspace);
         _dbContext.Add(testGroup);
 
-        await _dbContext.SaveChangesAsync();
-
         DirectMessageGroupMember testDmgMembership =
-            new DirectMessageGroupMember
-            {
-                DirectMessageGroupId = testGroup.Id,
-                UserId = testUser.Id
-            };
+            StoreTestUtils.CreateTestDirectMessageGroupMember(
+                testUser,
+                testGroup
+            );
         _dbContext.Add(testDmgMembership);
 
-        await _dbContext.SaveChangesAsync();
-
-        DirectMessage testMessage = new DirectMessage
-        {
-            Content = "test content",
-            DirectMessageGroupId = testGroup.Id,
-            SentAt = DateTime.Now,
-            UserId = testUser.Id
-        };
+        DirectMessage testMessage = StoreTestUtils.CreateTestDirectMessage(
+            testGroup,
+            testUser
+        );
         _dbContext.Add(testMessage);
 
-        await _dbContext.SaveChangesAsync();
-
-        DirectMessage testReply = new DirectMessage
-        {
-            Content = "test content",
-            DirectMessageGroupId = testGroup.Id,
-            SentAt = DateTime.Now,
-            UserId = testUser.Id
-        };
+        DirectMessage testReply = StoreTestUtils.CreateTestDirectMessage(
+            testGroup,
+            testUser
+        );
         _dbContext.Add(testReply);
 
-        await _dbContext.SaveChangesAsync();
+        DirectMessageReply testReplyRecord =
+            StoreTestUtils.CreateTestDirectMessageReplyRecord(
+                testReply,
+                testMessage,
+                testUser,
+                testUser
+            );
 
-        DirectMessageReply testReplyRecord = new DirectMessageReply
-        {
-            DirectMessageId = testReply.Id,
-            MessageRepliedToId = testMessage.Id,
-            RepliedToId = testUser.Id,
-            ReplierId = testUser.Id,
-        };
+        await _dbContext.SaveChangesAsync();
 
         await Assert.ThrowsAsync<ArgumentException>(
             async () =>
@@ -439,7 +362,6 @@ public class DirectMessageGroupStoreTests
         );
 
         _dbContext.Add(testReplyRecord);
-
         await _dbContext.SaveChangesAsync();
 
         Assert.NotNull(
@@ -452,77 +374,39 @@ public class DirectMessageGroupStoreTests
     [Fact]
     public async void InsertMentionNotifications_ShouldInsertMentionNotifications()
     {
-        Workspace testWorkspace = new Workspace
-        {
-            Description = "test description",
-            Name = "test-workspace-name" + ChannelStore.GenerateRandomString(10)
-        };
+        Workspace testWorkspace = StoreTestUtils.CreateTestWorkspace();
         _dbContext.Add(testWorkspace);
 
-        string email = UserStore.GenerateTestEmail(10);
-        string username = UserStore.GenerateTestUserName(10);
-        User testUser = new User
-        {
-            FirstName = UserStore.GenerateTestFirstName(10),
-            LastName = UserStore.GenerateTestLastName(10),
-            Timezone = UserStore.timezones[1].Id,
-            UserName = username,
-            Email = email,
-            PhoneNumber = "1-234-567-8901",
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword(
-                UserStore.testPassword,
-                4
-            ),
-            NormalizedEmail = email.ToUpper(),
-            NormalizedUserName = username.ToUpper(),
-            SecurityStamp = Guid.NewGuid().ToString(),
-            ConcurrencyStamp = Guid.NewGuid().ToString(),
-        };
+        User testUser = StoreTestUtils.CreateTestUser();
         _dbContext.Add(testUser);
 
-        await _dbContext.SaveChangesAsync();
-
-        WorkspaceMember testWorkspaceMembership = new WorkspaceMember
-        {
-            Title = "Member",
-            User = testUser,
-            Workspace = testWorkspace
-        };
+        WorkspaceMember testWorkspaceMembership =
+            StoreTestUtils.CreateTestWorkspaceMember(testUser, testWorkspace);
         _dbContext.Add(testWorkspaceMembership);
 
-        DirectMessageGroup testGroup = new DirectMessageGroup
-        {
-            WorkspaceId = testWorkspace.Id
-        };
+        DirectMessageGroup testGroup =
+            StoreTestUtils.CreateTestDirectMessageGroup(testWorkspace);
         _dbContext.Add(testGroup);
 
-        await _dbContext.SaveChangesAsync();
-
         DirectMessageGroupMember testDmgMembership =
-            new DirectMessageGroupMember
-            {
-                DirectMessageGroupId = testGroup.Id,
-                UserId = testUser.Id
-            };
+            StoreTestUtils.CreateTestDirectMessageGroupMember(
+                testUser,
+                testGroup
+            );
         _dbContext.Add(testDmgMembership);
 
-        await _dbContext.SaveChangesAsync();
-
-        DirectMessage testMessage = new DirectMessage
-        {
-            Content = "test content",
-            DirectMessageGroupId = testGroup.Id,
-            SentAt = DateTime.Now,
-            UserId = testUser.Id
-        };
+        DirectMessage testMessage = StoreTestUtils.CreateTestDirectMessage(
+            testGroup,
+            testUser
+        );
         _dbContext.Add(testMessage);
 
-        DirectMessageMention testMention = new DirectMessageMention
-        {
-            DirectMessage = testMessage,
-            Mentioned = testUser,
-            Mentioner = testUser
-        };
+        DirectMessageMention testMention =
+            StoreTestUtils.CreateTestDirectMessageMention(
+                testMessage,
+                testUser,
+                testUser
+            );
         _dbContext.Add(testMention);
 
         await _dbContext.SaveChangesAsync();
@@ -544,77 +428,41 @@ public class DirectMessageGroupStoreTests
     [Fact]
     public async void InsertMentionNotifications_ShouldThrowOnInvalidMentionRecord()
     {
-        Workspace testWorkspace = new Workspace
-        {
-            Description = "test description",
-            Name = "test-workspace-name" + ChannelStore.GenerateRandomString(10)
-        };
+        Workspace testWorkspace = StoreTestUtils.CreateTestWorkspace();
         _dbContext.Add(testWorkspace);
 
-        string email = UserStore.GenerateTestEmail(10);
-        string username = UserStore.GenerateTestUserName(10);
-        User testUser = new User
-        {
-            FirstName = UserStore.GenerateTestFirstName(10),
-            LastName = UserStore.GenerateTestLastName(10),
-            Timezone = UserStore.timezones[1].Id,
-            UserName = username,
-            Email = email,
-            PhoneNumber = "1-234-567-8901",
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword(
-                UserStore.testPassword,
-                4
-            ),
-            NormalizedEmail = email.ToUpper(),
-            NormalizedUserName = username.ToUpper(),
-            SecurityStamp = Guid.NewGuid().ToString(),
-            ConcurrencyStamp = Guid.NewGuid().ToString(),
-        };
+        User testUser = StoreTestUtils.CreateTestUser();
         _dbContext.Add(testUser);
 
-        await _dbContext.SaveChangesAsync();
-
-        WorkspaceMember testWorkspaceMembership = new WorkspaceMember
-        {
-            Title = "Member",
-            User = testUser,
-            Workspace = testWorkspace
-        };
+        WorkspaceMember testWorkspaceMembership =
+            StoreTestUtils.CreateTestWorkspaceMember(testUser, testWorkspace);
         _dbContext.Add(testWorkspaceMembership);
 
-        DirectMessageGroup testGroup = new DirectMessageGroup
-        {
-            WorkspaceId = testWorkspace.Id
-        };
+        DirectMessageGroup testGroup =
+            StoreTestUtils.CreateTestDirectMessageGroup(testWorkspace);
         _dbContext.Add(testGroup);
 
-        await _dbContext.SaveChangesAsync();
-
         DirectMessageGroupMember testDmgMembership =
-            new DirectMessageGroupMember
-            {
-                DirectMessageGroupId = testGroup.Id,
-                UserId = testUser.Id
-            };
+            StoreTestUtils.CreateTestDirectMessageGroupMember(
+                testUser,
+                testGroup
+            );
         _dbContext.Add(testDmgMembership);
 
-        await _dbContext.SaveChangesAsync();
-
-        DirectMessage testMessage = new DirectMessage
-        {
-            Content = "test content",
-            DirectMessageGroupId = testGroup.Id,
-            SentAt = DateTime.Now,
-            UserId = testUser.Id
-        };
+        DirectMessage testMessage = StoreTestUtils.CreateTestDirectMessage(
+            testGroup,
+            testUser
+        );
         _dbContext.Add(testMessage);
 
-        DirectMessageMention testMention = new DirectMessageMention
-        {
-            DirectMessage = testMessage,
-            Mentioned = testUser,
-            Mentioner = testUser
-        };
+        DirectMessageMention testMention =
+            StoreTestUtils.CreateTestDirectMessageMention(
+                testMessage,
+                testUser,
+                testUser
+            );
+
+        await _dbContext.SaveChangesAsync();
 
         await Assert.ThrowsAsync<ArgumentException>(
             async () =>
@@ -624,7 +472,6 @@ public class DirectMessageGroupStoreTests
         );
 
         _dbContext.Add(testMention);
-
         await _dbContext.SaveChangesAsync();
 
         DirectMessageNotification? insertedMentionNotif = (
@@ -637,79 +484,40 @@ public class DirectMessageGroupStoreTests
     [Fact]
     public async void InsertReactionNotification_ShouldInsertReactionNotification()
     {
-        Workspace testWorkspace = new Workspace
-        {
-            Description = "test description",
-            Name = "test-workspace-name" + ChannelStore.GenerateRandomString(10)
-        };
+        Workspace testWorkspace = StoreTestUtils.CreateTestWorkspace();
         _dbContext.Add(testWorkspace);
 
-        string email = UserStore.GenerateTestEmail(10);
-        string username = UserStore.GenerateTestUserName(10);
-        User testUser = new User
-        {
-            FirstName = UserStore.GenerateTestFirstName(10),
-            LastName = UserStore.GenerateTestLastName(10),
-            Timezone = UserStore.timezones[1].Id,
-            UserName = username,
-            Email = email,
-            PhoneNumber = "1-234-567-8901",
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword(
-                UserStore.testPassword,
-                4
-            ),
-            NormalizedEmail = email.ToUpper(),
-            NormalizedUserName = username.ToUpper(),
-            SecurityStamp = Guid.NewGuid().ToString(),
-            ConcurrencyStamp = Guid.NewGuid().ToString(),
-        };
+        User testUser = StoreTestUtils.CreateTestUser();
         _dbContext.Add(testUser);
 
-        await _dbContext.SaveChangesAsync();
-
-        WorkspaceMember testWorkspaceMembership = new WorkspaceMember
-        {
-            Title = "Member",
-            User = testUser,
-            Workspace = testWorkspace
-        };
+        WorkspaceMember testWorkspaceMembership =
+            StoreTestUtils.CreateTestWorkspaceMember(testUser, testWorkspace);
         _dbContext.Add(testWorkspaceMembership);
 
-        DirectMessageGroup testGroup = new DirectMessageGroup
-        {
-            WorkspaceId = testWorkspace.Id
-        };
+        DirectMessageGroup testGroup =
+            StoreTestUtils.CreateTestDirectMessageGroup(testWorkspace);
         _dbContext.Add(testGroup);
 
-        await _dbContext.SaveChangesAsync();
-
         DirectMessageGroupMember testDmgMembership =
-            new DirectMessageGroupMember
-            {
-                DirectMessageGroupId = testGroup.Id,
-                UserId = testUser.Id
-            };
+            StoreTestUtils.CreateTestDirectMessageGroupMember(
+                testUser,
+                testGroup
+            );
         _dbContext.Add(testDmgMembership);
 
-        await _dbContext.SaveChangesAsync();
-
-        DirectMessage testMessage = new DirectMessage
-        {
-            Content = "test content",
-            DirectMessageGroupId = testGroup.Id,
-            SentAt = DateTime.Now,
-            UserId = testUser.Id
-        };
+        DirectMessage testMessage = StoreTestUtils.CreateTestDirectMessage(
+            testGroup,
+            testUser
+        );
         _dbContext.Add(testMessage);
 
         await _dbContext.SaveChangesAsync();
 
-        DirectMessageReaction testReaction = new DirectMessageReaction
-        {
-            DirectMessageId = testMessage.Id,
-            Emoji = "🌍",
-            UserId = testUser.Id
-        };
+        DirectMessageReaction testReaction =
+            StoreTestUtils.CreateTestDirectMessageReaction(
+                testMessage,
+                testUser
+            );
         _dbContext.Add(testReaction);
 
         await _dbContext.SaveChangesAsync();
@@ -730,79 +538,41 @@ public class DirectMessageGroupStoreTests
     [Fact]
     public async void InsertReactionNotification_ShouldThrowOnInvalidReactionRecord()
     {
-        Workspace testWorkspace = new Workspace
-        {
-            Description = "test description",
-            Name = "test-workspace-name" + ChannelStore.GenerateRandomString(10)
-        };
+        Workspace testWorkspace = StoreTestUtils.CreateTestWorkspace();
         _dbContext.Add(testWorkspace);
 
-        string email = UserStore.GenerateTestEmail(10);
-        string username = UserStore.GenerateTestUserName(10);
-        User testUser = new User
-        {
-            FirstName = UserStore.GenerateTestFirstName(10),
-            LastName = UserStore.GenerateTestLastName(10),
-            Timezone = UserStore.timezones[1].Id,
-            UserName = username,
-            Email = email,
-            PhoneNumber = "1-234-567-8901",
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword(
-                UserStore.testPassword,
-                4
-            ),
-            NormalizedEmail = email.ToUpper(),
-            NormalizedUserName = username.ToUpper(),
-            SecurityStamp = Guid.NewGuid().ToString(),
-            ConcurrencyStamp = Guid.NewGuid().ToString(),
-        };
+        User testUser = StoreTestUtils.CreateTestUser();
         _dbContext.Add(testUser);
 
-        await _dbContext.SaveChangesAsync();
-
-        WorkspaceMember testWorkspaceMembership = new WorkspaceMember
-        {
-            Title = "Member",
-            User = testUser,
-            Workspace = testWorkspace
-        };
+        WorkspaceMember testWorkspaceMembership =
+            StoreTestUtils.CreateTestWorkspaceMember(testUser, testWorkspace);
         _dbContext.Add(testWorkspaceMembership);
 
-        DirectMessageGroup testGroup = new DirectMessageGroup
-        {
-            WorkspaceId = testWorkspace.Id
-        };
+        DirectMessageGroup testGroup =
+            StoreTestUtils.CreateTestDirectMessageGroup(testWorkspace);
         _dbContext.Add(testGroup);
 
-        await _dbContext.SaveChangesAsync();
-
         DirectMessageGroupMember testDmgMembership =
-            new DirectMessageGroupMember
-            {
-                DirectMessageGroupId = testGroup.Id,
-                UserId = testUser.Id
-            };
+            StoreTestUtils.CreateTestDirectMessageGroupMember(
+                testUser,
+                testGroup
+            );
         _dbContext.Add(testDmgMembership);
 
-        await _dbContext.SaveChangesAsync();
-
-        DirectMessage testMessage = new DirectMessage
-        {
-            Content = "test content",
-            DirectMessageGroupId = testGroup.Id,
-            SentAt = DateTime.Now,
-            UserId = testUser.Id
-        };
+        DirectMessage testMessage = StoreTestUtils.CreateTestDirectMessage(
+            testGroup,
+            testUser
+        );
         _dbContext.Add(testMessage);
 
         await _dbContext.SaveChangesAsync();
 
-        DirectMessageReaction testReaction = new DirectMessageReaction
-        {
-            DirectMessageId = testMessage.Id,
-            Emoji = "🌍",
-            UserId = testUser.Id
-        };
+        DirectMessageReaction testReaction =
+            StoreTestUtils.CreateTestDirectMessageReaction(
+                testMessage,
+                testUser
+            );
+        _dbContext.Add(testReaction);
 
         await Assert.ThrowsAsync<ArgumentException>(
             async () =>
@@ -810,8 +580,6 @@ public class DirectMessageGroupStoreTests
                     testReaction
                 )
         );
-
-        _dbContext.Add(testReaction);
 
         await _dbContext.SaveChangesAsync();
 
@@ -824,69 +592,31 @@ public class DirectMessageGroupStoreTests
     [Fact]
     public async void InsertDirectMessageLaterFlag_ShouldInsertDirectMessageLaterFlag()
     {
-        Workspace testWorkspace = new Workspace
-        {
-            Description = "test description",
-            Name = "test-workspace-name" + ChannelStore.GenerateRandomString(10)
-        };
+        Workspace testWorkspace = StoreTestUtils.CreateTestWorkspace();
         _dbContext.Add(testWorkspace);
 
-        string email = UserStore.GenerateTestEmail(10);
-        string username = UserStore.GenerateTestUserName(10);
-        User testUser = new User
-        {
-            FirstName = UserStore.GenerateTestFirstName(10),
-            LastName = UserStore.GenerateTestLastName(10),
-            Timezone = UserStore.timezones[1].Id,
-            UserName = username,
-            Email = email,
-            PhoneNumber = "1-234-567-8901",
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword(
-                UserStore.testPassword,
-                4
-            ),
-            NormalizedEmail = email.ToUpper(),
-            NormalizedUserName = username.ToUpper(),
-            SecurityStamp = Guid.NewGuid().ToString(),
-            ConcurrencyStamp = Guid.NewGuid().ToString(),
-        };
+        User testUser = StoreTestUtils.CreateTestUser();
         _dbContext.Add(testUser);
 
-        await _dbContext.SaveChangesAsync();
-
-        WorkspaceMember testWorkspaceMembership = new WorkspaceMember
-        {
-            Title = "Member",
-            User = testUser,
-            Workspace = testWorkspace
-        };
+        WorkspaceMember testWorkspaceMembership =
+            StoreTestUtils.CreateTestWorkspaceMember(testUser, testWorkspace);
         _dbContext.Add(testWorkspaceMembership);
 
-        DirectMessageGroup testGroup = new DirectMessageGroup
-        {
-            WorkspaceId = testWorkspace.Id
-        };
+        DirectMessageGroup testGroup =
+            StoreTestUtils.CreateTestDirectMessageGroup(testWorkspace);
         _dbContext.Add(testGroup);
 
-        await _dbContext.SaveChangesAsync();
-
         DirectMessageGroupMember testDmgMembership =
-            new DirectMessageGroupMember
-            {
-                DirectMessageGroupId = testGroup.Id,
-                UserId = testUser.Id
-            };
+            StoreTestUtils.CreateTestDirectMessageGroupMember(
+                testUser,
+                testGroup
+            );
         _dbContext.Add(testDmgMembership);
 
-        await _dbContext.SaveChangesAsync();
-
-        DirectMessage testMessage = new DirectMessage
-        {
-            Content = "test content",
-            DirectMessageGroupId = testGroup.Id,
-            SentAt = DateTime.Now,
-            UserId = testUser.Id
-        };
+        DirectMessage testMessage = StoreTestUtils.CreateTestDirectMessage(
+            testGroup,
+            testUser
+        );
         _dbContext.Add(testMessage);
 
         await _dbContext.SaveChangesAsync();
@@ -909,69 +639,31 @@ public class DirectMessageGroupStoreTests
     [Fact]
     public async void InsertDirectMessageLaterFlag_ShouldThrowOnInvalidIds()
     {
-        Workspace testWorkspace = new Workspace
-        {
-            Description = "test description",
-            Name = "test-workspace-name" + ChannelStore.GenerateRandomString(10)
-        };
+        Workspace testWorkspace = StoreTestUtils.CreateTestWorkspace();
         _dbContext.Add(testWorkspace);
 
-        string email = UserStore.GenerateTestEmail(10);
-        string username = UserStore.GenerateTestUserName(10);
-        User testUser = new User
-        {
-            FirstName = UserStore.GenerateTestFirstName(10),
-            LastName = UserStore.GenerateTestLastName(10),
-            Timezone = UserStore.timezones[1].Id,
-            UserName = username,
-            Email = email,
-            PhoneNumber = "1-234-567-8901",
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword(
-                UserStore.testPassword,
-                4
-            ),
-            NormalizedEmail = email.ToUpper(),
-            NormalizedUserName = username.ToUpper(),
-            SecurityStamp = Guid.NewGuid().ToString(),
-            ConcurrencyStamp = Guid.NewGuid().ToString(),
-        };
+        User testUser = StoreTestUtils.CreateTestUser();
         _dbContext.Add(testUser);
 
-        await _dbContext.SaveChangesAsync();
-
-        WorkspaceMember testWorkspaceMembership = new WorkspaceMember
-        {
-            Title = "Member",
-            User = testUser,
-            Workspace = testWorkspace
-        };
+        WorkspaceMember testWorkspaceMembership =
+            StoreTestUtils.CreateTestWorkspaceMember(testUser, testWorkspace);
         _dbContext.Add(testWorkspaceMembership);
 
-        DirectMessageGroup testGroup = new DirectMessageGroup
-        {
-            WorkspaceId = testWorkspace.Id
-        };
+        DirectMessageGroup testGroup =
+            StoreTestUtils.CreateTestDirectMessageGroup(testWorkspace);
         _dbContext.Add(testGroup);
 
-        await _dbContext.SaveChangesAsync();
-
         DirectMessageGroupMember testDmgMembership =
-            new DirectMessageGroupMember
-            {
-                DirectMessageGroupId = testGroup.Id,
-                UserId = testUser.Id
-            };
+            StoreTestUtils.CreateTestDirectMessageGroupMember(
+                testUser,
+                testGroup
+            );
         _dbContext.Add(testDmgMembership);
 
-        await _dbContext.SaveChangesAsync();
-
-        DirectMessage testMessage = new DirectMessage
-        {
-            Content = "test content",
-            DirectMessageGroupId = testGroup.Id,
-            SentAt = DateTime.Now,
-            UserId = testUser.Id
-        };
+        DirectMessage testMessage = StoreTestUtils.CreateTestDirectMessage(
+            testGroup,
+            testUser
+        );
         _dbContext.Add(testMessage);
 
         await _dbContext.SaveChangesAsync();
@@ -1002,58 +694,25 @@ public class DirectMessageGroupStoreTests
     [Fact]
     public async void InsertDirectMessage_ShouldInsertDirectMessage()
     {
-        Workspace testWorkspace = new Workspace
-        {
-            Description = "test description",
-            Name = "test-workspace-name" + ChannelStore.GenerateRandomString(10)
-        };
+        Workspace testWorkspace = StoreTestUtils.CreateTestWorkspace();
         _dbContext.Add(testWorkspace);
 
-        string email = UserStore.GenerateTestEmail(10);
-        string username = UserStore.GenerateTestUserName(10);
-        User testUser = new User
-        {
-            FirstName = UserStore.GenerateTestFirstName(10),
-            LastName = UserStore.GenerateTestLastName(10),
-            Timezone = UserStore.timezones[1].Id,
-            UserName = username,
-            Email = email,
-            PhoneNumber = "1-234-567-8901",
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword(
-                UserStore.testPassword,
-                4
-            ),
-            NormalizedEmail = email.ToUpper(),
-            NormalizedUserName = username.ToUpper(),
-            SecurityStamp = Guid.NewGuid().ToString(),
-            ConcurrencyStamp = Guid.NewGuid().ToString(),
-        };
+        User testUser = StoreTestUtils.CreateTestUser();
         _dbContext.Add(testUser);
 
-        await _dbContext.SaveChangesAsync();
-
-        WorkspaceMember testWorkspaceMembership = new WorkspaceMember
-        {
-            Title = "Member",
-            User = testUser,
-            Workspace = testWorkspace
-        };
+        WorkspaceMember testWorkspaceMembership =
+            StoreTestUtils.CreateTestWorkspaceMember(testUser, testWorkspace);
         _dbContext.Add(testWorkspaceMembership);
 
-        DirectMessageGroup testGroup = new DirectMessageGroup
-        {
-            WorkspaceId = testWorkspace.Id
-        };
+        DirectMessageGroup testGroup =
+            StoreTestUtils.CreateTestDirectMessageGroup(testWorkspace);
         _dbContext.Add(testGroup);
 
-        await _dbContext.SaveChangesAsync();
-
         DirectMessageGroupMember testDmgMembership =
-            new DirectMessageGroupMember
-            {
-                DirectMessageGroupId = testGroup.Id,
-                UserId = testUser.Id
-            };
+            StoreTestUtils.CreateTestDirectMessageGroupMember(
+                testUser,
+                testGroup
+            );
         _dbContext.Add(testDmgMembership);
 
         await _dbContext.SaveChangesAsync();
@@ -1131,58 +790,25 @@ public class DirectMessageGroupStoreTests
     [Fact]
     public async void InsertDirectMessage_ShouldThrowOnNonexistentIdsEmptyContent()
     {
-        Workspace testWorkspace = new Workspace
-        {
-            Description = "test description",
-            Name = "test-workspace-name" + ChannelStore.GenerateRandomString(10)
-        };
+        Workspace testWorkspace = StoreTestUtils.CreateTestWorkspace();
         _dbContext.Add(testWorkspace);
 
-        string email = UserStore.GenerateTestEmail(10);
-        string username = UserStore.GenerateTestUserName(10);
-        User testUser = new User
-        {
-            FirstName = UserStore.GenerateTestFirstName(10),
-            LastName = UserStore.GenerateTestLastName(10),
-            Timezone = UserStore.timezones[1].Id,
-            UserName = username,
-            Email = email,
-            PhoneNumber = "1-234-567-8901",
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword(
-                UserStore.testPassword,
-                4
-            ),
-            NormalizedEmail = email.ToUpper(),
-            NormalizedUserName = username.ToUpper(),
-            SecurityStamp = Guid.NewGuid().ToString(),
-            ConcurrencyStamp = Guid.NewGuid().ToString(),
-        };
+        User testUser = StoreTestUtils.CreateTestUser();
         _dbContext.Add(testUser);
 
-        await _dbContext.SaveChangesAsync();
-
-        WorkspaceMember testWorkspaceMembership = new WorkspaceMember
-        {
-            Title = "Member",
-            User = testUser,
-            Workspace = testWorkspace
-        };
+        WorkspaceMember testWorkspaceMembership =
+            StoreTestUtils.CreateTestWorkspaceMember(testUser, testWorkspace);
         _dbContext.Add(testWorkspaceMembership);
 
-        DirectMessageGroup testGroup = new DirectMessageGroup
-        {
-            WorkspaceId = testWorkspace.Id
-        };
+        DirectMessageGroup testGroup =
+            StoreTestUtils.CreateTestDirectMessageGroup(testWorkspace);
         _dbContext.Add(testGroup);
 
-        await _dbContext.SaveChangesAsync();
-
         DirectMessageGroupMember testDmgMembership =
-            new DirectMessageGroupMember
-            {
-                DirectMessageGroupId = testGroup.Id,
-                UserId = testUser.Id
-            };
+            StoreTestUtils.CreateTestDirectMessageGroupMember(
+                testUser,
+                testGroup
+            );
         _dbContext.Add(testDmgMembership);
 
         await _dbContext.SaveChangesAsync();
@@ -1273,58 +899,25 @@ public class DirectMessageGroupStoreTests
     [Fact]
     public async void InsertDirectMessage_ShouldThrowOnInvalidNullArgCombos()
     {
-        Workspace testWorkspace = new Workspace
-        {
-            Description = "test description",
-            Name = "test-workspace-name" + ChannelStore.GenerateRandomString(10)
-        };
+        Workspace testWorkspace = StoreTestUtils.CreateTestWorkspace();
         _dbContext.Add(testWorkspace);
 
-        string email = UserStore.GenerateTestEmail(10);
-        string username = UserStore.GenerateTestUserName(10);
-        User testUser = new User
-        {
-            FirstName = UserStore.GenerateTestFirstName(10),
-            LastName = UserStore.GenerateTestLastName(10),
-            Timezone = UserStore.timezones[1].Id,
-            UserName = username,
-            Email = email,
-            PhoneNumber = "1-234-567-8901",
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword(
-                UserStore.testPassword,
-                4
-            ),
-            NormalizedEmail = email.ToUpper(),
-            NormalizedUserName = username.ToUpper(),
-            SecurityStamp = Guid.NewGuid().ToString(),
-            ConcurrencyStamp = Guid.NewGuid().ToString(),
-        };
+        User testUser = StoreTestUtils.CreateTestUser();
         _dbContext.Add(testUser);
 
-        await _dbContext.SaveChangesAsync();
-
-        WorkspaceMember testWorkspaceMembership = new WorkspaceMember
-        {
-            Title = "Member",
-            User = testUser,
-            Workspace = testWorkspace
-        };
+        WorkspaceMember testWorkspaceMembership =
+            StoreTestUtils.CreateTestWorkspaceMember(testUser, testWorkspace);
         _dbContext.Add(testWorkspaceMembership);
 
-        DirectMessageGroup testGroup = new DirectMessageGroup
-        {
-            WorkspaceId = testWorkspace.Id
-        };
+        DirectMessageGroup testGroup =
+            StoreTestUtils.CreateTestDirectMessageGroup(testWorkspace);
         _dbContext.Add(testGroup);
 
-        await _dbContext.SaveChangesAsync();
-
         DirectMessageGroupMember testDmgMembership =
-            new DirectMessageGroupMember
-            {
-                DirectMessageGroupId = testGroup.Id,
-                UserId = testUser.Id
-            };
+            StoreTestUtils.CreateTestDirectMessageGroupMember(
+                testUser,
+                testGroup
+            );
         _dbContext.Add(testDmgMembership);
 
         await _dbContext.SaveChangesAsync();
@@ -1367,58 +960,25 @@ public class DirectMessageGroupStoreTests
     [Fact]
     public async void InsertDirectMessage_ShouldNotInsertDraftMentions()
     {
-        Workspace testWorkspace = new Workspace
-        {
-            Description = "test description",
-            Name = "test-workspace-name" + ChannelStore.GenerateRandomString(10)
-        };
+        Workspace testWorkspace = StoreTestUtils.CreateTestWorkspace();
         _dbContext.Add(testWorkspace);
 
-        string email = UserStore.GenerateTestEmail(10);
-        string username = UserStore.GenerateTestUserName(10);
-        User testUser = new User
-        {
-            FirstName = UserStore.GenerateTestFirstName(10),
-            LastName = UserStore.GenerateTestLastName(10),
-            Timezone = UserStore.timezones[1].Id,
-            UserName = username,
-            Email = email,
-            PhoneNumber = "1-234-567-8901",
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword(
-                UserStore.testPassword,
-                4
-            ),
-            NormalizedEmail = email.ToUpper(),
-            NormalizedUserName = username.ToUpper(),
-            SecurityStamp = Guid.NewGuid().ToString(),
-            ConcurrencyStamp = Guid.NewGuid().ToString(),
-        };
+        User testUser = StoreTestUtils.CreateTestUser();
         _dbContext.Add(testUser);
 
-        await _dbContext.SaveChangesAsync();
-
-        WorkspaceMember testWorkspaceMembership = new WorkspaceMember
-        {
-            Title = "Member",
-            User = testUser,
-            Workspace = testWorkspace
-        };
+        WorkspaceMember testWorkspaceMembership =
+            StoreTestUtils.CreateTestWorkspaceMember(testUser, testWorkspace);
         _dbContext.Add(testWorkspaceMembership);
 
-        DirectMessageGroup testGroup = new DirectMessageGroup
-        {
-            WorkspaceId = testWorkspace.Id
-        };
+        DirectMessageGroup testGroup =
+            StoreTestUtils.CreateTestDirectMessageGroup(testWorkspace);
         _dbContext.Add(testGroup);
 
-        await _dbContext.SaveChangesAsync();
-
         DirectMessageGroupMember testDmgMembership =
-            new DirectMessageGroupMember
-            {
-                DirectMessageGroupId = testGroup.Id,
-                UserId = testUser.Id
-            };
+            StoreTestUtils.CreateTestDirectMessageGroupMember(
+                testUser,
+                testGroup
+            );
         _dbContext.Add(testDmgMembership);
 
         await _dbContext.SaveChangesAsync();
@@ -1453,71 +1013,22 @@ public class DirectMessageGroupStoreTests
     [Fact]
     public async void InsertDirectMessageGroups_ShouldInsertDirectMessagesGroups()
     {
-        string emailPrefix = UserStore.GenerateTestEmail(10);
-        string usernamePrefix = "dgcreator-un";
         List<List<User>> testMembers = new List<List<User>>();
         List<DirectMessageGroup> testGroups = new List<DirectMessageGroup>();
-        Workspace directMessageGroupWorkspace = new Workspace
-        {
-            Description = "test-description",
-            Name = "test-workspace-direct-message-group-name"
-        };
+        Workspace testWorkspace = StoreTestUtils.CreateTestWorkspace();
         for (int i = 0; i < 10; i++)
         {
-            string email1 =
-                emailPrefix + DirectMessageGroupStore.GenerateRandomString(15);
-            string email2 =
-                emailPrefix + DirectMessageGroupStore.GenerateRandomString(15);
-            string username1 =
-                usernamePrefix
-                + DirectMessageGroupStore.GenerateRandomString(10);
-            string username2 =
-                usernamePrefix
-                + DirectMessageGroupStore.GenerateRandomString(10);
-            User dmgUser1 = new User
-            {
-                FirstName = "test-ccreator-fname",
-                LastName = "test-dmg-creator-lname",
-                Timezone = UserStore.timezones[0].Id,
-                UserName = username1,
-                Email = email1,
-                NormalizedEmail = email1.ToUpper(),
-                NormalizedUserName = username1.ToUpper(),
-                PhoneNumber = "1-234-456-7890",
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword(
-                    UserStore.testPassword,
-                    4
-                ),
-                SecurityStamp = Guid.NewGuid().ToString(),
-                ConcurrencyStamp = Guid.NewGuid().ToString(),
-            };
-            User dmgUser2 = new User
-            {
-                FirstName = "test-ccreator-fname",
-                LastName = "test-dmg-creator-lname",
-                Timezone = UserStore.timezones[0].Id,
-                UserName = username2,
-                Email = email2,
-                NormalizedEmail = email2.ToUpper(),
-                NormalizedUserName = username2.ToUpper(),
-                PhoneNumber = "1-234-456-7890",
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword(
-                    UserStore.testPassword,
-                    4
-                ),
-                SecurityStamp = Guid.NewGuid().ToString(),
-                ConcurrencyStamp = Guid.NewGuid().ToString(),
-            };
+            User dmgUser1 = StoreTestUtils.CreateTestUser();
+            User dmgUser2 = StoreTestUtils.CreateTestUser();
             testGroups.Add(
-                new DirectMessageGroup
-                {
-                    Workspace = directMessageGroupWorkspace,
-                }
+                StoreTestUtils.CreateTestDirectMessageGroup(testWorkspace)
             );
             testMembers.Add(new List<User> { dmgUser1, dmgUser2 });
         }
         _dbContext.AddRange(testMembers.SelectMany(pair => pair).ToList());
+
         await _dbContext.SaveChangesAsync();
+
         var inserted = await _directMessageGroupStore.InsertDirectMessageGroups(
             testGroups,
             testMembers
@@ -1536,8 +1047,8 @@ public class DirectMessageGroupStoreTests
             Assert.NotEqual(ig.CreatedAt, default(DateTime));
             Assert.NotNull(ig.DirectMessages);
             Assert.NotNull(ig.Files);
-            Assert.Equal(ig.Workspace, directMessageGroupWorkspace);
-            Assert.Equal(ig.WorkspaceId, directMessageGroupWorkspace.Id);
+            Assert.Equal(ig.Workspace, testWorkspace);
+            Assert.Equal(ig.WorkspaceId, testWorkspace.Id);
             foreach (
                 (
                     DirectMessageGroupMember igMember,

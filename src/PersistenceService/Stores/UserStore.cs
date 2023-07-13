@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using PersistenceService.Data.ApplicationDb;
 using PersistenceService.Models;
 using CustomBaseStore = PersistenceService.Stores.Store;
 
@@ -11,8 +10,6 @@ public class UserStore : UserManager<User>
 {
     public static List<TimeZoneInfo> timezones { get; set; } =
         TimeZoneInfo.GetSystemTimeZones().ToList();
-
-    public static string testPassword = "Testpassword123#";
 
     public static string testPhoneNumber = "9-999-999-9999";
 
@@ -64,7 +61,7 @@ public class UserStore : UserManager<User>
     }
 
     public static string GenerateTestUserName(int randsize) =>
-        "test_user_name" + CustomBaseStore.GenerateRandomString(randsize);
+        "test_user_name" + CustomBaseStore.random.Next(100000000).ToString();
 
     public static string GenerateTestFirstName(int randsize) =>
         "test_fname" + CustomBaseStore.GenerateRandomString(randsize);

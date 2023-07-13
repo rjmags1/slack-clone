@@ -12,7 +12,7 @@ using PersistenceService.Data.ApplicationDb;
 namespace PersistenceService.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20230710170417_InitialEntityCreate")]
+    [Migration("20230711202740_InitialEntityCreate")]
     partial class InitialEntityCreate
     {
         /// <inheritdoc />
@@ -1177,7 +1177,7 @@ namespace PersistenceService.Migrations
                     b.Property<int>("NumMembers")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer")
-                        .HasDefaultValueSql("1");
+                        .HasDefaultValueSql("0");
 
                     b.HasKey("Id");
 
