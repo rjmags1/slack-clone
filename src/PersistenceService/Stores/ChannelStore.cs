@@ -241,10 +241,10 @@ public class ChannelStore : Store
         Guid channelId,
         string content,
         Guid userId,
-        List<Guid>? mentionedPeople,
-        Guid? threadId,
-        Guid? messageRepliedToId,
-        Guid? personRepliedToId,
+        List<Guid>? mentionedPeople = null,
+        Guid? threadId = null,
+        Guid? messageRepliedToId = null,
+        Guid? personRepliedToId = null,
         bool draft = false
     )
     {
@@ -462,7 +462,11 @@ public class ChannelStore : Store
                 .Count() == userIds.Count;
         bool allUsersNotChannelMembers =
             _context.ChannelMembers
-                .Where(member => userIds.Contains(member.UserId))
+                .Where(
+                    member =>
+                        member.ChannelId == channelId
+                        && userIds.Contains(member.UserId)
+                )
                 .Count() == 0;
         if (!allUsersAreWorkspaceMembers || !allUsersNotChannelMembers)
         {

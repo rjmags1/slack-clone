@@ -1063,3 +1063,29 @@ public class DirectMessageGroupStoreTests
         }
     }
 }
+
+[Trait("Category", "Order 2")]
+[Collection("Database collection 2")]
+public class DirectMessageGroupStoreTests2
+{
+    private DirectMessageGroupStore _directMessageGroupStore;
+
+    private ApplicationDbContext _dbContext;
+
+    public DirectMessageGroupStoreTests2(
+        FilledApplicationDbContextFixture filledApplicationDbContextFixture
+    )
+    {
+        _dbContext = filledApplicationDbContextFixture.context;
+        _directMessageGroupStore = new DirectMessageGroupStore(_dbContext);
+    }
+
+    [Fact]
+    public void SeedHappened()
+    {
+        Assert.True(_dbContext.DirectMessageGroups.Count() > 0);
+        Assert.True(_dbContext.DirectMessages.Count() > 0);
+        Assert.True(_dbContext.DirectMessageLaterFlags.Count() > 0);
+        Assert.True(_dbContext.DirectMessageReactions.Count() > 0);
+    }
+}

@@ -2273,3 +2273,31 @@ public class ChannelStoreTests
         }
     }
 }
+
+[Trait("Category", "Order 2")]
+[Collection("Database collection 2")]
+public class ChannelStoreTests2
+{
+    private ChannelStore _channelStore;
+
+    private ApplicationDbContext _dbContext;
+
+    public ChannelStoreTests2(
+        FilledApplicationDbContextFixture filledApplicationDbContextFixture
+    )
+    {
+        _dbContext = filledApplicationDbContextFixture.context;
+        _channelStore = new ChannelStore(_dbContext);
+    }
+
+    [Fact]
+    public void SeedHappened()
+    {
+        Assert.True(_dbContext.Channels.Count() > 0);
+        Assert.True(_dbContext.Channels.Where(c => c.Private).Count() > 0);
+        Assert.True(_dbContext.ChannelMembers.Count() > 0);
+        Assert.True(_dbContext.ChannelMessages.Count() > 0);
+        Assert.True(_dbContext.ChannelMessageLaterFlags.Count() > 0);
+        Assert.True(_dbContext.ChannelMessageReactions.Count() > 0);
+    }
+}

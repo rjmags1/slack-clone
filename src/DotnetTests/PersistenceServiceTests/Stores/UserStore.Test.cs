@@ -176,7 +176,7 @@ public class UserStoreTests
         );
     }
 
-    private static UserStore GetUserStore()
+    public static UserStore GetUserStore()
     {
         var services = new ServiceCollection();
         services.AddScoped<IPasswordHasher<User>, BcryptPasswordHasher>();
@@ -207,5 +207,27 @@ public class UserStoreTests
 
         var serviceProvider = services.BuildServiceProvider();
         return serviceProvider.GetRequiredService<UserStore>();
+    }
+}
+
+[Trait("Category", "Order 2")]
+[Collection("Database collection 2")]
+public class UserStoreTests2
+{
+    private UserStore _userStore = UserStoreTests.GetUserStore();
+
+    private ApplicationDbContext _dbContext;
+
+    public UserStoreTests2(
+        FilledApplicationDbContextFixture filledApplicationDbContextFixture
+    )
+    {
+        _dbContext = filledApplicationDbContextFixture.context;
+    }
+
+    [Fact]
+    public void SeedHappened()
+    {
+        Assert.True(_dbContext.Users.Count() > 0);
     }
 }
