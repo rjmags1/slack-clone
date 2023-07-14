@@ -1,9 +1,8 @@
 <h1><a id="top" href="#top">Slack-Clone Design</a></h1>
 
 # TODO:
-- Make implementation plan and start implementing
-    - Very specific about the first few steps/phases can be vague about the rest. Start out with setting up the EF model and getting a DDL migration working. Write test data generation script.
 - Review data model, graphql schema, component tree, general review of this document
+    - Update dependency version numbers
 
 <hr>
 
@@ -111,6 +110,7 @@
 <h5>Useful dev dependencies</h5>
 <ul>
 <li><a href="https://prettier.io/">prettier</a></li>
+<li><a href="https://csharpier.com/">csharpier</a></li>
 <li><a href="https://tailwindcss.com/blog/automatic-class-sorting-with-prettier">prettier-plugin-tailwindcss</a></li>
 </ul>
 
@@ -2311,17 +2311,30 @@ I am pretty excited about using <a href="https://relay.dev/docs/tutorial/graphql
 
 <h1><a id="implementation" href="#implementation">Implementation Plan</a><a href="#top" style="padding-left:7px;font-size:1.2rem;color:grey;">▴</a></span></h1>
 
-Github/git will be used for version control, and all tests will be run against a replica of the database schema filled with test data. There will be a dev branch and a main branch; any merges into main will trigger all tests to run and the merge will fail if any tests fail. Integration tests will be written to test interfacing between services once the relevant services and interactions are sufficiently developed. End to end testing will be done far down the line and will most likely be done with Playwright.
+Github/git will be used for version control, and all tests will be run against a replica of the database schema filled with test data. There will be a dev branch and a main branch; any merges into main will trigger short-running tests to run and the merge will fail if any tests fail. Integration tests will be written to test interfacing between services once the relevant services and interactions are sufficiently developed. End to end testing will be done far down the line and will most likely be done with Playwright.
 
-### Phase 1 - Init
+## Phase 1 - Init
 - [✅] EF model -> DDL migration + Persistence, API, WebClient, Identity Service skeletons
   - Use Duende IdentityServer libraries and quickstarts to scaffold and integrate with EF, ASP.NET Identity
   - Add my entities to the model in addition to ones provided by Duende IdentityServer
   - Persistence Service as its own project for entity method calls and migrations
-- [] Implement test database generation and seeding logic
+- [✅] Implement test database generation and seeding logic
   - Implement single and batch entity insert + delete methods
     - Unit test
   - Use the implemented single and batch insert methods for custom seeding logic
     - Use test db connection string env variable for test db
-    - Docker + github secrets for test db initialization on github actions. 
-- [] Review + Update this file
+- [✅] Review + Update this file
+- #### Notes
+  - Added the ability to seed variable amounts of seed data and to preserve seed data. This will be useful down the line for benchmarking things like query efficiency.
+
+## Phase 2 - GraphQL API + Minimum function
+- Get user signin -> Workspaces page -> sign out flow working.
+  - Impl the workspaces graphql query and relevant graphql entities
+  - Init React app
+- Rest of GraphQL API
+
+## Phase 3 - Finish React UI
+
+## Phase 4 - Impl Realtime
+
+## Phase 5 - Optimize + Refactor
