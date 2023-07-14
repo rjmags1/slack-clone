@@ -108,7 +108,7 @@ public class ThemeStoreTests2
     }
 
     [Fact]
-    public void TestOrderer()
+    public void SeedHappened()
     {
         Assert.Equal(2, _dbContext.Themes.Count());
     }

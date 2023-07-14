@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using PersistenceService.Data.ApplicationDb;
-using PersistenceService.Stores;
+using PersistenceService.Data.SeedData;
+using DotnetTests.PersistenceService.Stores;
 
 namespace DotnetTests.Fixtures;
 
@@ -8,12 +9,12 @@ public class FilledApplicationDbContextFixture : IAsyncLifetime
 {
     public ApplicationDbContext context { get; private set; }
 
-    private readonly ThemeStore _themeStore;
+    private readonly TestSeeder _testSeeder;
 
     public FilledApplicationDbContextFixture()
     {
         var envFilePath = Directory.GetCurrentDirectory() + "/../../../.env";
-        if (File.Exists(envFilePath))
+        if (System.IO.File.Exists(envFilePath))
         {
             using (StreamReader reader = new StreamReader(envFilePath))
             {
@@ -45,12 +46,12 @@ public class FilledApplicationDbContextFixture : IAsyncLifetime
         ApplicationDbContext c = new ApplicationDbContext(options);
         c.Database.Migrate();
         context = c;
-        _themeStore = new ThemeStore(context);
+        _testSeeder = new TestSeeder(context, UserStoreTests.GetUserStore());
     }
 
     public async Task InitializeAsync()
     {
-        await _themeStore.InsertShippedThemes();
+        await _testSeeder.Seed(TestSeeder.Small);
     }
 
     public async Task DisposeAsync()

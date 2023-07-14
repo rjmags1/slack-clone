@@ -552,3 +552,27 @@ public class WorkspaceStoreTests
         }
     }
 }
+
+[Trait("Category", "Order 2")]
+[Collection("Database collection 2")]
+public class WorkspaceStoreTests2
+{
+    private WorkspaceStore _workspaceStore;
+
+    private ApplicationDbContext _dbContext;
+
+    public WorkspaceStoreTests2(
+        FilledApplicationDbContextFixture filledApplicationDbContextFixture
+    )
+    {
+        _dbContext = filledApplicationDbContextFixture.context;
+        _workspaceStore = new WorkspaceStore(_dbContext);
+    }
+
+    [Fact]
+    public void SeedHappened()
+    {
+        Assert.True(_dbContext.Workspaces.Count() > 0);
+        Assert.True(_dbContext.WorkspaceMembers.Count() > 0);
+    }
+}

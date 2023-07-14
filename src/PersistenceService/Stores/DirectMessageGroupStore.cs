@@ -240,9 +240,9 @@ public class DirectMessageGroupStore : Store
         Guid directMessageGroupId,
         string content,
         Guid userId,
-        List<Guid>? mentionedPeople,
-        Guid? messageRepliedToId,
-        Guid? personRepliedToId,
+        List<Guid>? mentionedPeople = null,
+        Guid? messageRepliedToId = null,
+        Guid? personRepliedToId = null,
         bool draft = false
     )
     {
