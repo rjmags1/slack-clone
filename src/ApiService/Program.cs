@@ -1,6 +1,7 @@
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.EntityFrameworkCore;
 using PersistenceService.Data.ApplicationDb;
+using PersistenceService.Stores;
 using GraphQL;
 using GraphQL.SystemTextJson;
 using Microsoft.Extensions.Options;
@@ -31,6 +32,12 @@ string connectionString = Environment.GetEnvironmentVariable(
 builder.Services.AddDbContext<ApplicationDbContext>(
     options => options.UseNpgsql(connectionString)
 );
+builder.Services.AddSingleton<ChannelStore>();
+builder.Services.AddSingleton<DirectMessageGroupStore>();
+builder.Services.AddSingleton<FileStore>();
+builder.Services.AddSingleton<ThemeStore>();
+builder.Services.AddSingleton<UserStore>();
+builder.Services.AddSingleton<WorkspaceStore>();
 
 builder.Services.Configure<GraphQLSettings>(options =>
 {
