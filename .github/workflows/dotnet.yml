@@ -55,7 +55,7 @@ jobs:
       run: dotnet build --no-restore --configuration Release
             
     - name: Perform Duende IdentityServer migrations
-      run: dotnet new tool-manifest && dotnet tool install dotnet-ef && dotnet ef --version
+      run: dotnet new tool-manifest && dotnet tool install dotnet-ef && cd src/IdentityService && dotnet ef database update --context ConfigurationDbContext && dotnet ef database update --context PersistedGrantDbContext
       
     - name: Test
       run: dotnet test --no-build --verbosity normal --configuration Release --filter "Category=Order 1" && dotnet test --no-build --verbosity normal --configuration Release --filter "Category=Order 2"
