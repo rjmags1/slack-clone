@@ -1,7 +1,6 @@
 using Duende.IdentityServer.EntityFramework.DbContexts;
 using Duende.IdentityServer.EntityFramework.Mappers;
 using Microsoft.EntityFrameworkCore;
-using Duende.IdentityServer;
 using PersistenceService.Models;
 using Microsoft.AspNetCore.Identity;
 using Serilog;
@@ -34,6 +33,8 @@ internal static class HostingExtensions
             BcryptPasswordHasher
         >();
 
+        builder.Services.AddScoped<SignInManager<User>, BCryptSigninManager>();
+
         builder.Services
             .AddIdentity<User, IdentityRole<Guid>>(options =>
             {
@@ -46,6 +47,7 @@ internal static class HostingExtensions
                 options.User.RequireUniqueEmail = true;
             })
             .AddUserManager<UserStore>()
+            .AddSignInManager<BCryptSigninManager>()
             .AddEntityFrameworkStores<ApplicationDbContext>()
             .AddDefaultTokenProviders();
 
