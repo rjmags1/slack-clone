@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using PersistenceService.Data.ApplicationDb;
 using PersistenceService.Data.SeedData;
 using DotnetTests.PersistenceService.Stores;
+using DotnetTest.SetupUtils;
 
 namespace DotnetTests.Fixtures;
 
@@ -17,35 +18,8 @@ public class FilledApplicationDbContextFixture : IAsyncLifetime
 
     public FilledApplicationDbContextFixture()
     {
-        var envFilePath = Directory.GetCurrentDirectory() + "/../../../.env";
-        if (System.IO.File.Exists(envFilePath))
-        {
-            using (StreamReader reader = new StreamReader(envFilePath))
-            {
-                string? line;
-                while ((line = reader.ReadLine()) != null)
-                {
-                    if (
-                        line.Count() == 0
-                        || line.TrimStart().FirstOrDefault() == '#'
-                    )
-                    {
-                        continue;
-                    }
-                    int i = line.IndexOf("=");
-                    if (i == -1)
-                    {
-                        throw new InvalidOperationException(
-                            "Invalid .env file format"
-                        );
-                    }
-                    Environment.SetEnvironmentVariable(
-                        line.Substring(0, i),
-                        line.Substring(i + 1)
-                    );
-                }
-            }
-        }
+        SetupUtils.LoadEnvironmentVariables("/../../../.env");
+
         _preserveSeededData =
             Environment.GetEnvironmentVariable("PRESERVE_SEEDED_DATA")
             == "true";
