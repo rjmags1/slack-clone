@@ -51,6 +51,9 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore
       
+    - name: Perform Duende IdentityServer migrations
+    - run: cd ./src/IdentityService && dotnet ef database update --context PersistedGrantDbContext && dotnet ef database update --context ConfigurationDbContext
+      
     - name: Build
       run: dotnet build --no-restore --configuration Release
       
