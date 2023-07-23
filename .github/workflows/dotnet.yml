@@ -8,6 +8,7 @@ on:
     
 env:
   TEST_DB_CONNECTION_STRING: Server=localhost;Port=5432;Database=slack_clone_test;Username=postgres;Password=postgres
+  DB_CONNECTION_STRING: Server=localhost;Port=5432;Database=slack_clone_test;Username=postgres;Password=postgres
 
 jobs:
   test:
