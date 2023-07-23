@@ -95,13 +95,19 @@ public class ApplicationDbContext
             };
             foreach (var p in entityType.ClrType.GetProperties())
             {
+                if (p.GetType() == typeof(DateTime))
+                {
+                    modelBuilder
+                        .Entity(entityType.ClrType)
+                        .Property(p.Name)
+                        .HasConversion<DateTimeTimestampConverter>();
+                }
                 if (timestampPropertyNames.Contains(p.Name))
                 {
                     modelBuilder
                         .Entity(entityType.ClrType)
                         .Property(p.Name)
-                        .HasDefaultValueSql("now()")
-                        .HasConversion<DateTimeTimestampConverter>();
+                        .HasDefaultValueSql("now()");
                 }
                 if (p.Name == "Id" && p.PropertyType == typeof(Guid))
                 {
