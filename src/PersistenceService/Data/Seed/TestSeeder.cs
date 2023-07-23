@@ -56,9 +56,11 @@ public class TestSeeder
 
         List<Theme> shippedThemes = await _themeStore.InsertShippedThemes();
 
-        List<User> testUsers = await InsertTestUsers(100);
+        List<User> testUsers = await InsertTestUsers(numUsers);
 
-        List<Workspace> testWorkspaces = await InsertTestWorkspaces(10);
+        List<Workspace> testWorkspaces = await InsertTestWorkspaces(
+            numWorkspaces
+        );
 
         List<List<WorkspaceMember>> testWorkspaceMembers =
             await EnrollIntoWorkspaces(testUsers, testWorkspaces);
@@ -512,9 +514,17 @@ public class TestSeeder
     private async Task<List<User>> InsertTestUsers(int numUsers)
     {
         List<User> testUsers = new List<User>();
-        for (int _ = 0; _ < numUsers; _++)
+        for (int i = 0; i < numUsers; i++)
         {
-            testUsers.Add(CreateTestUser());
+            var user = CreateTestUser();
+            if (i == 0)
+            {
+                user.UserName = "dev";
+                user.NormalizedUserName = "dev".ToUpper();
+                user.Email = "dev@test.com";
+                user.NormalizedEmail = "dev@test.com".ToUpper();
+            }
+            testUsers.Add(user);
         }
 
         context.AddRange(testUsers);

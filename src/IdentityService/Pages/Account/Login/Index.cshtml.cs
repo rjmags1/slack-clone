@@ -100,14 +100,14 @@ public class Index : PageModel
         if (ModelState.IsValid)
         {
             var result = await _signInManager.PasswordSignInAsync(
-                Input.Username,
+                Input.Email,
                 Input.Password,
                 Input.RememberLogin,
                 lockoutOnFailure: true
             );
             if (result.Succeeded)
             {
-                var user = await _userManager.FindByNameAsync(Input.Username);
+                var user = await _userManager.FindByEmailAsync(Input.Email);
                 await _events.RaiseAsync(
                     new UserLoginSuccessEvent(
                         user.UserName,
@@ -148,7 +148,7 @@ public class Index : PageModel
 
             await _events.RaiseAsync(
                 new UserLoginFailureEvent(
-                    Input.Username,
+                    Input.Email,
                     "invalid credentials",
                     clientId: context?.Client.ClientId
                 )
@@ -186,7 +186,7 @@ public class Index : PageModel
             // this is meant to short circuit the UI and only trigger the one external IdP
             View = new ViewModel { EnableLocalLogin = local, };
 
-            Input.Username = context?.LoginHint;
+            Input.Email = context?.LoginHint;
 
             if (!local)
             {

@@ -195,12 +195,15 @@ public class UserStoreTests
             .AddUserManager<UserStore>()
             .AddEntityFrameworkStores<ApplicationDbContext>()
             .AddDefaultTokenProviders();
+
+        string connectionString =
+            Environment.GetEnvironmentVariable("ENV") == "dev"
+                ? "LOCAL_DB_CONNECTION_STRING"
+                : "TEST_DB_CONNECTION_STRING";
         services.AddDbContext<ApplicationDbContext>(
             options =>
                 options.UseNpgsql(
-                    Environment.GetEnvironmentVariable(
-                        "TEST_DB_CONNECTION_STRING"
-                    )
+                    Environment.GetEnvironmentVariable(connectionString)
                 )
         );
         services.AddLogging();

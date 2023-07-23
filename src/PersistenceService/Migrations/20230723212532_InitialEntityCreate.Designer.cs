@@ -12,7 +12,7 @@ using PersistenceService.Data.ApplicationDb;
 namespace PersistenceService.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20230711202740_InitialEntityCreate")]
+    [Migration("20230723212532_InitialEntityCreate")]
     partial class InitialEntityCreate
     {
         /// <inheritdoc />
