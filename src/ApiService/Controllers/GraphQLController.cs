@@ -49,6 +49,14 @@ namespace ApiService.Controllers
                 s.CancellationToken = HttpContext.RequestAborted;
             });
 
+            if (result.Errors?.Count > 0)
+            {
+                foreach (var error in result.Errors)
+                {
+                    Console.WriteLine(error);
+                }
+            }
+
             if (_graphQLOptions.Value.EnableMetrics)
             {
                 result.EnrichWithApolloTracing(startTime);

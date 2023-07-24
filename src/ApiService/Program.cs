@@ -6,6 +6,8 @@ using GraphQL;
 using GraphQL.SystemTextJson;
 using Microsoft.Extensions.Options;
 using SlackCloneGraphQL;
+using Models = PersistenceService.Models;
+using Microsoft.AspNetCore.Identity;
 
 DotNetEnv.Env.Load();
 
@@ -32,12 +34,27 @@ string connectionString = Environment.GetEnvironmentVariable(
 builder.Services.AddDbContext<ApplicationDbContext>(
     options => options.UseNpgsql(connectionString)
 );
-builder.Services.AddSingleton<ChannelStore>();
-builder.Services.AddSingleton<DirectMessageGroupStore>();
-builder.Services.AddSingleton<FileStore>();
-builder.Services.AddSingleton<ThemeStore>();
-builder.Services.AddSingleton<UserStore>();
-builder.Services.AddSingleton<WorkspaceStore>();
+
+builder.Services
+    .AddIdentity<Models.User, IdentityRole<Guid>>(options =>
+    {
+        options.Password.RequireDigit = true;
+        options.Password.RequiredLength = 8;
+        options.Password.RequireNonAlphanumeric = true;
+        options.Password.RequireUppercase = true;
+        options.Password.RequireLowercase = true;
+        options.Password.RequiredUniqueChars = 6;
+        options.User.RequireUniqueEmail = true;
+    })
+    .AddUserManager<UserStore>()
+    .AddEntityFrameworkStores<ApplicationDbContext>()
+    .AddDefaultTokenProviders();
+builder.Services.AddScoped<ChannelStore>();
+builder.Services.AddScoped<DirectMessageGroupStore>();
+builder.Services.AddScoped<FileStore>();
+builder.Services.AddScoped<ThemeStore>();
+builder.Services.AddScoped<UserStore>();
+builder.Services.AddScoped<WorkspaceStore>();
 
 builder.Services.Configure<GraphQLSettings>(options =>
 {

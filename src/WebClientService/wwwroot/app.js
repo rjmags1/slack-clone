@@ -77,10 +77,17 @@ async function localApi() {
 }
   
 async function remoteApi() {
-    var req = new Request("/remote/identity", {
+    const query = `
+        query {
+            test
+        }`;
+    var req = new Request("/remote/graphql", {
         headers: new Headers({
             "X-CSRF": "1",
+            "Content-Type": 'application/json'
         }),
+        method: "POST",
+        body: JSON.stringify({ query })
     });
   
     try {

@@ -6,7 +6,7 @@ namespace SlackCloneGraphQL;
 
 public class SlackCloneMutation : ObjectGraphType
 {
-    public SlackCloneMutation(SlackCloneData data)
+    public SlackCloneMutation()
     {
         Name = "Mutation";
     }
