@@ -1,3 +1,4 @@
+using ApiService.Utils;
 using GraphQL;
 using GraphQL.Types;
 using SlackCloneGraphQL.Types;
@@ -6,27 +7,47 @@ namespace SlackCloneGraphQL;
 
 public class SlackCloneQuery : ObjectGraphType<object>
 {
-    public SlackCloneQuery()
+    public SlackCloneQuery(SlackCloneData data)
     {
         Name = "query";
-        Field<StringGraphType>("test").Resolve(context => "Hello");
-        //AddField(
-        //new FieldType
-        //{
-        //Name = "WorkspacesPageQuery",
-        //Arguments = new QueryArguments(
-        //new QueryArgument<NonNullGraphType<IdGraphType>>
-        //{
-        //Name = "userId"
-        //},
-        //new QueryArgument<
-        //NonNullGraphType<WorkspacesFilterInputType>
-        //>
-        //{
-        //Name = "workspacesFilter"
-        //}
-        //),
-        //}
-        //);
+        Field<StringGraphType>("test")
+            .Resolve(context =>
+            {
+                return "Hello";
+            });
+
+        Field<WorkspacesPageDataType>("workspacesPageData")
+            .Arguments(
+                new QueryArguments(
+                    new QueryArgument<NonNullGraphType<IdGraphType>>
+                    {
+                        Name = "userId"
+                    },
+                    new QueryArgument<
+                        NonNullGraphType<WorkspacesFilterInputType>
+                    >
+                    {
+                        Name = "workspacesFilter"
+                    }
+                )
+            )
+            .ResolveAsync(async context =>
+            {
+                var userId = context.GetArgument<Guid>("userId");
+                var userFields = FieldAnalyzer.User(context, userId);
+
+                //var workspacesFilter = context.GetArgument<WorkspacesFilter>(
+                //"workspacesFilter"
+                //);
+                //var workspacesFields = FieldAnalyzer.Workspaces(
+                //context,
+                //workspacesFilter
+                //);
+
+                return new WorkspacesPageData
+                {
+                    User = await data.GetUserById(userId, userFields)
+                };
+            });
     }
 }

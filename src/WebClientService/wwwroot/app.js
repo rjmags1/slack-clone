@@ -78,16 +78,28 @@ async function localApi() {
   
 async function remoteApi() {
     const query = `
-        query {
-            test
+        query WorkspacesPageQuery($userId: ID!) {
+            workspacesPageData(userId: $userId) {
+                user {
+                    id
+                    createdAt
+                    personalInfo {
+                        email
+                        userNotificationsPreferences {
+                            notifSound
+                        }
+                    }
+                }
+            }
         }`;
+    const variables = { userId: "e6560874-6d15-4d94-bc53-f2240ab364e0" }
     var req = new Request("/remote/graphql", {
         headers: new Headers({
             "X-CSRF": "1",
             "Content-Type": 'application/json'
         }),
         method: "POST",
-        body: JSON.stringify({ query })
+        body: JSON.stringify({ query, variables })
     });
   
     try {
