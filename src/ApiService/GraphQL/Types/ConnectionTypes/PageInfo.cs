@@ -6,7 +6,7 @@ public class PageInfoType : ObjectGraphType<PageInfo>
 {
     public PageInfoType()
     {
-        Name = "PageInfo";
+        Name = "pageInfo";
         Field<IdGraphType>("startCursor")
             .Description("Start cursor for the page");
         Field<IdGraphType>("endCursor").Description("End cursor for the page");

@@ -1,4 +1,5 @@
 using GraphQL.Types;
+using ApiService.Utils;
 
 namespace SlackCloneGraphQL.Types.Connections;
 
@@ -8,7 +9,7 @@ public class ConnectionType<T, U> : ObjectGraphType<Connection<T, U>>
 {
     public ConnectionType()
     {
-        Name = $"{nameof(T)}Connection";
+        Name = StringUtils.ToLowerFirstLetter($"{nameof(T)}Connection");
         Field<NonNullGraphType<IntGraphType>>("totalEdges")
             .Description("Total number of edges in the connection");
         Field<

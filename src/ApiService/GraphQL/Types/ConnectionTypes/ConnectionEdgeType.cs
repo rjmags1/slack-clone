@@ -1,4 +1,5 @@
 using GraphQL.Types;
+using ApiService.Utils;
 
 namespace SlackCloneGraphQL.Types.Connections;
 
@@ -8,7 +9,7 @@ public class ConnectionEdgeType<T, U> : ObjectGraphType<ConnectionEdge<T, U>>
 {
     public ConnectionEdgeType()
     {
-        Name = $"{nameof(T)}ConnectionEdge";
+        Name = StringUtils.ToLowerFirstLetter($"{nameof(T)}ConnectionEdge");
         Field<NonNullGraphType<T>>("node")
             .Description("The node pointed to by a connection edge.");
         Field<NonNullGraphType<IdGraphType>>("cursor")
