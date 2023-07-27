@@ -1,5 +1,9 @@
+using System.Collections;
+using System.Text.Json;
 using ApiService.Utils;
+using GraphQL.Types;
 using SlackCloneGraphQL.Types;
+using SlackCloneGraphQL.Types.Connections;
 using File = SlackCloneGraphQL.Types.File;
 using Models = PersistenceService.Models;
 
@@ -22,6 +26,52 @@ public class ModelToObjectConverters
         Id = Guid.Empty,
         Name = "DEFAULT_THEME"
     };
+
+    public static Workspace ConvertWorkspace(dynamic modelWorkspace)
+    {
+        var expando = DynamicUtils.ToExpando(modelWorkspace);
+        Workspace workspace = new Workspace();
+        if (DynamicUtils.HasProperty(expando, nameof(Workspace.Id)))
+        {
+            workspace.Id = JsonSerializer.Deserialize<Guid>(expando.Id);
+        }
+        if (DynamicUtils.HasProperty(expando, nameof(Workspace.Avatar)))
+        {
+            Console.WriteLine(expando.Avatar is null);
+            if (expando.Avatar is null)
+            {
+                workspace.Avatar = DefaultAvatar;
+            }
+            else
+            {
+                throw new NotImplementedException();
+            }
+        }
+        if (DynamicUtils.HasProperty(expando, nameof(Workspace.CreatedAt)))
+        {
+            workspace.CreatedAt = JsonSerializer.Deserialize<DateTime>(
+                expando.CreatedAt
+            );
+        }
+        if (DynamicUtils.HasProperty(expando, nameof(Workspace.Description)))
+        {
+            workspace.Description = JsonSerializer.Deserialize<string>(
+                expando.Description
+            );
+        }
+        if (DynamicUtils.HasProperty(expando, nameof(Workspace.Name)))
+        {
+            workspace.Name = JsonSerializer.Deserialize<string>(expando.Name);
+        }
+        if (DynamicUtils.HasProperty(expando, nameof(Workspace.NumMembers)))
+        {
+            workspace.NumMembers = JsonSerializer.Deserialize<int>(
+                expando.NumMembers
+            );
+        }
+
+        return workspace;
+    }
 
     public static User ConvertUser(
         Models.User modelUser,
@@ -98,5 +148,49 @@ public class ModelToObjectConverters
             AllowAlertsEndTimeUTC = modelUser.NotificationsAllowEndTime,
             PauseAlertsUntil = modelUser.NotificationsPauseUntil
         };
+    }
+
+    public static Connection<T> ToConnection<T>(
+        List<T> nodes,
+        IEnumerable<string> requestedFields,
+        bool firstPage,
+        bool lastPage
+    )
+        where T : INode
+    {
+        return new Connection<T>
+        {
+            TotalEdges = nodes.Count,
+            Edges = nodes
+                .Select(n => new ConnectionEdge<T> { Node = n, Cursor = n.Id })
+                .ToList(),
+            PageInfo = new PageInfo
+            {
+                StartCursor = nodes.Count > 0 ? nodes.First().Id : null,
+                EndCursor = nodes.Count > 0 ? nodes.Last().Id : null,
+                HasPreviousPage = !firstPage,
+                HasNextPage = !lastPage
+            }
+        };
+    }
+
+    public static WorkspaceMember ConvertWorkspaceMember(
+        Models.WorkspaceMember dbm
+    )
+    {
+        throw new NotImplementedException();
+    }
+
+    public static Connection<T> ToConnection<T, F>(
+        List<T> nodes,
+        (string, ArrayList?) requestedFields,
+        F filter,
+        bool first,
+        bool last
+    )
+        where T : INode
+        where F : IInputFilter<T>
+    {
+        throw new NotImplementedException();
     }
 }

@@ -1,12 +1,21 @@
+using Microsoft.EntityFrameworkCore;
 using PersistenceService.Data.ApplicationDb;
 using PersistenceService.Models;
+using PersistenceService.Utils;
+using System.Collections;
+using System.Linq.Dynamic.Core;
 
 namespace PersistenceService.Stores;
 
 public class WorkspaceStore : Store
 {
+    private IEnumerable<string> WorkspaceProps { get; set; }
+
     public WorkspaceStore(ApplicationDbContext dbContext)
-        : base(dbContext) { }
+        : base(dbContext)
+    {
+        WorkspaceProps = typeof(Workspace).GetProperties().Select(p => p.Name);
+    }
 
     public async Task<WorkspaceMember> InsertWorkspaceAdmin(
         Guid userId,
@@ -205,5 +214,54 @@ public class WorkspaceStore : Store
         await _context.SaveChangesAsync();
 
         return invite;
+    }
+
+    public async Task<(
+        List<dynamic> dbWorkspaces,
+        bool lastPage
+    )> LoadWorkspaces(
+        Guid userId,
+        int first,
+        (string, ArrayList) connectionTree,
+        DateTime? after = null
+    )
+    {
+        var memberships = _context.WorkspaceMembers
+            .OrderByDescending(wm => wm.JoinedAt)
+            .Where(wm => wm.UserId == userId);
+        if (!(after is null))
+        {
+            memberships = memberships.Where(wm => wm.JoinedAt > after);
+        }
+        IQueryable<Workspace> workspaces = memberships
+            .Take(first + 1)
+            .Select(wm => wm.Workspace);
+        var dynamicWorkspaces = await workspaces
+            .Select(
+                DynamicLinqUtils.NodeFieldToDynamicSelectString(connectionTree)
+            )
+            .ToDynamicListAsync();
+
+        bool lastPage = dynamicWorkspaces.Count <= first;
+        if (!lastPage)
+        {
+            dynamicWorkspaces.RemoveAt(dynamicWorkspaces.Count - 1);
+        }
+        return (dynamicWorkspaces, lastPage);
+    }
+
+    public Task<(
+        IEnumerable<WorkspaceMember> dbMembers,
+        bool lastPage
+    )> LoadWorkspaceMembersEagerNavPropLoading(
+        Guid userId,
+        int first,
+        (string, ArrayList?) requestedFields,
+        Guid workspaceId,
+        Guid? after = null
+    )
+    {
+        // System.Linq.Dynamic.Core
+        throw new NotImplementedException();
     }
 }

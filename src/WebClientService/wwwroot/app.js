@@ -78,8 +78,8 @@ async function localApi() {
   
 async function remoteApi() {
     const query = `
-        query WorkspacesPageQuery($userId: ID!) {
-            workspacesPageData(userId: $userId) {
+        query WorkspacesPageQuery($userId: ID!, $workspacesFilter: WorkspacesFilterInput!) {
+            workspacesPageData(userId: $userId, workspacesFilter: $workspacesFilter) {
                 user {
                     id
                     createdAt
@@ -90,9 +90,40 @@ async function remoteApi() {
                         }
                     }
                 }
+                workspaces {
+                    totalEdges
+                    pageInfo {
+                        startCursor
+                        endCursor
+                        hasNextPage
+                        hasPreviousPage
+                    }
+                    edges {
+                        node {
+                            id
+                            createdAt
+                            description
+                            name
+                            numMembers
+                            avatar {
+                                id
+                                storeKey
+                            }
+                        }
+                    }
+                }
             }
         }`;
-    const variables = { userId: "e6560874-6d15-4d94-bc53-f2240ab364e0" }
+
+    const variables = { 
+        userId: "e6560874-6d15-4d94-bc53-f2240ab364e0",
+        workspacesFilter: {
+            cursor: {
+                first: 2
+            },
+            userId: "e6560874-6d15-4d94-bc53-f2240ab364e0"
+        }
+    }
     var req = new Request("/remote/graphql", {
         headers: new Headers({
             "X-CSRF": "1",

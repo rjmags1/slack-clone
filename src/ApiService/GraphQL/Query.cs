@@ -36,17 +36,22 @@ public class SlackCloneQuery : ObjectGraphType<object>
                 var userId = context.GetArgument<Guid>("userId");
                 var userFields = FieldAnalyzer.User(context, userId);
 
-                //var workspacesFilter = context.GetArgument<WorkspacesFilter>(
-                //"workspacesFilter"
-                //);
-                //var workspacesFields = FieldAnalyzer.Workspaces(
-                //context,
-                //workspacesFilter
-                //);
+                var workspacesFilter = context.GetArgument<WorkspacesFilter>(
+                    "workspacesFilter"
+                );
+                var (fieldsTree, flattened) = FieldAnalyzer.Workspaces(
+                    context,
+                    workspacesFilter
+                );
 
                 return new WorkspacesPageData
                 {
-                    User = await data.GetUserById(userId, userFields)
+                    User = await data.GetUserById(userId, userFields),
+                    Workspaces = await data.GetWorkspaces(
+                        workspacesFilter,
+                        fieldsTree,
+                        flattened
+                    ),
                 };
             });
     }
