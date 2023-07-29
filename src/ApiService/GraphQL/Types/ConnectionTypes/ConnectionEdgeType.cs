@@ -1,14 +1,16 @@
 using GraphQL.Types;
+using ApiService.Utils;
 
 namespace SlackCloneGraphQL.Types.Connections;
 
-public class ConnectionEdgeType<T, U> : ObjectGraphType<ConnectionEdge<T, U>>
+public abstract class ConnectionEdgeType<T, U>
+    : ObjectGraphType<ConnectionEdge<U>>
     where T : INodeGraphType<U>
     where U : INode
 {
     public ConnectionEdgeType()
     {
-        Name = $"{nameof(T)}ConnectionEdge";
+        Name = StringUtils.ToLowerFirstLetter($"{nameof(T)}ConnectionEdge");
         Field<NonNullGraphType<T>>("node")
             .Description("The node pointed to by a connection edge.");
         Field<NonNullGraphType<IdGraphType>>("cursor")
@@ -18,11 +20,10 @@ public class ConnectionEdgeType<T, U> : ObjectGraphType<ConnectionEdge<T, U>>
     }
 }
 
-public class ConnectionEdge<T, U>
-    where T : INodeGraphType<U>
-    where U : INode
+public class ConnectionEdge<T>
+    where T : INode
 {
 #pragma warning disable CS8618
     public T Node { get; set; }
-    public string Cursor { get; set; }
+    public Guid Cursor { get; set; }
 }

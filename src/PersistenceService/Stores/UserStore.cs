@@ -1,7 +1,11 @@
+using System.Reflection;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using PersistenceService.Data.ApplicationDb;
 using PersistenceService.Models;
+using PersistenceService.Utils;
 using CustomBaseStore = PersistenceService.Stores.Store;
 
 namespace PersistenceService.Stores;
@@ -13,6 +17,12 @@ public class UserStore : UserManager<User>
 
     public static string testPhoneNumber = "9-999-999-9999";
 
+    private const string AVATAR_NAV_PROP = "Avatar";
+
+    private const string THEME_NAV_PROP = "Theme";
+
+    private ApplicationDbContext context { get; set; }
+
     public UserStore(
         IUserStore<User> userStore,
         IOptions<IdentityOptions> options,
@@ -22,7 +32,8 @@ public class UserStore : UserManager<User>
         ILookupNormalizer keyNormalizer,
         IdentityErrorDescriber errors,
         IServiceProvider services,
-        ILogger<UserManager<User>> logger
+        ILogger<UserManager<User>> logger,
+        ApplicationDbContext dbContext
     )
         : base(
             userStore,
@@ -34,7 +45,46 @@ public class UserStore : UserManager<User>
             errors,
             services,
             logger
-        ) { }
+        )
+    {
+        context = dbContext;
+    }
+
+    public async Task<User> FindByIdAsyncWithEagerNavPropLoading(
+        Guid userId,
+        IEnumerable<string> fields
+    )
+    {
+        IEnumerable<string> uppercaseFields = fields.Select(
+            f => StringUtils.ToUpperFirstLetter(f)
+        );
+        IQueryable<User> query = context.Users.Where(u => u.Id == userId);
+
+        bool avatarRequested = false;
+        bool themeRequested = false;
+        foreach (string f in fields)
+        {
+            if (f == AVATAR_NAV_PROP)
+            {
+                avatarRequested = true;
+            }
+            if (f == THEME_NAV_PROP)
+            {
+                themeRequested = true;
+            }
+        }
+
+        if (avatarRequested)
+        {
+            query = query.Include(u => u.Avatar).Where(u => u.Id == userId);
+        }
+        if (themeRequested)
+        {
+            query = query.Include(u => u.Theme).Where(u => u.Id == userId);
+        }
+
+        return await query.FirstAsync();
+    }
 
     public async Task<List<User>> InsertUsers(
         List<User> users,

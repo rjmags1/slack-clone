@@ -6,7 +6,7 @@ public class PageInfoType : ObjectGraphType<PageInfo>
 {
     public PageInfoType()
     {
-        Name = "PageInfo";
+        Name = "pageInfo";
         Field<IdGraphType>("startCursor")
             .Description("Start cursor for the page");
         Field<IdGraphType>("endCursor").Description("End cursor for the page");
@@ -22,9 +22,9 @@ public class PageInfoType : ObjectGraphType<PageInfo>
 public class PageInfo
 {
 #pragma warning disable CS8618
-    Guid? StartCursor { get; set; }
-    Guid? EndCursor { get; set; }
+    public Guid? StartCursor { get; set; }
+    public Guid? EndCursor { get; set; }
 #pragma warning restore CS8618
-    bool HasNextPage { get; set; }
-    bool HasPreviousPage { get; set; }
+    public bool HasNextPage { get; set; }
+    public bool HasPreviousPage { get; set; }
 }
