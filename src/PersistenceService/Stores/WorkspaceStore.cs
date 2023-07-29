@@ -2,7 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using PersistenceService.Data.ApplicationDb;
 using PersistenceService.Models;
 using PersistenceService.Utils;
-using System.Collections;
+using PersistenceService.Utils.GraphQL;
 using System.Linq.Dynamic.Core;
 
 namespace PersistenceService.Stores;
@@ -222,7 +222,7 @@ public class WorkspaceStore : Store
     )> LoadWorkspaces(
         Guid userId,
         int first,
-        (string, ArrayList) connectionTree,
+        FieldTree connectionTree,
         DateTime? after = null
     )
     {
@@ -256,7 +256,7 @@ public class WorkspaceStore : Store
     )> LoadWorkspaceMembers(
         Guid userId,
         int first,
-        (string, ArrayList) connectionTree,
+        FieldTree connectionTree,
         Guid workspaceId,
         Guid? after = null
     )

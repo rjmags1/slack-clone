@@ -1,6 +1,7 @@
 using ApiService.Utils;
 using GraphQL;
 using GraphQL.Types;
+using PersistenceService.Utils.GraphQL;
 using SlackCloneGraphQL.Types;
 using SlackCloneGraphQL.Types.Connections;
 
@@ -35,23 +36,22 @@ public class SlackCloneQuery : ObjectGraphType<object>
             .ResolveAsync(async context =>
             {
                 var userId = context.GetArgument<Guid>("userId");
-                var userFields = FieldAnalyzer.User(context, userId);
+                FieldInfo userFieldsInfo = FieldAnalyzer.User(context, userId);
 
                 var workspacesFilter = context.GetArgument<WorkspacesFilter>(
                     "workspacesFilter"
                 );
-                var (fieldsTree, flattened) = FieldAnalyzer.Workspaces(
-                    context,
-                    workspacesFilter
-                );
+                FieldInfo fieldInfo = FieldAnalyzer.Workspaces(context);
 
                 return new WorkspacesPageData
                 {
-                    User = await data.GetUserById(userId, userFields),
+                    User = await data.GetUserById(
+                        userId,
+                        userFieldsInfo.SubfieldNames
+                    ),
                     Workspaces = await data.GetWorkspaces(
                         workspacesFilter,
-                        fieldsTree,
-                        flattened
+                        userFieldsInfo
                     ),
                 };
             });

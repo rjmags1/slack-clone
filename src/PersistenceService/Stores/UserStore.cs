@@ -10,7 +10,7 @@ using CustomBaseStore = PersistenceService.Stores.Store;
 
 namespace PersistenceService.Stores;
 
-public class UserStore : UserManager<User>
+public class UserStore : UserManager<User>, IStore
 {
     public static List<TimeZoneInfo> timezones { get; set; } =
         TimeZoneInfo.GetSystemTimeZones().ToList();

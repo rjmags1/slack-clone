@@ -3,6 +3,7 @@ using Models = PersistenceService.Models;
 using SlackCloneGraphQL.Types;
 using SlackCloneGraphQL.Types.Connections;
 using System.Collections;
+using PersistenceService.Utils.GraphQL;
 
 namespace SlackCloneGraphQL;
 
@@ -20,9 +21,7 @@ public class SlackCloneData
         IEnumerable<string> requestedFields
     )
     {
-        using var scope = _provider.CreateScope();
-        UserStore userStore =
-            scope.ServiceProvider.GetRequiredService<UserStore>();
+        UserStore userStore = GetStore<UserStore>();
         Models.User dbUser =
             await userStore.FindByIdAsyncWithEagerNavPropLoading(
                 userId,
@@ -33,19 +32,16 @@ public class SlackCloneData
     }
 
     public async Task<Connection<WorkspaceMember>> GetWorkspaceMembers(
-        (string, ArrayList) connectionTree,
-        List<string> requestedFields,
+        FieldInfo fieldInfo,
         UsersFilter filter
     )
     {
-        using var scope = _provider.CreateScope();
-        WorkspaceStore workspaceStore =
-            scope.ServiceProvider.GetRequiredService<WorkspaceStore>();
+        WorkspaceStore workspaceStore = GetStore<WorkspaceStore>();
         (List<dynamic> dbMembers, bool lastPage) =
             await workspaceStore.LoadWorkspaceMembers(
                 filter.UserId,
                 filter.Cursor.First,
-                connectionTree,
+                fieldInfo.FieldTree,
                 filter.WorkspaceId,
                 (Guid?)filter.Cursor.After
             );
@@ -56,8 +52,14 @@ public class SlackCloneData
             WorkspaceMember member = (WorkspaceMember)
                 ModelToObjectConverters.ConvertDynamicWorkspaceMember(
                     dbm,
-                    FieldAnalyzer.ExtractUserFields("user", connectionTree),
-                    FieldAnalyzer.ExtractUserFields("admin", connectionTree)
+                    FieldAnalyzer.ExtractUserFields(
+                        "user",
+                        fieldInfo.FieldTree
+                    ),
+                    FieldAnalyzer.ExtractUserFields(
+                        "admin",
+                        fieldInfo.FieldTree
+                    )
                 );
             members.Add(member);
         }
@@ -71,34 +73,31 @@ public class SlackCloneData
 
     public async Task<Connection<Workspace>> GetWorkspaces(
         WorkspacesFilter filter,
-        (string, ArrayList) connectionTree,
-        List<string> requestedFields
+        FieldInfo fieldInfo
     )
     {
         if (!(filter.NameQuery is null))
         {
             throw new NotImplementedException();
         }
-        if (requestedFields.Contains(nameof(Workspace.Members)))
+        if (fieldInfo.SubfieldNames.Contains(nameof(Workspace.Members)))
         {
             throw new InvalidOperationException(
                 "Cannot load connection within a connection here."
             );
         }
 
-        using var scope = _provider.CreateScope();
-        WorkspaceStore workspaceStore =
-            scope.ServiceProvider.GetRequiredService<WorkspaceStore>();
+        WorkspaceStore workspaceStore = GetStore<WorkspaceStore>();
         (List<dynamic> dbWorkspaces, bool lastPage) =
             await workspaceStore.LoadWorkspaces(
                 filter.UserId,
                 filter.Cursor.First,
-                connectionTree,
+                fieldInfo.FieldTree,
                 (DateTime?)filter.Cursor.After
             );
 
         List<Workspace> workspaces = new List<Workspace>();
-        foreach (var dbw in dbWorkspaces)
+        foreach (dynamic dbw in dbWorkspaces)
         {
             Workspace workspace = (Workspace)
                 ModelToObjectConverters.ConvertDynamicWorkspace(dbw);
@@ -114,13 +113,19 @@ public class SlackCloneData
 
     public async Task<Workspace> GetWorkspace(Guid workspaceId)
     {
-        using var scope = _provider.CreateScope();
-        WorkspaceStore workspaceStore =
-            scope.ServiceProvider.GetRequiredService<WorkspaceStore>();
+        WorkspaceStore workspaceStore = GetStore<WorkspaceStore>();
         Models.Workspace dbWorkspace = await workspaceStore.GetWorkspace(
             workspaceId
         );
 
         return ModelToObjectConverters.ConvertWorkspace(dbWorkspace);
+    }
+
+    private T GetStore<T>()
+        where T : IStore
+    {
+        using var scope = _provider.CreateScope();
+        T store = scope.ServiceProvider.GetRequiredService<T>();
+        return store;
     }
 }

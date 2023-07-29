@@ -3,7 +3,7 @@ using PersistenceService.Data.ApplicationDb;
 
 namespace PersistenceService.Stores;
 
-public class Store : IDisposable
+public class Store : IDisposable, IStore
 {
     public static Random random { get; set; } = new Random();
     private static string _letters { get; set; } =
@@ -36,3 +36,5 @@ public class Store : IDisposable
         _context.Dispose();
     }
 }
+
+public interface IStore { }
