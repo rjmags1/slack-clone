@@ -1,75 +1,90 @@
-using System.Collections;
 using GraphQL;
-using SlackCloneGraphQL.Types;
+using PersistenceService.Utils.GraphQL;
 
 namespace SlackCloneGraphQL;
 
+/// <summary>
+/// This class parses individual fields of a valid GraphQL document to
+/// determine which subfields of an individual field were queried for by
+/// the client. This extra bit of analysis helps optimize database
+/// queries; knowing which fields were queried for by the client allows EF Core
+/// queries to the database to avoid unnecessary joins, and select only necessary
+/// columns when performing multi-row load operations.
+///
+/// Getting this information solely through the IResolveFieldContext API
+/// provided by GraphQL.NET is either not possible or harder than simply
+/// writing some document parsing logic myself.
+/// </summary>
 public static class FieldAnalyzer
 {
-    public static ((string, ArrayList), List<string>) Workspaces(
-        IResolveFieldContext context,
-        WorkspacesFilter filter
-    )
+    public static FieldInfo Workspaces(IResolveFieldContext context)
     {
-        string workspacesFieldSlice = GetFieldSlice(context, "workspaces");
-        var (fields, flattened) = CollectFields(workspacesFieldSlice);
-        return (fields, flattened);
+        string workspacesFieldSlice = GetFieldSliceFromParentContext(
+            context,
+            "workspaces"
+        );
+        return CollectFields(workspacesFieldSlice);
     }
 
-    public static List<string> User(IResolveFieldContext context, Guid userId)
+    public static FieldInfo User(IResolveFieldContext context, Guid userId)
     {
-        string userFieldSlice = GetFieldSlice(context, "user");
-        var (fields, flattened) = CollectFields(userFieldSlice);
-        return flattened;
+        string userFieldSlice = GetFieldSliceFromParentContext(context, "user");
+        return CollectFields(userFieldSlice);
     }
 
-    public static ((string, ArrayList), List<string>) WorkspaceMembers(
-        IResolveFieldContext context
-    )
+    public static FieldInfo WorkspaceMembers(IResolveFieldContext context)
     {
-        var start = context.FieldAst.Location.Start;
-        var stop = context.FieldAst.Location.End;
-        string membersFieldSlice = context.Document.Source
-            .Slice(start, stop - start)
-            .ToString();
-        var (fields, flattened) = CollectFields(membersFieldSlice);
-        return (fields, flattened);
+        string membersFieldSlice = GetFieldSlice(context);
+        return CollectFields(membersFieldSlice);
     }
 
+    /// <summary>
+    /// Helper method for getting all subfields of a User object
+    /// in a GraphQL document. Not all fields that refer to a User
+    /// object have the field name 'user', and this method addresses
+    /// that situation.
+    /// </summary>
     public static List<string> ExtractUserFields(
         string userFieldName,
-        (string, ArrayList) connectionTree
+        FieldTree parentTree
     )
     {
         List<string> fields = new List<string>();
-        CollectUserFields(userFieldName, connectionTree, fields);
+        CollectUserFields(userFieldName, parentTree, fields);
         return fields;
     }
 
+    /// <summary>
+    /// Helper method for ExtractUserFields() method
+    /// </summary>
     private static void CollectUserFields(
         string userFieldName,
-        (string, ArrayList) root,
+        FieldTree root,
         List<string> fields,
         bool inUserSubtree = false
     )
     {
         if (inUserSubtree)
         {
-            fields.Add(root.Item1);
+            fields.Add(root.FieldName);
         }
-        bool nodeRoot = root.Item1 == userFieldName;
-        foreach ((string, ArrayList) child in root.Item2)
+        bool userRoot = root.FieldName == userFieldName;
+        foreach (FieldTree child in root.Children)
         {
             CollectUserFields(
                 userFieldName,
                 child,
                 fields,
-                nodeRoot || inUserSubtree
+                userRoot || inUserSubtree
             );
         }
     }
 
-    private static string GetFieldSlice(
+    /// <summary>
+    /// Gets the substring containing all subfields of a field
+    /// without converting the entire GraphQL document to a string.
+    /// </summary>
+    private static string GetFieldSliceFromParentContext(
         IResolveFieldContext context,
         string fieldName
     )
@@ -86,24 +101,55 @@ public static class FieldAnalyzer
         return fieldSlice;
     }
 
-    private static ((string, ArrayList), List<string>) CollectFields(
-        string fieldSlice
-    )
+    /// <summary>
+    /// Gets the substring containing all subfields of a field
+    /// without converting the entire GraphQL document to a string.
+    /// </summary>
+    private static string GetFieldSlice(IResolveFieldContext context)
+    {
+        var start = context.FieldAst.Location.Start;
+        var stop = context.FieldAst.Location.End;
+        string slice = context.Document.Source
+            .Slice(start, stop - start)
+            .ToString();
+        return slice;
+    }
+
+    /// <summary>
+    /// Parses a substring (fieldSlice) from a GraphQL document containing all subfields of
+    /// a particular field. Returns a tree data structure representing the parsed
+    /// field and its subfields, as well as a list containing the flattened version of
+    /// the tree without the root field (only the names of the subfields).
+    /// </summary>
+    private static FieldInfo CollectFields(string fieldSlice)
     {
         int i = fieldSlice.IndexOf("{");
         string rootField = fieldSlice.Substring(0, i).Trim();
-        (string, ArrayList) root = (rootField, new ArrayList());
-        List<string> flattened = new List<string>();
+        FieldTree root = new FieldTree
+        {
+            FieldName = rootField,
+            Children = new List<FieldTree>()
+        };
+        List<string> subFieldNames = new List<string>();
 
-        TraverseSlice(root, fieldSlice, flattened, i + 1);
+        TraverseSlice(root, fieldSlice, subFieldNames, i + 1);
 
-        return (root, flattened);
+        return new FieldInfo
+        {
+            FieldTree = root,
+            SubfieldNames = subFieldNames
+        };
     }
 
-    private static ((string, ArrayList), int) TraverseSlice(
-        (string, ArrayList) root,
+    /// <summary>
+    /// Helper method for CollectFields method. Performs most of the heavy lifting;
+    /// parses the fieldSlice, generates the representative tree data structure and
+    /// list of all subfield names contained in the fieldSlice.
+    /// </summary>
+    private static (FieldTree fieldTree, int parsedToIdx) TraverseSlice(
+        FieldTree root,
         string fieldSlice,
-        List<string> flattened,
+        List<string> subFieldNames,
         int i
     )
     {
@@ -121,15 +167,11 @@ public static class FieldAnalyzer
             }
             else if (c == '{')
             {
-                (string, ArrayList) rootChildWithChildren = ((
-                    string,
-                    ArrayList
-                ))
-                    root.Item2[root.Item2.Count - 1]!;
-                ((string, ArrayList) _, int k) = TraverseSlice(
+                FieldTree rootChildWithChildren = root.Children.Last();
+                (FieldTree _, int k) = TraverseSlice(
                     rootChildWithChildren,
                     fieldSlice,
-                    flattened,
+                    subFieldNames,
                     i + 1
                 );
                 i = k;
@@ -155,9 +197,9 @@ public static class FieldAnalyzer
                 }
 
                 string fieldName = fieldSlice.Substring(i, (k - i));
-                flattened.Add(fieldName);
-                (string, ArrayList) field = (fieldName, new ArrayList());
-                root.Item2!.Add(field);
+                subFieldNames.Add(fieldName);
+                FieldTree field = new FieldTree(fieldName);
+                root.Children.Add(field);
 
                 i = k;
             }

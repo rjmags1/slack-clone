@@ -1,6 +1,7 @@
 using System.Collections;
 using GraphQL;
 using GraphQL.Types;
+using PersistenceService.Utils.GraphQL;
 using SlackCloneGraphQL.Types.Connections;
 
 namespace SlackCloneGraphQL.Types;
@@ -45,14 +46,9 @@ public class WorkspaceType
                     );
                 }
 
-                ((string, ArrayList) connectionTree, List<string> flattened) =
-                    FieldAnalyzer.WorkspaceMembers(context);
+                FieldInfo fieldInfo = FieldAnalyzer.WorkspaceMembers(context);
 
-                return await data.GetWorkspaceMembers(
-                    connectionTree,
-                    flattened,
-                    usersFilter
-                );
+                return await data.GetWorkspaceMembers(fieldInfo, usersFilter);
             });
         Field<NonNullGraphType<IntGraphType>>("numMembers")
             .Description("Members in the workspace")

@@ -1,7 +1,5 @@
-using System.Collections;
 using System.Text.Json;
 using ApiService.Utils;
-using GraphQL.Types;
 using SlackCloneGraphQL.Types;
 using SlackCloneGraphQL.Types.Connections;
 using File = SlackCloneGraphQL.Types.File;
@@ -9,7 +7,20 @@ using Models = PersistenceService.Models;
 
 namespace SlackCloneGraphQL;
 
-public class ModelToObjectConverters
+/// <summary>
+/// This class performs data transfer utility functions that enable the
+/// translation of both EF Core Model, and anonymous objects resulting
+/// from optimized dynamic LINQ
+/// queries, into objects that can be understood by GraphQL.NET and translated
+/// into GraphQL responses.
+///
+/// The methods of the class that handle anonymous object LINQ query results convert
+/// them into duck-typed System.Dynamic.Expando objects that implement
+/// IDictionary. The conversion is done via json serialization
+/// and is useful because it provides a way to check for the presence of individual
+/// members of EF Core model objects (which the expando objects originate from).
+/// </summary>
+public static class ModelToObjectConverters
 {
     private const string DEFAULT_ONLINE_STATUS = "offline";
 

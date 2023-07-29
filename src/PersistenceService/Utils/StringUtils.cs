@@ -1,4 +1,4 @@
-using System.Collections;
+using PersistenceService.Utils.GraphQL;
 
 namespace PersistenceService.Utils;
 
@@ -18,7 +18,7 @@ public static class StringUtils
 public static class DynamicLinqUtils
 {
     public static string NodeFieldToDynamicSelectString(
-        (string, ArrayList) connectionTree,
+        FieldTree connectionTree,
         List<string>? nonDbMapped = null
     )
     {
@@ -49,7 +49,7 @@ public static class DynamicLinqUtils
     }
 
     private static void CollectNodeFields(
-        (string, ArrayList) root,
+        FieldTree root,
         List<string> fields,
         List<string>? nonDbMapped = null,
         bool parentIsNonDbMapped = false
@@ -57,17 +57,17 @@ public static class DynamicLinqUtils
     {
         if (parentIsNonDbMapped)
         {
-            fields.Add(root.Item1);
+            fields.Add(root.FieldName);
         }
-        bool nodeLevel = root.Item1 == "node";
+        bool nodeLevel = root.FieldName == "node";
         bool rootInNonDbMapped = nonDbMapped is null
             ? false
-            : nonDbMapped.Contains(root.Item1);
-        foreach ((string, ArrayList) child in root.Item2)
+            : nonDbMapped.Contains(root.FieldName);
+        foreach (FieldTree child in root.Children)
         {
             if (nodeLevel)
             {
-                fields.Add(child.Item1);
+                fields.Add(child.FieldName);
             }
             CollectNodeFields(child, fields, nonDbMapped, rootInNonDbMapped);
         }
