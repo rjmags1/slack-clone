@@ -250,18 +250,54 @@ public class WorkspaceStore : Store
         return (dynamicWorkspaces, lastPage);
     }
 
-    public Task<(
-        IEnumerable<WorkspaceMember> dbMembers,
+    public async Task<(
+        List<dynamic> dbMembers,
         bool lastPage
-    )> LoadWorkspaceMembersEagerNavPropLoading(
+    )> LoadWorkspaceMembers(
         Guid userId,
         int first,
-        (string, ArrayList?) requestedFields,
+        (string, ArrayList) connectionTree,
         Guid workspaceId,
         Guid? after = null
     )
     {
-        // System.Linq.Dynamic.Core
-        throw new NotImplementedException();
+        IQueryable<WorkspaceMember> memberships = _context.WorkspaceMembers
+            .Where(wm => wm.WorkspaceId == workspaceId)
+            .Include(wm => wm.User);
+        if (!(after is null))
+        {
+            string prevLast = await memberships
+                .Where(wm => wm.Id == after)
+                .Select(wm => wm.User.NormalizedUserName)
+                .FirstAsync();
+            memberships = memberships.Where(
+                wm => wm.User.NormalizedUserName.CompareTo(prevLast) > 0
+            );
+        }
+        memberships = memberships
+            .OrderBy(wm => wm.User.NormalizedUserName)
+            .Take(first + 1);
+        var dynamicWorkspaceMembers = await memberships
+            .Select(
+                DynamicLinqUtils.NodeFieldToDynamicSelectString(
+                    connectionTree,
+                    nonDbMapped: new List<string> { "workspaceMemberInfo" }
+                )
+            )
+            .ToDynamicListAsync();
+
+        bool lastPage = dynamicWorkspaceMembers.Count <= first;
+        if (!lastPage)
+        {
+            dynamicWorkspaceMembers.RemoveAt(dynamicWorkspaceMembers.Count - 1);
+        }
+        return (dynamicWorkspaceMembers, lastPage);
+    }
+
+    public async Task<Workspace> GetWorkspace(Guid workspaceId)
+    {
+        return await _context.Workspaces
+            .Where(w => w.Id == workspaceId)
+            .FirstAsync();
     }
 }

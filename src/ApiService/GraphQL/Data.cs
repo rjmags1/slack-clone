@@ -33,33 +33,37 @@ public class SlackCloneData
     }
 
     public async Task<Connection<WorkspaceMember>> GetWorkspaceMembers(
-        (string, ArrayList?) requestedFields,
+        (string, ArrayList) connectionTree,
+        List<string> requestedFields,
         UsersFilter filter
     )
     {
         using var scope = _provider.CreateScope();
         WorkspaceStore workspaceStore =
             scope.ServiceProvider.GetRequiredService<WorkspaceStore>();
-        (IEnumerable<Models.WorkspaceMember> dbMembers, bool lastPage) =
-            await workspaceStore.LoadWorkspaceMembersEagerNavPropLoading(
+        (List<dynamic> dbMembers, bool lastPage) =
+            await workspaceStore.LoadWorkspaceMembers(
                 filter.UserId,
                 filter.Cursor.First,
-                requestedFields,
+                connectionTree,
                 filter.WorkspaceId,
                 (Guid?)filter.Cursor.After
             );
 
-        List<WorkspaceMember> members = dbMembers
-            .Select(dbm => ModelToObjectConverters.ConvertWorkspaceMember(dbm))
-            .ToList();
+        List<WorkspaceMember> members = new List<WorkspaceMember>();
+        foreach (dynamic dbm in dbMembers)
+        {
+            WorkspaceMember member = (WorkspaceMember)
+                ModelToObjectConverters.ConvertDynamicWorkspaceMember(
+                    dbm,
+                    FieldAnalyzer.ExtractUserFields("user", connectionTree),
+                    FieldAnalyzer.ExtractUserFields("admin", connectionTree)
+                );
+            members.Add(member);
+        }
 
-        return ModelToObjectConverters.ToConnection<
-            WorkspaceMember,
-            UsersFilter
-        >(
+        return ModelToObjectConverters.ToConnection<WorkspaceMember>(
             members,
-            requestedFields,
-            filter,
             filter.Cursor.After is null,
             lastPage
         );
@@ -97,15 +101,26 @@ public class SlackCloneData
         foreach (var dbw in dbWorkspaces)
         {
             Workspace workspace = (Workspace)
-                ModelToObjectConverters.ConvertWorkspace(dbw);
+                ModelToObjectConverters.ConvertDynamicWorkspace(dbw);
             workspaces.Add(workspace);
         }
 
         return ModelToObjectConverters.ToConnection<Workspace>(
             workspaces,
-            requestedFields,
             filter.Cursor.After is null,
             lastPage
         );
+    }
+
+    public async Task<Workspace> GetWorkspace(Guid workspaceId)
+    {
+        using var scope = _provider.CreateScope();
+        WorkspaceStore workspaceStore =
+            scope.ServiceProvider.GetRequiredService<WorkspaceStore>();
+        Models.Workspace dbWorkspace = await workspaceStore.GetWorkspace(
+            workspaceId
+        );
+
+        return ModelToObjectConverters.ConvertWorkspace(dbWorkspace);
     }
 }

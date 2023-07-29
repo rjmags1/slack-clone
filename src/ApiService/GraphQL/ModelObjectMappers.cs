@@ -27,7 +27,7 @@ public class ModelToObjectConverters
         Name = "DEFAULT_THEME"
     };
 
-    public static Workspace ConvertWorkspace(dynamic modelWorkspace)
+    public static Workspace ConvertDynamicWorkspace(dynamic modelWorkspace)
     {
         var expando = DynamicUtils.ToExpando(modelWorkspace);
         Workspace workspace = new Workspace();
@@ -37,7 +37,6 @@ public class ModelToObjectConverters
         }
         if (DynamicUtils.HasProperty(expando, nameof(Workspace.Avatar)))
         {
-            Console.WriteLine(expando.Avatar is null);
             if (expando.Avatar is null)
             {
                 workspace.Avatar = DefaultAvatar;
@@ -152,7 +151,6 @@ public class ModelToObjectConverters
 
     public static Connection<T> ToConnection<T>(
         List<T> nodes,
-        IEnumerable<string> requestedFields,
         bool firstPage,
         bool lastPage
     )
@@ -174,23 +172,177 @@ public class ModelToObjectConverters
         };
     }
 
-    public static WorkspaceMember ConvertWorkspaceMember(
-        Models.WorkspaceMember dbm
+    public static WorkspaceMember ConvertDynamicWorkspaceMember(
+        dynamic modelWorkspaceMember,
+        List<string> userFields,
+        List<string> adminFields
     )
     {
-        throw new NotImplementedException();
+        var expando = DynamicUtils.ToExpando(modelWorkspaceMember);
+        WorkspaceMember member = new WorkspaceMember();
+        if (DynamicUtils.HasProperty(expando, nameof(WorkspaceMember.Id)))
+        {
+            member.Id = JsonSerializer.Deserialize<Guid>(expando.Id);
+        }
+        if (DynamicUtils.HasProperty(expando, nameof(WorkspaceMember.Avatar)))
+        {
+            if (expando.Avatar is null)
+            {
+                member.Avatar = DefaultAvatar;
+            }
+            else
+            {
+                throw new NotImplementedException();
+            }
+        }
+        if (DynamicUtils.HasProperty(expando, nameof(WorkspaceMember.JoinedAt)))
+        {
+            member.JoinedAt = JsonSerializer.Deserialize<DateTime>(
+                expando.JoinedAt
+            );
+        }
+        if (DynamicUtils.HasProperty(expando, nameof(WorkspaceMember.Title)))
+        {
+            member.Title = JsonSerializer.Deserialize<string>(expando.Title);
+        }
+        if (DynamicUtils.HasProperty(expando, nameof(WorkspaceMember.User)))
+        {
+            Models.User modelUser = JsonSerializer.Deserialize<Models.User>(
+                expando.User
+            );
+            member.User = ConvertUser(modelUser, userFields);
+        }
+        if (
+            DynamicUtils.HasProperty(expando, nameof(WorkspaceMember.Workspace))
+        )
+        {
+            Models.Workspace modelWorkspace =
+                JsonSerializer.Deserialize<Models.Workspace>(expando.Workspace);
+            member.Workspace = ConvertWorkspace(modelWorkspace);
+        }
+        if (IncludeWorkspaceMemberInfo(expando))
+        {
+            member.WorkspaceMemberInfo = ConvertWorkspaceMemberInfo(
+                expando,
+                adminFields
+            );
+        }
+
+        return member;
     }
 
-    public static Connection<T> ToConnection<T, F>(
-        List<T> nodes,
-        (string, ArrayList?) requestedFields,
-        F filter,
-        bool first,
-        bool last
+    public static WorkspaceMemberInfo ConvertWorkspaceMemberInfo(
+        dynamic expandoModelWorkspaceMember,
+        List<string> adminFields
     )
-        where T : INode
-        where F : IInputFilter<T>
     {
-        throw new NotImplementedException();
+        WorkspaceMemberInfo memberInfo = new WorkspaceMemberInfo();
+        if (
+            DynamicUtils.HasProperty(
+                expandoModelWorkspaceMember,
+                nameof(WorkspaceMemberInfo.Admin)
+            )
+        )
+        {
+            memberInfo.Admin = JsonSerializer.Deserialize<bool>(
+                expandoModelWorkspaceMember.Admin
+            );
+        }
+        if (
+            DynamicUtils.HasProperty(
+                expandoModelWorkspaceMember,
+                nameof(WorkspaceMemberInfo.Owner)
+            )
+        )
+        {
+            memberInfo.Owner = JsonSerializer.Deserialize<bool>(
+                expandoModelWorkspaceMember.Owner
+            );
+        }
+        if (
+            DynamicUtils.HasProperty(
+                expandoModelWorkspaceMember,
+                nameof(WorkspaceMemberInfo.WorkspaceAdminPermissions)
+            )
+            && !(expandoModelWorkspaceMember.WorkspaceAdminPermissions is null)
+        )
+        {
+            Models.WorkspaceAdminPermissions modelPermissions =
+                JsonSerializer.Deserialize<Models.WorkspaceAdminPermissions>(
+                    expandoModelWorkspaceMember.WorkspaceAdminPermissions
+                );
+            memberInfo.WorkspaceAdminPermissions =
+                ConvertWorkspaceAdminPermissions(modelPermissions, adminFields);
+        }
+
+        return memberInfo;
+    }
+
+    public static WorkspaceAdminPermissions ConvertWorkspaceAdminPermissions(
+        Models.WorkspaceAdminPermissions modelPermissions,
+        List<string> adminFields
+    )
+    {
+        int mask = modelPermissions.WorkspaceAdminPermissionsMask;
+        return new WorkspaceAdminPermissions
+        {
+            Admin = ConvertUser(modelPermissions.Admin, adminFields),
+            All = (mask & 1) > 0,
+            Invite = (mask & 2) > 0,
+            Kick = (mask & 4) > 0,
+            AdminGrant = (mask & 8) > 0,
+            AdminRevoke = (mask & 16) > 0,
+            GrantAdminPermissions = (mask & 32) > 0,
+            RevokeAdminPermissions = (mask & 64) > 0,
+            EditMessages = (mask & 128) > 0,
+            DeleteMessages = (mask & 256) > 0
+        };
+    }
+
+    public static Workspace ConvertWorkspace(Models.Workspace modelWorkspace)
+    {
+        return new Workspace
+        {
+            Id = modelWorkspace.Id,
+            Avatar = ConvertAvatar(modelWorkspace.Avatar),
+            CreatedAt = modelWorkspace.CreatedAt,
+            Description = modelWorkspace.Description,
+            Name = modelWorkspace.Name,
+            NumMembers = modelWorkspace.NumMembers
+        };
+    }
+
+    private static bool IncludeWorkspaceMemberInfo(dynamic expando)
+    {
+        return (
+            DynamicUtils.HasProperty(
+                expando,
+                nameof(Models.WorkspaceMember.Admin)
+            )
+            || DynamicUtils.HasProperty(
+                expando,
+                nameof(Models.WorkspaceMember.WorkspaceAdminPermissions)
+            )
+            || DynamicUtils.HasProperty(
+                expando,
+                nameof(Models.WorkspaceMember.Owner)
+            )
+            || DynamicUtils.HasProperty(
+                expando,
+                nameof(Models.WorkspaceMember.NotificationsAllowTimeStart)
+            )
+            || DynamicUtils.HasProperty(
+                expando,
+                nameof(Models.WorkspaceMember.NotificationsAllTimeEnd)
+            )
+            || DynamicUtils.HasProperty(
+                expando,
+                nameof(Models.WorkspaceMember.NotificationSound)
+            )
+            || DynamicUtils.HasProperty(
+                expando,
+                nameof(Models.WorkspaceMember.Theme)
+            )
+        );
     }
 }

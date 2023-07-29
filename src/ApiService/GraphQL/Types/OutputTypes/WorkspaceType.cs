@@ -1,6 +1,5 @@
 using System.Collections;
 using GraphQL;
-using GraphQL.Resolvers;
 using GraphQL.Types;
 using SlackCloneGraphQL.Types.Connections;
 
@@ -30,17 +29,28 @@ public class WorkspaceType
             .Resolve(context => context.Source.Avatar);
         Field<NonNullGraphType<WorkspaceMembersConnectionType>>("members")
             .Description("The members of the workspace")
+            .Argument<UsersFilterInputType>(
+                "usersFilter",
+                "Filter for resolving workspace members"
+            )
             .ResolveAsync(async context =>
             {
-                UsersFilter usersFilter = context.GetArgument<UsersFilter>(
+                UsersFilter? usersFilter = context.GetArgument<UsersFilter>(
                     "usersFilter"
                 );
+                if (usersFilter is null)
+                {
+                    throw new ArgumentNullException(
+                        "usersFilter required for workspace members field"
+                    );
+                }
 
-                (string, ArrayList?) requestedFields =
+                ((string, ArrayList) connectionTree, List<string> flattened) =
                     FieldAnalyzer.WorkspaceMembers(context);
 
                 return await data.GetWorkspaceMembers(
-                    requestedFields,
+                    connectionTree,
+                    flattened,
                     usersFilter
                 );
             });

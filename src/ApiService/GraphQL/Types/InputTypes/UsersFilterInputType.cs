@@ -6,8 +6,8 @@ public class UsersFilterInputType : InputObjectGraphType<UsersFilter>
 {
     public UsersFilterInputType()
     {
-        Name = "usersFilterInput";
-        Field<NonNullGraphType<IdGraphType>>("userId");
+        Name = "UsersFilterInput";
+        //Field<NonNullGraphType<IdGraphType>>("userId");
         Field<NonNullGraphType<CursorInputType>>("cursor");
         Field<NonNullGraphType<IdGraphType>>("workspaceId");
         Field<ListGraphType<IdGraphType>>("users");

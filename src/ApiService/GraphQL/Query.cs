@@ -2,6 +2,7 @@ using ApiService.Utils;
 using GraphQL;
 using GraphQL.Types;
 using SlackCloneGraphQL.Types;
+using SlackCloneGraphQL.Types.Connections;
 
 namespace SlackCloneGraphQL;
 
@@ -53,6 +54,30 @@ public class SlackCloneQuery : ObjectGraphType<object>
                         flattened
                     ),
                 };
+            });
+
+        Field<WorkspaceType>("testWorkspaceMembers")
+            .Arguments(
+                new QueryArguments(
+                    new QueryArgument<NonNullGraphType<UsersFilterInputType>>
+                    {
+                        Name = "usersFilter"
+                    },
+                    new QueryArgument<NonNullGraphType<IdGraphType>>
+                    {
+                        Name = "workspaceId"
+                    }
+                )
+            )
+            .ResolveAsync(async context =>
+            {
+                var workspaceId = context.GetArgument<Guid>("workspaceId");
+                if (workspaceId == Guid.Empty)
+                {
+                    throw new ArgumentNullException();
+                }
+
+                return await data.GetWorkspace(workspaceId);
             });
     }
 }

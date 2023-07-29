@@ -6,7 +6,7 @@ namespace SlackCloneGraphQL;
 
 public static class FieldAnalyzer
 {
-    public static ((string, ArrayList?), List<string>) Workspaces(
+    public static ((string, ArrayList), List<string>) Workspaces(
         IResolveFieldContext context,
         WorkspacesFilter filter
     )
@@ -23,13 +23,50 @@ public static class FieldAnalyzer
         return flattened;
     }
 
-    public static (string, ArrayList?) WorkspaceMembers(
+    public static ((string, ArrayList), List<string>) WorkspaceMembers(
         IResolveFieldContext context
     )
     {
-        string membersFieldSlice = GetFieldSlice(context, "members");
+        var start = context.FieldAst.Location.Start;
+        var stop = context.FieldAst.Location.End;
+        string membersFieldSlice = context.Document.Source
+            .Slice(start, stop - start)
+            .ToString();
         var (fields, flattened) = CollectFields(membersFieldSlice);
+        return (fields, flattened);
+    }
+
+    public static List<string> ExtractUserFields(
+        string userFieldName,
+        (string, ArrayList) connectionTree
+    )
+    {
+        List<string> fields = new List<string>();
+        CollectUserFields(userFieldName, connectionTree, fields);
         return fields;
+    }
+
+    private static void CollectUserFields(
+        string userFieldName,
+        (string, ArrayList) root,
+        List<string> fields,
+        bool inUserSubtree = false
+    )
+    {
+        if (inUserSubtree)
+        {
+            fields.Add(root.Item1);
+        }
+        bool nodeRoot = root.Item1 == userFieldName;
+        foreach ((string, ArrayList) child in root.Item2)
+        {
+            CollectUserFields(
+                userFieldName,
+                child,
+                fields,
+                nodeRoot || inUserSubtree
+            );
+        }
     }
 
     private static string GetFieldSlice(
@@ -88,7 +125,7 @@ public static class FieldAnalyzer
                     string,
                     ArrayList
                 ))
-                    root.Item2![root.Item2.Count - 1]!;
+                    root.Item2[root.Item2.Count - 1]!;
                 ((string, ArrayList) _, int k) = TraverseSlice(
                     rootChildWithChildren,
                     fieldSlice,
