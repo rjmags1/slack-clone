@@ -10,11 +10,16 @@ public static class Config
         {
             new IdentityResources.OpenId(),
             new IdentityResources.Profile(),
-            new IdentityResource("color", new[] { "favorite_color" })
         };
 
     public static IEnumerable<ApiScope> ApiScopes =>
-        new List<ApiScope> { new ApiScope(name: "api1", displayName: "MyAPI") };
+        new List<ApiScope> { new ApiScope("api", "API") };
+
+    public static IEnumerable<ApiResource> ApiResources =>
+        new List<ApiResource>
+        {
+            new ApiResource("bff", "bff graphql api") { Scopes = { "api" } }
+        };
 
     public static IEnumerable<Client> Clients =>
         new List<Client>
@@ -24,9 +29,7 @@ public static class Config
                 ClientId = "bff",
                 ClientSecrets = { new Secret("secret".Sha256()) },
                 AllowedGrantTypes = GrantTypes.Code,
-                // where to redirect to after login
                 RedirectUris = { "https://localhost:5003/signin-oidc" },
-                // where to redirect to after logout
                 PostLogoutRedirectUris =
                 {
                     "https://localhost:5003/signout-callback-oidc"
@@ -35,8 +38,7 @@ public static class Config
                 {
                     IdentityServerConstants.StandardScopes.OpenId,
                     IdentityServerConstants.StandardScopes.Profile,
-                    "api1",
-                    "color"
+                    "api"
                 }
             }
         };
