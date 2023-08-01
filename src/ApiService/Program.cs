@@ -8,25 +8,41 @@ using Microsoft.Extensions.Options;
 using SlackCloneGraphQL;
 using Models = PersistenceService.Models;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using System.Security.Cryptography;
+using System.Text.Json;
 
 DotNetEnv.Env.Load();
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services
-    .AddAuthentication("Bearer")
-    .AddJwtBearer(
-        "Bearer",
-        options =>
+    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.Authority = "https://localhost:5001";
+        options.Audience = "bff";
+        options.TokenValidationParameters = new TokenValidationParameters
         {
-            options.Authority = "https://localhost:5001";
-
-            options.TokenValidationParameters = new TokenValidationParameters
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKeyResolver = GetIssuerSigningKeys,
+            ValidateIssuer = true,
+            ValidIssuer = "https://localhost:5001",
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidAlgorithms = new string[] { SecurityAlgorithms.RsaSha256 }
+        };
+        options.Events = new JwtBearerEvents
+        {
+            OnAuthenticationFailed = async context =>
             {
-                ValidateAudience = false
-            };
-        }
-    );
+                await Task.Run(() =>
+                {
+                    Console.WriteLine(context.Exception.Message);
+                });
+            }
+        };
+    });
 
 string connectionString = Environment.GetEnvironmentVariable(
     "DB_CONNECTION_STRING"
@@ -36,16 +52,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(
 );
 
 builder.Services
-    .AddIdentity<Models.User, IdentityRole<Guid>>(options =>
-    {
-        options.Password.RequireDigit = true;
-        options.Password.RequiredLength = 8;
-        options.Password.RequireNonAlphanumeric = true;
-        options.Password.RequireUppercase = true;
-        options.Password.RequireLowercase = true;
-        options.Password.RequiredUniqueChars = 6;
-        options.User.RequireUniqueEmail = true;
-    })
+    .AddIdentity<Models.User, IdentityRole<Guid>>()
     .AddUserManager<UserStore>()
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders();
@@ -93,3 +100,48 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+IEnumerable<SecurityKey> GetIssuerSigningKeys(
+    string token,
+    SecurityToken securityToken,
+    string kid,
+    TokenValidationParameters validationParameters
+)
+{
+    var httpClient = new HttpClient();
+    var discoveryEndpoint =
+        "https://localhost:5001/.well-known/openid-configuration";
+    var response = httpClient.GetStringAsync(discoveryEndpoint).Result;
+    var jwksUri = JsonDocument
+        .Parse(response)
+        .RootElement.GetProperty("jwks_uri")
+        .GetString();
+
+    var jwksResponse = httpClient.GetStringAsync(jwksUri).Result;
+    var jwksDocument = JsonDocument.Parse(jwksResponse);
+    var issuerSigningKeys = new List<SecurityKey>();
+
+    foreach (
+        var key in jwksDocument.RootElement.GetProperty("keys").EnumerateArray()
+    )
+    {
+        var keyType = key.GetProperty("kty").GetString();
+
+        if (keyType?.ToString() == "RSA")
+        {
+            var m = Base64UrlEncoder.DecodeBytes(
+                key.GetProperty("n").GetString()
+            );
+            var e = Base64UrlEncoder.DecodeBytes(
+                key.GetProperty("e").GetString()
+            );
+            var rsaParameters = new RSAParameters { Modulus = m, Exponent = e };
+
+            var rsa = RSA.Create();
+            rsa.ImportParameters(rsaParameters);
+            issuerSigningKeys.Add(new RsaSecurityKey(rsa));
+        }
+    }
+
+    return issuerSigningKeys;
+}

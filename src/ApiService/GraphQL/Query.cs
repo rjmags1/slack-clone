@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using ApiService.Utils;
 using GraphQL;
 using GraphQL.Types;
@@ -35,13 +36,19 @@ public class SlackCloneQuery : ObjectGraphType<object>
             )
             .ResolveAsync(async context =>
             {
+                ClaimsPrincipal claimsPrincipal = (ClaimsPrincipal)
+                    context.UserContext["claims"]!;
+                Console.WriteLine(claimsPrincipal.Identity!.IsAuthenticated); // true
+
                 var userId = context.GetArgument<Guid>("userId");
                 FieldInfo userFieldsInfo = FieldAnalyzer.User(context, userId);
 
                 var workspacesFilter = context.GetArgument<WorkspacesFilter>(
                     "workspacesFilter"
                 );
-                FieldInfo fieldInfo = FieldAnalyzer.Workspaces(context);
+                FieldInfo workspacesFieldsInfo = FieldAnalyzer.Workspaces(
+                    context
+                );
 
                 return new WorkspacesPageData
                 {
@@ -51,33 +58,9 @@ public class SlackCloneQuery : ObjectGraphType<object>
                     ),
                     Workspaces = await data.GetWorkspaces(
                         workspacesFilter,
-                        userFieldsInfo
+                        workspacesFieldsInfo
                     ),
                 };
-            });
-
-        Field<WorkspaceType>("testWorkspaceMembers")
-            .Arguments(
-                new QueryArguments(
-                    new QueryArgument<NonNullGraphType<UsersFilterInputType>>
-                    {
-                        Name = "usersFilter"
-                    },
-                    new QueryArgument<NonNullGraphType<IdGraphType>>
-                    {
-                        Name = "workspaceId"
-                    }
-                )
-            )
-            .ResolveAsync(async context =>
-            {
-                var workspaceId = context.GetArgument<Guid>("workspaceId");
-                if (workspaceId == Guid.Empty)
-                {
-                    throw new ArgumentNullException();
-                }
-
-                return await data.GetWorkspace(workspaceId);
             });
     }
 }

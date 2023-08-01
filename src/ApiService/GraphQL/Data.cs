@@ -2,7 +2,6 @@ using PersistenceService.Stores;
 using Models = PersistenceService.Models;
 using SlackCloneGraphQL.Types;
 using SlackCloneGraphQL.Types.Connections;
-using System.Collections;
 using PersistenceService.Utils.GraphQL;
 
 namespace SlackCloneGraphQL;

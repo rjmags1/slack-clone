@@ -6,6 +6,7 @@ using GraphQL.Types;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using SlackCloneGraphQL;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 
 namespace ApiService.Controllers
 {
@@ -29,6 +30,9 @@ namespace ApiService.Controllers
         }
 
         [HttpPost]
+        [Microsoft.AspNetCore.Authorization.Authorize(
+            AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme
+        )]
         public async Task<IActionResult> GraphQLAsync(
             [FromBody] GraphQLRequest request
         )
@@ -37,15 +41,14 @@ namespace ApiService.Controllers
 
             var result = await _documentExecuter.ExecuteAsync(s =>
             {
+                var userContext = new GraphQLUserContext();
+                userContext.Add("claims", HttpContext.User);
                 s.Schema = _schema;
                 s.Query = request.Query;
                 s.Variables = request.Variables;
                 s.OperationName = request.OperationName;
                 s.RequestServices = HttpContext.RequestServices;
-                s.UserContext = new GraphQLUserContext
-                {
-                    User = HttpContext.User,
-                }!;
+                s.UserContext = userContext!;
                 s.CancellationToken = HttpContext.RequestAborted;
             });
 
