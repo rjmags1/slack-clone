@@ -1,9 +1,9 @@
+using System.Security.Claims;
 using ApiService.Utils;
 using GraphQL;
 using GraphQL.Types;
 using PersistenceService.Utils.GraphQL;
 using SlackCloneGraphQL.Types;
-using SlackCloneGraphQL.Types.Connections;
 
 namespace SlackCloneGraphQL;
 
@@ -19,6 +19,13 @@ public class SlackCloneQuery : ObjectGraphType<object>
             });
 
         Field<WorkspacesPageDataType>("workspacesPageData")
+            .Directive(
+                "requiresClaimMapping",
+                "claimName",
+                "sub",
+                "constraint",
+                "equivalent-userId"
+            )
             .Arguments(
                 new QueryArguments(
                     new QueryArgument<NonNullGraphType<IdGraphType>>
@@ -41,7 +48,9 @@ public class SlackCloneQuery : ObjectGraphType<object>
                 var workspacesFilter = context.GetArgument<WorkspacesFilter>(
                     "workspacesFilter"
                 );
-                FieldInfo fieldInfo = FieldAnalyzer.Workspaces(context);
+                FieldInfo workspacesFieldsInfo = FieldAnalyzer.Workspaces(
+                    context
+                );
 
                 return new WorkspacesPageData
                 {
@@ -51,33 +60,9 @@ public class SlackCloneQuery : ObjectGraphType<object>
                     ),
                     Workspaces = await data.GetWorkspaces(
                         workspacesFilter,
-                        userFieldsInfo
+                        workspacesFieldsInfo
                     ),
                 };
-            });
-
-        Field<WorkspaceType>("testWorkspaceMembers")
-            .Arguments(
-                new QueryArguments(
-                    new QueryArgument<NonNullGraphType<UsersFilterInputType>>
-                    {
-                        Name = "usersFilter"
-                    },
-                    new QueryArgument<NonNullGraphType<IdGraphType>>
-                    {
-                        Name = "workspaceId"
-                    }
-                )
-            )
-            .ResolveAsync(async context =>
-            {
-                var workspaceId = context.GetArgument<Guid>("workspaceId");
-                if (workspaceId == Guid.Empty)
-                {
-                    throw new ArgumentNullException();
-                }
-
-                return await data.GetWorkspace(workspaceId);
             });
     }
 }

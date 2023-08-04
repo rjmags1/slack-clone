@@ -1,5 +1,6 @@
 using GraphQL.Instrumentation;
 using GraphQL.Types;
+using SlackCloneGraphQL.Auth;
 
 namespace SlackCloneGraphQL;
 
@@ -16,5 +17,8 @@ public class SlackCloneSchema : Schema
         //?? throw new InvalidOperationException();
 
         FieldMiddleware.Use(new InstrumentFieldsMiddleware());
+        FieldMiddleware.Use(new VariableClaimMappingCheckFieldMiddleware());
+
+        Directives.Register(new RequiresVariableClaimMappingDirective());
     }
 }

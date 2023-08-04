@@ -77,7 +77,6 @@ async function localApi() {
 }
   
 async function remoteApi() {
-    /*
     const query = `
         query WorkspacesPageQuery($userId: ID!, $workspacesFilter: WorkspacesFilterInput!) {
             workspacesPageData(userId: $userId, workspacesFilter: $workspacesFilter) {
@@ -122,74 +121,6 @@ async function remoteApi() {
                 first: 2
             },
             userId: "e6560874-6d15-4d94-bc53-f2240ab364e0"
-        }
-    }
-    */
-    const query = `
-        query TestWorkspaceMembers($usersFilter: UsersFilterInput!, $workspaceId: ID!) {
-            testWorkspaceMembers(usersFilter: $usersFilter, workspaceId: $workspaceId) {
-                id
-                name
-                members(usersFilter: $usersFilter) {
-                    totalEdges
-                    pageInfo {
-                        startCursor
-                        endCursor
-                        hasNextPage
-                        hasPreviousPage
-                    }
-                    edges {
-                        node {
-                            id
-                            title
-                            avatar {
-                                id
-                                storeKey
-                            }
-                            joinedAt
-                            user {
-                                id
-                                username
-                                personalInfo {
-                                    firstName
-                                    userNotificationsPreferences {
-                                        notifSound
-                                    }
-                                }
-                            }
-                            workspace {
-                                id
-                            }
-                            workspaceMemberInfo {
-                                admin
-                                owner
-                                workspaceAdminPermissions {
-                                    admin {
-                                        id
-                                    }
-                                    all
-                                    invite
-                                    kick
-                                    adminGrant
-                                    adminRevoke
-                                    grantAdminPermissions
-                                    revokeAdminPermissions
-                                    editMessages
-                                    deleteMessages
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }`
-    const variables = {
-        workspaceId: "0f784094-8fb4-4d3c-a163-ddde89e27cb8",
-        usersFilter: {
-            cursor: {
-                first: 10
-            },
-            workspaceId: "0f784094-8fb4-4d3c-a163-ddde89e27cb8",
         }
     }
 

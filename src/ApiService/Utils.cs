@@ -1,5 +1,7 @@
 using System.Dynamic;
+using System.Security.Claims;
 using System.Text.Json;
+using SlackCloneGraphQL;
 
 namespace ApiService.Utils;
 
@@ -41,5 +43,18 @@ public static class DynamicUtils
         }
 
         throw new InvalidOperationException();
+    }
+}
+
+public static class AuthUtils
+{
+    public static ClaimsPrincipal GetClaims(GraphQLUserContext context)
+    {
+        if (!context.ContainsKey("claims"))
+        {
+            throw new NullReferenceException();
+        }
+
+        return (ClaimsPrincipal)context["claims"]!;
     }
 }

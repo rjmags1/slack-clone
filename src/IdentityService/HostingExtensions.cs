@@ -71,9 +71,11 @@ internal static class HostingExtensions
             })
             .AddInMemoryIdentityResources(Config.IdentityResources)
             .AddInMemoryApiScopes(Config.ApiScopes)
+            .AddInMemoryApiResources(Config.ApiResources)
             .AddInMemoryClients(Config.Clients)
             .AddAspNetIdentity<User>()
-            .AddProfileService<CustomProfileService>();
+            .AddProfileService<CustomProfileService>()
+            .AddDeveloperSigningCredential();
 
         return builder.Build();
     }
@@ -137,6 +139,15 @@ internal static class HostingExtensions
                 foreach (var resource in Config.ApiScopes)
                 {
                     context.ApiScopes.Add(resource.ToEntity());
+                }
+                context.SaveChanges();
+            }
+
+            if (!context.ApiResources.Any())
+            {
+                foreach (var resource in Config.ApiResources)
+                {
+                    context.ApiResources.Add(resource.ToEntity());
                 }
                 context.SaveChanges();
             }

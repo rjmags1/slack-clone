@@ -2,7 +2,6 @@ using PersistenceService.Stores;
 using Models = PersistenceService.Models;
 using SlackCloneGraphQL.Types;
 using SlackCloneGraphQL.Types.Connections;
-using System.Collections;
 using PersistenceService.Utils.GraphQL;
 
 namespace SlackCloneGraphQL;
@@ -21,7 +20,9 @@ public class SlackCloneData
         IEnumerable<string> requestedFields
     )
     {
-        UserStore userStore = GetStore<UserStore>();
+        using var scope = _provider.CreateScope();
+        UserStore userStore =
+            scope.ServiceProvider.GetRequiredService<UserStore>();
         Models.User dbUser =
             await userStore.FindByIdAsyncWithEagerNavPropLoading(
                 userId,
@@ -36,7 +37,9 @@ public class SlackCloneData
         UsersFilter filter
     )
     {
-        WorkspaceStore workspaceStore = GetStore<WorkspaceStore>();
+        using var scope = _provider.CreateScope();
+        WorkspaceStore workspaceStore =
+            scope.ServiceProvider.GetRequiredService<WorkspaceStore>();
         (List<dynamic> dbMembers, bool lastPage) =
             await workspaceStore.LoadWorkspaceMembers(
                 filter.UserId,
@@ -87,7 +90,9 @@ public class SlackCloneData
             );
         }
 
-        WorkspaceStore workspaceStore = GetStore<WorkspaceStore>();
+        using var scope = _provider.CreateScope();
+        WorkspaceStore workspaceStore =
+            scope.ServiceProvider.GetRequiredService<WorkspaceStore>();
         (List<dynamic> dbWorkspaces, bool lastPage) =
             await workspaceStore.LoadWorkspaces(
                 filter.UserId,
@@ -113,19 +118,13 @@ public class SlackCloneData
 
     public async Task<Workspace> GetWorkspace(Guid workspaceId)
     {
-        WorkspaceStore workspaceStore = GetStore<WorkspaceStore>();
+        using var scope = _provider.CreateScope();
+        WorkspaceStore workspaceStore =
+            scope.ServiceProvider.GetRequiredService<WorkspaceStore>();
         Models.Workspace dbWorkspace = await workspaceStore.GetWorkspace(
             workspaceId
         );
 
         return ModelToObjectConverters.ConvertWorkspace(dbWorkspace);
-    }
-
-    private T GetStore<T>()
-        where T : IStore
-    {
-        using var scope = _provider.CreateScope();
-        T store = scope.ServiceProvider.GetRequiredService<T>();
-        return store;
     }
 }
