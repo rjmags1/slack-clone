@@ -4,7 +4,6 @@ using GraphQL;
 using GraphQL.Types;
 using PersistenceService.Utils.GraphQL;
 using SlackCloneGraphQL.Types;
-using SlackCloneGraphQL.Types.Connections;
 
 namespace SlackCloneGraphQL;
 
@@ -20,6 +19,13 @@ public class SlackCloneQuery : ObjectGraphType<object>
             });
 
         Field<WorkspacesPageDataType>("workspacesPageData")
+            .Directive(
+                "requiresClaimMapping",
+                "claimName",
+                "sub",
+                "constraint",
+                "equivalent-userId"
+            )
             .Arguments(
                 new QueryArguments(
                     new QueryArgument<NonNullGraphType<IdGraphType>>
@@ -36,10 +42,6 @@ public class SlackCloneQuery : ObjectGraphType<object>
             )
             .ResolveAsync(async context =>
             {
-                ClaimsPrincipal claimsPrincipal = (ClaimsPrincipal)
-                    context.UserContext["claims"]!;
-                Console.WriteLine(claimsPrincipal.Identity!.IsAuthenticated); // true
-
                 var userId = context.GetArgument<Guid>("userId");
                 FieldInfo userFieldsInfo = FieldAnalyzer.User(context, userId);
 

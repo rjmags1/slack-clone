@@ -41,8 +41,10 @@ namespace ApiService.Controllers
 
             var result = await _documentExecuter.ExecuteAsync(s =>
             {
-                var userContext = new GraphQLUserContext();
-                userContext.Add("claims", HttpContext.User);
+                var userContext = new GraphQLUserContext
+                {
+                    { "claims", HttpContext.User }
+                };
                 s.Schema = _schema;
                 s.Query = request.Query;
                 s.Variables = request.Variables;
