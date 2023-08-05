@@ -5,3 +5,9 @@ bin/
 obj/
 .vscode
 *.jwk
+
+**/ui/node_modules
+**/ui/build
+**/WebClientService/wwwroot/
+
+npm-debug.log*
