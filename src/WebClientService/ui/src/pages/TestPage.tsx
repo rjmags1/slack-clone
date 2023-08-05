@@ -135,7 +135,7 @@ function TestPage() {
     }
 
     return (
-        <div>
+        <div className="text-xs bg-orange-400">
             <button id="login" onClick={login}>
                 Login
             </button>
