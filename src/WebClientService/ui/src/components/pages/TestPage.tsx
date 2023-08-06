@@ -135,20 +135,38 @@ function TestPage() {
     }
 
     return (
-        <div className="text-xs">
-            <button id="login" onClick={login}>
-                Login
-            </button>
-            <button id="local" onClick={localApi}>
-                Call Local API
-            </button>
-            <button id="remote" onClick={remoteApi}>
-                Call Remote API
-            </button>
-            <button id="logout" onClick={logout}>
-                Logout
-            </button>
-            <pre id="results">
+        <>
+            <div className="flex flex-row gap-2 text-xs">
+                <button
+                    id="login"
+                    onClick={login}
+                    className="rounded-sm border border-green-300 p-2"
+                >
+                    Login
+                </button>
+                <button
+                    id="local"
+                    onClick={localApi}
+                    className="rounded-sm border border-green-300 p-2"
+                >
+                    Call Local API
+                </button>
+                <button
+                    id="remote"
+                    onClick={remoteApi}
+                    className="rounded-sm border border-green-300 p-2"
+                >
+                    Call Remote API
+                </button>
+                <button
+                    id="logout"
+                    onClick={logout}
+                    className="rounded-sm border border-green-300 p-2"
+                >
+                    Logout
+                </button>
+            </div>
+            <pre id="results" className="text-xs">
                 {remoteApiResults}
                 {localApiResults}
                 {loggedIn &&
@@ -158,7 +176,7 @@ function TestPage() {
                         .join('\n')}
                 {!loggedIn && 'user not logged in'}
             </pre>
-        </div>
+        </>
     )
 }
 
