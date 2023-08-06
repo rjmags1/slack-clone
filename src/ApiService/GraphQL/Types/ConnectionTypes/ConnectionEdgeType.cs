@@ -10,7 +10,7 @@ public abstract class ConnectionEdgeType<T, U>
 {
     public ConnectionEdgeType()
     {
-        Name = StringUtils.ToLowerFirstLetter($"{nameof(T)}ConnectionEdge");
+        Name = $"{nameof(U)}sConnectionEdge";
         Field<NonNullGraphType<T>>("node")
             .Description("The node pointed to by a connection edge.");
         Field<NonNullGraphType<IdGraphType>>("cursor")

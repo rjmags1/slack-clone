@@ -6,7 +6,7 @@ public class CursorInputType : InputObjectGraphType<Cursor>
 {
     public CursorInputType()
     {
-        Name = "cursorInput";
+        Name = "Cursor";
         Field<NonNullGraphType<IntGraphType>>("first");
         Field<IdGraphType>("after");
     }

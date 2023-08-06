@@ -6,12 +6,12 @@ public class UsersFilterInputType : InputObjectGraphType<UsersFilter>
 {
     public UsersFilterInputType()
     {
-        Name = "UsersFilterInput";
-        //Field<NonNullGraphType<IdGraphType>>("userId");
+        Name = "UsersFilter";
+        Field<IdGraphType>("userId");
         Field<NonNullGraphType<CursorInputType>>("cursor");
         Field<NonNullGraphType<IdGraphType>>("workspaceId");
-        Field<ListGraphType<IdGraphType>>("users");
-        Field<ListGraphType<IdGraphType>>("channels");
+        Field<ListGraphType<NonNullGraphType<IdGraphType>>>("users");
+        Field<ListGraphType<NonNullGraphType<IdGraphType>>>("channels");
         Field<DateTimeGraphType>("joinedAfter");
         Field<DateTimeGraphType>("joinedBefore");
         Field<StringGraphType>("query");

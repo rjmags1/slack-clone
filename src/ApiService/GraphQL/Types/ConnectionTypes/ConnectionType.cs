@@ -10,7 +10,7 @@ public abstract class ConnectionType<T, U, E> : ObjectGraphType<Connection<U>>
 {
     public ConnectionType()
     {
-        Name = StringUtils.ToLowerFirstLetter($"{nameof(T)}Connection");
+        Name = $"{nameof(U)}sConnection";
         Field<NonNullGraphType<IntGraphType>>("totalEdges")
             .Description("Total number of edges in the connection");
         Field<NonNullGraphType<ListGraphType<NonNullGraphType<E>>>>("edges")

@@ -28,7 +28,7 @@ public class WorkspaceType
         Field<NonNullGraphType<FileType>>("avatar")
             .Description("The avatar for the workspace")
             .Resolve(context => context.Source.Avatar);
-        Field<NonNullGraphType<WorkspaceMembersConnectionType>>("members")
+        Field<WorkspaceMembersConnectionType>("members")
             .Description("The members of the workspace")
             .Argument<UsersFilterInputType>(
                 "usersFilter",

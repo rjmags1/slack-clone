@@ -6,7 +6,7 @@ public class WorkspacesFilterInputType : InputObjectGraphType<WorkspacesFilter>
 {
     public WorkspacesFilterInputType()
     {
-        Name = "WorkspacesFilterInput";
+        Name = "WorkspacesFilter";
         Field<NonNullGraphType<CursorInputType>>("cursor");
         Field<StringGraphType>("nameQuery");
         Field<NonNullGraphType<IdGraphType>>("userId");
