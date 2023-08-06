@@ -8,6 +8,6 @@ obj/
 
 **/ui/node_modules
 **/ui/build
-**/WebClientService/wwwroot/
+**/wwwroot
 
 npm-debug.log*
