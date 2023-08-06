@@ -1,0 +1,157 @@
+interface Node {
+    id: ID!
+}
+
+
+
+type Query {
+    workspacesPageData(
+        userId: ID!, 
+        workspacesFilter: WorkspacesFilter!
+    ): WorkspacesPageData
+}
+
+
+
+type WorkspacesPageData {
+    user: User!
+    workspaces: WorkspacesConnection!
+}
+
+
+
+type File implements Node {
+    id: ID!
+    name: String!
+    storeKey: String!
+    uploadedAt: String!
+}
+
+type Theme implements Node {
+    id: ID!
+    name: String!
+}
+
+type UserInfo {
+    email: String!
+    emailConfirmed: Boolean!
+    firstName: String!
+    lastName: String!
+    userNotificationsPreferences: UserNotificationsPreferences!
+    theme: Theme!
+    timezone: String!
+}
+
+type UserNotificationsPreferences {
+    allMessages: Boolean!
+    noMessages: Boolean!
+    mentions: Boolean!
+    dms: Boolean!
+    replies: Boolean!
+    threadWatch: Boolean!
+    notifSound: Int!
+    allowAlertsStartTimeUTC: String
+    allowAlertsEndTimeUTC: String
+    pauseAlertsUntil: String
+}
+
+type User implements Node {
+    id: ID!
+    avatar: File!
+    createdAt: String!
+    onlineStatus: String!
+    personalInfo: UserInfo
+    username: String!
+}
+
+type WorkspaceAdminPermissions {
+    admin: User!
+    all: Boolean!
+    invite: Boolean!
+    kick: Boolean!
+    adminGrant: Boolean!
+    adminRevoke: Boolean!
+    grantAdminPermissions: Boolean!
+    revokeAdminPermissions: Boolean!
+    editMessages: Boolean!
+    deleteMessages: Boolean!
+}
+
+type WorkspaceMemberInfo {
+    admin: Boolean!
+    owner: Boolean!
+    workspaceAdminPermissions: WorkspaceAdminPermissions
+    theme: Theme
+}
+
+type WorkspaceMember implements Node {
+    id: ID!
+    avatar: File
+    joinedAt: String!
+    title: String!
+    user: User!
+    workspace: Workspace!
+    workspaceMemberInfo: WorkspaceMemberInfo
+}
+
+type Workspace implements Node {
+    id: ID!
+    avatar: File!
+    createdAt: String!
+    description: String!
+    name: String!
+    numMembers: Int!
+    members(usersFilter: UsersFilter!): WorkspaceMembersConnection
+}
+
+type WorkspaceMembersConnection {
+    totalEdges: Int!
+    edges: [WorkspaceMembersConnectionEdge!]!
+    pageInfo: PageInfo!
+}
+
+type PageInfo {
+    startCursor: ID
+    endCursor: ID
+    hasNextPage: Boolean!
+    hasPreviousPage: Boolean!
+}
+
+type WorkspaceMembersConnectionEdge {
+    node: WorkspaceMember!
+    cursor: ID!
+}
+
+type WorkspacesConnection {
+    totalEdges: Int!
+    edges: [WorkspacesConnectionEdge!]!
+    pageInfo: PageInfo!
+}
+
+type WorkspacesConnectionEdge {
+    node: Workspace!
+    cursor: ID!
+}
+
+input UsersFilter {
+    cursor: Cursor!
+    userId: ID
+    workspaceId: ID!
+    users: [ID!]
+    channels: [ID!]
+    joinedAfter: String
+    joinedBefore: String
+    query: String
+    queryTypeMask: Int # 1 - email, 2 - username
+}
+
+input Cursor {
+    first: Int!
+    after: String
+}
+
+input WorkspacesFilter {
+    cursor: Cursor!
+    userId: ID!
+    nameQuery: String
+}

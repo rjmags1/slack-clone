@@ -5,7 +5,7 @@ public class WorkspaceConnectionEdgeType
 {
     public WorkspaceConnectionEdgeType()
     {
-        Name = "WorkspaceConnectionEdge";
+        Name = "WorkspacesConnectionEdge";
     }
 }
 

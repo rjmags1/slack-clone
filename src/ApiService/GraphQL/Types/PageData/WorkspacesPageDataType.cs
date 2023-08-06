@@ -7,7 +7,7 @@ public class WorkspacesPageDataType : ObjectGraphType<WorkspacesPageData>
 {
     public WorkspacesPageDataType()
     {
-        Name = "workspacesPageData";
+        Name = "WorkspacesPageData";
         Field<NonNullGraphType<UserType>>("user")
             .Description("The authenticated user");
         Field<NonNullGraphType<WorkspacesConnectionType>>("workspaces")

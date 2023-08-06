@@ -9,5 +9,6 @@ obj/
 **/ui/node_modules
 **/ui/build
 **/wwwroot
+**/__generated__
 
 npm-debug.log*
