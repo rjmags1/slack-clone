@@ -1,66 +1,66 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState } from 'react'
 
 function TestPage() {
-    const [userClaims, setUserClaims] = useState<any>(null);
-    const [loggedIn, setLoggedIn] = useState<boolean>(false);
-    const [localApiResults, setLocalApiResults] = useState<any>(null);
-    const [remoteApiResults, setRemoteApiResults] = useState<any>(null);
+    const [userClaims, setUserClaims] = useState<any>(null)
+    const [loggedIn, setLoggedIn] = useState<boolean>(false)
+    const [localApiResults, setLocalApiResults] = useState<any>(null)
+    const [remoteApiResults, setRemoteApiResults] = useState<any>(null)
 
     useEffect(() => {
-        (async function () {
-            var req = new Request("/bff/user", {
+        ;(async function () {
+            var req = new Request('/bff/user', {
                 headers: new Headers({
-                    "X-CSRF": "1",
+                    'X-CSRF': '1',
                 }),
-            });
+            })
 
             try {
-                var resp = await fetch(req);
+                var resp = await fetch(req)
                 if (resp.ok) {
-                    const claims = await resp.json();
-                    setUserClaims(claims);
-                    setLoggedIn(true);
+                    const claims = await resp.json()
+                    setUserClaims(claims)
+                    setLoggedIn(true)
                 }
             } catch (e) {
                 //
             }
-        })();
-    });
+        })()
+    })
 
     function login() {
-        window.location.href = "/bff/login?returnUrl=/";
+        window.location.href = '/bff/login?returnUrl=/'
     }
 
     function logout() {
         if (userClaims) {
             var logoutUrl = userClaims.find(
-                (claim: any) => claim.type === "bff:logout_url"
-            ).value;
-            window.location.href = logoutUrl;
+                (claim: any) => claim.type === 'bff:logout_url'
+            ).value
+            window.location.href = logoutUrl
         } else {
-            window.location.href = "/bff/logout";
+            window.location.href = '/bff/logout'
         }
     }
 
     async function localApi() {
-        var req = new Request("/local/identity", {
+        var req = new Request('/local/identity', {
             headers: new Headers({
-                "X-CSRF": "1",
+                'X-CSRF': '1',
             }),
-        });
+        })
 
         try {
-            var resp = await fetch(req);
+            var resp = await fetch(req)
 
-            let data;
+            let data
             if (resp.ok) {
-                data = await resp.json();
+                data = await resp.json()
             }
-            setLocalApiResults(JSON.stringify(data, null, 2));
+            setLocalApiResults(JSON.stringify(data, null, 2))
         } catch (e) {
-            setLocalApiResults("local api call failed");
+            setLocalApiResults('local api call failed')
         }
-        setRemoteApiResults(null);
+        setRemoteApiResults(null)
     }
 
     async function remoteApi() {
@@ -100,42 +100,42 @@ function TestPage() {
                     }
                 }
             }
-        }`;
+        }`
         const variables = {
-            userId: "e6560874-6d15-4d94-bc53-f2240ab364e0",
+            userId: 'e6560874-6d15-4d94-bc53-f2240ab364e0',
             workspacesFilter: {
                 cursor: {
                     first: 2,
                 },
-                userId: "e6560874-6d15-4d94-bc53-f2240ab364e0",
+                userId: 'e6560874-6d15-4d94-bc53-f2240ab364e0',
             },
-        };
+        }
 
-        var req = new Request("/remote/graphql", {
+        var req = new Request('/remote/graphql', {
             headers: new Headers({
-                "X-CSRF": "1",
-                "Content-Type": "application/json",
+                'X-CSRF': '1',
+                'Content-Type': 'application/json',
             }),
-            method: "POST",
+            method: 'POST',
             body: JSON.stringify({ query, variables }),
-        });
+        })
 
         try {
-            var resp = await fetch(req);
+            var resp = await fetch(req)
 
-            let data;
+            let data
             if (resp.ok) {
-                data = await resp.json();
+                data = await resp.json()
             }
-            setRemoteApiResults(JSON.stringify(data, null, 2));
+            setRemoteApiResults(JSON.stringify(data, null, 2))
         } catch (e) {
-            setRemoteApiResults("error calling remote API");
+            setRemoteApiResults('error calling remote API')
         }
-        setLocalApiResults(null);
+        setLocalApiResults(null)
     }
 
     return (
-        <div className="text-xs bg-orange-400">
+        <div className="text-xs">
             <button id="login" onClick={login}>
                 Login
             </button>
@@ -155,11 +155,11 @@ function TestPage() {
                     !(localApiResults || remoteApiResults) &&
                     userClaims
                         .map((c: object) => JSON.stringify(c, null, 2))
-                        .join("\n")}
-                {!loggedIn && "user not logged in"}
+                        .join('\n')}
+                {!loggedIn && 'user not logged in'}
             </pre>
         </div>
-    );
+    )
 }
 
-export default TestPage;
+export default TestPage
