@@ -3,12 +3,11 @@ import WorkspacesPage from './pages/WorkspacesPage'
 import RelayEnvironment from './relay/RelayEnvironment'
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import SessionProvider from './session/SessionProvider'
-import AuthGuard from './session/AuthGuard'
 
 const router = createBrowserRouter([
     {
         path: '/',
-        element: <AuthGuard page={WorkspacesPage()} />,
+        element: <WorkspacesPage />,
     },
     {
         path: '/test',

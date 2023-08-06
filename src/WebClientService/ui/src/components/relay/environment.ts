@@ -10,7 +10,10 @@ import type { FetchFunction, IEnvironment } from 'relay-runtime'
 const fetchFn: FetchFunction = (params, variables) => {
     const response = fetch('/remote/graphql', {
         method: 'POST',
-        headers: [['Content-Type', 'application/json']],
+        headers: [
+            ['Content-Type', 'application/json'],
+            ['X-CSRF', '1'],
+        ],
         body: JSON.stringify({
             query: params.text,
             variables,
