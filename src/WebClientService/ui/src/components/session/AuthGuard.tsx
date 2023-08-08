@@ -1,6 +1,6 @@
 import { ReactNode, useContext } from 'react'
 import { SessionContext } from './SessionProvider'
-import Redirect from '../utils/Redirect'
+import Redirect from '../lib/Redirect'
 
 const LOGIN_URL = '/bff/login?returnUrl=/'
 
