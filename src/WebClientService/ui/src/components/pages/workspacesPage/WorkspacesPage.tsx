@@ -1,7 +1,7 @@
 import graphql from 'babel-plugin-relay/macro'
 import { useLazyLoadQuery } from 'react-relay'
 import type { WorkspacesPageQuery as WorkspacesPageQueryType } from './__generated__/WorkspacesPageQuery.graphql'
-import AuthGuard from '../session/AuthGuard'
+import WorkspacesPageNavbar from './WorkspacesPageNavbar'
 
 const WorkspacesPageDataQuery = graphql`
     query WorkspacesPageQuery(
@@ -62,12 +62,10 @@ function WorkspacesPage() {
         }
     )
 
-    console.log(data)
-
     return (
-        <AuthGuard>
-            <div>workspaces page</div>
-        </AuthGuard>
+        <div className="h-full w-full">
+            <WorkspacesPageNavbar />
+        </div>
     )
 }
 
