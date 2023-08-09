@@ -8,12 +8,14 @@ type CustomSearchFieldProps = SearchFieldProps & {
     inputClassName?: string
     labelClassName?: string
     clearButtonClassName?: string
+    inputContainerClassName?: string
 }
 
 function SearchField(props: CustomSearchFieldProps) {
     const {
         label,
         containerClassName,
+        inputContainerClassName,
         inputClassName,
         labelClassName,
         clearButtonClassName,
@@ -36,7 +38,12 @@ function SearchField(props: CustomSearchFieldProps) {
             <label {...labelProps} className={labelClassName}>
                 {label}
             </label>
-            <div className="flex items-center justify-between border-b border-b-white text-xs text-white">
+            <div
+                className={
+                    inputContainerClassName ||
+                    'flex items-center justify-between border-b border-b-white text-xs text-white'
+                }
+            >
                 <input
                     {...inputProps}
                     className={
