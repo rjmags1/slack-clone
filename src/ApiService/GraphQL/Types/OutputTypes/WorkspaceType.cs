@@ -46,7 +46,11 @@ public class WorkspaceType
                     );
                 }
 
-                FieldInfo fieldInfo = FieldAnalyzer.WorkspaceMembers(context);
+                var fragments = FieldAnalyzer.GetFragments(context);
+                FieldInfo fieldInfo = FieldAnalyzer.WorkspaceMembers(
+                    context,
+                    fragments
+                );
 
                 return await data.GetWorkspaceMembers(fieldInfo, usersFilter);
             });

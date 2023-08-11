@@ -17,25 +17,77 @@ namespace SlackCloneGraphQL;
 /// </summary>
 public static class FieldAnalyzer
 {
-    public static FieldInfo Workspaces(IResolveFieldContext context)
+    public static Dictionary<string, string> GetFragments(
+        IResolveFieldContext context
+    )
+    {
+        string document = context.Document.Source.ToString();
+        int i = document.IndexOf("fragment") + 9;
+        int k;
+        Dictionary<string, string> fragments = new();
+        bool done = i == -1;
+        while (!done)
+        {
+            int n = document.IndexOf("on", i) - 1;
+            string fragmentName = document.Substring(i, n - i);
+            int j = document.IndexOf('{', n);
+            k = GetMatchingClosingParenIdx(document, j);
+            fragments[fragmentName] = document.Substring(j, k - j + 1);
+            i = document.IndexOf("fragment", k);
+            done = i == -1;
+            i += 9;
+        }
+
+        return fragments;
+    }
+
+    private static int GetMatchingClosingParenIdx(string s, int openingIdx)
+    {
+        int opening = 1;
+        int i = openingIdx + 1;
+        while (opening > 0)
+        {
+            char c = s[i++];
+            if (c == '{')
+            {
+                opening++;
+            }
+            else if (c == '}')
+            {
+                opening--;
+            }
+        }
+        return i - 1;
+    }
+
+    public static FieldInfo Workspaces(
+        IResolveFieldContext context,
+        Dictionary<string, string> fragments
+    )
     {
         string workspacesFieldSlice = GetFieldSliceFromParentContext(
             context,
             "workspaces"
         );
-        return CollectFields(workspacesFieldSlice);
+        return CollectFields(workspacesFieldSlice, fragments);
     }
 
-    public static FieldInfo User(IResolveFieldContext context, Guid userId)
+    public static FieldInfo User(
+        IResolveFieldContext context,
+        Dictionary<string, string> fragments
+    )
     {
         string userFieldSlice = GetFieldSliceFromParentContext(context, "user");
-        return CollectFields(userFieldSlice);
+        return CollectFields(userFieldSlice, fragments);
     }
 
-    public static FieldInfo WorkspaceMembers(IResolveFieldContext context)
+    public static FieldInfo WorkspaceMembers(
+        IResolveFieldContext context,
+        Dictionary<string, string> fragments
+    )
     {
         string membersFieldSlice = GetFieldSlice(context);
-        return CollectFields(membersFieldSlice);
+        return CollectFields(membersFieldSlice, fragments);
     }
 
     /// <summary>
@@ -121,7 +173,10 @@ public static class FieldAnalyzer
     /// field and its subfields, as well as a list containing the flattened version of
     /// the tree without the root field (only the names of the subfields).
     /// </summary>
-    private static FieldInfo CollectFields(string fieldSlice)
+    private static FieldInfo CollectFields(
+        string fieldSlice,
+        Dictionary<string, string> fragments
+    )
     {
         int i = fieldSlice.IndexOf("{");
         string rootField = fieldSlice.Substring(0, i).Trim();
@@ -132,7 +187,7 @@ public static class FieldAnalyzer
         };
         List<string> subFieldNames = new List<string>();
 
-        TraverseSlice(root, fieldSlice, subFieldNames, i + 1);
+        TraverseSlice(root, fieldSlice, subFieldNames, i + 1, fragments);
 
         return new FieldInfo
         {
@@ -150,9 +205,11 @@ public static class FieldAnalyzer
         FieldTree root,
         string fieldSlice,
         List<string> subFieldNames,
-        int i
+        int i,
+        Dictionary<string, string> fragments
     )
     {
+        Stack<(int, string)> returnFromFragmentStack = new();
         while (i < fieldSlice.Length)
         {
             char c = fieldSlice[i];
@@ -163,7 +220,11 @@ public static class FieldAnalyzer
             }
             else if (c == '}')
             {
-                break;
+                if (returnFromFragmentStack.Count == 0)
+                {
+                    break;
+                }
+                (i, fieldSlice) = returnFromFragmentStack.Pop();
             }
             else if (c == '{')
             {
@@ -172,9 +233,22 @@ public static class FieldAnalyzer
                     rootChildWithChildren,
                     fieldSlice,
                     subFieldNames,
-                    i + 1
+                    i + 1,
+                    fragments
                 );
                 i = k;
+            }
+            else if (c == '.')
+            {
+                int stop = fieldSlice.IndexOf("Fragment", i) + 8;
+                string fragmentName = fieldSlice.Substring(
+                    i + 3,
+                    stop - (i + 3)
+                );
+                string fragment = fragments[fragmentName];
+                returnFromFragmentStack.Push((stop, fieldSlice));
+                fieldSlice = fragment;
+                i = 1;
             }
             else
             {

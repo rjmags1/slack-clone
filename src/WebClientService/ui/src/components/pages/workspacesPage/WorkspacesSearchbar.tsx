@@ -1,13 +1,19 @@
 import SearchField from '../../lib/SearchField'
 
 type WorkspacesSearchBarProps = {
-    workspaces: any[]
+    searchText: string
+    setSearchText: React.Dispatch<React.SetStateAction<string>>
 }
 
-function WorkspacesSearchbar({ workspaces }: WorkspacesSearchBarProps) {
+function WorkspacesSearchbar({
+    searchText,
+    setSearchText,
+}: WorkspacesSearchBarProps) {
     return (
         <div className="bg-sky-950 px-6 py-2">
             <SearchField
+                onChange={setSearchText}
+                value={searchText}
                 inputClassName="text-white text-sm font-normal w-full 
                     bg-inherit outline-none py-1"
                 clearButtonClassName="text-white"

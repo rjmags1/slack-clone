@@ -43,14 +43,30 @@ public class SlackCloneQuery : ObjectGraphType<object>
             .ResolveAsync(async context =>
             {
                 var userId = context.GetArgument<Guid>("userId");
-                FieldInfo userFieldsInfo = FieldAnalyzer.User(context, userId);
-
+                var fragments = FieldAnalyzer.GetFragments(context);
+                FieldInfo userFieldsInfo = FieldAnalyzer.User(
+                    context,
+                    fragments
+                );
                 var workspacesFilter = context.GetArgument<WorkspacesFilter>(
                     "workspacesFilter"
                 );
                 FieldInfo workspacesFieldsInfo = FieldAnalyzer.Workspaces(
-                    context
+                    context,
+                    fragments
                 );
+                Console.WriteLine("#############");
+                Console.WriteLine("#############");
+                Console.WriteLine("#############");
+                Console.WriteLine("#############");
+                foreach (var s in workspacesFieldsInfo.SubfieldNames)
+                {
+                    Console.WriteLine(s);
+                }
+                Console.WriteLine("#############");
+                Console.WriteLine("#############");
+                Console.WriteLine("#############");
+                Console.WriteLine("#############");
 
                 return new WorkspacesPageData
                 {
