@@ -3,7 +3,9 @@ import { useLazyLoadQuery } from 'react-relay'
 import type { WorkspacesPageQuery as WorkspacesPageQueryType } from './__generated__/WorkspacesPageQuery.graphql'
 import WorkspacesPageNavbar from './WorkspacesPageNavbar'
 import WorkspacesList from './WorkspacesList'
-import WorkspacesSearchbar from './WorkspacesSearchbar'
+import { useContext, useEffect } from 'react'
+import { SessionContext } from '../../session/SessionProvider'
+import Loading from '../../lib/Loading'
 
 const WorkspacesPageDataQuery = graphql`
     query WorkspacesPageQuery(
@@ -25,41 +27,26 @@ const WorkspacesPageDataQuery = graphql`
                 }
             }
             workspaces {
-                totalEdges
-                pageInfo {
-                    startCursor
-                    endCursor
-                    hasNextPage
-                    hasPreviousPage
-                }
-                edges {
-                    node {
-                        id
-                        createdAt
-                        description
-                        name
-                        numMembers
-                        avatar {
-                            id
-                            storeKey
-                        }
-                    }
-                }
+                ...WorkspacesListFragment
             }
         }
     }
 `
 
+const MAX_WORKSPACES_PER_USER = 100
+
 function WorkspacesPage() {
+    const claims = useContext(SessionContext)!
+    const sub = claims.filter((c) => c.type === 'sub')[0]?.value as string
     const data = useLazyLoadQuery<WorkspacesPageQueryType>(
         WorkspacesPageDataQuery,
         {
-            userId: 'e6560874-6d15-4d94-bc53-f2240ab364e0',
+            userId: sub,
             workspacesFilter: {
                 cursor: {
-                    first: 2,
+                    first: MAX_WORKSPACES_PER_USER,
                 },
-                userId: 'e6560874-6d15-4d94-bc53-f2240ab364e0',
+                userId: sub,
             },
         }
     )
@@ -76,7 +63,13 @@ function WorkspacesPage() {
                         Welcome back!
                     </h2>
                 </header>
-                <WorkspacesList />
+                {data.workspacesPageData === null ? (
+                    <Loading />
+                ) : (
+                    <WorkspacesList
+                        workspaces={data.workspacesPageData.workspaces}
+                    />
+                )}
             </div>
         </div>
     )

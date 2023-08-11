@@ -1,37 +1,57 @@
 import Button from '../../lib/Button'
+import graphql from 'babel-plugin-relay/macro'
+import type { WorkspaceListingFragment$key } from './__generated__/WorkspaceListingFragment.graphql'
+import { useFragment } from 'react-relay'
+
+const WorkspaceListingFragment = graphql`
+    fragment WorkspaceListingFragment on Workspace {
+        createdAt
+        description
+        numMembers
+        avatar {
+            id
+            storeKey
+        }
+    }
+`
 
 type WorkspaceListingProps = {
-    workspace: any
+    workspace: WorkspaceListingFragment$key
+    name: string
 }
 
-function WorkspaceListing({ workspace }: WorkspaceListingProps) {
+function WorkspaceListing({ workspace, name }: WorkspaceListingProps) {
+    const data = useFragment(WorkspaceListingFragment, workspace)
+
     const onWorkspaceOpen = () => {
         // TODO
     }
 
     return (
         <div
-            className="flex w-full items-center gap-x-2 rounded-md
-                px-4 py-2 text-white hover:bg-zinc-600"
+            className="flex h-12 w-full items-center justify-between
+                rounded-md px-4 py-2 text-white hover:bg-zinc-600"
         >
-            <img
-                src="/default-avatar.png"
-                alt="avatar"
-                style={{
-                    border: '1px',
-                    borderColor: 'white',
-                    height: '2rem',
-                    borderRadius: '9999px',
-                    backgroundColor: 'black',
-                }}
-            />
-            <div className="flex flex-col">
-                <h5 className="text-sm">{workspace.name}</h5>
-                <p className="text-[0.6rem]">{workspace.numMembers} members</p>
+            <div className="flex flex-row items-center gap-x-2">
+                <img
+                    src="/default-avatar.png"
+                    alt="avatar"
+                    style={{
+                        border: '1px',
+                        borderColor: 'white',
+                        height: '2rem',
+                        borderRadius: '9999px',
+                        backgroundColor: 'black',
+                    }}
+                />
+                <div className="flex flex-col">
+                    <h5 className="text-sm">{name}</h5>
+                    <p className="text-[0.6rem]">{data.numMembers} members</p>
+                </div>
             </div>
             <Button
                 onClick={onWorkspaceOpen}
-                className="ml-[8rem] rounded-md bg-sky-700 px-4 py-2
+                className="rounded-md bg-sky-700 px-4 py-2
                     text-xs hover:bg-sky-900"
             >
                 Open Workspace
