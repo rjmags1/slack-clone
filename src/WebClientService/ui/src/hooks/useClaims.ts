@@ -2,9 +2,17 @@ import { useState, useEffect } from 'react'
 
 const SESSION_URL = '/bff/user'
 
-function useClaims() {
-    const [claims, setClaims] = useState(null)
-    const [loading, setLoading] = useState(true)
+export type Claim = {
+    type: string
+    value: string | number
+}
+
+function useClaims(): {
+    loading: boolean
+    claims: Claim[] | null
+} {
+    const [claims, setClaims] = useState<Claim[] | null>(null)
+    const [loading, setLoading] = useState<boolean>(true)
 
     useEffect(() => {
         const fetchData = async () => {

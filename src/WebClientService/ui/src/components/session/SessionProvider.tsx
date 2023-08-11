@@ -1,8 +1,8 @@
-import useClaims from '../../hooks/useClaims'
+import useClaims, { Claim } from '../../hooks/useClaims'
 import Loading from '../lib/Loading'
 import { createContext } from 'react'
 
-export const SessionContext = createContext(null)
+export const SessionContext = createContext<Claim[] | null>(null)
 
 function SessionProvider({ children }: { children: React.ReactNode }) {
     const { claims, loading } = useClaims()
