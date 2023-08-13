@@ -27,7 +27,9 @@ public static class Config
             new Client
             {
                 ClientId = "bff",
+                AllowOfflineAccess = true,
                 ClientSecrets = { new Secret("secret".Sha256()) },
+                AccessTokenLifetime = 1800,
                 AllowedGrantTypes = GrantTypes.Code,
                 RedirectUris = { "https://localhost:5003/signin-oidc" },
                 PostLogoutRedirectUris =

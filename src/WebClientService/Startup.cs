@@ -3,6 +3,7 @@ using Duende.Bff.Yarp;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.FileProviders;
+using Microsoft.AspNetCore.Authentication;
 
 namespace WebClientService;
 
@@ -29,7 +30,16 @@ public class Startup
                 options.DefaultChallengeScheme = "oidc";
                 options.DefaultSignOutScheme = "oidc";
             })
-            .AddCookie("Cookies")
+            .AddCookie(
+                "Cookies",
+                options =>
+                {
+                    options.Events.OnSigningOut = async e =>
+                    {
+                        await e.HttpContext.RevokeUserRefreshTokenAsync();
+                    };
+                }
+            )
             .AddOpenIdConnect(
                 "oidc",
                 options =>
@@ -38,6 +48,7 @@ public class Startup
                     options.ClientId = "bff";
                     options.ClientSecret = "secret";
                     options.ResponseType = "code";
+                    options.Scope.Clear();
                     options.Scope.Add("openid");
                     options.Scope.Add("profile");
                     options.Scope.Add("api");
@@ -46,6 +57,8 @@ public class Startup
                     options.GetClaimsFromUserInfoEndpoint = true;
                 }
             );
+
+        services.AddAccessTokenManagement();
     }
 
     public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
