@@ -3,7 +3,7 @@ import { useLazyLoadQuery } from 'react-relay'
 import type { WorkspacesPageQuery as WorkspacesPageQueryType } from './__generated__/WorkspacesPageQuery.graphql'
 import WorkspacesPageNavbar from './WorkspacesPageNavbar'
 import WorkspacesList from './WorkspacesList'
-import { useContext, useEffect } from 'react'
+import { useContext } from 'react'
 import { SessionContext } from '../../session/SessionProvider'
 import Loading from '../../lib/Loading'
 

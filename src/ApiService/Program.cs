@@ -11,6 +11,8 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using System.Security.Cryptography;
 using System.Text.Json;
+using ApiService.Auth;
+using Microsoft.AspNetCore.Authorization;
 
 DotNetEnv.Env.Load();
 
@@ -43,6 +45,16 @@ builder.Services
             }
         };
     });
+
+builder.Services.AddSingleton<IAuthorizationHandler, RequiredScopeHandler>();
+
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy(
+        "HasApiScopeClaim",
+        policy => policy.Requirements.Add(new ScopeRequirement("api"))
+    );
+});
 
 string connectionString = Environment.GetEnvironmentVariable(
     "DB_CONNECTION_STRING"
