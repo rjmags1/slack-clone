@@ -7,11 +7,13 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using SlackCloneGraphQL;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using AuthorizeAttribute = Microsoft.AspNetCore.Authorization.AuthorizeAttribute;
 
 namespace ApiService.Controllers
 {
     [ApiController]
     [Route("graphql")]
+    [Authorize(Policy = "HasApiScopeClaim")]
     public class ApiController : Controller
     {
         private readonly IDocumentExecuter _documentExecuter;
