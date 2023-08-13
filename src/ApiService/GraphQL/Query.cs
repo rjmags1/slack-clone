@@ -1,5 +1,3 @@
-using System.Security.Claims;
-using ApiService.Utils;
 using GraphQL;
 using GraphQL.Types;
 using PersistenceService.Utils.GraphQL;
@@ -55,18 +53,6 @@ public class SlackCloneQuery : ObjectGraphType<object>
                     context,
                     fragments
                 );
-                Console.WriteLine("#############");
-                Console.WriteLine("#############");
-                Console.WriteLine("#############");
-                Console.WriteLine("#############");
-                foreach (var s in workspacesFieldsInfo.SubfieldNames)
-                {
-                    Console.WriteLine(s);
-                }
-                Console.WriteLine("#############");
-                Console.WriteLine("#############");
-                Console.WriteLine("#############");
-                Console.WriteLine("#############");
 
                 return new WorkspacesPageData
                 {
