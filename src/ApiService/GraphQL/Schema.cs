@@ -12,9 +12,9 @@ public class SlackCloneSchema : Schema
         Query =
             (SlackCloneQuery)provider.GetService(typeof(SlackCloneQuery))!
             ?? throw new InvalidOperationException();
-        //Mutation =
-        //(SlackCloneMutation)provider.GetService(typeof(SlackCloneMutation))!
-        //?? throw new InvalidOperationException();
+        Mutation =
+            (SlackCloneMutation)provider.GetService(typeof(SlackCloneMutation))!
+            ?? throw new InvalidOperationException();
 
         FieldMiddleware.Use(new InstrumentFieldsMiddleware());
         FieldMiddleware.Use(new VariableClaimMappingCheckFieldMiddleware());

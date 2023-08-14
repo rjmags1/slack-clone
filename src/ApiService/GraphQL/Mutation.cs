@@ -6,8 +6,19 @@ namespace SlackCloneGraphQL;
 
 public class SlackCloneMutation : ObjectGraphType
 {
-    public SlackCloneMutation()
+    public SlackCloneMutation(SlackCloneData data)
     {
         Name = "Mutation";
+        Field<WorkspaceType>("createWorkspace")
+            .Argument<NonNullGraphType<WorkspaceInputType>>("workspace")
+            .Argument<NonNullGraphType<IdGraphType>>("creatorId")
+            .ResolveAsync(async context =>
+            {
+                var workspaceInfo = context.GetArgument<WorkspaceInput>(
+                    "workspace"
+                );
+                var creatorId = context.GetArgument<Guid>("creatorId");
+                return await data.CreateWorkspace(workspaceInfo, creatorId);
+            });
     }
 }

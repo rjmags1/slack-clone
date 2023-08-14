@@ -59,6 +59,7 @@ public class WorkspaceStore : Store
                 WorkspaceId = workspaceId,
             };
             _context.Add(workspaceMembership);
+            workspace.NumMembers += 1;
         }
 
         WorkspaceAdminPermissions permissions = new WorkspaceAdminPermissions
@@ -69,7 +70,6 @@ public class WorkspaceStore : Store
         };
         _context.Add(permissions);
         workspaceMembership.WorkspaceAdminPermissions = permissions;
-        workspace.NumMembers += 1;
         await _context.SaveChangesAsync();
 
         return workspaceMembership;
@@ -164,6 +164,61 @@ public class WorkspaceStore : Store
         _context.AddRange(workspaces);
         await _context.SaveChangesAsync();
         return workspaces;
+    }
+
+    public async Task<List<WorkspaceInvite>> InviteUsersByEmail(
+        Guid workspaceId,
+        Guid adminId,
+        List<string> emails
+    )
+    {
+        bool workspaceExists =
+            _context.Workspaces.Where(w => w.Id == workspaceId).Count() == 1;
+        if (!workspaceExists)
+        {
+            throw new InvalidOperationException(
+                "Could not invite to workspace"
+            );
+        }
+
+        WorkspaceMember adminMembership = _context.WorkspaceMembers.First(
+            wm => wm.UserId == adminId && wm.WorkspaceId == workspaceId
+        );
+        if (!adminMembership.Admin)
+        {
+            throw new InvalidOperationException(
+                "Only workspace admins may send invites"
+            );
+        }
+
+        List<Guid> idsFromEmails = await _context.Users
+            .Where(u => emails.Contains(u.Email))
+            .Select(u => u.Id)
+            .ToListAsync();
+        bool validEmails = idsFromEmails.Count == emails.Count;
+        if (!validEmails)
+        {
+            throw new InvalidOperationException(
+                "Could not invite to workspace"
+            );
+        }
+
+        List<WorkspaceInvite> invites = new();
+        foreach (Guid invitedId in idsFromEmails)
+        {
+            invites.Add(
+                new WorkspaceInvite
+                {
+                    AdminId = adminId,
+                    UserId = invitedId,
+                    WorkspaceId = workspaceId
+                }
+            );
+        }
+
+        _context.AddRange(invites);
+        await _context.SaveChangesAsync();
+        return invites;
     }
 
     public async Task<WorkspaceInvite> InsertWorkspaceInvite(
