@@ -127,4 +127,41 @@ public class SlackCloneData
 
         return ModelToObjectConverters.ConvertWorkspace(dbWorkspace);
     }
+
+    public async Task<Workspace> CreateWorkspace(
+        WorkspaceInput workspaceInfo,
+        Guid creatorId
+    )
+    {
+        using var scope = _provider.CreateScope();
+        WorkspaceStore workspaceStore =
+            scope.ServiceProvider.GetRequiredService<WorkspaceStore>();
+
+        Models.Workspace dbWorkspaceSkeleton =
+            new()
+            {
+                AvatarId = workspaceInfo.AvatarId,
+                Description = workspaceInfo.Description ?? "",
+                Name = workspaceInfo.Name,
+            };
+
+        Models.Workspace dbWorkspace = (
+            await workspaceStore.InsertWorkspaces(
+                new List<Models.Workspace> { dbWorkspaceSkeleton }
+            )
+        ).First();
+
+        await workspaceStore.InsertWorkspaceAdmin(creatorId, dbWorkspace.Id, 1);
+
+        if (workspaceInfo.InvitedUserEmails is not null)
+        {
+            await workspaceStore.InviteUsersByEmail(
+                dbWorkspace.Id,
+                creatorId,
+                workspaceInfo.InvitedUserEmails
+            );
+        }
+
+        return ModelToObjectConverters.ConvertWorkspace(dbWorkspace);
+    }
 }
