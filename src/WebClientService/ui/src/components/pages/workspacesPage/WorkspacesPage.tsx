@@ -56,10 +56,10 @@ function WorkspacesPage() {
             <WorkspacesPageNavbar />
             <div
                 className="flex h-[calc(100%_-_2.5rem)] flex-col 
-                    items-center justify-center p-4"
+                    items-center justify-start pb-6"
             >
-                <header className="my-3">
-                    <h2 className="text-3xl font-bold text-white">
+                <header className="my-10">
+                    <h2 className="text-5xl font-bold text-white">
                         Welcome back!
                     </h2>
                 </header>

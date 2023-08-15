@@ -157,7 +157,10 @@ function CreateWorkspaceForm({ close }: CreateWorkspaceFormProps) {
         <form className="flex h-full w-full flex-col gap-y-3 text-sm">
             <InputTextField label="Name" onChange={setName} />
             <InputTextField label="Description" onChange={setDescription} />
-            <div className="mb-1 flex flex-col gap-y-1 font-extralight">
+            <div
+                className="mb-1 flex max-w-[16rem] flex-col gap-y-1 truncate 
+                    font-extralight"
+            >
                 <label htmlFor="workspace-avatar">Avatar</label>
                 <input
                     ref={fileInputRef}
@@ -173,6 +176,8 @@ function CreateWorkspaceForm({ close }: CreateWorkspaceFormProps) {
                 onClear={() => setEmailSearchText('')}
                 onChange={setEmailSearchText}
                 onSubmit={() => setSubmittedSearchEmailText(searchEmailText)}
+                alertInvalidSearch={alertInvalidEmail}
+                errorMessage="Invalid email"
                 label="Add members by email"
                 value={searchEmailText}
             />
