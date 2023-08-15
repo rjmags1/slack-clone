@@ -4,7 +4,7 @@ import type { WorkspacesPageQuery as WorkspacesPageQueryType } from './__generat
 import WorkspacesPageNavbar from './WorkspacesPageNavbar'
 import WorkspacesList from './WorkspacesList'
 import { useContext } from 'react'
-import { SessionContext } from '../../session/SessionProvider'
+import { SessionContext, getSubClaim } from '../../session/SessionProvider'
 import Loading from '../../lib/Loading'
 
 const WorkspacesPageDataQuery = graphql`
@@ -37,7 +37,7 @@ const MAX_WORKSPACES_PER_USER = 100
 
 function WorkspacesPage() {
     const claims = useContext(SessionContext)!
-    const sub = claims.filter((c) => c.type === 'sub')[0]?.value as string
+    const sub = getSubClaim(claims)
     const data = useLazyLoadQuery<WorkspacesPageQueryType>(
         WorkspacesPageDataQuery,
         {

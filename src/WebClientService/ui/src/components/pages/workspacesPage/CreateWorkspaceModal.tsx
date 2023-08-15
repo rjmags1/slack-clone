@@ -14,7 +14,7 @@ function CreateWorkspaceModal({ close }: CreateWorkspaceModalProps) {
                 bg-sky-950 p-4 text-2xl text-white outline-none"
             close={close}
         >
-            <CreateWorkspaceForm />
+            <CreateWorkspaceForm close={close} />
         </Dialog>
     )
 }

@@ -9,8 +9,21 @@ type Query {
         userId: ID!, 
         workspacesFilter: WorkspacesFilter!
     ): WorkspacesPageData
+    validUserEmail(
+        email: String!
+    ): ValidationResult
 }
 
+
+type Mutation {
+    createWorkspace(
+        workspace: WorkspaceInput!,
+        creatorId: ID!
+    ): Workspace
+    createAvatar(
+        file: FileInput!
+    ): File
+}
 
 
 type WorkspacesPageData {
@@ -62,6 +75,10 @@ type User implements Node {
     onlineStatus: String!
     personalInfo: UserInfo
     username: String!
+}
+
+type ValidationResult {
+    valid: Boolean!
 }
 
 type WorkspaceAdminPermissions {
@@ -154,4 +171,17 @@ input WorkspacesFilter {
     cursor: Cursor!
     userId: ID!
     nameQuery: String
+}
+
+input WorkspaceInput {
+    name: String!
+    description: String!
+    avatarId: ID
+    invitedUserEmails: [String!]
+}
+
+input FileInput {
+    name: String!
+    storeKey: String!
+    uploaderId: ID!
 }
