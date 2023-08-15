@@ -54,7 +54,10 @@ public static class ModelToObjectConverters
             }
             else
             {
-                throw new NotImplementedException();
+                Models.File dbAvatar = JsonSerializer.Deserialize<Models.File>(
+                    expando.Avatar
+                );
+                workspace.Avatar = ConvertAvatar(dbAvatar);
             }
         }
         if (DynamicUtils.HasProperty(expando, nameof(Workspace.CreatedAt)))
