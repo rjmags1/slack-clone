@@ -110,6 +110,15 @@ public class UserStore : UserManager<User>, IStore
         return users;
     }
 
+    public async Task<bool> RegisteredEmail(string email)
+    {
+        return (
+                await context.Users
+                    .Where(u => u.NormalizedEmail == email.ToUpper())
+                    .CountAsync()
+            ) == 1;
+    }
+
     public static string GenerateTestUserName(int randsize) =>
         "test_user_name" + CustomBaseStore.random.Next(100000000).ToString();
 

@@ -15,6 +15,14 @@ public class SlackCloneQuery : ObjectGraphType<object>
             {
                 return "Hello";
             });
+        Field<ValidationResultType>("validUserEmail")
+            .Argument<NonNullGraphType<StringGraphType>>("email")
+            .ResolveAsync(async context =>
+            {
+                var email = context.GetArgument<string>("email");
+                var valid = await data.ValidUserEmail(email);
+                return new ValidationResult { Valid = valid };
+            });
 
         Field<WorkspacesPageDataType>("workspacesPageData")
             .Directive(

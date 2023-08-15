@@ -10,7 +10,7 @@ function WorkspacesSearchbar({
     setSearchText,
 }: WorkspacesSearchBarProps) {
     return (
-        <div className="bg-sky-950 px-6 py-2">
+        <div className="sticky top-0 bg-sky-950 px-6 py-2">
             <SearchField
                 onChange={setSearchText}
                 value={searchText}

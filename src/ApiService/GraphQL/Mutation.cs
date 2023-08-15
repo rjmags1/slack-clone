@@ -20,5 +20,12 @@ public class SlackCloneMutation : ObjectGraphType
                 var creatorId = context.GetArgument<Guid>("creatorId");
                 return await data.CreateWorkspace(workspaceInfo, creatorId);
             });
+        Field<FileType>("createAvatar")
+            .Argument<NonNullGraphType<FileInputType>>("file")
+            .ResolveAsync(async context =>
+            {
+                var fileInfo = context.GetArgument<FileInput>("file");
+                return await data.CreateAvatar(fileInfo);
+            });
     }
 }

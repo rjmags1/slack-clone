@@ -9,6 +9,7 @@ type CustomSearchFieldProps = SearchFieldProps & {
     labelClassName?: string
     clearButtonClassName?: string
     inputContainerClassName?: string
+    alertInvalidSearch?: boolean
 }
 
 function SearchField(props: CustomSearchFieldProps) {
@@ -19,14 +20,12 @@ function SearchField(props: CustomSearchFieldProps) {
         inputClassName,
         labelClassName,
         clearButtonClassName,
+        alertInvalidSearch,
     } = props
     const state = useSearchFieldState(props)
     const ref = useRef(null)
-    const { labelProps, inputProps, clearButtonProps } = useSearchField(
-        props,
-        state,
-        ref
-    )
+    const { labelProps, inputProps, clearButtonProps, errorMessageProps } =
+        useSearchField(props, state, ref)
 
     return (
         <div
@@ -61,6 +60,11 @@ function SearchField(props: CustomSearchFieldProps) {
                     </Button>
                 )}
             </div>
+            {alertInvalidSearch && (
+                <div {...errorMessageProps} className="text-xs text-rose-500">
+                    {props.errorMessage}
+                </div>
+            )}
         </div>
     )
 }

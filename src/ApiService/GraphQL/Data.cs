@@ -3,6 +3,7 @@ using Models = PersistenceService.Models;
 using SlackCloneGraphQL.Types;
 using SlackCloneGraphQL.Types.Connections;
 using PersistenceService.Utils.GraphQL;
+using File = SlackCloneGraphQL.Types.File;
 
 namespace SlackCloneGraphQL;
 
@@ -140,10 +141,18 @@ public class SlackCloneData
         Models.Workspace dbWorkspaceSkeleton =
             new()
             {
-                AvatarId = workspaceInfo.AvatarId,
                 Description = workspaceInfo.Description ?? "",
                 Name = workspaceInfo.Name,
             };
+
+        if (workspaceInfo.AvatarId is not null)
+        {
+            FileStore fileStore =
+                scope.ServiceProvider.GetRequiredService<FileStore>();
+            dbWorkspaceSkeleton.Avatar = await fileStore.GetFileById(
+                workspaceInfo.AvatarId
+            );
+        }
 
         Models.Workspace dbWorkspace = (
             await workspaceStore.InsertWorkspaces(
@@ -163,5 +172,34 @@ public class SlackCloneData
         }
 
         return ModelToObjectConverters.ConvertWorkspace(dbWorkspace);
+    }
+
+    public async Task<File> CreateAvatar(FileInput fileinfo)
+    {
+        using var scope = _provider.CreateScope();
+        FileStore fileStore =
+            scope.ServiceProvider.GetRequiredService<FileStore>();
+
+        Models.File dbAvatarSkeleton = new Models.File
+        {
+            Name = fileinfo.Name,
+            StoreKey = fileinfo.StoreKey
+        };
+
+        Models.File dbAvatar = (
+            await fileStore.InsertFiles(
+                new List<Models.File> { dbAvatarSkeleton }
+            )
+        ).First();
+
+        return ModelToObjectConverters.ConvertAvatar(dbAvatar);
+    }
+
+    public async Task<bool> ValidUserEmail(string email)
+    {
+        using var scope = _provider.CreateScope();
+        UserStore userStore =
+            scope.ServiceProvider.GetRequiredService<UserStore>();
+        return await userStore.RegisteredEmail(email);
     }
 }

@@ -6,7 +6,7 @@ public class WorkspaceInputType : InputObjectGraphType<WorkspaceInput>
 {
     public WorkspaceInputType()
     {
-        Name = "Workspace";
+        Name = "WorkspaceInput";
         Field<NonNullGraphType<StringGraphType>>("name");
         Field<StringGraphType>("description");
         Field<IdGraphType>("avatarId");
