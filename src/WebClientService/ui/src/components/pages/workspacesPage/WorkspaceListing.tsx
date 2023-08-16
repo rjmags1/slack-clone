@@ -2,6 +2,7 @@ import Button from '../../lib/Button'
 import graphql from 'babel-plugin-relay/macro'
 import type { WorkspaceListingFragment$key } from './__generated__/WorkspaceListingFragment.graphql'
 import { useFragment } from 'react-relay'
+import { Link } from 'react-router-dom'
 
 const WorkspaceListingFragment = graphql`
     fragment WorkspaceListingFragment on Workspace {
@@ -16,16 +17,13 @@ const WorkspaceListingFragment = graphql`
 `
 
 type WorkspaceListingProps = {
+    id: string
     workspace: WorkspaceListingFragment$key
     name: string
 }
 
-function WorkspaceListing({ workspace, name }: WorkspaceListingProps) {
+function WorkspaceListing({ workspace, name, id }: WorkspaceListingProps) {
     const data = useFragment(WorkspaceListingFragment, workspace)
-
-    const onWorkspaceOpen = () => {
-        // TODO
-    }
 
     return (
         <div
@@ -49,13 +47,14 @@ function WorkspaceListing({ workspace, name }: WorkspaceListingProps) {
                     <p className="text-[0.6rem]">{data.numMembers} members</p>
                 </div>
             </div>
-            <Button
-                onClick={onWorkspaceOpen}
-                className="rounded-md bg-sky-700 px-4 py-2
+            <Link to={`/workspace/${id}`}>
+                <Button
+                    className="rounded-md bg-sky-700 px-4 py-2
                     text-xs hover:bg-sky-900"
-            >
-                Open Workspace
-            </Button>
+                >
+                    Open Workspace
+                </Button>
+            </Link>
         </div>
     )
 }

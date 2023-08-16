@@ -18,6 +18,7 @@ const WorkspacesListFragment = graphql`
         }
         edges {
             node {
+                id
                 ...WorkspaceListingFragment
                 name
             }
@@ -63,6 +64,8 @@ function WorkspacesList({ workspaces }: WorkspacesListProps) {
                     renderedEdges.map((w) => (
                         <Item>
                             <WorkspaceListing
+                                id={w.node.id}
+                                key={w.node.id}
                                 workspace={w.node}
                                 name={w.node.name}
                             />

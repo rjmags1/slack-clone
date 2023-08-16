@@ -78,8 +78,16 @@ public class Startup
 
                 if (context.Response.StatusCode == 404)
                 {
-                    string[] clientSideRoutes = new string[] { "/test" };
-                    if (clientSideRoutes.Contains(context.Request.Path.Value))
+                    string[] clientSideRoutes = new string[]
+                    {
+                        "/test",
+                        "/workspaces"
+                    };
+                    if (
+                        clientSideRoutes.Contains(context.Request.Path.Value)
+                        || context.Request.Path.Value?.Substring(0, 11)
+                            == "/workspace/"
+                    )
                     {
                         var fileProvider = new PhysicalFileProvider(
                             env.WebRootPath
