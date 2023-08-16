@@ -1,4 +1,5 @@
 import CreateWorkspaceBtn from './CreateWorkspaceBtn'
+import LogoutBtn from './LogoutBtn'
 
 function WorkspacesPageNavbar() {
     return (
@@ -7,7 +8,10 @@ function WorkspacesPageNavbar() {
                 justify-between bg-sky-950 px-8 text-white"
         >
             <h1>slack-clone</h1>
-            <CreateWorkspaceBtn />
+            <div className="flex gap-x-3">
+                <CreateWorkspaceBtn />
+                <LogoutBtn />
+            </div>
         </nav>
     )
 }
