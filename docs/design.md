@@ -2323,7 +2323,7 @@ Github/git will be used for version control, and all tests will be run against a
 
 ## Phase 2 - GraphQL API + UI
 - [✅] Get user signin -> Workspaces page flow working.
-- [] Custom login page, signout functionality
+- [✅] Custom login page, signout functionality
 - [] Refactor and test existing functionality
   - GraphQL custom field analysis, dynamic query tests
   - Test + refactor + optimize new Data, Store methods
