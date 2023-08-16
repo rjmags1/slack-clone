@@ -4,16 +4,17 @@ import { useFocusRing, useTag } from 'react-aria'
 import Button from './Button'
 import { useRef } from 'react'
 
-export interface TagClassNames {
+export type TagClassNames = {
     containerClassName?: string
     gridCellClassName?: string
     removeButtonClassName?: string
 }
 
-interface TagProps<T> extends AriaTagProps<T>, TagClassNames {
-    state: ListState<T>
-    setTags: React.Dispatch<React.SetStateAction<string[]>>
-}
+type TagProps<T> = AriaTagProps<T> &
+    TagClassNames & {
+        state: ListState<T>
+        setTags: React.Dispatch<React.SetStateAction<string[]>>
+    }
 
 function Tag<T>(props: TagProps<T>) {
     const {
@@ -24,9 +25,9 @@ function Tag<T>(props: TagProps<T>) {
         removeButtonClassName,
         setTags,
     } = props
-    const ref = useRef(null)
+    const ref = useRef<HTMLDivElement>(null)
     const { focusProps, isFocusVisible } = useFocusRing({ within: true })
-    const { rowProps, gridCellProps, removeButtonProps } = useTag(
+    const { rowProps, gridCellProps, removeButtonProps } = useTag<T>(
         props,
         state,
         ref

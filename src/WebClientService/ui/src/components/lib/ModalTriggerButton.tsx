@@ -4,7 +4,7 @@ import Button from './Button'
 import React, { JSXElementConstructor, ReactElement } from 'react'
 import Modal from './Modal'
 
-type ModalTriggerProps = {
+type ModalTriggerProps = OverlayTriggerProps & {
     label: string
     className?: string
     children: (
@@ -18,7 +18,7 @@ function ModalTriggerButton({
     className,
     ...props
 }: ModalTriggerProps) {
-    const state = useOverlayTriggerState(props as OverlayTriggerProps)
+    const state = useOverlayTriggerState(props)
     const { triggerProps, overlayProps } = useOverlayTrigger(
         { type: 'dialog' },
         state

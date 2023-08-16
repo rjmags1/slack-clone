@@ -10,7 +10,7 @@ type DialogProps = AriaDialogProps & {
 }
 
 function Dialog({ title, children, className, close, ...props }: DialogProps) {
-    const ref = useRef(null)
+    const ref = useRef<HTMLDivElement>(null)
     const { dialogProps, titleProps } = useDialog(props, ref)
 
     return (

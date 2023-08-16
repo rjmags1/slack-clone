@@ -23,7 +23,7 @@ function SearchField(props: CustomSearchFieldProps) {
         alertInvalidSearch,
     } = props
     const state = useSearchFieldState(props)
-    const ref = useRef(null)
+    const ref = useRef<HTMLInputElement>(null)
     const { labelProps, inputProps, clearButtonProps, errorMessageProps } =
         useSearchField(props, state, ref)
 

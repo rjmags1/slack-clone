@@ -9,7 +9,7 @@ type ModalProps = {
 }
 
 function Modal({ state, children, className, ...props }: ModalProps) {
-    let ref = useRef(null)
+    let ref = useRef<HTMLDivElement>(null)
     let { modalProps, underlayProps } = useModalOverlay(
         props as AriaModalOverlayProps,
         state,

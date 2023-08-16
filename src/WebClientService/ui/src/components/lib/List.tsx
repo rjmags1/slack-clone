@@ -8,9 +8,9 @@ type CustomListProps = ListProps<object> & {
 }
 
 function List(props: CustomListProps) {
-    let state = useListState(props as ListProps<object>)
+    let state = useListState(props)
     let ref = useRef<HTMLUListElement>(null)
-    let { gridProps } = useGridList(props as ListProps<object>, state, ref)
+    let { gridProps } = useGridList(props, state, ref)
 
     return (
         <ul {...gridProps} ref={ref} className={props.className}>

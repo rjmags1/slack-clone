@@ -19,7 +19,7 @@ function InputTextField(props: InputTextFieldProps) {
         descriptionClassName,
         errorMessageClassName,
     } = props
-    const ref = useRef(null)
+    const ref = useRef<HTMLInputElement>(null)
     const { labelProps, inputProps, descriptionProps, errorMessageProps } =
         useTextField(props, ref)
 
