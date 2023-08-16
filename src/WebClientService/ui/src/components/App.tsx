@@ -4,6 +4,7 @@ import RelayEnvironment from './relay/RelayEnvironment'
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import SessionProvider from './session/SessionProvider'
 import AuthGuard from './session/AuthGuard'
+import WorkspacePage from './pages/workspacePage/WorkspacePage'
 
 const router = createBrowserRouter([
     {
@@ -11,6 +12,22 @@ const router = createBrowserRouter([
         element: (
             <AuthGuard>
                 <WorkspacesPage />
+            </AuthGuard>
+        ),
+    },
+    {
+        path: '/workspaces',
+        element: (
+            <AuthGuard>
+                <WorkspacesPage />
+            </AuthGuard>
+        ),
+    },
+    {
+        path: '/workspace/:workspaceId',
+        element: (
+            <AuthGuard>
+                <WorkspacePage />
             </AuthGuard>
         ),
     },

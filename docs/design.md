@@ -1,11 +1,5 @@
 <h1><a id="top" href="#top">Slack-Clone Design</a></h1>
 
-# TODO:
-- Review data model, graphql schema, component tree, general review of this document
-    - Update dependency version numbers
-
-<hr>
-
 <ul>
     <li><a href="#overview">Overview</a></li>
     <li><a href="#stack">Stack</a></li>
@@ -77,13 +71,13 @@
 
 <h1><a id="stack" href="#stack">Stack</a></h1>
 <ul>
-    <li><a href="https://learn.microsoft.com/en-us/aspnet/core/introduction-to-aspnet-core?view=aspnetcore-7.0">ASP.NET Core (7.0)</a> - API Service, Identity Service, File Service, Realtime Service, WebClient Service</li>
+    <li><a href="https://learn.microsoft.com/en-us/aspnet/core/introduction-to-aspnet-core?view=aspnetcore-7.0">ASP.NET Core (6.0)</a> - API Service, Identity Service, File Service, Realtime Service, WebClient Service</li>
     <ul>
         <li><a href="https://learn.microsoft.com/en-us/aspnet/core/introduction-to-aspnet-core?view=aspnetcore-7.0">ASP.NET Core SignalR (2.4)</a> - Realtime Service</li>
         <li><a href="https://docs.confluent.io/kafka-clients/dotnet/current/overview.html">confluent-kafka-dotnet (2.1)</a> - Realtime Service, API Service</li>
     </ul>
     <li><a href="https://kafka.apache.org/intro">Apache Kafka</a> - API Service, Realtime Service</li>
-    <li><a href="https://docs.duendesoftware.com/identityserver/v6/">Duende Identity Server (6.2)</a> - Identity Service</li>
+    <li><a href="https://docs.duendesoftware.com/identityserver/v6/">Duende Identity Server (6.3)</a> - Identity Service</li>
         <ul>
             <li><a href="https://docs.duendesoftware.com/identityserver/v6/bff/">Duende.BFF (2.0)</a> - WebClient Service</li>
         </ul>
@@ -91,8 +85,8 @@
     <li>
         <a href="https://graphql.org/">GraphQL</a>
         <ul>
-            <li><a href="https://relay.dev/">Relay (14.0)</a> - WebClient Service</li>
-            <li><a href="https://graphql-dotnet.github.io/">GraphQL .NET (7.4)</a> - API Service</li>
+            <li><a href="https://relay.dev/">Relay (15.0)</a> - WebClient Service</li>
+            <li><a href="https://graphql-dotnet.github.io/">GraphQL .NET (7.5)</a> - API Service</li>
         </ul>
     </li>
     <li><a href="https://www.postgresql.org/docs/15/index.html">PostgreSQL (15.2)</a> - Database Service</li>
@@ -101,7 +95,7 @@
         <ul>
             <li><a href="https://webpack.js.org/">webpack (5.82)</a></li>
             <li><a href="https://www.npmjs.com/package/react-relay">react-relay (15.0)</a></li>
-            <li><a href="https://reactrouter.com/en/main">react-relay-dom (6.11)</a></li>
+            <li><a href="https://reactrouter.com/en/main">react-router-dom (6.14)</a></li>
             <li><a href="https://react-spectrum.adobe.com/react-aria/index.html">react-aria (3.26)</a></li>
             <li><a href="https://tailwindcss.com/">tailwindCSS (3.3)</a></li>
         </ul>
@@ -2327,14 +2321,20 @@ Github/git will be used for version control, and all tests will be run against a
 - #### Notes
   - Added the ability to seed variable amounts of seed data and to preserve seed data. This will be useful down the line for benchmarking things like query efficiency.
 
-## Phase 2 - GraphQL API + Minimum function
-- Get user signin -> Workspaces page -> sign out flow working.
-  - Impl the workspaces graphql query and relevant graphql entities
-  - Init React app
-- Rest of GraphQL API
+## Phase 2 - GraphQL API + UI
+- [✅] Get user signin -> Workspaces page flow working.
+- [✅] Custom login page, signout functionality
+- [] Refactor and test existing functionality
+  - GraphQL custom field analysis, dynamic query tests
+  - Test + refactor + optimize new Data, Store methods
+  - Refactor frontend TS
+    - Add more robust typing
+    - Optimize Relay query behavior (usePreloadedQuery)
+    - webpack chunk pages/non-load-rendered UI
+- [] Workspace page
+    - Impl each needed query and associated UI until page is complete
+- Alternate between adding new functionality and testing/refactoring existing functionality until Phase 2 complete
 
-## Phase 3 - Finish React UI
+## Phase 3 - Impl Realtime
 
-## Phase 4 - Impl Realtime
-
-## Phase 5 - Optimize + Refactor
+## Phase 4 - Optimize + Refactor

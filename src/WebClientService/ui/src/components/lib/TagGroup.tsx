@@ -27,11 +27,11 @@ function TagGroup<T extends object>(props: TagGroupProps<T>) {
         tagClassNames,
         setTags,
     } = props
-    const ref = useRef(null)
+    const ref = useRef<HTMLDivElement>(null)
 
     const state = useListState(props)
     const { gridProps, labelProps, descriptionProps, errorMessageProps } =
-        useTagGroup(props, state, ref)
+        useTagGroup<T>(props, state, ref)
 
     return (
         <div className={containerClassName}>

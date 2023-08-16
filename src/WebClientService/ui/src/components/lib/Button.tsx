@@ -8,7 +8,7 @@ type ButtonProps = AriaButtonProps<'button'> & {
 }
 
 function Button(props: ButtonProps) {
-    const ref: any = useRef()
+    const ref = useRef<HTMLButtonElement>(null)
     const { buttonProps } = useButton({}, ref)
     const { children, className, onClick } = props
 

@@ -1,10 +1,5 @@
 import { useRef } from 'react'
-import {
-    AriaGridListItemOptions,
-    mergeProps,
-    useFocusRing,
-    useGridListItem,
-} from 'react-aria'
+import { mergeProps, useFocusRing, useGridListItem } from 'react-aria'
 import { ListState } from 'react-stately'
 import { Node } from 'react-stately'
 
@@ -15,14 +10,14 @@ function ListItem({
     item: Node<object>
     state: ListState<object>
 }) {
-    let ref = useRef(null)
-    let { rowProps, gridCellProps, isPressed } = useGridListItem(
+    const ref = useRef<HTMLLIElement>(null)
+    const { rowProps, gridCellProps, isPressed } = useGridListItem(
         { node: item },
         state,
         ref
     )
 
-    let { isFocusVisible, focusProps } = useFocusRing()
+    const { isFocusVisible, focusProps } = useFocusRing()
 
     return (
         <li
