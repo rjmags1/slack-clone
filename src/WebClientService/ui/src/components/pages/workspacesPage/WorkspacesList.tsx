@@ -2,9 +2,7 @@ import { Item } from 'react-stately'
 import List from '../../lib/List'
 import WorkspacesSearchbar from './WorkspacesSearchbar'
 import WorkspaceListing from './WorkspaceListing'
-import graphql from 'babel-plugin-relay/macro'
-import type { WorkspacesListFragment$key } from './__generated__/WorkspacesListFragment.graphql'
-import { useFragment } from 'react-relay'
+import { usePaginationFragment } from 'react-relay'
 import { useState } from 'react'
 
 const WorkspacesListFragment = graphql`
@@ -31,7 +29,10 @@ type WorkspacesListProps = {
 }
 
 function WorkspacesList({ workspaces }: WorkspacesListProps) {
-    const data = useFragment(WorkspacesListFragment, workspaces)
+    const { data, loadNext } = usePaginationFragment(
+        WorkspacesListFragment,
+        workspaces
+    )
     const [searchText, setSearchText] = useState('')
 
     return (
@@ -44,7 +45,7 @@ function WorkspacesList({ workspaces }: WorkspacesListProps) {
                 setSearchText={setSearchText}
             />
             <List className="flex min-w-[36rem] flex-col gap-y-2 px-4 py-2">
-                {data.edges.length === 0 ? (
+                {data.workspaces.totalEdges === 0 ? (
                     <Item>
                         <h6
                             className="flex h-12 w-full items-center 
@@ -54,7 +55,7 @@ function WorkspacesList({ workspaces }: WorkspacesListProps) {
                         </h6>
                     </Item>
                 ) : (
-                    data.edges
+                    data.workspaces.edges
                         .filter((w) => w.node.name.includes(searchText))
                         .map((w) => (
                             <Item>

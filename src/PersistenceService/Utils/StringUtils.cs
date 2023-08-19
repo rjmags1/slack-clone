@@ -65,7 +65,7 @@ public static class DynamicLinqUtils
             : nonDbMapped.Contains(root.FieldName);
         foreach (FieldTree child in root.Children)
         {
-            if (nodeLevel)
+            if (nodeLevel && child.FieldName.Substring(0, 2) != "__")
             {
                 fields.Add(child.FieldName);
             }

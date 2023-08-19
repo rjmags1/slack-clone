@@ -2,16 +2,12 @@ interface Node {
     id: ID!
 }
 
-
-
 type Query {
-    workspacesPageData(
-        userId: ID!, 
-        workspacesFilter: WorkspacesFilter!
-    ): WorkspacesPageData
+    workspacesPageData: WorkspacesPageData
     validUserEmail(
         email: String!
     ): ValidationResult
+    node(id: ID!): Node
 }
 
 
@@ -26,12 +22,11 @@ type Mutation {
 }
 
 
-type WorkspacesPageData {
-    user: User!
-    workspaces: WorkspacesConnection!
+type WorkspacesPageData implements Node {
+    id: ID!
+    user(id: ID!): User!
+    workspaces(filter: WorkspacesFilter, first: Int!, after: ID): WorkspacesConnection!
 }
-
-
 
 type File implements Node {
     id: ID!
@@ -118,7 +113,7 @@ type Workspace implements Node {
     description: String!
     name: String!
     numMembers: Int!
-    members(usersFilter: UsersFilter!): WorkspaceMembersConnection
+    members(usersFilter: UsersFilter, first: Int!, after: ID): WorkspaceMembersConnection
 }
 
 type WorkspaceMembersConnection {
@@ -151,7 +146,6 @@ type WorkspacesConnectionEdge {
 }
 
 input UsersFilter {
-    cursor: Cursor!
     userId: ID
     workspaceId: ID!
     users: [ID!]
@@ -162,15 +156,9 @@ input UsersFilter {
     queryTypeMask: Int # 1 - email, 2 - username
 }
 
-input Cursor {
-    first: Int!
-    after: String
-}
-
 input WorkspacesFilter {
-    cursor: Cursor!
-    userId: ID!
     nameQuery: String
+    userId: ID!
 }
 
 input WorkspaceInput {
