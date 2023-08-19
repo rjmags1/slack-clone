@@ -3,6 +3,7 @@ import graphql from 'babel-plugin-relay/macro'
 import type { WorkspaceListingFragment$key } from './__generated__/WorkspaceListingFragment.graphql'
 import { useFragment } from 'react-relay'
 import { Link } from 'react-router-dom'
+import Avatar from '../../lib/Avatar'
 
 const WorkspaceListingFragment = graphql`
     fragment WorkspaceListingFragment on Workspace {
@@ -31,16 +32,10 @@ function WorkspaceListing({ workspace, name, id }: WorkspaceListingProps) {
                 rounded-md px-4 py-2 text-white hover:bg-zinc-600"
         >
             <div className="flex flex-row items-center gap-x-2">
-                <img
+                <Avatar
                     src="/default-avatar.png"
                     alt="avatar"
-                    style={{
-                        border: '1px',
-                        borderColor: 'white',
-                        height: '2rem',
-                        borderRadius: '9999px',
-                        backgroundColor: 'black',
-                    }}
+                    className="h-[2rem] bg-black"
                 />
                 <div className="flex flex-col">
                     <h5 className="text-sm">{name}</h5>
