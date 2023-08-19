@@ -2,10 +2,12 @@ import { useLazyLoadQuery } from 'react-relay'
 import type { WorkspacesPageQuery as WorkspacesPageQueryType } from '../../../relay/queries/__generated__/WorkspacesPageQuery.graphql'
 import WorkspacesPageNavbar from './WorkspacesPageNavbar'
 import WorkspacesList from './WorkspacesList'
-import { useContext } from 'react'
+import { useContext, createContext } from 'react'
 import { SessionContext, getSubClaim } from '../../session/SessionProvider'
 import Loading from '../../lib/Loading'
 import WorkspacesPageDataQuery from '../../../relay/queries/WorkspacesPage'
+
+export const WorkspacesPageIdContext = createContext<string | null>(null)
 
 function WorkspacesPage() {
     const claims = useContext(SessionContext)!
@@ -18,24 +20,28 @@ function WorkspacesPage() {
     )
 
     return (
-        <div className="h-full w-full">
-            <WorkspacesPageNavbar />
-            <div
-                className="flex h-[calc(100%_-_2.5rem)] flex-col 
+        <WorkspacesPageIdContext.Provider
+            value={data?.workspacesPageData?.id || null}
+        >
+            <div className="h-full w-full">
+                <WorkspacesPageNavbar />
+                <div
+                    className="flex h-[calc(100%_-_2.5rem)] flex-col 
                     items-center justify-start pb-6"
-            >
-                <header className="my-10">
-                    <h2 className="text-5xl font-bold text-white">
-                        Welcome back!
-                    </h2>
-                </header>
-                {data.workspacesPageData === null ? (
-                    <Loading />
-                ) : (
-                    <WorkspacesList workspaces={data.workspacesPageData} />
-                )}
+                >
+                    <header className="my-10">
+                        <h2 className="text-5xl font-bold text-white">
+                            Welcome back!
+                        </h2>
+                    </header>
+                    {data.workspacesPageData === null ? (
+                        <Loading />
+                    ) : (
+                        <WorkspacesList workspaces={data.workspacesPageData} />
+                    )}
+                </div>
             </div>
-        </div>
+        </WorkspacesPageIdContext.Provider>
     )
 }
 
