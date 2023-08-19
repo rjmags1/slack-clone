@@ -4,25 +4,8 @@ import WorkspacesSearchbar from './WorkspacesSearchbar'
 import WorkspaceListing from './WorkspaceListing'
 import { usePaginationFragment } from 'react-relay'
 import { useState } from 'react'
-
-const WorkspacesListFragment = graphql`
-    fragment WorkspacesListFragment on WorkspacesConnection {
-        totalEdges
-        pageInfo {
-            startCursor
-            endCursor
-            hasNextPage
-            hasPreviousPage
-        }
-        edges {
-            node {
-                id
-                ...WorkspaceListingFragment
-                name
-            }
-        }
-    }
-`
+import WorkspacesListFragment from '../../../relay/fragments/WorkspacesList'
+import { WorkspacesListFragment$key } from '../../../relay/fragments/__generated__/WorkspacesListFragment.graphql'
 
 type WorkspacesListProps = {
     workspaces: WorkspacesListFragment$key

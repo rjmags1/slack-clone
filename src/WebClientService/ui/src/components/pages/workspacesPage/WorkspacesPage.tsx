@@ -1,39 +1,11 @@
-import graphql from 'babel-plugin-relay/macro'
 import { useLazyLoadQuery } from 'react-relay'
-import type { WorkspacesPageQuery as WorkspacesPageQueryType } from './__generated__/WorkspacesPageQuery.graphql'
+import type { WorkspacesPageQuery as WorkspacesPageQueryType } from '../../../relay/queries/__generated__/WorkspacesPageQuery.graphql'
 import WorkspacesPageNavbar from './WorkspacesPageNavbar'
 import WorkspacesList from './WorkspacesList'
 import { useContext } from 'react'
 import { SessionContext, getSubClaim } from '../../session/SessionProvider'
 import Loading from '../../lib/Loading'
-
-const WorkspacesPageDataQuery = graphql`
-    query WorkspacesPageQuery(
-        $userId: ID!
-        $workspacesFilter: WorkspacesFilter!
-    ) {
-        workspacesPageData(
-            userId: $userId
-            workspacesFilter: $workspacesFilter
-        ) {
-            user {
-                id
-                createdAt
-                personalInfo {
-                    email
-                    userNotificationsPreferences {
-                        notifSound
-                    }
-                }
-            }
-            workspaces {
-                ...WorkspacesListFragment
-            }
-        }
-    }
-`
-
-const MAX_WORKSPACES_PER_USER = 100
+import WorkspacesPageDataQuery from '../../../relay/queries/WorkspacesPage'
 
 function WorkspacesPage() {
     const claims = useContext(SessionContext)!
@@ -42,12 +14,6 @@ function WorkspacesPage() {
         WorkspacesPageDataQuery,
         {
             userId: sub,
-            workspacesFilter: {
-                cursor: {
-                    first: MAX_WORKSPACES_PER_USER,
-                },
-                userId: sub,
-            },
         }
     )
 
@@ -66,9 +32,7 @@ function WorkspacesPage() {
                 {data.workspacesPageData === null ? (
                     <Loading />
                 ) : (
-                    <WorkspacesList
-                        workspaces={data.workspacesPageData.workspaces}
-                    />
+                    <WorkspacesList workspaces={data.workspacesPageData} />
                 )}
             </div>
         </div>

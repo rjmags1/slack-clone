@@ -1,21 +1,9 @@
 import Button from '../../lib/Button'
-import graphql from 'babel-plugin-relay/macro'
-import type { WorkspaceListingFragment$key } from './__generated__/WorkspaceListingFragment.graphql'
 import { useFragment } from 'react-relay'
 import { Link } from 'react-router-dom'
 import Avatar from '../../lib/Avatar'
-
-const WorkspaceListingFragment = graphql`
-    fragment WorkspaceListingFragment on Workspace {
-        createdAt
-        description
-        numMembers
-        avatar {
-            id
-            storeKey
-        }
-    }
-`
+import WorkspaceListingFragment from '../../../relay/fragments/WorkspaceListing'
+import { WorkspaceListingFragment$key } from '../../../relay/fragments/__generated__/WorkspaceListingFragment.graphql'
 
 type WorkspaceListingProps = {
     id: string

@@ -4,31 +4,12 @@ import SearchField from '../../lib/SearchField'
 import TagGroup from '../../lib/TagGroup'
 import { Item } from 'react-stately'
 import Button from '../../lib/Button'
-import graphql from 'babel-plugin-relay/macro'
 import { fetchQuery, useMutation, useRelayEnvironment } from 'react-relay'
 import { SessionContext, getSubClaim } from '../../session/SessionProvider'
-import { CreateAvatarMutation } from '../../relay/generic/CreateAvatar'
-import { ValidUserEmailQuery } from '../../relay/generic/ValidUserEmail'
+import ValidUserEmailQuery from '../../../relay/queries/ValidUserEmail'
+import CreateAvatarMutation from '../../../relay/mutations/CreateAvatar'
 import { generateRandomString } from '../../../utils'
-
-const CreateWorkspaceMutation = graphql`
-    mutation CreateWorkspaceFormMutation(
-        $workspace: WorkspaceInput!
-        $creatorId: ID!
-    ) {
-        createWorkspace(workspace: $workspace, creatorId: $creatorId) {
-            id
-            createdAt
-            description
-            name
-            avatar {
-                id
-                storeKey
-            }
-            numMembers
-        }
-    }
-`
+import CreateWorkspaceMutation from '../../../relay/mutations/CreateWorkspace'
 
 type NewWorkspaceSubmissionState =
     | 'NOT_SUBMITTING'
