@@ -1,6 +1,6 @@
 import TestPage from './pages/TestPage'
 import WorkspacesPage from './pages/workspacesPage/WorkspacesPage'
-import RelayEnvironment from './relay/RelayEnvironment'
+import RelayEnvironment from '../relay/RelayEnvironment'
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import SessionProvider from './session/SessionProvider'
 import AuthGuard from './session/AuthGuard'

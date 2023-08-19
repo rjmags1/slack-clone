@@ -14,7 +14,7 @@ function useClaims(): {
     claims: Claim[] | null
 } {
     const [claims, setClaims] = useState<Claim[] | null>(null)
-    const [loading, setLoading] = useState<boolean>(true)
+    const [loading, setLoading] = useState(true)
     const [lastCheckedAt, setLastCheckedAt] = useState(Date.now())
 
     useEffect(() => {
@@ -49,8 +49,11 @@ function useClaims(): {
             setLastCheckedAt(Date.now())
         }
 
-        setInterval(checkSession, THREE_MIN_MS)
+        if (claims === null) {
+            setLoading(true)
+        }
         getSession()
+        setInterval(checkSession, THREE_MIN_MS)
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 

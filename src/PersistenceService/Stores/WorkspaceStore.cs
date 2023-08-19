@@ -278,7 +278,7 @@ public class WorkspaceStore : Store
         Guid userId,
         int first,
         FieldTree connectionTree,
-        DateTime? after = null
+        Guid? after = null
     )
     {
         var memberships = _context.WorkspaceMembers
@@ -286,11 +286,16 @@ public class WorkspaceStore : Store
             .Where(wm => wm.UserId == userId);
         if (!(after is null))
         {
-            memberships = memberships.Where(wm => wm.JoinedAt > after);
+            var afterJoinedAt = _context.WorkspaceMembers
+                .Where(wm => wm.UserId == after)
+                .Select(wm => wm.JoinedAt)
+                .First();
+            memberships = memberships.Where(wm => wm.JoinedAt > afterJoinedAt);
         }
         IQueryable<Workspace> workspaces = memberships
             .Take(first + 1)
             .Select(wm => wm.Workspace);
+
         var dynamicWorkspaces = await workspaces
             .Select(
                 DynamicLinqUtils.NodeFieldToDynamicSelectString(connectionTree)

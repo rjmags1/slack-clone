@@ -2,44 +2,21 @@ import { Item } from 'react-stately'
 import List from '../../lib/List'
 import WorkspacesSearchbar from './WorkspacesSearchbar'
 import WorkspaceListing from './WorkspaceListing'
-import graphql from 'babel-plugin-relay/macro'
-import type { WorkspacesListFragment$key } from './__generated__/WorkspacesListFragment.graphql'
-import { useFragment } from 'react-relay'
-import { useEffect, useState } from 'react'
-
-const WorkspacesListFragment = graphql`
-    fragment WorkspacesListFragment on WorkspacesConnection {
-        totalEdges
-        pageInfo {
-            startCursor
-            endCursor
-            hasNextPage
-            hasPreviousPage
-        }
-        edges {
-            node {
-                id
-                ...WorkspaceListingFragment
-                name
-            }
-        }
-    }
-`
+import { usePaginationFragment } from 'react-relay'
+import { useState } from 'react'
+import WorkspacesListFragment from '../../../relay/fragments/WorkspacesList'
+import { WorkspacesListFragment$key } from '../../../relay/fragments/__generated__/WorkspacesListFragment.graphql'
 
 type WorkspacesListProps = {
     workspaces: WorkspacesListFragment$key
 }
 
 function WorkspacesList({ workspaces }: WorkspacesListProps) {
-    const data = useFragment(WorkspacesListFragment, workspaces)
+    const { data, loadNext } = usePaginationFragment(
+        WorkspacesListFragment,
+        workspaces
+    )
     const [searchText, setSearchText] = useState('')
-    const [renderedEdges, setRenderedEdges] = useState(data.edges)
-
-    useEffect(() => {
-        setRenderedEdges(
-            data.edges.filter((e) => e.node.name.includes(searchText))
-        )
-    }, [data.edges, searchText])
 
     return (
         <div
@@ -51,7 +28,7 @@ function WorkspacesList({ workspaces }: WorkspacesListProps) {
                 setSearchText={setSearchText}
             />
             <List className="flex min-w-[36rem] flex-col gap-y-2 px-4 py-2">
-                {renderedEdges.length === 0 ? (
+                {data.workspaces.totalEdges === 0 ? (
                     <Item>
                         <h6
                             className="flex h-12 w-full items-center 
@@ -61,16 +38,18 @@ function WorkspacesList({ workspaces }: WorkspacesListProps) {
                         </h6>
                     </Item>
                 ) : (
-                    renderedEdges.map((w) => (
-                        <Item>
-                            <WorkspaceListing
-                                id={w.node.id}
-                                key={w.node.id}
-                                workspace={w.node}
-                                name={w.node.name}
-                            />
-                        </Item>
-                    ))
+                    data.workspaces.edges
+                        .filter((w) => w.node.name.includes(searchText))
+                        .map((w) => (
+                            <Item>
+                                <WorkspaceListing
+                                    id={w.node.id}
+                                    key={w.node.id}
+                                    workspace={w.node}
+                                    name={w.node.name}
+                                />
+                            </Item>
+                        ))
                 )}
             </List>
         </div>

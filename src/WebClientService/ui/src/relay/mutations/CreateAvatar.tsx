@@ -1,6 +1,6 @@
 import graphql from 'babel-plugin-relay/macro'
 
-export const CreateAvatarMutation = graphql`
+const CreateAvatarMutation = graphql`
     mutation CreateAvatarMutation($file: FileInput!) {
         createAvatar(file: $file) {
             id
@@ -9,3 +9,5 @@ export const CreateAvatarMutation = graphql`
         }
     }
 `
+
+export default CreateAvatarMutation

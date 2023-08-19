@@ -32,47 +32,12 @@ public class SlackCloneQuery : ObjectGraphType<object>
                 "constraint",
                 "equivalent-userId"
             )
-            .Arguments(
-                new QueryArguments(
-                    new QueryArgument<NonNullGraphType<IdGraphType>>
-                    {
-                        Name = "userId"
-                    },
-                    new QueryArgument<
-                        NonNullGraphType<WorkspacesFilterInputType>
-                    >
-                    {
-                        Name = "workspacesFilter"
-                    }
-                )
-            )
-            .ResolveAsync(async context =>
+            .Resolve(context =>
             {
-                var userId = context.GetArgument<Guid>("userId");
                 var fragments = FieldAnalyzer.GetFragments(context);
-                FieldInfo userFieldsInfo = FieldAnalyzer.User(
-                    context,
-                    fragments
-                );
-                var workspacesFilter = context.GetArgument<WorkspacesFilter>(
-                    "workspacesFilter"
-                );
-                FieldInfo workspacesFieldsInfo = FieldAnalyzer.Workspaces(
-                    context,
-                    fragments
-                );
+                context.UserContext.Add("fragments", fragments);
 
-                return new WorkspacesPageData
-                {
-                    User = await data.GetUserById(
-                        userId,
-                        userFieldsInfo.SubfieldNames
-                    ),
-                    Workspaces = await data.GetWorkspaces(
-                        workspacesFilter,
-                        workspacesFieldsInfo
-                    ),
-                };
+                return new WorkspacesPageData { };
             });
     }
 }

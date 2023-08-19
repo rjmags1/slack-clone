@@ -65,10 +65,7 @@ public static class FieldAnalyzer
         Dictionary<string, string> fragments
     )
     {
-        string workspacesFieldSlice = GetFieldSliceFromParentContext(
-            context,
-            "workspaces"
-        );
+        string workspacesFieldSlice = GetFieldSlice(context);
         return CollectFields(workspacesFieldSlice, fragments);
     }
 
@@ -77,7 +74,7 @@ public static class FieldAnalyzer
         Dictionary<string, string> fragments
     )
     {
-        string userFieldSlice = GetFieldSliceFromParentContext(context, "user");
+        string userFieldSlice = GetFieldSlice(context);
         return CollectFields(userFieldSlice, fragments);
     }
 

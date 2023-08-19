@@ -6,14 +6,10 @@ function LogoutBtn() {
     const claims = useContext(SessionContext)
 
     const logout = () => {
-        if (claims) {
-            const logoutUrl = claims.find(
-                (claim: any) => claim.type === 'bff:logout_url'
-            )!.value as string
-            window.location.href = logoutUrl
-        } else {
-            window.location.href = '/bff/logout'
-        }
+        const logoutUrl = claims!.find(
+            (claim: any) => claim.type === 'bff:logout_url'
+        )!.value as string
+        window.location.href = logoutUrl
     }
 
     return (

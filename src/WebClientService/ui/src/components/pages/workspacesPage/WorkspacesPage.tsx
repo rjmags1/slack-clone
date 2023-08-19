@@ -1,39 +1,13 @@
-import graphql from 'babel-plugin-relay/macro'
 import { useLazyLoadQuery } from 'react-relay'
-import type { WorkspacesPageQuery as WorkspacesPageQueryType } from './__generated__/WorkspacesPageQuery.graphql'
+import type { WorkspacesPageQuery as WorkspacesPageQueryType } from '../../../relay/queries/__generated__/WorkspacesPageQuery.graphql'
 import WorkspacesPageNavbar from './WorkspacesPageNavbar'
 import WorkspacesList from './WorkspacesList'
-import { useContext } from 'react'
+import { useContext, createContext } from 'react'
 import { SessionContext, getSubClaim } from '../../session/SessionProvider'
 import Loading from '../../lib/Loading'
+import WorkspacesPageDataQuery from '../../../relay/queries/WorkspacesPage'
 
-const WorkspacesPageDataQuery = graphql`
-    query WorkspacesPageQuery(
-        $userId: ID!
-        $workspacesFilter: WorkspacesFilter!
-    ) {
-        workspacesPageData(
-            userId: $userId
-            workspacesFilter: $workspacesFilter
-        ) {
-            user {
-                id
-                createdAt
-                personalInfo {
-                    email
-                    userNotificationsPreferences {
-                        notifSound
-                    }
-                }
-            }
-            workspaces {
-                ...WorkspacesListFragment
-            }
-        }
-    }
-`
-
-const MAX_WORKSPACES_PER_USER = 100
+export const WorkspacesPageIdContext = createContext<string | null>(null)
 
 function WorkspacesPage() {
     const claims = useContext(SessionContext)!
@@ -42,36 +16,32 @@ function WorkspacesPage() {
         WorkspacesPageDataQuery,
         {
             userId: sub,
-            workspacesFilter: {
-                cursor: {
-                    first: MAX_WORKSPACES_PER_USER,
-                },
-                userId: sub,
-            },
         }
     )
 
     return (
-        <div className="h-full w-full">
-            <WorkspacesPageNavbar />
-            <div
-                className="flex h-[calc(100%_-_2.5rem)] flex-col 
+        <WorkspacesPageIdContext.Provider
+            value={data?.workspacesPageData?.id || null}
+        >
+            <div className="h-full w-full">
+                <WorkspacesPageNavbar />
+                <div
+                    className="flex h-[calc(100%_-_2.5rem)] flex-col 
                     items-center justify-start pb-6"
-            >
-                <header className="my-10">
-                    <h2 className="text-5xl font-bold text-white">
-                        Welcome back!
-                    </h2>
-                </header>
-                {data.workspacesPageData === null ? (
-                    <Loading />
-                ) : (
-                    <WorkspacesList
-                        workspaces={data.workspacesPageData.workspaces}
-                    />
-                )}
+                >
+                    <header className="my-10">
+                        <h2 className="text-5xl font-bold text-white">
+                            Welcome back!
+                        </h2>
+                    </header>
+                    {data.workspacesPageData === null ? (
+                        <Loading />
+                    ) : (
+                        <WorkspacesList workspaces={data.workspacesPageData} />
+                    )}
+                </div>
             </div>
-        </div>
+        </WorkspacesPageIdContext.Provider>
     )
 }
 

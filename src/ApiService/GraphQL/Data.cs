@@ -76,11 +76,13 @@ public class SlackCloneData
     }
 
     public async Task<Connection<Workspace>> GetWorkspaces(
+        int first,
+        Guid? after,
         WorkspacesFilter filter,
         FieldInfo fieldInfo
     )
     {
-        if (!(filter.NameQuery is null))
+        if (filter.NameQuery is not null)
         {
             throw new NotImplementedException();
         }
@@ -97,9 +99,9 @@ public class SlackCloneData
         (List<dynamic> dbWorkspaces, bool lastPage) =
             await workspaceStore.LoadWorkspaces(
                 filter.UserId,
-                filter.Cursor.First,
+                first,
                 fieldInfo.FieldTree,
-                (DateTime?)filter.Cursor.After
+                after
             );
 
         List<Workspace> workspaces = new List<Workspace>();
@@ -112,7 +114,7 @@ public class SlackCloneData
 
         return ModelToObjectConverters.ToConnection<Workspace>(
             workspaces,
-            filter.Cursor.After is null,
+            after is null,
             lastPage
         );
     }

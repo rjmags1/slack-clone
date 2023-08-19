@@ -4,31 +4,15 @@ import SearchField from '../../lib/SearchField'
 import TagGroup from '../../lib/TagGroup'
 import { Item } from 'react-stately'
 import Button from '../../lib/Button'
-import graphql from 'babel-plugin-relay/macro'
 import { fetchQuery, useMutation, useRelayEnvironment } from 'react-relay'
 import { SessionContext, getSubClaim } from '../../session/SessionProvider'
-import { CreateAvatarMutation } from '../../relay/generic/CreateAvatar'
-import { ValidUserEmailQuery } from '../../relay/generic/ValidUserEmail'
+import ValidUserEmailQuery from '../../../relay/queries/ValidUserEmail'
+import CreateAvatarMutation from '../../../relay/mutations/CreateAvatar'
 import { generateRandomString } from '../../../utils'
-
-const CreateWorkspaceMutation = graphql`
-    mutation CreateWorkspaceFormMutation(
-        $workspace: WorkspaceInput!
-        $creatorId: ID!
-    ) {
-        createWorkspace(workspace: $workspace, creatorId: $creatorId) {
-            id
-            createdAt
-            description
-            name
-            avatar {
-                id
-                storeKey
-            }
-            numMembers
-        }
-    }
-`
+import CreateWorkspaceMutation from '../../../relay/mutations/CreateWorkspace'
+import { CreateWorkspaceFormMutation$data } from '../../../relay/mutations/__generated__/CreateWorkspaceFormMutation.graphql'
+import { ConnectionHandler } from 'react-relay'
+import { WorkspacesPageIdContext } from './WorkspacesPage'
 
 type NewWorkspaceSubmissionState =
     | 'NOT_SUBMITTING'
@@ -46,6 +30,7 @@ function CreateWorkspaceForm({ close }: CreateWorkspaceFormProps) {
     const [commitAvatarMutation] = useMutation(CreateAvatarMutation)
 
     const claims = useContext(SessionContext)!
+    const pageId = useContext(WorkspacesPageIdContext)
 
     const fileInputRef = useRef<HTMLInputElement>(null)
     const [submissionState, setSubmissionState] =
@@ -110,7 +95,33 @@ function CreateWorkspaceForm({ close }: CreateWorkspaceFormProps) {
                 if (errors === null) {
                     setSubmissionState('COMPLETE')
                     close()
+                } else {
+                    for (const e of errors) {
+                        console.error(e)
+                    }
                 }
+            },
+            updater: (store, data) => {
+                const { createWorkspace: newWorkspace } =
+                    data as CreateWorkspaceFormMutation$data
+                if (!pageId) return
+                const pageRelayRecord = store.get(pageId)!
+                const newWorkspaceRelayRecord = store.get(newWorkspace!.id)!
+                const workspacesConnectionRelayRecord =
+                    ConnectionHandler.getConnection(
+                        pageRelayRecord,
+                        'WorkspacesListFragment_workspaces'
+                    )!
+                const edge = ConnectionHandler.createEdge(
+                    store,
+                    workspacesConnectionRelayRecord,
+                    newWorkspaceRelayRecord,
+                    'WorkspacesConnectionEdge'
+                )
+                ConnectionHandler.insertEdgeBefore(
+                    workspacesConnectionRelayRecord,
+                    edge
+                )
             },
         })
         // eslint-disable-next-line react-hooks/exhaustive-deps

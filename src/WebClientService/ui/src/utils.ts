@@ -10,3 +10,8 @@ export const generateRandomString = (length: number) => {
 
     return result
 }
+
+export const uploadToStore = (file: File): string => {
+    // TODO
+    return generateRandomString(64)
+}
