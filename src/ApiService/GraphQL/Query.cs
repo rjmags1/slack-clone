@@ -1,7 +1,7 @@
 using GraphQL;
 using GraphQL.Types;
-using PersistenceService.Utils.GraphQL;
 using SlackCloneGraphQL.Types;
+using SlackCloneGraphQL.Types.Connections;
 
 namespace SlackCloneGraphQL;
 
@@ -10,11 +10,6 @@ public class SlackCloneQuery : ObjectGraphType<object>
     public SlackCloneQuery(SlackCloneData data)
     {
         Name = "query";
-        Field<StringGraphType>("test")
-            .Resolve(context =>
-            {
-                return "Hello";
-            });
         Field<ValidationResultType>("validUserEmail")
             .Argument<NonNullGraphType<StringGraphType>>("email")
             .ResolveAsync(async context =>
@@ -38,6 +33,27 @@ public class SlackCloneQuery : ObjectGraphType<object>
                 context.UserContext.Add("fragments", fragments);
 
                 return new WorkspacesPageData { };
+            });
+        Field<RelayNodeInterface>("node")
+            .Argument<NonNullGraphType<IdGraphType>>("id")
+            .Resolve(context =>
+            {
+                if (context.UserContext["queryName"] is not string queryName)
+                {
+                    throw new InvalidOperationException(
+                        "Queries with node field must be named"
+                    );
+                }
+                var id = context.GetArgument<Guid>("id");
+                if (queryName == "WorkspacesListPaginationQuery")
+                {
+                    var fragments = FieldAnalyzer.GetFragments(context);
+                    context.UserContext.Add("fragments", fragments);
+
+                    return new WorkspacesPageData { Id = id };
+                }
+
+                return null;
             });
     }
 }

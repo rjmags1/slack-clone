@@ -4,7 +4,6 @@ import WorkspacesPageNavbar from './WorkspacesPageNavbar'
 import WorkspacesList from './WorkspacesList'
 import { useContext, createContext } from 'react'
 import { SessionContext, getSubClaim } from '../../session/SessionProvider'
-import Loading from '../../lib/Loading'
 import WorkspacesPageDataQuery from '../../../relay/queries/WorkspacesPage'
 
 export const WorkspacesPageIdContext = createContext<string | null>(null)
@@ -34,9 +33,7 @@ function WorkspacesPage() {
                             Welcome back!
                         </h2>
                     </header>
-                    {data.workspacesPageData === null ? (
-                        <Loading />
-                    ) : (
+                    {data.workspacesPageData && (
                         <WorkspacesList workspaces={data.workspacesPageData} />
                     )}
                 </div>

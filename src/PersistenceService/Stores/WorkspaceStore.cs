@@ -287,10 +287,12 @@ public class WorkspaceStore : Store
         if (!(after is null))
         {
             var afterJoinedAt = _context.WorkspaceMembers
-                .Where(wm => wm.UserId == after)
+                .Where(wm => wm.UserId == userId && wm.WorkspaceId == after)
                 .Select(wm => wm.JoinedAt)
                 .First();
-            memberships = memberships.Where(wm => wm.JoinedAt > afterJoinedAt);
+            memberships = memberships.Where(
+                wm => wm.UserId == userId && wm.JoinedAt < afterJoinedAt
+            );
         }
         IQueryable<Workspace> workspaces = memberships
             .Take(first + 1)

@@ -1,5 +1,5 @@
 import useClaims, { Claim } from '../../hooks/useClaims'
-import Loading from '../lib/Loading'
+import LoadingSpinner from '../lib/LoadingSpinner'
 import { createContext } from 'react'
 
 export const SessionContext = createContext<Claim[] | null>(null)
@@ -12,7 +12,11 @@ function SessionProvider({ children }: { children: React.ReactNode }) {
 
     return (
         <SessionContext.Provider value={claims}>
-            {loading ? <Loading /> : children}
+            {loading ? (
+                <LoadingSpinner className="flex h-screen w-screen items-center justify-center" />
+            ) : (
+                children
+            )}
         </SessionContext.Provider>
     )
 }

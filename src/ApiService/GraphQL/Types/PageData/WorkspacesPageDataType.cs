@@ -11,8 +11,9 @@ public class WorkspacesPageDataType : ObjectGraphType<WorkspacesPageData>
     public WorkspacesPageDataType(SlackCloneData data)
     {
         Name = "WorkspacesPageData";
+        Interface<RelayNodeInterface>();
         Field<NonNullGraphType<IdGraphType>>("id")
-            .Resolve(context => Guid.NewGuid());
+            .Resolve(context => context.Source.Id ?? Guid.NewGuid());
         Field<NonNullGraphType<UserType>>("user")
             .Description("The authenticated user")
             .Argument<NonNullGraphType<IdGraphType>>("id")
@@ -74,6 +75,7 @@ public class WorkspacesPageDataType : ObjectGraphType<WorkspacesPageData>
 
 public class WorkspacesPageData
 {
+    public Guid? Id { get; set; }
 #pragma warning disable CS8618
     public User User { get; set; }
     public Connection<Workspace> Workspaces { get; set; }

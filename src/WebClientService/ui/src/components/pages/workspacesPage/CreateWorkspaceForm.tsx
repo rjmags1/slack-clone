@@ -1,40 +1,22 @@
-import { useContext, useEffect, useRef, useState } from 'react'
+import { useContext, useEffect, useState } from 'react'
 import InputTextField from '../../lib/InputTextField'
 import SearchField from '../../lib/SearchField'
 import TagGroup from '../../lib/TagGroup'
 import { Item } from 'react-stately'
 import Button from '../../lib/Button'
-import { fetchQuery, useMutation, useRelayEnvironment } from 'react-relay'
 import { SessionContext, getSubClaim } from '../../session/SessionProvider'
-import ValidUserEmailQuery from '../../../relay/queries/ValidUserEmail'
-import CreateAvatarMutation from '../../../relay/mutations/CreateAvatar'
-import { generateRandomString } from '../../../utils'
-import CreateWorkspaceMutation from '../../../relay/mutations/CreateWorkspace'
-import { CreateWorkspaceFormMutation$data } from '../../../relay/mutations/__generated__/CreateWorkspaceFormMutation.graphql'
-import { ConnectionHandler } from 'react-relay'
-import { WorkspacesPageIdContext } from './WorkspacesPage'
-
-type NewWorkspaceSubmissionState =
-    | 'NOT_SUBMITTING'
-    | 'UPLOADING_AVATAR'
-    | 'START_WORKSPACE_COMMIT'
-    | 'COMPLETE'
+import useCreateAvatar from '../../../hooks/useCreateAvatar'
+import useValidateEmail from '../../../hooks/useValidateEmail'
+import useCreateWorkspace from '../../../hooks/useCreateWorkspace'
+import FileInput from '../../lib/FileInput'
 
 type CreateWorkspaceFormProps = {
     close: () => void
 }
 
 function CreateWorkspaceForm({ close }: CreateWorkspaceFormProps) {
-    const relayEnv = useRelayEnvironment()
-    const [commitWorkspaceMutation] = useMutation(CreateWorkspaceMutation)
-    const [commitAvatarMutation] = useMutation(CreateAvatarMutation)
-
     const claims = useContext(SessionContext)!
-    const pageId = useContext(WorkspacesPageIdContext)
 
-    const fileInputRef = useRef<HTMLInputElement>(null)
-    const [submissionState, setSubmissionState] =
-        useState<NewWorkspaceSubmissionState>('NOT_SUBMITTING')
     const [name, setName] = useState<string>('')
     const [description, setDescription] = useState<string>('')
     const [avatar, setAvatar] = useState<File | null>(null)
@@ -43,126 +25,54 @@ function CreateWorkspaceForm({ close }: CreateWorkspaceFormProps) {
     const [searchEmailText, setEmailSearchText] = useState<string>('')
     const [submittedSearchEmailText, setSubmittedSearchEmailText] =
         useState<string>('')
-    const [alertInvalidEmail, setAlertInvalidEmail] = useState<boolean>(false)
+
+    const {
+        createAvatar,
+        data: uploadedAvatar,
+        errors: avatarUploadErrors,
+    } = useCreateAvatar(avatar, getSubClaim(claims))
+    const { createWorkspace } = useCreateWorkspace()
+    const { valid: validEmail } = useValidateEmail({
+        alertTime: 3 * 1000,
+        email: submittedSearchEmailText,
+        exclude: memberEmails,
+        onValidated: () => {
+            setEmailSearchText('')
+            setMemberEmails([submittedSearchEmailText, ...memberEmails])
+        },
+    })
+
+    const createNewWorkspace = () =>
+        createWorkspace({
+            sub: getSubClaim(claims),
+            name,
+            description,
+            avatarId: avatarId,
+            invitedEmails: memberEmails,
+            closeModal: close,
+        })
+
+    const initSubmit = () => (avatar ? createAvatar() : createNewWorkspace())
 
     useEffect(() => {
-        if (submittedSearchEmailText === '') return
-        if (memberEmails.includes(submittedSearchEmailText)) {
-            setAlertInvalidEmail(true)
+        if (!uploadedAvatar && !avatarUploadErrors) return
+        if (uploadedAvatar && !avatarId) {
+            setAvatarId(uploadedAvatar.createAvatar!.id)
             return
         }
-
-        fetchQuery(relayEnv, ValidUserEmailQuery, {
-            email: submittedSearchEmailText,
-        }).subscribe({
-            next: (data: any) => {
-                if (data.validUserEmail.valid) {
-                    setEmailSearchText('')
-                    setMemberEmails([submittedSearchEmailText, ...memberEmails])
-                } else {
-                    setAlertInvalidEmail(true)
-                }
-            },
-            error: (error: any) => console.log(error),
-        })
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [submittedSearchEmailText])
-
-    useEffect(() => {
-        if (!alertInvalidEmail) return
-
-        setTimeout(() => {
-            setAlertInvalidEmail(false)
-        }, 3000)
-    }, [alertInvalidEmail])
-
-    useEffect(() => {
-        if (submissionState !== 'START_WORKSPACE_COMMIT') {
+        if (avatarUploadErrors) {
+            setAvatarId(null)
+            for (const e of avatarUploadErrors) {
+                console.error(e)
+            }
             return
         }
+        if (avatarId) {
+            createNewWorkspace()
+        }
 
-        commitWorkspaceMutation({
-            variables: {
-                creatorId: getSubClaim(claims),
-                workspace: {
-                    name,
-                    description,
-                    avatarId: avatarId,
-                    invitedUserEmails: memberEmails,
-                },
-            },
-            onCompleted: (response, errors) => {
-                if (errors === null) {
-                    setSubmissionState('COMPLETE')
-                    close()
-                } else {
-                    for (const e of errors) {
-                        console.error(e)
-                    }
-                }
-            },
-            updater: (store, data) => {
-                const { createWorkspace: newWorkspace } =
-                    data as CreateWorkspaceFormMutation$data
-                if (!pageId) return
-                const pageRelayRecord = store.get(pageId)!
-                const newWorkspaceRelayRecord = store.get(newWorkspace!.id)!
-                const workspacesConnectionRelayRecord =
-                    ConnectionHandler.getConnection(
-                        pageRelayRecord,
-                        'WorkspacesListFragment_workspaces'
-                    )!
-                const edge = ConnectionHandler.createEdge(
-                    store,
-                    workspacesConnectionRelayRecord,
-                    newWorkspaceRelayRecord,
-                    'WorkspacesConnectionEdge'
-                )
-                ConnectionHandler.insertEdgeBefore(
-                    workspacesConnectionRelayRecord,
-                    edge
-                )
-            },
-        })
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [submissionState])
-
-    const handleFileUpload = () => {
-        const uploadedFiles = fileInputRef.current?.files
-        if (uploadedFiles && uploadedFiles.length > 0) {
-            setAvatar(uploadedFiles[uploadedFiles.length - 1])
-        }
-    }
-
-    const uploadToStore = (file: File): string => {
-        // TODO
-        return generateRandomString(64)
-    }
-
-    const initSubmit = async () => {
-        setSubmissionState('UPLOADING_AVATAR')
-        if (avatar !== null) {
-            const storeKey = uploadToStore(avatar)
-
-            commitAvatarMutation({
-                variables: {
-                    file: {
-                        name: avatar.name,
-                        storeKey,
-                        uploaderId: getSubClaim(claims),
-                    },
-                },
-                onCompleted: (data: any, errors) => {
-                    if (errors === null) {
-                        setAvatarId(data.createAvatar.id)
-                        setSubmissionState('START_WORKSPACE_COMMIT')
-                    }
-                },
-            })
-        } else {
-            setSubmissionState('START_WORKSPACE_COMMIT')
-        }
-    }
+    }, [uploadedAvatar, avatarId])
 
     return (
         <form className="flex h-full w-full flex-col gap-y-3 text-sm">
@@ -172,22 +82,19 @@ function CreateWorkspaceForm({ close }: CreateWorkspaceFormProps) {
                 className="mb-1 flex max-w-[16rem] flex-col gap-y-1 truncate 
                     font-extralight"
             >
-                <label htmlFor="workspace-avatar">Avatar</label>
-                <input
-                    ref={fileInputRef}
-                    type="file"
+                <FileInput
+                    label="Avatar"
                     id="workspace-avatar"
-                    name="workspace-avatar"
                     accept="image/png, image/jpeg, image/jpg"
-                    onChange={handleFileUpload}
                     className="text-xs font-extralight"
+                    setFile={setAvatar}
                 />
             </div>
             <SearchField
                 onClear={() => setEmailSearchText('')}
                 onChange={setEmailSearchText}
                 onSubmit={() => setSubmittedSearchEmailText(searchEmailText)}
-                alertInvalidSearch={alertInvalidEmail}
+                alertInvalidSearch={!validEmail}
                 errorMessage="Invalid email"
                 label="Add members by email"
                 value={searchEmailText}

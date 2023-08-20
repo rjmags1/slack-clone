@@ -13,6 +13,8 @@ using System.Security.Cryptography;
 using System.Text.Json;
 using ApiService.Auth;
 using Microsoft.AspNetCore.Authorization;
+using GraphQL.Types;
+using SlackCloneGraphQL.Types;
 
 DotNetEnv.Env.Load();
 

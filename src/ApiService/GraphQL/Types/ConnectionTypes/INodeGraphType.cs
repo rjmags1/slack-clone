@@ -9,3 +9,11 @@ public interface INode
 {
     public Guid Id { get; set; }
 }
+
+public class RelayNodeInterface : InterfaceGraphType<INode>
+{
+    public RelayNodeInterface()
+    {
+        Field<NonNullGraphType<IdGraphType>>("id");
+    }
+}
