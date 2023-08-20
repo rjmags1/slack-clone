@@ -4,7 +4,7 @@ const WorkspacesListFragment = graphql`
     fragment WorkspacesListFragment on WorkspacesPageData
     @refetchable(queryName: "WorkspacesListPaginationQuery")
     @argumentDefinitions(
-        first: { type: "Int", defaultValue: 30 }
+        first: { type: "Int", defaultValue: 10 }
         after: { type: "ID" }
         filter: { type: "WorkspacesFilter" }
     ) {
