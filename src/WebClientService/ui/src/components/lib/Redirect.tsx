@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import LoadingSpinner from './LoadingSpinner'
 
 function Redirect({ to }: { to: string }) {
     useEffect(() => {
@@ -6,7 +7,9 @@ function Redirect({ to }: { to: string }) {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
-    return <span>redirecting...</span>
+    return (
+        <LoadingSpinner className="flex h-screen w-screen items-center justify-center" />
+    )
 }
 
 export default Redirect
