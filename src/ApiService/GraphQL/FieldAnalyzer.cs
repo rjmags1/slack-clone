@@ -17,6 +17,21 @@ namespace SlackCloneGraphQL;
 /// </summary>
 public static class FieldAnalyzer
 {
+    public static string? GetQueryName(string? query)
+    {
+        if (query is null)
+        {
+            return null;
+        }
+
+        int start = 6;
+        int stop = Math.Min(
+            query.IndexOf('(', start),
+            query.IndexOf(' ', start)
+        );
+        return query[start..stop];
+    }
+
     public static Dictionary<string, string> GetFragments(
         IResolveFieldContext context
     )

@@ -45,7 +45,9 @@ namespace ApiService.Controllers
             {
                 var userContext = new GraphQLUserContext
                 {
-                    { "claims", HttpContext.User }
+                    { "claims", HttpContext.User },
+                    { "queryName", FieldAnalyzer.GetQueryName(request.Query) },
+                    { "query", request.Query }
                 };
                 s.Schema = _schema;
                 s.Query = request.Query;
