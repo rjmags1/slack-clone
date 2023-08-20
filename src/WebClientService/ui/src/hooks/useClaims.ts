@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 
 const SESSION_URL = '/bff/user'
 
-const THREE_MIN_MS = 180 * 1000
+const THREE_MIN_MS = 3 * 60 * 1000
 
 export type Claim = {
     type: string
