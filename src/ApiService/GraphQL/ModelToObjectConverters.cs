@@ -24,24 +24,21 @@ public static class ModelToObjectConverters
 {
     private const string DEFAULT_ONLINE_STATUS = "offline";
 
-    private static readonly File DefaultAvatar = new File
-    {
-        Id = Guid.Empty,
-        Name = "DEFAULT_AVATAR",
-        StoreKey = "DEFAULT_AVATAR",
-        UploadedAt = default(DateTime)
-    };
+    private static readonly File DefaultAvatar =
+        new()
+        {
+            Id = Guid.Empty,
+            Name = "DEFAULT_AVATAR",
+            StoreKey = "DEFAULT_AVATAR",
+        };
 
-    private static readonly Theme DefaultTheme = new Theme
-    {
-        Id = Guid.Empty,
-        Name = "DEFAULT_THEME"
-    };
+    private static readonly Theme DefaultTheme =
+        new() { Id = Guid.Empty, Name = "DEFAULT_THEME" };
 
     public static Workspace ConvertDynamicWorkspace(dynamic modelWorkspace)
     {
         var expando = DynamicUtils.ToExpando(modelWorkspace);
-        Workspace workspace = new Workspace();
+        Workspace workspace = new();
         if (DynamicUtils.HasProperty(expando, nameof(Workspace.Id)))
         {
             workspace.Id = JsonSerializer.Deserialize<Guid>(expando.Id);
@@ -91,32 +88,34 @@ public static class ModelToObjectConverters
         IEnumerable<string> requestedFields
     )
     {
-        User user = new User
-        {
-            Id = modelUser.Id,
-            Avatar = ConvertAvatar(modelUser.Avatar),
-            OnlineStatus = modelUser.OnlineStatus ?? DEFAULT_ONLINE_STATUS,
-            OnlineStatusUntil = modelUser.OnlineStatusUntil,
-            Username = modelUser.UserName,
-            CreatedAt = modelUser.CreatedAt,
-        };
+        User user =
+            new()
+            {
+                Id = modelUser.Id,
+                Avatar = ConvertAvatar(modelUser.Avatar),
+                OnlineStatus = modelUser.OnlineStatus ?? DEFAULT_ONLINE_STATUS,
+                OnlineStatusUntil = modelUser.OnlineStatusUntil,
+                Username = modelUser.UserName,
+                CreatedAt = modelUser.CreatedAt,
+            };
         if (
             requestedFields.Contains(
                 StringUtils.ToLowerFirstLetter(nameof(User.PersonalInfo))
             )
         )
         {
-            UserInfo userInfo = new UserInfo
-            {
-                Email = modelUser.Email,
-                EmailConfirmed = modelUser.EmailConfirmed,
-                FirstName = modelUser.FirstName,
-                LastName = modelUser.LastName,
-                Theme = ConvertTheme(modelUser.Theme),
-                Timezone = modelUser.Timezone,
-                UserNotificationsPreferences =
-                    ConvertUserNotificationsPreferences(modelUser)
-            };
+            UserInfo userInfo =
+                new()
+                {
+                    Email = modelUser.Email,
+                    EmailConfirmed = modelUser.EmailConfirmed,
+                    FirstName = modelUser.FirstName,
+                    LastName = modelUser.LastName,
+                    Theme = ConvertTheme(modelUser.Theme),
+                    Timezone = modelUser.Timezone,
+                    UserNotificationsPreferences =
+                        ConvertUserNotificationsPreferences(modelUser)
+                };
             user.PersonalInfo = userInfo;
         }
 
@@ -193,7 +192,7 @@ public static class ModelToObjectConverters
     )
     {
         var expando = DynamicUtils.ToExpando(modelWorkspaceMember);
-        WorkspaceMember member = new WorkspaceMember();
+        WorkspaceMember member = new();
         if (DynamicUtils.HasProperty(expando, nameof(WorkspaceMember.Id)))
         {
             member.Id = JsonSerializer.Deserialize<Guid>(expando.Id);
@@ -250,7 +249,7 @@ public static class ModelToObjectConverters
         List<string> adminFields
     )
     {
-        WorkspaceMemberInfo memberInfo = new WorkspaceMemberInfo();
+        WorkspaceMemberInfo memberInfo = new();
         if (
             DynamicUtils.HasProperty(
                 expandoModelWorkspaceMember,
@@ -278,7 +277,7 @@ public static class ModelToObjectConverters
                 expandoModelWorkspaceMember,
                 nameof(WorkspaceMemberInfo.WorkspaceAdminPermissions)
             )
-            && !(expandoModelWorkspaceMember.WorkspaceAdminPermissions is null)
+            && expandoModelWorkspaceMember.WorkspaceAdminPermissions is not null
         )
         {
             Models.WorkspaceAdminPermissions modelPermissions =

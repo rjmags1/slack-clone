@@ -11,12 +11,22 @@ public class WorkspacesPageDataType : ObjectGraphType<WorkspacesPageData>
     public WorkspacesPageDataType(SlackCloneData data)
     {
         Name = "WorkspacesPageData";
-        Interface<RelayNodeInterface>();
+        Interface<RelayNodeInterfaceType>();
         Field<NonNullGraphType<IdGraphType>>("id")
+            .Description(
+                "A UUID for page data - included for Relay compatibility"
+            )
             .Resolve(context => context.Source.Id ?? Guid.NewGuid());
         Field<NonNullGraphType<UserType>>("user")
             .Description("The authenticated user")
             .Argument<NonNullGraphType<IdGraphType>>("id")
+            .Directive(
+                "requiresClaimMapping",
+                "claimName",
+                "sub",
+                "constraint",
+                "equivalent-id"
+            )
             .ResolveAsync(async context =>
             {
                 var userId = context.GetArgument<Guid>("id");
@@ -31,7 +41,7 @@ public class WorkspacesPageDataType : ObjectGraphType<WorkspacesPageData>
                 );
             });
         Field<NonNullGraphType<WorkspacesConnectionType>>("workspaces")
-            .Description("The current workspaces connection page")
+            .Description("The current page of this workspaces connection")
             .Argument<WorkspacesFilterInputType>("filter")
             .Argument<NonNullGraphType<IntGraphType>>("first")
             .Argument<IdGraphType>("after")
@@ -50,7 +60,9 @@ public class WorkspacesPageDataType : ObjectGraphType<WorkspacesPageData>
                     workspacesFilter = new WorkspacesFilter
                     {
                         UserId = Guid.Parse(
-                            claims.FindFirst(ClaimTypes.NameIdentifier)!.Value
+                            AuthUtils
+                                .GetClaim(ClaimTypes.NameIdentifier, claims)!
+                                .Value
                         )
                     };
                 }

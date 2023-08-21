@@ -21,10 +21,8 @@ public class PageInfoType : ObjectGraphType<PageInfo>
 
 public class PageInfo
 {
-#pragma warning disable CS8618
     public Guid? StartCursor { get; set; }
     public Guid? EndCursor { get; set; }
-#pragma warning restore CS8618
     public bool HasNextPage { get; set; }
     public bool HasPreviousPage { get; set; }
 }

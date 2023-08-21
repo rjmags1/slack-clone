@@ -9,11 +9,11 @@ namespace SlackCloneGraphQL;
 
 public class SlackCloneData
 {
-    private IServiceProvider _provider { get; set; }
+    private IServiceProvider Provider { get; set; }
 
     public SlackCloneData(IServiceProvider provider)
     {
-        _provider = provider;
+        Provider = provider;
     }
 
     public async Task<User> GetUserById(
@@ -21,7 +21,7 @@ public class SlackCloneData
         IEnumerable<string> requestedFields
     )
     {
-        using var scope = _provider.CreateScope();
+        using var scope = Provider.CreateScope();
         UserStore userStore =
             scope.ServiceProvider.GetRequiredService<UserStore>();
         Models.User dbUser =
@@ -38,7 +38,7 @@ public class SlackCloneData
         UsersFilter filter
     )
     {
-        using var scope = _provider.CreateScope();
+        using var scope = Provider.CreateScope();
         WorkspaceStore workspaceStore =
             scope.ServiceProvider.GetRequiredService<WorkspaceStore>();
         (List<dynamic> dbMembers, bool lastPage) =
@@ -50,10 +50,10 @@ public class SlackCloneData
                 (Guid?)filter.Cursor.After
             );
 
-        List<WorkspaceMember> members = new List<WorkspaceMember>();
+        List<WorkspaceMember> members = new();
         foreach (dynamic dbm in dbMembers)
         {
-            WorkspaceMember member = (WorkspaceMember)
+            WorkspaceMember member =
                 ModelToObjectConverters.ConvertDynamicWorkspaceMember(
                     dbm,
                     FieldAnalyzer.ExtractUserFields(
@@ -89,11 +89,11 @@ public class SlackCloneData
         if (fieldInfo.SubfieldNames.Contains(nameof(Workspace.Members)))
         {
             throw new InvalidOperationException(
-                "Cannot load connection within a connection here."
+                "Forbidden attempt to load a connection within a connection"
             );
         }
 
-        using var scope = _provider.CreateScope();
+        using var scope = Provider.CreateScope();
         WorkspaceStore workspaceStore =
             scope.ServiceProvider.GetRequiredService<WorkspaceStore>();
         (List<dynamic> dbWorkspaces, bool lastPage) =
@@ -104,7 +104,7 @@ public class SlackCloneData
                 after
             );
 
-        List<Workspace> workspaces = new List<Workspace>();
+        List<Workspace> workspaces = new();
         foreach (dynamic dbw in dbWorkspaces)
         {
             Workspace workspace = (Workspace)
@@ -121,7 +121,7 @@ public class SlackCloneData
 
     public async Task<Workspace> GetWorkspace(Guid workspaceId)
     {
-        using var scope = _provider.CreateScope();
+        using var scope = Provider.CreateScope();
         WorkspaceStore workspaceStore =
             scope.ServiceProvider.GetRequiredService<WorkspaceStore>();
         Models.Workspace dbWorkspace = await workspaceStore.GetWorkspace(
@@ -136,7 +136,7 @@ public class SlackCloneData
         Guid creatorId
     )
     {
-        using var scope = _provider.CreateScope();
+        using var scope = Provider.CreateScope();
         WorkspaceStore workspaceStore =
             scope.ServiceProvider.GetRequiredService<WorkspaceStore>();
 
@@ -156,37 +156,23 @@ public class SlackCloneData
             );
         }
 
-        Models.Workspace dbWorkspace = (
-            await workspaceStore.InsertWorkspaces(
-                new List<Models.Workspace> { dbWorkspaceSkeleton }
-            )
-        ).First();
-
-        await workspaceStore.InsertWorkspaceAdmin(creatorId, dbWorkspace.Id, 1);
-
-        if (workspaceInfo.InvitedUserEmails is not null)
-        {
-            await workspaceStore.InviteUsersByEmail(
-                dbWorkspace.Id,
-                creatorId,
-                workspaceInfo.InvitedUserEmails
-            );
-        }
+        Models.Workspace dbWorkspace = await workspaceStore.CreateWorkspace(
+            dbWorkspaceSkeleton,
+            creatorId,
+            workspaceInfo.InvitedUserEmails
+        );
 
         return ModelToObjectConverters.ConvertWorkspace(dbWorkspace);
     }
 
     public async Task<File> CreateAvatar(FileInput fileinfo)
     {
-        using var scope = _provider.CreateScope();
+        using var scope = Provider.CreateScope();
         FileStore fileStore =
             scope.ServiceProvider.GetRequiredService<FileStore>();
 
-        Models.File dbAvatarSkeleton = new Models.File
-        {
-            Name = fileinfo.Name,
-            StoreKey = fileinfo.StoreKey
-        };
+        Models.File dbAvatarSkeleton =
+            new() { Name = fileinfo.Name, StoreKey = fileinfo.StoreKey };
 
         Models.File dbAvatar = (
             await fileStore.InsertFiles(
@@ -199,7 +185,7 @@ public class SlackCloneData
 
     public async Task<bool> ValidUserEmail(string email)
     {
-        using var scope = _provider.CreateScope();
+        using var scope = Provider.CreateScope();
         UserStore userStore =
             scope.ServiceProvider.GetRequiredService<UserStore>();
         return await userStore.RegisteredEmail(email);

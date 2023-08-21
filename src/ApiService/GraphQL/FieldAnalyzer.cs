@@ -43,11 +43,11 @@ public static class FieldAnalyzer
         bool done = i == -1;
         while (!done)
         {
-            int n = document.IndexOf("on", i) - 1;
-            string fragmentName = document.Substring(i, n - i);
-            int j = document.IndexOf('{', n);
-            k = GetMatchingClosingParenIdx(document, j);
-            fragments[fragmentName] = document.Substring(j, k - j + 1);
+            int fragmentNameStop = document.IndexOf("on", i) - 1;
+            string fragmentName = document[i..fragmentNameStop];
+            int fragmentOpeningIdx = document.IndexOf('{', fragmentNameStop);
+            k = GetMatchingClosingParenIdx(document, fragmentOpeningIdx);
+            fragments[fragmentName] = document[fragmentOpeningIdx..(k + 1)];
             i = document.IndexOf("fragment", k);
             done = i == -1;
             i += 9;
@@ -113,7 +113,7 @@ public static class FieldAnalyzer
         FieldTree parentTree
     )
     {
-        List<string> fields = new List<string>();
+        List<string> fields = new();
         CollectUserFields(userFieldName, parentTree, fields);
         return fields;
     }
@@ -148,34 +148,11 @@ public static class FieldAnalyzer
     /// Gets the substring containing all subfields of a field
     /// without converting the entire GraphQL document to a string.
     /// </summary>
-    private static string GetFieldSliceFromParentContext(
-        IResolveFieldContext context,
-        string fieldName
-    )
-    {
-        var field = context.SubFields!
-            .First(f => f.Key == fieldName)
-            .Value.Field;
-        int start = field.Location.Start;
-        int stop = field.Location.End;
-        string fieldSlice = context.Document.Source
-            .Slice(start, stop - start)
-            .ToString();
-
-        return fieldSlice;
-    }
-
-    /// <summary>
-    /// Gets the substring containing all subfields of a field
-    /// without converting the entire GraphQL document to a string.
-    /// </summary>
     private static string GetFieldSlice(IResolveFieldContext context)
     {
         var start = context.FieldAst.Location.Start;
         var stop = context.FieldAst.Location.End;
-        string slice = context.Document.Source
-            .Slice(start, stop - start)
-            .ToString();
+        string slice = context.Document.Source[start..stop].ToString();
         return slice;
     }
 
@@ -191,14 +168,11 @@ public static class FieldAnalyzer
     )
     {
         int i = fieldSlice.IndexOf("{");
-        string rootField = fieldSlice.Substring(0, i).Trim();
-        FieldTree root = new FieldTree
-        {
-            FieldName = rootField,
-            Children = new List<FieldTree>()
-        };
-        List<string> subFieldNames = new List<string>();
+        string rootField = fieldSlice[..i].Trim();
+        FieldTree root =
+            new() { FieldName = rootField, Children = new List<FieldTree>() };
 
+        List<string> subFieldNames = new();
         TraverseSlice(root, fieldSlice, subFieldNames, i + 1, fragments);
 
         return new FieldInfo
@@ -282,9 +256,9 @@ public static class FieldAnalyzer
                     }
                 }
 
-                string fieldName = fieldSlice.Substring(i, (k - i));
+                string fieldName = fieldSlice[i..k];
                 subFieldNames.Add(fieldName);
-                FieldTree field = new FieldTree(fieldName);
+                FieldTree field = new(fieldName);
                 root.Children.Add(field);
 
                 i = k;

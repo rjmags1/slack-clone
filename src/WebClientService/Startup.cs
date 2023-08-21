@@ -85,8 +85,7 @@ public class Startup
                     };
                     if (
                         clientSideRoutes.Contains(context.Request.Path.Value)
-                        || context.Request.Path.Value?.Substring(0, 11)
-                            == "/workspace/"
+                        || context.Request.Path.Value?[..11] == "/workspace/"
                     )
                     {
                         var fileProvider = new PhysicalFileProvider(

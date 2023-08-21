@@ -13,8 +13,6 @@ using System.Security.Cryptography;
 using System.Text.Json;
 using ApiService.Auth;
 using Microsoft.AspNetCore.Authorization;
-using GraphQL.Types;
-using SlackCloneGraphQL.Types;
 
 DotNetEnv.Env.Load();
 
@@ -115,7 +113,7 @@ app.MapControllers();
 
 app.Run();
 
-IEnumerable<SecurityKey> GetIssuerSigningKeys(
+static IEnumerable<SecurityKey> GetIssuerSigningKeys(
     string token,
     SecurityToken securityToken,
     string kid,

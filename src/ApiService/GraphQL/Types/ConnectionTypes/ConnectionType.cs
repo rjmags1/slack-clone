@@ -1,5 +1,4 @@
 using GraphQL.Types;
-using ApiService.Utils;
 
 namespace SlackCloneGraphQL.Types.Connections;
 
