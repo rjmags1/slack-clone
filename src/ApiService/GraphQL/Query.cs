@@ -21,13 +21,6 @@ public class SlackCloneQuery : ObjectGraphType<object>
             });
 
         Field<WorkspacesPageDataType>("workspacesPageData")
-            .Directive(
-                "requiresClaimMapping",
-                "claimName",
-                "sub",
-                "constraint",
-                "equivalent-userId"
-            )
             .Resolve(context =>
             {
                 var fragments = FieldAnalyzer.GetFragments(context);
