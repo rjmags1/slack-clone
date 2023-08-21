@@ -17,6 +17,92 @@ public class WorkspaceStore : Store
         WorkspaceProps = typeof(Workspace).GetProperties().Select(p => p.Name);
     }
 
+    public async Task<Workspace> CreateWorkspace(
+        Workspace workspaceSkeleton,
+        Guid creatorId,
+        List<string>? invitedEmails
+    )
+    {
+        Workspace workspace = (
+            await InsertWorkspaces(
+                new List<Workspace> { workspaceSkeleton },
+                performSave: false
+            )
+        ).First();
+
+        await CreateWorkspaceAdmin(creatorId, workspace);
+        if (invitedEmails is not null)
+        {
+            await InviteUsersByEmail(workspace, creatorId, invitedEmails);
+        }
+        await _context.SaveChangesAsync();
+
+        return workspace;
+    }
+
+    private async Task<List<WorkspaceInvite>> InviteUsersByEmail(
+        Workspace workspace,
+        Guid adminId,
+        List<string> emails
+    )
+    {
+        List<Guid> idsFromEmails = await _context.Users
+            .Where(u => emails.Contains(u.Email))
+            .Select(u => u.Id)
+            .ToListAsync();
+        bool validEmails = idsFromEmails.Count == emails.Count;
+        if (!validEmails)
+        {
+            throw new InvalidOperationException(
+                "Could not invite to workspace"
+            );
+        }
+
+        List<WorkspaceInvite> invites = new();
+        foreach (Guid invitedId in idsFromEmails)
+        {
+            invites.Add(
+                new WorkspaceInvite
+                {
+                    AdminId = adminId,
+                    UserId = invitedId,
+                    Workspace = workspace
+                }
+            );
+        }
+
+        _context.AddRange(invites);
+        return invites;
+    }
+
+    private async Task<WorkspaceMember> CreateWorkspaceAdmin(
+        Guid userId,
+        Workspace workspace,
+        int permissionsMask = 1
+    )
+    {
+        WorkspaceMember workspaceMembership = new WorkspaceMember
+        {
+            Admin = true,
+            Title = "Admin",
+            UserId = userId,
+            Workspace = workspace,
+        };
+        _context.Add(workspaceMembership);
+        workspace.NumMembers += 1;
+
+        WorkspaceAdminPermissions permissions = new WorkspaceAdminPermissions
+        {
+            AdminId = userId,
+            Workspace = workspace,
+            WorkspaceAdminPermissionsMask = permissionsMask
+        };
+        _context.Add(permissions);
+        workspaceMembership.WorkspaceAdminPermissions = permissions;
+
+        return workspaceMembership;
+    }
+
     public async Task<WorkspaceMember> InsertWorkspaceAdmin(
         Guid userId,
         Guid workspaceId,
@@ -70,7 +156,6 @@ public class WorkspaceStore : Store
         };
         _context.Add(permissions);
         workspaceMembership.WorkspaceAdminPermissions = permissions;
-        await _context.SaveChangesAsync();
 
         return workspaceMembership;
     }
@@ -158,11 +243,15 @@ public class WorkspaceStore : Store
     }
 
     public async Task<List<Workspace>> InsertWorkspaces(
-        List<Workspace> workspaces
+        List<Workspace> workspaces,
+        bool performSave = true
     )
     {
         _context.AddRange(workspaces);
-        await _context.SaveChangesAsync();
+        if (performSave)
+        {
+            await _context.SaveChangesAsync();
+        }
         return workspaces;
     }
 

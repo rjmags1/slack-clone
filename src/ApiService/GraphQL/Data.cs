@@ -156,22 +156,11 @@ public class SlackCloneData
             );
         }
 
-        Models.Workspace dbWorkspace = (
-            await workspaceStore.InsertWorkspaces(
-                new List<Models.Workspace> { dbWorkspaceSkeleton }
-            )
-        ).First();
-
-        await workspaceStore.InsertWorkspaceAdmin(creatorId, dbWorkspace.Id, 1);
-
-        if (workspaceInfo.InvitedUserEmails is not null)
-        {
-            await workspaceStore.InviteUsersByEmail(
-                dbWorkspace.Id,
-                creatorId,
-                workspaceInfo.InvitedUserEmails
-            );
-        }
+        Models.Workspace dbWorkspace = await workspaceStore.CreateWorkspace(
+            dbWorkspaceSkeleton,
+            creatorId,
+            workspaceInfo.InvitedUserEmails
+        );
 
         return ModelToObjectConverters.ConvertWorkspace(dbWorkspace);
     }
