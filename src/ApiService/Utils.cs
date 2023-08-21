@@ -14,7 +14,7 @@ public class StringUtils
             return s;
         }
 
-        return char.ToLower(s[0]) + s.Substring(1);
+        return char.ToLower(s[0]) + s[1..];
     }
 }
 
@@ -56,5 +56,23 @@ public static class AuthUtils
         }
 
         return (ClaimsPrincipal)context["claims"]!;
+    }
+
+    public static string? GetQueryName(GraphQLUserContext context)
+    {
+        return (string?)context["queryName"];
+    }
+
+    public static Claim? GetClaim(string claimName, ClaimsPrincipal claims)
+    {
+        var requiredClaim = claims.Claims
+            .Where(c => c.Type == claimName)
+            .FirstOrDefault();
+        if (requiredClaim is null && claimName == "sub")
+        {
+            requiredClaim = claims.FindFirst(ClaimTypes.NameIdentifier);
+        }
+
+        return requiredClaim;
     }
 }

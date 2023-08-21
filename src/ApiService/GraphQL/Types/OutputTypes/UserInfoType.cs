@@ -1,5 +1,4 @@
 using GraphQL.Types;
-using Models = PersistenceService.Models;
 
 namespace SlackCloneGraphQL.Types;
 

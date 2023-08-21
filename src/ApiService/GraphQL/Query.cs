@@ -1,3 +1,4 @@
+using ApiService.Utils;
 using GraphQL;
 using GraphQL.Types;
 using SlackCloneGraphQL.Types;
@@ -34,16 +35,17 @@ public class SlackCloneQuery : ObjectGraphType<object>
 
                 return new WorkspacesPageData { };
             });
-        Field<RelayNodeInterface>("node")
+        Field<RelayNodeInterfaceType>("node")
             .Argument<NonNullGraphType<IdGraphType>>("id")
             .Resolve(context =>
             {
-                if (context.UserContext["queryName"] is not string queryName)
-                {
-                    throw new InvalidOperationException(
+                var queryName =
+                    AuthUtils.GetQueryName(
+                        (context.UserContext as GraphQLUserContext)!
+                    )
+                    ?? throw new InvalidOperationException(
                         "Queries with node field must be named"
                     );
-                }
                 var id = context.GetArgument<Guid>("id");
                 if (queryName == "WorkspacesListPaginationQuery")
                 {

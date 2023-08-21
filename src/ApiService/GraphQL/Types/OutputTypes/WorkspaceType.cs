@@ -1,4 +1,3 @@
-using System.Collections;
 using GraphQL;
 using GraphQL.Types;
 using PersistenceService.Utils.GraphQL;
@@ -36,16 +35,11 @@ public class WorkspaceType
             )
             .ResolveAsync(async context =>
             {
-                UsersFilter? usersFilter = context.GetArgument<UsersFilter>(
-                    "usersFilter"
-                );
-                if (usersFilter is null)
-                {
-                    throw new ArgumentNullException(
+                UsersFilter? usersFilter =
+                    context.GetArgument<UsersFilter>("usersFilter")
+                    ?? throw new ArgumentNullException(
                         "usersFilter required for workspace members field"
                     );
-                }
-
                 var fragments = FieldAnalyzer.GetFragments(context);
                 FieldInfo fieldInfo = FieldAnalyzer.WorkspaceMembers(
                     context,

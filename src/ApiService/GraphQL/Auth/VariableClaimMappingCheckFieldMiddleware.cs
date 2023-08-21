@@ -32,27 +32,21 @@ public class VariableClaimMappingCheckFieldMiddleware : IFieldMiddleware
             claimsDirective.FindArgument("constraint")!.Value!;
 
         ClaimsPrincipal claims;
-        try
-        {
-            claims = AuthUtils.GetClaims(
-                (context.UserContext as GraphQLUserContext)!
-            );
-        }
-        catch (Exception)
-        {
-            return null;
-        }
+        claims = AuthUtils.GetClaims(
+            (context.UserContext as GraphQLUserContext)!
+        );
 
-        var requiredClaim = GetRequiredClaim(requiredClaimName, claims);
-        if (requiredClaim is null)
-        {
-            return null;
-        }
-
+        var requiredClaim =
+            AuthUtils.GetClaim(requiredClaimName, claims)
+            ?? throw new InvalidOperationException();
         MappingConstraint constraint = ParseConstraintString(constraintString);
-        bool passed = CheckConstraint(constraint, requiredClaim, context);
+        bool validClaimVariableMapping = CheckConstraint(
+            constraint,
+            requiredClaim,
+            context
+        );
 
-        return passed ? await next(context) : null;
+        return validClaimVariableMapping ? await next(context) : null;
     }
 
     private static bool CheckConstraint(
@@ -61,16 +55,16 @@ public class VariableClaimMappingCheckFieldMiddleware : IFieldMiddleware
         IResolveFieldContext context
     )
     {
-        var mappedVariable = context.Variables
-            .Where(v => v.Name == constraint.MappedVariable)
-            .FirstOrDefault();
+        var mappedVariable = context.GetArgument<object>(
+            constraint.MappedVariable
+        );
         if (mappedVariable is null)
         {
             return false;
         }
         if (constraint.Name == "equivalent")
         {
-            return (string)mappedVariable.Value! == requiredClaim.Value;
+            return mappedVariable.ToString() == requiredClaim.Value;
         }
 
         return false;
@@ -94,21 +88,5 @@ public class VariableClaimMappingCheckFieldMiddleware : IFieldMiddleware
             "requiresClaimMapping"
         )
             is not null;
-    }
-
-    private static Claim? GetRequiredClaim(
-        string requiredClaimName,
-        ClaimsPrincipal claims
-    )
-    {
-        var requiredClaim = claims.Claims
-            .Where(c => c.Type == requiredClaimName)
-            .FirstOrDefault();
-        if (requiredClaim is null && requiredClaimName == "sub")
-        {
-            requiredClaim = claims.FindFirst(ClaimTypes.NameIdentifier);
-        }
-
-        return requiredClaim;
     }
 }

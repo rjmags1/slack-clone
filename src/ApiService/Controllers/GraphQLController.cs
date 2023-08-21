@@ -9,69 +9,66 @@ using SlackCloneGraphQL;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using AuthorizeAttribute = Microsoft.AspNetCore.Authorization.AuthorizeAttribute;
 
-namespace ApiService.Controllers
+namespace ApiService.Controllers;
+
+[ApiController]
+[Route("graphql")]
+[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+[Authorize(Policy = "HasApiScopeClaim")]
+public class ApiController : Controller
 {
-    [ApiController]
-    [Route("graphql")]
-    [Authorize(Policy = "HasApiScopeClaim")]
-    public class ApiController : Controller
+    private readonly IDocumentExecuter _documentExecuter;
+    private readonly ISchema _schema;
+    private readonly IOptions<GraphQLSettings> _graphQLOptions;
+
+    public ApiController(
+        IDocumentExecuter documentExecuter,
+        ISchema schema,
+        IOptions<GraphQLSettings> options
+    )
     {
-        private readonly IDocumentExecuter _documentExecuter;
-        private readonly ISchema _schema;
-        private readonly IOptions<GraphQLSettings> _graphQLOptions;
+        _documentExecuter = documentExecuter;
+        _schema = schema;
+        _graphQLOptions = options;
+    }
 
-        public ApiController(
-            IDocumentExecuter documentExecuter,
-            ISchema schema,
-            IOptions<GraphQLSettings> options
-        )
+    [HttpPost]
+    public async Task<IActionResult> GraphQLAsync(
+        [FromBody] GraphQLRequest request
+    )
+    {
+        var startTime = DateTime.UtcNow;
+
+        var result = await _documentExecuter.ExecuteAsync(s =>
         {
-            _documentExecuter = documentExecuter;
-            _schema = schema;
-            _graphQLOptions = options;
+            var userContext = new GraphQLUserContext
+            {
+                { "claims", HttpContext.User },
+                { "queryName", FieldAnalyzer.GetQueryName(request.Query) },
+                { "query", request.Query }
+            };
+            s.Schema = _schema;
+            s.Query = request.Query;
+            s.Variables = request.Variables;
+            s.OperationName = request.OperationName;
+            s.RequestServices = HttpContext.RequestServices;
+            s.UserContext = userContext!;
+            s.CancellationToken = HttpContext.RequestAborted;
+        });
+
+        if (result.Errors?.Count > 0)
+        {
+            foreach (var error in result.Errors)
+            {
+                Console.WriteLine(error);
+            }
         }
 
-        [HttpPost]
-        [Microsoft.AspNetCore.Authorization.Authorize(
-            AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme
-        )]
-        public async Task<IActionResult> GraphQLAsync(
-            [FromBody] GraphQLRequest request
-        )
+        if (_graphQLOptions.Value.EnableMetrics)
         {
-            var startTime = DateTime.UtcNow;
-
-            var result = await _documentExecuter.ExecuteAsync(s =>
-            {
-                var userContext = new GraphQLUserContext
-                {
-                    { "claims", HttpContext.User },
-                    { "queryName", FieldAnalyzer.GetQueryName(request.Query) },
-                    { "query", request.Query }
-                };
-                s.Schema = _schema;
-                s.Query = request.Query;
-                s.Variables = request.Variables;
-                s.OperationName = request.OperationName;
-                s.RequestServices = HttpContext.RequestServices;
-                s.UserContext = userContext!;
-                s.CancellationToken = HttpContext.RequestAborted;
-            });
-
-            if (result.Errors?.Count > 0)
-            {
-                foreach (var error in result.Errors)
-                {
-                    Console.WriteLine(error);
-                }
-            }
-
-            if (_graphQLOptions.Value.EnableMetrics)
-            {
-                result.EnrichWithApolloTracing(startTime);
-            }
-
-            return new ExecutionResultActionResult(result);
+            result.EnrichWithApolloTracing(startTime);
         }
+
+        return new ExecutionResultActionResult(result);
     }
 }
