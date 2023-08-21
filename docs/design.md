@@ -2327,11 +2327,44 @@ Github/git will be used for version control, and all tests will be run against a
 - [] Refactor and test existing functionality
   - GraphQL custom field analysis, dynamic query tests
   - Test + refactor + optimize new Data, Store methods
-  - Refactor frontend TS
-    - Add more robust typing
-    - Optimize Relay query behavior (usePreloadedQuery)
+  - Tests TODO:
+    - ApiService
+      - [] authentication requirement (http client)
+      - [] scope policy (http client)
+      - [] variable claim mapping field middleware (http client)
+      - [] WorkspaceType members field resolver
+      - [] WorkspacesPageDataType field resolvers
+      - [] all SlackCloneData methods
+      - [] all FieldAnalyzer methods
+      - [] all ModelObjectMapper methods
+      - [] all Mutation field resolvers
+      - [] all Query field resolvers
+      - [] all Util methods
+    - IdentityService
+      - [] all endpoints behavior (http client)
+      - [] scope emission for bff client (http client)
+      - [] refresh token behavior (http client)
+      - [] custom profile manager
+      - [] custom signin manager
+    - PersistenceService
+      - [] all ChannelStore methods
+      - [] all DirectMessageGroupStore methods
+      - [] all FileStore methods
+      - [] all ThemeStore methods
+      - [] all UserStore methods
+      - [] all WorkspaceStore methods
+      - [] all Util methods
+    - WebClientService
+      - [] signin/signout flow (playwright)
+      - [] workspaces page load (playwright)
+      - [] workspace page load (playwright)
+      - [] create new workspace flow (playwright)
+      - [] infinite scroll workspaces flow (playwright)
+      - [] catch all routing behavior (http client)
+  - [] Refactor frontend TS
+    - [✅] Add more robust typing, hooks, improve code
     - webpack chunk pages/non-load-rendered UI
-- [] Workspace page
+- [] Workspace page, other pages
     - Impl each needed query and associated UI until page is complete
 - Alternate between adding new functionality and testing/refactoring existing functionality until Phase 2 complete
 
