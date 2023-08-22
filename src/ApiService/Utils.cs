@@ -58,11 +58,6 @@ public static class AuthUtils
         return (ClaimsPrincipal)context["claims"]!;
     }
 
-    public static string? GetQueryName(GraphQLUserContext context)
-    {
-        return (string?)context["queryName"];
-    }
-
     public static Claim? GetClaim(string claimName, ClaimsPrincipal claims)
     {
         var requiredClaim = claims.Claims
@@ -74,5 +69,18 @@ public static class AuthUtils
         }
 
         return requiredClaim;
+    }
+}
+
+public static class GraphQLUtils
+{
+    public static string? GetQueryName(GraphQLUserContext context)
+    {
+        return (string?)context["queryName"];
+    }
+
+    public static string? GetQuery(GraphQLUserContext context)
+    {
+        return (string?)context["query"];
     }
 }

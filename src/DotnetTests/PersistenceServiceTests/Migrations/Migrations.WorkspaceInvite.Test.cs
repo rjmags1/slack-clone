@@ -15,7 +15,7 @@ public class WorkspaceInviteMigrationsTests
         ApplicationDbContextFixture applicationDbContextFixture
     )
     {
-        _dbContext = applicationDbContextFixture.context;
+        _dbContext = applicationDbContextFixture.Context;
         _entityType = _dbContext.Model.FindEntityType(typeof(WorkspaceInvite))!;
     }
 

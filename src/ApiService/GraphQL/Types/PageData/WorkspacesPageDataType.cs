@@ -34,7 +34,10 @@ public class WorkspacesPageDataType : ObjectGraphType<WorkspacesPageData>
                     context.UserContext["fragments"]
                     as Dictionary<string, string>
                 )!;
-                var userFieldsInfo = FieldAnalyzer.User(context, fragments);
+                var query = GraphQLUtils.GetQuery(
+                    (context.UserContext as GraphQLUserContext)!
+                )!;
+                var userFieldsInfo = FieldAnalyzer.User(query, fragments);
                 return await data.GetUserById(
                     userId,
                     userFieldsInfo.SubfieldNames
@@ -70,8 +73,11 @@ public class WorkspacesPageDataType : ObjectGraphType<WorkspacesPageData>
                     context.UserContext["fragments"]
                     as Dictionary<string, string>
                 )!;
+                var query = GraphQLUtils.GetQuery(
+                    (context.UserContext as GraphQLUserContext)!
+                )!;
                 var workspacesFieldsInfo = FieldAnalyzer.Workspaces(
-                    context,
+                    query,
                     fragments
                 );
 

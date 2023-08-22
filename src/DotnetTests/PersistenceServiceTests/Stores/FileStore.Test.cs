@@ -9,16 +9,16 @@ namespace DotnetTests.PersistenceService.Stores;
 
 [Trait("Category", "Order 1")]
 [Collection("Database collection 1")]
-public class FileStoreTests
+public class FileStoreTests1
 {
     private readonly ApplicationDbContext _dbContext;
     private readonly FileStore _fileStore;
 
-    public FileStoreTests(
+    public FileStoreTests1(
         ApplicationDbContextFixture applicationDbContextFixture
     )
     {
-        _dbContext = applicationDbContextFixture.context;
+        _dbContext = applicationDbContextFixture.Context;
         _fileStore = new FileStore(_dbContext);
     }
 
@@ -31,7 +31,7 @@ public class FileStoreTests
             files.Add(StoreTestUtils.CreateTestFileRecord());
         }
 
-        FileStore fileStore = new FileStore(_dbContext);
+        FileStore fileStore = new(_dbContext);
 
         List<Models.File> loaded = await fileStore.InsertFiles(files);
         Assert.Equal(

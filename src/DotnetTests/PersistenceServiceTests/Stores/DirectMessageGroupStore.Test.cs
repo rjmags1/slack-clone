@@ -8,17 +8,17 @@ namespace DotnetTests.PersistenceService.Stores;
 
 [Trait("Category", "Order 1")]
 [Collection("Database collection 1")]
-public class DirectMessageGroupStoreTests
+public class DirectMessageGroupStoreTests1
 {
     private readonly ApplicationDbContext _dbContext;
 
     private readonly DirectMessageGroupStore _directMessageGroupStore;
 
-    public DirectMessageGroupStoreTests(
+    public DirectMessageGroupStoreTests1(
         ApplicationDbContextFixture applicationDbContextFixture
     )
     {
-        _dbContext = applicationDbContextFixture.context;
+        _dbContext = applicationDbContextFixture.Context;
         _directMessageGroupStore = new DirectMessageGroupStore(_dbContext);
     }
 
@@ -1068,15 +1068,15 @@ public class DirectMessageGroupStoreTests
 [Collection("Database collection 2")]
 public class DirectMessageGroupStoreTests2
 {
-    private DirectMessageGroupStore _directMessageGroupStore;
+    private readonly DirectMessageGroupStore _directMessageGroupStore;
 
-    private ApplicationDbContext _dbContext;
+    private readonly ApplicationDbContext _dbContext;
 
     public DirectMessageGroupStoreTests2(
         FilledApplicationDbContextFixture filledApplicationDbContextFixture
     )
     {
-        _dbContext = filledApplicationDbContextFixture.context;
+        _dbContext = filledApplicationDbContextFixture.Context;
         _directMessageGroupStore = new DirectMessageGroupStore(_dbContext);
     }
 

@@ -1,3 +1,4 @@
+using ApiService.Utils;
 using GraphQL;
 using GraphQL.Types;
 using PersistenceService.Utils.GraphQL;
@@ -40,9 +41,12 @@ public class WorkspaceType
                     ?? throw new ArgumentNullException(
                         "usersFilter required for workspace members field"
                     );
-                var fragments = FieldAnalyzer.GetFragments(context);
+                string query = GraphQLUtils.GetQuery(
+                    (context.UserContext as GraphQLUserContext)!
+                )!;
+                var fragments = FieldAnalyzer.GetFragments(query);
                 FieldInfo fieldInfo = FieldAnalyzer.WorkspaceMembers(
-                    context,
+                    query,
                     fragments
                 );
 

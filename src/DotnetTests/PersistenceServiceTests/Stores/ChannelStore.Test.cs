@@ -9,17 +9,17 @@ namespace DotnetTests.PersistenceService.Stores;
 
 [Trait("Category", "Order 1")]
 [Collection("Database collection 1")]
-public class ChannelStoreTests
+public class ChannelStoreTests1
 {
     private readonly ApplicationDbContext _dbContext;
 
     private readonly ChannelStore _channelStore;
 
-    public ChannelStoreTests(
+    public ChannelStoreTests1(
         ApplicationDbContextFixture applicationDbContextFixture
     )
     {
-        _dbContext = applicationDbContextFixture.context;
+        _dbContext = applicationDbContextFixture.Context;
         _channelStore = new ChannelStore(_dbContext);
     }
 
@@ -2278,15 +2278,15 @@ public class ChannelStoreTests
 [Collection("Database collection 2")]
 public class ChannelStoreTests2
 {
-    private ChannelStore _channelStore;
+    private readonly ChannelStore _channelStore;
 
-    private ApplicationDbContext _dbContext;
+    private readonly ApplicationDbContext _dbContext;
 
     public ChannelStoreTests2(
         FilledApplicationDbContextFixture filledApplicationDbContextFixture
     )
     {
-        _dbContext = filledApplicationDbContextFixture.context;
+        _dbContext = filledApplicationDbContextFixture.Context;
         _channelStore = new ChannelStore(_dbContext);
     }
 

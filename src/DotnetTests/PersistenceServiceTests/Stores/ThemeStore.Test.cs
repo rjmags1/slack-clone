@@ -10,23 +10,23 @@ namespace DotnetTests.PersistenceService.Stores;
 
 [Trait("Category", "Order 1")]
 [Collection("Database collection 1")]
-public class ThemeStoreTests
+public class ThemeStoreTests1
 {
     private readonly ApplicationDbContext _dbContext;
     private readonly ThemeStore _themeStore;
 
-    public ThemeStoreTests(
+    public ThemeStoreTests1(
         ApplicationDbContextFixture applicationDbContextFixture
     )
     {
-        _dbContext = applicationDbContextFixture.context;
+        _dbContext = applicationDbContextFixture.Context;
         _themeStore = new ThemeStore(_dbContext);
     }
 
     [Fact]
     public async void InsertThemes_ShouldInsertThemes()
     {
-        List<Theme> themes = new List<Theme>();
+        List<Theme> themes = new();
         for (int i = 0; i < 10; i++)
         {
             themes.Add(StoreTestUtils.CreateTestTheme());
@@ -103,7 +103,7 @@ public class ThemeStoreTests2
         FilledApplicationDbContextFixture filledApplicationDbContextFixture
     )
     {
-        _dbContext = filledApplicationDbContextFixture.context;
+        _dbContext = filledApplicationDbContextFixture.Context;
         _themeStore = new ThemeStore(_dbContext);
     }
 

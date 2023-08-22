@@ -23,7 +23,10 @@ public class SlackCloneQuery : ObjectGraphType<object>
         Field<WorkspacesPageDataType>("workspacesPageData")
             .Resolve(context =>
             {
-                var fragments = FieldAnalyzer.GetFragments(context);
+                string query = GraphQLUtils.GetQuery(
+                    (context.UserContext as GraphQLUserContext)!
+                )!;
+                var fragments = FieldAnalyzer.GetFragments(query);
                 context.UserContext.Add("fragments", fragments);
 
                 return new WorkspacesPageData { };
@@ -33,16 +36,19 @@ public class SlackCloneQuery : ObjectGraphType<object>
             .Resolve(context =>
             {
                 var queryName =
-                    AuthUtils.GetQueryName(
+                    GraphQLUtils.GetQueryName(
                         (context.UserContext as GraphQLUserContext)!
                     )
                     ?? throw new InvalidOperationException(
                         "Queries with node field must be named"
                     );
+                string query = GraphQLUtils.GetQuery(
+                    (context.UserContext as GraphQLUserContext)!
+                )!;
                 var id = context.GetArgument<Guid>("id");
                 if (queryName == "WorkspacesListPaginationQuery")
                 {
-                    var fragments = FieldAnalyzer.GetFragments(context);
+                    var fragments = FieldAnalyzer.GetFragments(query);
                     context.UserContext.Add("fragments", fragments);
 
                     return new WorkspacesPageData { Id = id };

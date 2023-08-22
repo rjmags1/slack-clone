@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using GraphQL;
 using PersistenceService.Utils.GraphQL;
 
@@ -23,26 +24,36 @@ public static class FieldAnalyzer
         {
             return null;
         }
+        int queryStart = query.IndexOf('q');
+        if (queryStart == -1 || query[queryStart..(queryStart + 5)] != "query")
+        {
+            throw new InvalidOperationException();
+        }
 
-        int start = 6;
+        int start = queryStart + 6;
+        int parenIdx = query.IndexOf('(', start);
+        int bracketIdx = query.IndexOf('{', start);
+        if (parenIdx == -1 && bracketIdx == -1)
+        {
+            throw new InvalidOperationException();
+        }
         int stop = Math.Min(
-            query.IndexOf('(', start),
-            query.IndexOf(' ', start)
+            parenIdx == -1 ? int.MaxValue : parenIdx,
+            bracketIdx == -1 ? int.MaxValue : bracketIdx
         );
-        return query[start..stop];
+        return query[start..stop].Trim();
     }
 
-    public static Dictionary<string, string> GetFragments(
-        IResolveFieldContext context
-    )
+    public static Dictionary<string, string> GetFragments(string document)
     {
-        string document = context.Document.Source.ToString();
-        int i = document.IndexOf("fragment") + 9;
-        int k;
         Dictionary<string, string> fragments = new();
+        int i = document.IndexOf("fragment");
+        int k;
         bool done = i == -1;
+        int fragmentKeywordLength = 9;
         while (!done)
         {
+            i += fragmentKeywordLength;
             int fragmentNameStop = document.IndexOf("on", i) - 1;
             string fragmentName = document[i..fragmentNameStop];
             int fragmentOpeningIdx = document.IndexOf('{', fragmentNameStop);
@@ -50,7 +61,6 @@ public static class FieldAnalyzer
             fragments[fragmentName] = document[fragmentOpeningIdx..(k + 1)];
             i = document.IndexOf("fragment", k);
             done = i == -1;
-            i += 9;
         }
 
         return fragments;
@@ -76,29 +86,29 @@ public static class FieldAnalyzer
     }
 
     public static FieldInfo Workspaces(
-        IResolveFieldContext context,
+        string opString,
         Dictionary<string, string> fragments
     )
     {
-        string workspacesFieldSlice = GetFieldSlice(context);
+        string workspacesFieldSlice = GetFieldSlice(opString, "workspaces");
         return CollectFields(workspacesFieldSlice, fragments);
     }
 
     public static FieldInfo User(
-        IResolveFieldContext context,
+        string opString,
         Dictionary<string, string> fragments
     )
     {
-        string userFieldSlice = GetFieldSlice(context);
+        string userFieldSlice = GetFieldSlice(opString, "user");
         return CollectFields(userFieldSlice, fragments);
     }
 
     public static FieldInfo WorkspaceMembers(
-        IResolveFieldContext context,
+        string opString,
         Dictionary<string, string> fragments
     )
     {
-        string membersFieldSlice = GetFieldSlice(context);
+        string membersFieldSlice = GetFieldSlice(opString, "members");
         return CollectFields(membersFieldSlice, fragments);
     }
 
@@ -132,7 +142,9 @@ public static class FieldAnalyzer
         {
             fields.Add(root.FieldName);
         }
-        bool userRoot = root.FieldName == userFieldName;
+        bool userRoot =
+            root.FieldName.Length >= userFieldName.Length
+            && root.FieldName[..userFieldName.Length] == userFieldName;
         foreach (FieldTree child in root.Children)
         {
             CollectUserFields(
@@ -145,15 +157,18 @@ public static class FieldAnalyzer
     }
 
     /// <summary>
-    /// Gets the substring containing all subfields of a field
-    /// without converting the entire GraphQL document to a string.
+    /// Gets the substring containing all subfields of a field.
     /// </summary>
-    private static string GetFieldSlice(IResolveFieldContext context)
+    private static string GetFieldSlice(string opString, string fieldName)
     {
-        var start = context.FieldAst.Location.Start;
-        var stop = context.FieldAst.Location.End;
-        string slice = context.Document.Source[start..stop].ToString();
-        return slice;
+        var start = opString.IndexOf(fieldName);
+        if (start == -1)
+        {
+            throw new InvalidOperationException();
+        }
+        var openingParenIdx = opString.IndexOf('{', start);
+        var stop = GetMatchingClosingParenIdx(opString, openingParenIdx) + 1;
+        return opString[start..stop];
     }
 
     /// <summary>

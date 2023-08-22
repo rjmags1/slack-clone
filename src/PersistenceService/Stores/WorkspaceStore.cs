@@ -157,6 +157,8 @@ public class WorkspaceStore : Store
         _context.Add(permissions);
         workspaceMembership.WorkspaceAdminPermissions = permissions;
 
+        await _context.SaveChangesAsync();
+
         return workspaceMembership;
     }
 
