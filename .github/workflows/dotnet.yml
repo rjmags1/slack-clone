@@ -59,7 +59,7 @@ jobs:
       run: dotnet new tool-manifest && dotnet tool install dotnet-ef && cd src/IdentityService && dotnet ef database update --context ConfigurationDbContext && dotnet ef database update --context PersistedGrantDbContext
       
     - name: Test
-      run: dotnet test --no-build --verbosity normal --configuration Release --filter "Category=Order 1" && dotnet test --no-build --verbosity normal --configuration Release --filter "Category=Order 2"
+      run: dotnet test --no-build --verbosity normal --configuration Release --filter "Category=Order 0" && dotnet test --no-build --verbosity normal --configuration Release --filter "Category=Order 1" && dotnet test --no-build --verbosity normal --configuration Release --filter "Category=Order 2" &&  dotnet test --no-build --verbosity normal --configuration Release --filter "Category=Order 3"
       
     - name: Cleanup
       run: |
