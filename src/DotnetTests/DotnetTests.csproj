@@ -25,6 +25,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\PersistenceService\PersistenceService.csproj" />
+    <ProjectReference Include="..\ApiService\ApiService.csproj" />
   </ItemGroup>
 
 </Project>
