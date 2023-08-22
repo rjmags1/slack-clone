@@ -6,7 +6,7 @@ namespace DotnetTests.Fixtures;
 
 public class ApplicationDbContextFixture : IDisposable
 {
-    public ApplicationDbContext context { get; private set; }
+    public ApplicationDbContext Context { get; private set; }
 
     public ApplicationDbContextFixture()
     {
@@ -20,15 +20,15 @@ public class ApplicationDbContextFixture : IDisposable
             //.LogTo(Console.WriteLine)
             .Options;
 
-        ApplicationDbContext c = new ApplicationDbContext(options);
+        ApplicationDbContext c = new(options);
         c.Database.Migrate();
-        context = c;
+        Context = c;
     }
 
     public void Dispose()
     {
-        context.Database.EnsureDeleted();
-        context.Dispose();
+        Context.Database.EnsureDeleted();
+        Context.Dispose();
     }
 }
 

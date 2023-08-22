@@ -12,17 +12,17 @@ namespace DotnetTests.PersistenceService.Stores;
 
 [Trait("Category", "Order 1")]
 [Collection("Database collection 1")]
-public class UserStoreTests
+public class UserStoreTests1
 {
-    private UserStore _userStore = GetUserStore();
+    private readonly UserStore _userStore = GetUserStore();
 
-    private ApplicationDbContext _dbContext;
+    private readonly ApplicationDbContext _dbContext;
 
-    public UserStoreTests(
+    public UserStoreTests1(
         ApplicationDbContextFixture applicationDbContextFixture
     )
     {
-        _dbContext = applicationDbContextFixture.context;
+        _dbContext = applicationDbContextFixture.Context;
     }
 
     [Fact]
@@ -217,15 +217,15 @@ public class UserStoreTests
 [Collection("Database collection 2")]
 public class UserStoreTests2
 {
-    private UserStore _userStore = UserStoreTests.GetUserStore();
+    private readonly UserStore _userStore = UserStoreTests1.GetUserStore();
 
-    private ApplicationDbContext _dbContext;
+    private readonly ApplicationDbContext _dbContext;
 
     public UserStoreTests2(
         FilledApplicationDbContextFixture filledApplicationDbContextFixture
     )
     {
-        _dbContext = filledApplicationDbContextFixture.context;
+        _dbContext = filledApplicationDbContextFixture.Context;
     }
 
     [Fact]

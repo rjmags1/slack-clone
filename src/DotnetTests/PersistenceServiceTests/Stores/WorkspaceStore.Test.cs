@@ -6,18 +6,18 @@ using PersistenceService.Stores;
 
 namespace DotnetTest.PersistenceService.Stores;
 
-[Trait("Category", "Order 1")]
+[Trait("Category", "Order 0")]
 [Collection("Database collection 1")]
-public class WorkspaceStoreTests
+public class WorkspaceStoreTests1
 {
     private readonly ApplicationDbContext _dbContext;
     private readonly WorkspaceStore _workspaceStore;
 
-    public WorkspaceStoreTests(
+    public WorkspaceStoreTests1(
         ApplicationDbContextFixture applicationDbContextFixture
     )
     {
-        _dbContext = applicationDbContextFixture.context;
+        _dbContext = applicationDbContextFixture.Context;
         _workspaceStore = new WorkspaceStore(_dbContext);
     }
 
@@ -557,15 +557,15 @@ public class WorkspaceStoreTests
 [Collection("Database collection 2")]
 public class WorkspaceStoreTests2
 {
-    private WorkspaceStore _workspaceStore;
+    private readonly WorkspaceStore _workspaceStore;
 
-    private ApplicationDbContext _dbContext;
+    private readonly ApplicationDbContext _dbContext;
 
     public WorkspaceStoreTests2(
         FilledApplicationDbContextFixture filledApplicationDbContextFixture
     )
     {
-        _dbContext = filledApplicationDbContextFixture.context;
+        _dbContext = filledApplicationDbContextFixture.Context;
         _workspaceStore = new WorkspaceStore(_dbContext);
     }
 

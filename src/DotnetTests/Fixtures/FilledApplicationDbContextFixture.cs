@@ -8,7 +8,7 @@ namespace DotnetTests.Fixtures;
 
 public class FilledApplicationDbContextFixture : IAsyncLifetime
 {
-    public ApplicationDbContext context { get; private set; }
+    public ApplicationDbContext Context { get; private set; }
 
     private readonly TestSeeder _testSeeder;
 
@@ -33,13 +33,13 @@ public class FilledApplicationDbContextFixture : IAsyncLifetime
             //.LogTo(Console.WriteLine)
             .Options;
 
-        ApplicationDbContext c = new ApplicationDbContext(options);
+        ApplicationDbContext c = new(options);
         if (!c.Database.CanConnect())
         {
             c.Database.Migrate();
         }
-        context = c;
-        _testSeeder = new TestSeeder(context, UserStoreTests.GetUserStore());
+        Context = c;
+        _testSeeder = new TestSeeder(Context, UserStoreTests1.GetUserStore());
     }
 
     public async Task InitializeAsync()
@@ -55,9 +55,9 @@ public class FilledApplicationDbContextFixture : IAsyncLifetime
     {
         if (!_preserveSeededData)
         {
-            context.Database.EnsureDeleted();
+            Context.Database.EnsureDeleted();
         }
-        await context.DisposeAsync();
+        await Context.DisposeAsync();
     }
 }
 

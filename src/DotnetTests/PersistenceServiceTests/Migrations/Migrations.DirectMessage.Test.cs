@@ -15,7 +15,7 @@ public class DirectMessageMigrationsTests
         ApplicationDbContextFixture applicationDbContextFixture
     )
     {
-        _dbContext = applicationDbContextFixture.context;
+        _dbContext = applicationDbContextFixture.Context;
         _entityType = _dbContext.Model.FindEntityType(typeof(DirectMessage))!;
     }
 
