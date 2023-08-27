@@ -20,13 +20,6 @@ public class WorkspacesPageDataType : ObjectGraphType<WorkspacesPageData>
         Field<NonNullGraphType<UserType>>("user")
             .Description("The authenticated user")
             .Argument<NonNullGraphType<IdGraphType>>("id")
-            .Directive(
-                "requiresClaimMapping",
-                "claimName",
-                "sub",
-                "constraint",
-                "equivalent-id"
-            )
             .ResolveAsync(async context =>
             {
                 var userId = context.GetArgument<Guid>("id");

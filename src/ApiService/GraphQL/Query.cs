@@ -21,6 +21,14 @@ public class SlackCloneQuery : ObjectGraphType<object>
             });
 
         Field<WorkspacesPageDataType>("workspacesPageData")
+            .Directive(
+                "requiresClaimMapping",
+                "claimName",
+                "sub",
+                "constraint",
+                "equivalent-userId"
+            )
+            .Argument<NonNullGraphType<IdGraphType>>("userId")
             .Resolve(context =>
             {
                 string query = GraphQLUtils.GetQuery(
