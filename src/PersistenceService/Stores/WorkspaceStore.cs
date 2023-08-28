@@ -11,6 +11,10 @@ public class WorkspaceStore : Store
 {
     private IEnumerable<string> WorkspaceProps { get; set; }
 
+    public const string CHANNEL = "CHANNEL";
+
+    public const string DIRECT_MESSAGE_GROUP = "DIRECT_MESSAGE_GROUP";
+
     public WorkspaceStore(ApplicationDbContext dbContext)
         : base(dbContext)
     {
@@ -30,7 +34,7 @@ public class WorkspaceStore : Store
             )
         ).First();
 
-        await CreateWorkspaceAdmin(creatorId, workspace);
+        CreateWorkspaceAdmin(creatorId, workspace);
         if (invitedEmails is not null)
         {
             await InviteUsersByEmail(workspace, creatorId, invitedEmails);
@@ -75,7 +79,7 @@ public class WorkspaceStore : Store
         return invites;
     }
 
-    private async Task<WorkspaceMember> CreateWorkspaceAdmin(
+    private WorkspaceMember CreateWorkspaceAdmin(
         Guid userId,
         Workspace workspace,
         int permissionsMask = 1
@@ -452,5 +456,72 @@ public class WorkspaceStore : Store
         return await _context.Workspaces
             .Where(w => w.Id == workspaceId)
             .FirstAsync();
+    }
+
+    public struct StarredInfo
+    {
+        public string Type { get; set; }
+        public dynamic Starred { get; set; }
+    }
+
+    public async Task<(List<StarredInfo>, bool lastPage)> LoadStarred(
+        Guid workspaceId,
+        Guid userId,
+        int first,
+        FieldTree connectionTree,
+        Guid? after = null
+    )
+    {
+        IQueryable<Star> stars = _context.Stars
+            .Where(s => s.UserId == userId && s.WorkspaceId == workspaceId)
+            .OrderBy(s => s.CreatedAt);
+        if (!(after is null))
+        {
+            DateTime afterStarredAt = stars
+                .Where(s => s.Id == after)
+                .Select(s => s.CreatedAt)
+                .First();
+            stars = stars.Where(
+                s => s.CreatedAt >= afterStarredAt && s.Id != after
+            );
+        }
+        IQueryable<Star> loadedStars = stars.Take(first + 1);
+        IQueryable<Channel> starredChannels = loadedStars
+            .Where(s => s.Channel != null)
+            .Select(s => s.Channel!);
+        IQueryable<DirectMessageGroup> starredDirectMessageGroups = loadedStars
+            .Where(s => s.DirectMessageGroup != null)
+            .Select(s => s.DirectMessageGroup!);
+
+        // GroupType should be interface not union
+        // so can only request id, name, num messages, etc.
+        // as a result can use the connectionTree for both types of groups
+
+        var dynamicChannels = await starredChannels
+            .Select(
+                DynamicLinqUtils.NodeFieldToDynamicSelectString(connectionTree)
+            )
+            .ToDynamicListAsync();
+        var dynamicDirectMessageGroups = await starredDirectMessageGroups
+            .Select(
+                DynamicLinqUtils.NodeFieldToDynamicSelectString(connectionTree)
+            )
+            .ToDynamicListAsync();
+        bool lastPage =
+            (dynamicChannels.Count + dynamicDirectMessageGroups.Count) <= first;
+
+        List<StarredInfo> starred = new();
+        foreach (var dbc in starredChannels)
+        {
+            starred.Add(new StarredInfo { Type = CHANNEL, Starred = dbc });
+        }
+        foreach (var dbg in starredDirectMessageGroups)
+        {
+            starred.Add(
+                new StarredInfo { Type = DIRECT_MESSAGE_GROUP, Starred = dbg }
+            );
+        }
+
+        return (starred, lastPage);
     }
 }

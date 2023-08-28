@@ -5,6 +5,8 @@ using Thread = PersistenceService.Models.Thread;
 
 namespace PersistenceService.Data.SeedData;
 
+// TODO: seed some channel and direct message group memberships as starred
+
 public class TestSeeder
 {
     public ApplicationDbContext context { get; private set; }

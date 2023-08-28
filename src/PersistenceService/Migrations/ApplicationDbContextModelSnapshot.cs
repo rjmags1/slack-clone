@@ -165,7 +165,7 @@ namespace PersistenceService.Migrations
                         .HasColumnType("boolean")
                         .HasDefaultValueSql("true");
 
-                    b.Property<int>("AllowedChannelPostersMask")
+                    b.Property<int>("AllowedPostersMask")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer")
                         .HasDefaultValueSql("1");
@@ -304,9 +304,14 @@ namespace PersistenceService.Migrations
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid");
 
+                    b.Property<Guid>("WorkspaceId")
+                        .HasColumnType("uuid");
+
                     b.HasKey("Id");
 
                     b.HasIndex("UserId");
+
+                    b.HasIndex("WorkspaceId");
 
                     b.HasIndex("ChannelId", "UserId")
                         .IsUnique();
@@ -673,12 +678,20 @@ namespace PersistenceService.Migrations
                     b.Property<DateTime?>("LastViewedGroupMessagesAt")
                         .HasColumnType("timestamp");
 
+                    b.Property<bool>("Starred")
+                        .HasColumnType("boolean");
+
                     b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("WorkspaceId")
                         .HasColumnType("uuid");
 
                     b.HasKey("Id");
 
                     b.HasIndex("DirectMessageGroupId");
+
+                    b.HasIndex("WorkspaceId");
 
                     b.HasIndex("UserId", "DirectMessageGroupId")
                         .IsUnique();
@@ -916,6 +929,43 @@ namespace PersistenceService.Migrations
                     b.HasIndex("UploadedAt");
 
                     b.ToTable("Files");
+                });
+
+            modelBuilder.Entity("PersistenceService.Models.Star", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasDefaultValueSql("gen_random_uuid()");
+
+                    b.Property<Guid?>("ChannelId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp")
+                        .HasDefaultValueSql("now()");
+
+                    b.Property<Guid?>("DirectMessageGroupId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("WorkspaceId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ChannelId");
+
+                    b.HasIndex("DirectMessageGroupId");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("WorkspaceId");
+
+                    b.ToTable("Stars");
                 });
 
             modelBuilder.Entity("PersistenceService.Models.Theme", b =>
@@ -1496,9 +1546,17 @@ namespace PersistenceService.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("PersistenceService.Models.Workspace", "Workspace")
+                        .WithMany()
+                        .HasForeignKey("WorkspaceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.Navigation("Channel");
 
                     b.Navigation("User");
+
+                    b.Navigation("Workspace");
                 });
 
             modelBuilder.Entity("PersistenceService.Models.ChannelMessage", b =>
@@ -1714,9 +1772,17 @@ namespace PersistenceService.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("PersistenceService.Models.Workspace", "Workspace")
+                        .WithMany()
+                        .HasForeignKey("WorkspaceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.Navigation("DirectMessageGroup");
 
                     b.Navigation("User");
+
+                    b.Navigation("Workspace");
                 });
 
             modelBuilder.Entity("PersistenceService.Models.DirectMessageLaterFlag", b =>
@@ -1883,6 +1949,39 @@ namespace PersistenceService.Migrations
                     b.Navigation("DirectMessage");
 
                     b.Navigation("DirectMessageGroup");
+                });
+
+            modelBuilder.Entity("PersistenceService.Models.Star", b =>
+                {
+                    b.HasOne("PersistenceService.Models.Channel", "Channel")
+                        .WithMany()
+                        .HasForeignKey("ChannelId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("PersistenceService.Models.DirectMessageGroup", "DirectMessageGroup")
+                        .WithMany()
+                        .HasForeignKey("DirectMessageGroupId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("PersistenceService.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("PersistenceService.Models.Workspace", "Workspace")
+                        .WithMany()
+                        .HasForeignKey("WorkspaceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Channel");
+
+                    b.Navigation("DirectMessageGroup");
+
+                    b.Navigation("User");
+
+                    b.Navigation("Workspace");
                 });
 
             modelBuilder.Entity("PersistenceService.Models.Thread", b =>

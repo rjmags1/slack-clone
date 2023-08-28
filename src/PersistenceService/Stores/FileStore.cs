@@ -14,7 +14,7 @@ public class FileStore : Store
         return files;
     }
 
-    public async Task<Models.File?> GetFileById(Guid? id)
+    public Models.File? GetFileById(Guid? id)
     {
         return _context.Files.Where(f => f.Id == id).FirstOrDefault();
     }
