@@ -2335,7 +2335,7 @@ Github/git will be used for version control, and all tests will be run against a
       - [] WorkspaceType members field resolver
       - [] WorkspacesPageDataType field resolvers
       - [] all SlackCloneData methods
-      - [] all FieldAnalyzer methods
+      - [✅] all FieldAnalyzer methods
       - [] all ModelObjectMapper methods
       - [] all Mutation field resolvers
       - [] all Query field resolvers
@@ -2366,6 +2366,9 @@ Github/git will be used for version control, and all tests will be run against a
     - webpack chunk pages/non-load-rendered UI
 - [] Workspace page, other pages
     - Impl each needed query and associated UI until page is complete
+- Other TODO:
+  - [] implement name query for workspaces data method
+  - [] implement complex filtering for channels data method
 - Alternate between adding new functionality and testing/refactoring existing functionality until Phase 2 complete
 
 ## Phase 3 - Impl Realtime
