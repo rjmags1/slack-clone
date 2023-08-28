@@ -39,6 +39,25 @@ public class SlackCloneQuery : ObjectGraphType<object>
 
                 return new WorkspacesPageData { };
             });
+        Field<WorkspacePageData>("workspacePageData")
+            .Directive(
+                "requiresClaimMapping",
+                "claimName",
+                "sub",
+                "constraint",
+                "equivalent-userId"
+            )
+            .Argument<NonNullGraphType<IdGraphType>>("userId")
+            .Resolve(context =>
+            {
+                string query = GraphQLUtils.GetQuery(
+                    (context.UserContext as GraphQLUserContext)!
+                )!;
+                var fragments = FieldAnalyzer.GetFragments(query);
+                context.UserContext.Add("fragments", fragments);
+
+                return new WorkspacePageData { };
+            });
         Field<RelayNodeInterfaceType>("node")
             .Argument<NonNullGraphType<IdGraphType>>("id")
             .Resolve(context =>
