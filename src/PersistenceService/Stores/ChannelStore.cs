@@ -2,6 +2,8 @@ using PersistenceService.Data.ApplicationDb;
 using PersistenceService.Models;
 using PersistenceService.Constants;
 using PersistenceService.Utils;
+using PersistenceService.Utils.GraphQL;
+using System.Linq.Dynamic.Core;
 
 namespace PersistenceService.Stores;
 
@@ -549,5 +551,38 @@ public class ChannelStore : Store
         _context.AddRange(channels);
         await _context.SaveChangesAsync();
         return channels;
+    }
+
+    public async Task<(List<dynamic> channels, bool lastPage)> LoadChannels(
+        Guid workspaceId,
+        Guid userId,
+        int first,
+        FieldTree connectionTree,
+        Guid? after = null
+    )
+    {
+        IQueryable<ChannelMember> memberships = _context.ChannelMembers
+            .Where(cm => cm.WorkspaceId == workspaceId && cm.UserId == userId)
+            .OrderBy(cm => cm.Id);
+        if (!(after is null))
+        {
+            memberships = memberships.Where(cm => cm.Id.CompareTo(after!) > 0);
+        }
+        IQueryable<Channel> channels = memberships
+            .Take(first + 1)
+            .Select(cm => cm.Channel);
+
+        var dynamicChannels = await channels
+            .Select(
+                DynamicLinqUtils.NodeFieldToDynamicSelectString(connectionTree)
+            )
+            .ToDynamicListAsync();
+
+        bool lastPage = dynamicChannels.Count <= first;
+        if (!lastPage)
+        {
+            dynamicChannels.RemoveAt(dynamicChannels.Count - 1);
+        }
+        return (dynamicChannels, lastPage);
     }
 }

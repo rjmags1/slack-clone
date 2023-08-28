@@ -19,7 +19,7 @@ public class Channel
     [ForeignKey(nameof(Avatar))]
     public Guid? AvatarId { get; set; }
 
-    public int AllowedChannelPostersMask { get; set; } = 1;
+    public int AllowedPostersMask { get; set; } = 1;
 
     [Column(TypeName = "timestamp")]
     public DateTime CreatedAt { get; set; }

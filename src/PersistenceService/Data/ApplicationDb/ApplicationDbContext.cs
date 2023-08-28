@@ -32,6 +32,7 @@ public class ApplicationDbContext
     public DbSet<Theme> Themes { get; set; }
     public DbSet<Models.Thread> Threads { get; set; }
     public DbSet<ThreadWatch> ThreadWatches { get; set; }
+    public DbSet<Star> Stars { get; set; }
     public DbSet<Workspace> Workspaces { get; set; }
     public DbSet<WorkspaceAdminPermissions> WorkspaceAdminPermissions { get; set; }
     public DbSet<WorkspaceInvite> WorkspaceInvites { get; set; }
@@ -149,7 +150,7 @@ public class ApplicationDbContext
 
         modelBuilder
             .Entity<Channel>()
-            .Property(e => e.AllowedChannelPostersMask)
+            .Property(e => e.AllowedPostersMask)
             .HasDefaultValueSql("1");
     }
 

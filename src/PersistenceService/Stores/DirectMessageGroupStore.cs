@@ -2,6 +2,8 @@ using PersistenceService.Constants;
 using PersistenceService.Data.ApplicationDb;
 using PersistenceService.Models;
 using PersistenceService.Utils;
+using PersistenceService.Utils.GraphQL;
+using System.Linq.Dynamic.Core;
 
 namespace PersistenceService.Stores;
 
@@ -382,5 +384,49 @@ public class DirectMessageGroupStore : Store
         }
 
         return directMessageGroups;
+    }
+
+    public async Task<(
+        List<dynamic> dbDirectMessageGroups,
+        bool lastPage
+    )> LoadDirectMessageGroups(
+        Guid workspaceId,
+        Guid userId,
+        int first,
+        FieldTree connectionTree,
+        Guid? after = null
+    )
+    {
+        IQueryable<DirectMessageGroupMember> memberships =
+            _context.DirectMessageGroupMembers
+                .Where(
+                    dmg =>
+                        dmg.WorkspaceId == workspaceId && dmg.UserId == userId
+                )
+                .OrderBy(dmg => dmg.Id);
+        if (!(after is null))
+        {
+            memberships = memberships.Where(
+                dmg => dmg.Id.CompareTo(after!) > 0
+            );
+        }
+        IQueryable<DirectMessageGroup> directMessageGroups = memberships
+            .Take(first + 1)
+            .Select(dmg => dmg.DirectMessageGroup);
+
+        var dynamicDirectMessageGroups = await memberships
+            .Select(
+                DynamicLinqUtils.NodeFieldToDynamicSelectString(connectionTree)
+            )
+            .ToDynamicListAsync();
+
+        bool lastPage = dynamicDirectMessageGroups.Count <= first;
+        if (!lastPage)
+        {
+            dynamicDirectMessageGroups.RemoveAt(
+                dynamicDirectMessageGroups.Count - 1
+            );
+        }
+        return (dynamicDirectMessageGroups, lastPage);
     }
 }

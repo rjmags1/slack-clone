@@ -210,7 +210,8 @@ namespace PersistenceService.Migrations
                     EnableNotifications = table.Column<bool>(type: "boolean", nullable: true, defaultValueSql: "true"),
                     LastViewedAt = table.Column<DateTime>(type: "timestamp", nullable: true),
                     Starred = table.Column<bool>(type: "boolean", nullable: false, defaultValueSql: "false"),
-                    UserId = table.Column<Guid>(type: "uuid", nullable: false)
+                    UserId = table.Column<Guid>(type: "uuid", nullable: false),
+                    WorkspaceId = table.Column<Guid>(type: "uuid", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -378,7 +379,7 @@ namespace PersistenceService.Migrations
                     Id = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "gen_random_uuid()"),
                     AllowThreads = table.Column<bool>(type: "boolean", nullable: false, defaultValueSql: "true"),
                     AvatarId = table.Column<Guid>(type: "uuid", nullable: true),
-                    AllowedChannelPostersMask = table.Column<int>(type: "integer", nullable: false, defaultValueSql: "1"),
+                    AllowedPostersMask = table.Column<int>(type: "integer", nullable: false, defaultValueSql: "1"),
                     CreatedAt = table.Column<DateTime>(type: "timestamp", nullable: false, defaultValueSql: "now()"),
                     CreatedById = table.Column<Guid>(type: "uuid", nullable: false),
                     ConcurrencyStamp = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "gen_random_uuid()"),
@@ -407,7 +408,9 @@ namespace PersistenceService.Migrations
                     Id = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "gen_random_uuid()"),
                     DirectMessageGroupId = table.Column<Guid>(type: "uuid", nullable: false),
                     LastViewedGroupMessagesAt = table.Column<DateTime>(type: "timestamp", nullable: true),
-                    UserId = table.Column<Guid>(type: "uuid", nullable: false)
+                    Starred = table.Column<bool>(type: "boolean", nullable: false),
+                    UserId = table.Column<Guid>(type: "uuid", nullable: false),
+                    WorkspaceId = table.Column<Guid>(type: "uuid", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -694,6 +697,46 @@ namespace PersistenceService.Migrations
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_DirectMessageLaterFlags_Workspaces_WorkspaceId",
+                        column: x => x.WorkspaceId,
+                        principalTable: "Workspaces",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Stars",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "gen_random_uuid()"),
+                    UserId = table.Column<Guid>(type: "uuid", nullable: false),
+                    ChannelId = table.Column<Guid>(type: "uuid", nullable: true),
+                    DirectMessageGroupId = table.Column<Guid>(type: "uuid", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp", nullable: false, defaultValueSql: "now()"),
+                    WorkspaceId = table.Column<Guid>(type: "uuid", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Stars", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Stars_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Stars_Channels_ChannelId",
+                        column: x => x.ChannelId,
+                        principalTable: "Channels",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Stars_DirectMessageGroups_DirectMessageGroupId",
+                        column: x => x.DirectMessageGroupId,
+                        principalTable: "DirectMessageGroups",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Stars_Workspaces_WorkspaceId",
                         column: x => x.WorkspaceId,
                         principalTable: "Workspaces",
                         principalColumn: "Id",
@@ -996,6 +1039,11 @@ namespace PersistenceService.Migrations
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_ChannelMembers_WorkspaceId",
+                table: "ChannelMembers",
+                column: "WorkspaceId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_ChannelMessageLaterFlags_ChannelId",
                 table: "ChannelMessageLaterFlags",
                 column: "ChannelId");
@@ -1157,6 +1205,11 @@ namespace PersistenceService.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
+                name: "IX_DirectMessageGroupMembers_WorkspaceId",
+                table: "DirectMessageGroupMembers",
+                column: "WorkspaceId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_DirectMessageGroups_WorkspaceId",
                 table: "DirectMessageGroups",
                 column: "WorkspaceId");
@@ -1304,6 +1357,26 @@ namespace PersistenceService.Migrations
                 name: "IX_Files_UploadedAt",
                 table: "Files",
                 column: "UploadedAt");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Stars_ChannelId",
+                table: "Stars",
+                column: "ChannelId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Stars_DirectMessageGroupId",
+                table: "Stars",
+                column: "DirectMessageGroupId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Stars_UserId",
+                table: "Stars",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Stars_WorkspaceId",
+                table: "Stars",
+                column: "WorkspaceId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Themes_Name",
@@ -1482,6 +1555,14 @@ namespace PersistenceService.Migrations
                 onDelete: ReferentialAction.Cascade);
 
             migrationBuilder.AddForeignKey(
+                name: "FK_ChannelMembers_Workspaces_WorkspaceId",
+                table: "ChannelMembers",
+                column: "WorkspaceId",
+                principalTable: "Workspaces",
+                principalColumn: "Id",
+                onDelete: ReferentialAction.Cascade);
+
+            migrationBuilder.AddForeignKey(
                 name: "FK_ChannelMessageLaterFlags_ChannelMessages_ChannelMessageId",
                 table: "ChannelMessageLaterFlags",
                 column: "ChannelMessageId",
@@ -1594,6 +1675,14 @@ namespace PersistenceService.Migrations
                 onDelete: ReferentialAction.Cascade);
 
             migrationBuilder.AddForeignKey(
+                name: "FK_DirectMessageGroupMembers_Workspaces_WorkspaceId",
+                table: "DirectMessageGroupMembers",
+                column: "WorkspaceId",
+                principalTable: "Workspaces",
+                principalColumn: "Id",
+                onDelete: ReferentialAction.Cascade);
+
+            migrationBuilder.AddForeignKey(
                 name: "FK_DirectMessageGroups_Workspaces_WorkspaceId",
                 table: "DirectMessageGroups",
                 column: "WorkspaceId",
@@ -1694,6 +1783,9 @@ namespace PersistenceService.Migrations
 
             migrationBuilder.DropTable(
                 name: "DirectMessageReplies");
+
+            migrationBuilder.DropTable(
+                name: "Stars");
 
             migrationBuilder.DropTable(
                 name: "ThreadWatches");
