@@ -45,9 +45,9 @@ public class TestSeeder
         Console.WriteLine($"Database seeding start. Seed size: {size}");
 
         int numUsers = size == Large ? 10000 : 100;
-        int numWorkspaces = size == Large ? 100 : 10;
+        int numWorkspaces = size == Large ? 100 : 5;
         int minChannelsPerWorkspace = 2;
-        int maxChannelsPerWorkspace = size == Large ? 10 : 3;
+        int maxChannelsPerWorkspace = size == Large ? 10 : 6;
         int minMembersPerChannel = 2;
         int dmGroupsPerWorkspace = size == Large ? 1000 : 10;
         int threadsPerChannel = size == Large ? 10 : 2;
@@ -60,12 +60,14 @@ public class TestSeeder
 
         List<User> testUsers = await InsertTestUsers(numUsers);
 
+        User devUser = testUsers.First();
+
         List<Workspace> testWorkspaces = await InsertTestWorkspaces(
             numWorkspaces
         );
 
         List<List<WorkspaceMember>> testWorkspaceMembers =
-            await EnrollIntoWorkspaces(testUsers, testWorkspaces);
+            await EnrollIntoWorkspaces(devUser, testUsers, testWorkspaces);
 
         List<List<Channel>> testChannels = await InsertTestChannels(
             testWorkspaceMembers,
@@ -78,6 +80,7 @@ public class TestSeeder
 
         List<List<List<ChannelMember>>> channelMembers =
             await EnrollChannelMembers(
+                devUser,
                 testChannels,
                 testWorkspaceMembers,
                 minMembersPerChannel
@@ -547,6 +550,7 @@ public class TestSeeder
     }
 
     private async Task<List<List<WorkspaceMember>>> EnrollIntoWorkspaces(
+        User devUser,
         List<User> testUsers,
         List<Workspace> testWorkspaces
     )
@@ -570,6 +574,11 @@ public class TestSeeder
                     titles[usersCurrentWorkspace - 1] =
                         usersCurrentWorkspace == 1 ? "Owner" : "Admin";
                 }
+            }
+            if (i > usersPerWorkspace)
+            {
+                userIds.Add(devUser.Id);
+                titles.Add("Member");
             }
             List<WorkspaceMember> addedMembers =
                 await _workspaceStore.InsertWorkspaceMembers(
@@ -652,6 +661,7 @@ public class TestSeeder
     }
 
     private async Task<List<List<List<ChannelMember>>>> EnrollChannelMembers(
+        User devUser,
         List<List<Channel>> testChannels,
         List<List<WorkspaceMember>> testWorkspaceMembers,
         int minMembersPerChannel
@@ -685,21 +695,29 @@ public class TestSeeder
                         .Range(0, testWorkspaceMembers.Count)
                         .OrderBy(_ => Store.random.Next())
                         .ToList();
+                    List<Guid> memberIds = testMembers
+                        .Where((m, i) => randomIndices.Contains(i))
+                        .Select(m => m.UserId)
+                        .Take(
+                            Math.Max(
+                                Store.random.Next(
+                                    testWorkspaceMembers.Count + 1
+                                ),
+                                minMembersPerChannel
+                            )
+                        )
+                        .ToList();
+                    if (
+                        testChannel.CreatedById != devUser.Id
+                        && !memberIds.Contains(devUser.Id)
+                    )
+                    {
+                        memberIds.Add(devUser.Id);
+                    }
                     channelMembers = await _channelStore.InsertChannelMembers(
                         testChannel.Id,
                         testChannel.WorkspaceId,
-                        testMembers
-                            .Where((m, i) => randomIndices.Contains(i))
-                            .Select(m => m.UserId)
-                            .Take(
-                                Math.Max(
-                                    Store.random.Next(
-                                        testWorkspaceMembers.Count + 1
-                                    ),
-                                    minMembersPerChannel
-                                )
-                            )
-                            .ToList()
+                        memberIds
                     );
                 }
 
