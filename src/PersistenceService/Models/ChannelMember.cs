@@ -22,6 +22,9 @@ public class ChannelMember
     public bool? EnableNotifications { get; set; }
 
     [Column(TypeName = "timestamp")]
+    public DateTime JoinedAt { get; set; }
+
+    [Column(TypeName = "timestamp")]
     public DateTime? LastViewedAt { get; set; }
 
     public bool Starred { get; set; } = false;

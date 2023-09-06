@@ -488,7 +488,8 @@ public class TestSeeder
             }
             await _directMessageGroupStore.InsertDirectMessageGroups(
                 addedGroups,
-                addedGroupMembers
+                addedGroupMembers,
+                workspace.Id
             );
             groups.Add(addedGroups);
             dmgMembers.Add(addedGroupMembers);
@@ -674,6 +675,7 @@ public class TestSeeder
                 {
                     channelMembers = await _channelStore.InsertChannelMembers(
                         testChannel.Id,
+                        testChannel.WorkspaceId,
                         testMembers.Select(m => m.UserId).ToList()
                     );
                 }
@@ -685,6 +687,7 @@ public class TestSeeder
                         .ToList();
                     channelMembers = await _channelStore.InsertChannelMembers(
                         testChannel.Id,
+                        testChannel.WorkspaceId,
                         testMembers
                             .Where((m, i) => randomIndices.Contains(i))
                             .Select(m => m.UserId)

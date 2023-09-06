@@ -450,6 +450,7 @@ public class ChannelStore : Store
 
     public async Task<List<ChannelMember>> InsertChannelMembers(
         Guid channelId,
+        Guid workspaceId,
         List<Guid> userIds
     )
     {
@@ -481,7 +482,12 @@ public class ChannelStore : Store
         foreach (Guid userId in userIds)
         {
             channelMembers.Add(
-                new ChannelMember { ChannelId = channelId, UserId = userId }
+                new ChannelMember
+                {
+                    ChannelId = channelId,
+                    UserId = userId,
+                    WorkspaceId = workspaceId
+                }
             );
         }
 

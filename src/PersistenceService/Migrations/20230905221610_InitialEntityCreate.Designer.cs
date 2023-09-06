@@ -12,7 +12,7 @@ using PersistenceService.Data.ApplicationDb;
 namespace PersistenceService.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20230828174430_InitialEntityCreate")]
+    [Migration("20230905221610_InitialEntityCreate")]
     partial class InitialEntityCreate
     {
         /// <inheritdoc />
@@ -295,6 +295,11 @@ namespace PersistenceService.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")
                         .HasDefaultValueSql("true");
+
+                    b.Property<DateTime>("JoinedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp")
+                        .HasDefaultValueSql("now()");
 
                     b.Property<DateTime?>("LastViewedAt")
                         .HasColumnType("timestamp");
@@ -678,7 +683,12 @@ namespace PersistenceService.Migrations
                     b.Property<Guid>("DirectMessageGroupId")
                         .HasColumnType("uuid");
 
-                    b.Property<DateTime?>("LastViewedGroupMessagesAt")
+                    b.Property<DateTime>("JoinedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp")
+                        .HasDefaultValueSql("now()");
+
+                    b.Property<DateTime?>("LastViewedAt")
                         .HasColumnType("timestamp");
 
                     b.Property<bool>("Starred")

@@ -45,7 +45,7 @@ public class ChannelMigrationsTests
     public void AllowedChannelPostersMask()
     {
         var allowedChannelPostersMask = _entityType.FindProperty(
-            nameof(Channel.AllowedChannelPostersMask)
+            nameof(Channel.AllowedPostersMask)
         )!;
         Assert.Equal("1", allowedChannelPostersMask.GetDefaultValueSql());
     }

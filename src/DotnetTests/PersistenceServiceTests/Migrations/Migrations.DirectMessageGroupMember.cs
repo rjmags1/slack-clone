@@ -56,7 +56,7 @@ public class DirectMessageGroupMemberMigrationsTests
     public void LastViewedGroupMessagesAtColumn()
     {
         var lastViewedGroupMessagesAtProperty = _entityType.FindProperty(
-            nameof(DirectMessageGroupMember.LastViewedGroupMessagesAt)
+            nameof(DirectMessageGroupMember.LastViewedAt)
         )!;
         Assert.Equal(
             "timestamp",

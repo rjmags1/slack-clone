@@ -43,7 +43,11 @@ public class ChannelStoreTests1
         _dbContext.Add(testChannel);
 
         ChannelMember testChannelMembership =
-            StoreTestUtils.CreateTestChannelMember(testUser, testChannel);
+            StoreTestUtils.CreateTestChannelMember(
+                testUser,
+                testChannel,
+                testWorkspace
+            );
         _dbContext.Add(testChannelMembership);
 
         ChannelMessage testMessage = StoreTestUtils.CreateTestChannelMessage(
@@ -88,7 +92,11 @@ public class ChannelStoreTests1
         _dbContext.Add(testChannel);
 
         ChannelMember testChannelMembership =
-            StoreTestUtils.CreateTestChannelMember(testUser, testChannel);
+            StoreTestUtils.CreateTestChannelMember(
+                testUser,
+                testChannel,
+                testWorkspace
+            );
         _dbContext.Add(testChannelMembership);
 
         ChannelMessage testMessage = StoreTestUtils.CreateTestChannelMessage(
@@ -197,7 +205,11 @@ public class ChannelStoreTests1
         testFirstMessage.ThreadId = testThread.Id;
 
         ChannelMember testChannelMembership =
-            StoreTestUtils.CreateTestChannelMember(testUser, testChannel);
+            StoreTestUtils.CreateTestChannelMember(
+                testUser,
+                testChannel,
+                testWorkspace
+            );
         _dbContext.Add(testChannelMembership);
 
         ChannelMessage testReply = StoreTestUtils.CreateTestChannelMessage(
@@ -265,7 +277,11 @@ public class ChannelStoreTests1
         testFirstMessage.ThreadId = testThread.Id;
 
         ChannelMember testChannelMembership =
-            StoreTestUtils.CreateTestChannelMember(testUser, testChannel);
+            StoreTestUtils.CreateTestChannelMember(
+                testUser,
+                testChannel,
+                testWorkspace
+            );
         _dbContext.Add(testChannelMembership);
 
         ChannelMessage testReply = StoreTestUtils.CreateTestChannelMessage(
@@ -313,7 +329,11 @@ public class ChannelStoreTests1
         _dbContext.Add(testChannel);
 
         ChannelMember testChannelMembership =
-            StoreTestUtils.CreateTestChannelMember(testUser, testChannel);
+            StoreTestUtils.CreateTestChannelMember(
+                testUser,
+                testChannel,
+                testWorkspace
+            );
         _dbContext.Add(testChannelMembership);
 
         ChannelMessage testMessage = StoreTestUtils.CreateTestChannelMessage(
@@ -367,7 +387,11 @@ public class ChannelStoreTests1
         _dbContext.Add(testChannel);
 
         ChannelMember testChannelMembership =
-            StoreTestUtils.CreateTestChannelMember(testUser, testChannel);
+            StoreTestUtils.CreateTestChannelMember(
+                testUser,
+                testChannel,
+                testWorkspace
+            );
         _dbContext.Add(testChannelMembership);
 
         ChannelMessage testMessage = StoreTestUtils.CreateTestChannelMessage(
@@ -414,7 +438,11 @@ public class ChannelStoreTests1
         _dbContext.Add(testChannel);
 
         ChannelMember testChannelMembership =
-            StoreTestUtils.CreateTestChannelMember(testUser, testChannel);
+            StoreTestUtils.CreateTestChannelMember(
+                testUser,
+                testChannel,
+                testWorkspace
+            );
         _dbContext.Add(testChannelMembership);
 
         ChannelMessage testMessage = StoreTestUtils.CreateTestChannelMessage(
@@ -463,7 +491,11 @@ public class ChannelStoreTests1
         _dbContext.Add(testChannel);
 
         ChannelMember testChannelMembership =
-            StoreTestUtils.CreateTestChannelMember(testUser, testChannel);
+            StoreTestUtils.CreateTestChannelMember(
+                testUser,
+                testChannel,
+                testWorkspace
+            );
         _dbContext.Add(testChannelMembership);
 
         ChannelMessage testMessage = StoreTestUtils.CreateTestChannelMessage(
@@ -524,7 +556,11 @@ public class ChannelStoreTests1
         testMessage.ThreadId = testThread.Id;
 
         ChannelMember testChannelMembership =
-            StoreTestUtils.CreateTestChannelMember(testUser, testChannel);
+            StoreTestUtils.CreateTestChannelMember(
+                testUser,
+                testChannel,
+                testWorkspace
+            );
         _dbContext.Add(testChannelMembership);
 
         ThreadWatch testThreadWatch = StoreTestUtils.CreateTestThreadWatch(
@@ -588,7 +624,11 @@ public class ChannelStoreTests1
         testMessage.ThreadId = testThread.Id;
 
         ChannelMember testChannelMembership =
-            StoreTestUtils.CreateTestChannelMember(testUser, testChannel);
+            StoreTestUtils.CreateTestChannelMember(
+                testUser,
+                testChannel,
+                testWorkspace
+            );
         _dbContext.Add(testChannelMembership);
 
         await _dbContext.SaveChangesAsync();
@@ -651,7 +691,11 @@ public class ChannelStoreTests1
         _dbContext.Add(testMessage);
 
         ChannelMember testChannelMembership =
-            StoreTestUtils.CreateTestChannelMember(testUser, testChannel);
+            StoreTestUtils.CreateTestChannelMember(
+                testUser,
+                testChannel,
+                testWorkspace
+            );
         _dbContext.Add(testChannelMembership);
 
         await _dbContext.SaveChangesAsync();
@@ -697,7 +741,11 @@ public class ChannelStoreTests1
         _dbContext.Add(testMessage);
 
         ChannelMember testChannelMembership =
-            StoreTestUtils.CreateTestChannelMember(testUser, testChannel);
+            StoreTestUtils.CreateTestChannelMember(
+                testUser,
+                testChannel,
+                testWorkspace
+            );
         _dbContext.Add(testChannelMembership);
 
         await _dbContext.SaveChangesAsync();
@@ -796,7 +844,11 @@ public class ChannelStoreTests1
         testFirstMessage.ThreadId = testThread.Id;
 
         ChannelMember testChannelMembership =
-            StoreTestUtils.CreateTestChannelMember(testUser, testChannel);
+            StoreTestUtils.CreateTestChannelMember(
+                testUser,
+                testChannel,
+                testWorkspace
+            );
         _dbContext.Add(testChannelMembership);
 
         await _dbContext.SaveChangesAsync();
@@ -900,7 +952,11 @@ public class ChannelStoreTests1
         testFirstMessage.ThreadId = testThread.Id;
 
         ChannelMember testChannelMembership =
-            StoreTestUtils.CreateTestChannelMember(testUser, testChannel);
+            StoreTestUtils.CreateTestChannelMember(
+                testUser,
+                testChannel,
+                testWorkspace
+            );
         _dbContext.Add(testChannelMembership);
 
         await _dbContext.SaveChangesAsync();
@@ -1042,7 +1098,11 @@ public class ChannelStoreTests1
         testFirstMessage.ThreadId = testThread.Id;
 
         ChannelMember testChannelMembership =
-            StoreTestUtils.CreateTestChannelMember(testUser, testChannel);
+            StoreTestUtils.CreateTestChannelMember(
+                testUser,
+                testChannel,
+                testWorkspace
+            );
         _dbContext.Add(testChannelMembership);
 
         await _dbContext.SaveChangesAsync();
@@ -1133,7 +1193,11 @@ public class ChannelStoreTests1
         testFirstMessage.ThreadId = testThread.Id;
 
         ChannelMember testChannelMembership =
-            StoreTestUtils.CreateTestChannelMember(testUser, testChannel);
+            StoreTestUtils.CreateTestChannelMember(
+                testUser,
+                testChannel,
+                testWorkspace
+            );
         _dbContext.Add(testChannelMembership);
 
         await _dbContext.SaveChangesAsync();
@@ -1203,7 +1267,11 @@ public class ChannelStoreTests1
         testFirstMessage.ThreadId = testThread.Id;
 
         ChannelMember testChannelMembership =
-            StoreTestUtils.CreateTestChannelMember(testUser, testChannel);
+            StoreTestUtils.CreateTestChannelMember(
+                testUser,
+                testChannel,
+                testWorkspace
+            );
         _dbContext.Add(testChannelMembership);
 
         await _dbContext.SaveChangesAsync();
@@ -1266,7 +1334,11 @@ public class ChannelStoreTests1
         testFirstMessage.ThreadId = testThread.Id;
 
         ChannelMember testChannelMembership =
-            StoreTestUtils.CreateTestChannelMember(testUser, testChannel);
+            StoreTestUtils.CreateTestChannelMember(
+                testUser,
+                testChannel,
+                testWorkspace
+            );
         _dbContext.Add(testChannelMembership);
 
         await _dbContext.SaveChangesAsync();
@@ -1331,7 +1403,11 @@ public class ChannelStoreTests1
         testFirstMessage.ThreadId = testThread.Id;
 
         ChannelMember testChannelMembership =
-            StoreTestUtils.CreateTestChannelMember(testUser, testChannel);
+            StoreTestUtils.CreateTestChannelMember(
+                testUser,
+                testChannel,
+                testWorkspace
+            );
         _dbContext.Add(testChannelMembership);
 
         await _dbContext.SaveChangesAsync();
@@ -1379,7 +1455,11 @@ public class ChannelStoreTests1
         testFirstMessage.ThreadId = testThread.Id;
 
         ChannelMember testChannelMembership =
-            StoreTestUtils.CreateTestChannelMember(testUser, testChannel);
+            StoreTestUtils.CreateTestChannelMember(
+                testUser,
+                testChannel,
+                testWorkspace
+            );
         _dbContext.Add(testChannelMembership);
 
         await _dbContext.SaveChangesAsync();
@@ -1426,10 +1506,18 @@ public class ChannelStoreTests1
         _dbContext.Add(testChannel2);
 
         ChannelMember testChannelMembership1 =
-            StoreTestUtils.CreateTestChannelMember(testUser1, testChannel1);
+            StoreTestUtils.CreateTestChannelMember(
+                testUser1,
+                testChannel1,
+                testWorkspace
+            );
         _dbContext.Add(testChannelMembership1);
         ChannelMember testChannelMembership2 =
-            StoreTestUtils.CreateTestChannelMember(testUser2, testChannel2);
+            StoreTestUtils.CreateTestChannelMember(
+                testUser2,
+                testChannel2,
+                testWorkspace
+            );
         _dbContext.Add(testChannelMembership2);
 
         ChannelMessage testFirstMessage1 =
@@ -1646,10 +1734,18 @@ public class ChannelStoreTests1
         _dbContext.Add(testChannel2);
 
         ChannelMember testChannelMembership1 =
-            StoreTestUtils.CreateTestChannelMember(testUser1, testChannel1);
+            StoreTestUtils.CreateTestChannelMember(
+                testUser1,
+                testChannel1,
+                testWorkspace
+            );
         _dbContext.Add(testChannelMembership1);
         ChannelMember testChannelMembership2 =
-            StoreTestUtils.CreateTestChannelMember(testUser2, testChannel2);
+            StoreTestUtils.CreateTestChannelMember(
+                testUser2,
+                testChannel2,
+                testWorkspace
+            );
         _dbContext.Add(testChannelMembership2);
 
         ChannelMessage testFirstMessage1 =
@@ -1731,7 +1827,11 @@ public class ChannelStoreTests1
         _dbContext.Add(testChannel);
 
         ChannelMember testChannelMembership1 =
-            StoreTestUtils.CreateTestChannelMember(testUser, testChannel);
+            StoreTestUtils.CreateTestChannelMember(
+                testUser,
+                testChannel,
+                testWorkspace
+            );
         _dbContext.Add(testChannelMembership1);
 
         ChannelMessage testFirstMessage =
@@ -1824,6 +1924,11 @@ public class ChannelStoreTests1
             testMembers.First(),
             testWorkspace
         );
+        StoreTestUtils.CreateTestChannelMember(
+            testMembers.First(),
+            testChannel,
+            testWorkspace
+        );
         _dbContext.Add(testChannel);
 
         await _dbContext.SaveChangesAsync();
@@ -1832,6 +1937,7 @@ public class ChannelStoreTests1
         List<ChannelMember> insertedMembers =
             await _channelStore.InsertChannelMembers(
                 testChannel.Id,
+                testWorkspace.Id,
                 nonCreators.Select(u => u.Id).ToList()
             );
 
@@ -1878,6 +1984,7 @@ public class ChannelStoreTests1
             async () =>
                 await _channelStore.InsertChannelMembers(
                     testChannel.Id,
+                    testWorkspace.Id,
                     new List<Guid> { Guid.Empty }
                 )
         );
@@ -1886,6 +1993,7 @@ public class ChannelStoreTests1
             async () =>
                 await _channelStore.InsertChannelMembers(
                     Guid.Empty,
+                    testWorkspace.Id,
                     new List<Guid> { testMember.Id }
                 )
         );
@@ -1893,6 +2001,7 @@ public class ChannelStoreTests1
         Assert.NotNull(
             await _channelStore.InsertChannelMembers(
                 testChannel.Id,
+                testWorkspace.Id,
                 new List<Guid> { testMember.Id }
             )
         );
@@ -1920,6 +2029,7 @@ public class ChannelStoreTests1
             async () =>
                 await _channelStore.InsertChannelMembers(
                     testChannel.Id,
+                    testWorkspace.Id,
                     new List<Guid> { testMember.Id }
                 )
         );
@@ -1947,7 +2057,11 @@ public class ChannelStoreTests1
         await _dbContext.SaveChangesAsync();
 
         ChannelMember testChannelMembership =
-            StoreTestUtils.CreateTestChannelMember(testMember, testChannel);
+            StoreTestUtils.CreateTestChannelMember(
+                testMember,
+                testChannel,
+                testWorkspace
+            );
         _dbContext.Add(testChannelMembership);
 
         await _dbContext.SaveChangesAsync();
@@ -1956,6 +2070,7 @@ public class ChannelStoreTests1
             async () =>
                 await _channelStore.InsertChannelMembers(
                     testChannel.Id,
+                    testWorkspace.Id,
                     new List<Guid> { testMember.Id }
                 )
         );
@@ -1987,7 +2102,11 @@ public class ChannelStoreTests1
         _dbContext.Add(testChannel);
 
         ChannelMember testInviterChannelMembership =
-            StoreTestUtils.CreateTestChannelMember(testInviter, testChannel);
+            StoreTestUtils.CreateTestChannelMember(
+                testInviter,
+                testChannel,
+                testWorkspace
+            );
         testInviterChannelMembership.Admin = true;
         _dbContext.Add(testInviterChannelMembership);
 
@@ -2058,7 +2177,11 @@ public class ChannelStoreTests1
         _dbContext.Add(testChannel);
 
         ChannelMember testInviterMembership =
-            StoreTestUtils.CreateTestChannelMember(testInviter, testChannel);
+            StoreTestUtils.CreateTestChannelMember(
+                testInviter,
+                testChannel,
+                testWorkspace
+            );
         testInviterMembership.Admin = true;
         _dbContext.Add(testInviterMembership);
 
@@ -2124,11 +2247,19 @@ public class ChannelStoreTests1
         _dbContext.Add(testChannel);
 
         ChannelMember testInviterMembership =
-            StoreTestUtils.CreateTestChannelMember(testInviter, testChannel);
+            StoreTestUtils.CreateTestChannelMember(
+                testInviter,
+                testChannel,
+                testWorkspace
+            );
         testInviterMembership.Admin = true;
         _dbContext.Add(testInviterMembership);
         ChannelMember testInvitedMembership =
-            StoreTestUtils.CreateTestChannelMember(testInvited, testChannel);
+            StoreTestUtils.CreateTestChannelMember(
+                testInvited,
+                testChannel,
+                testWorkspace
+            );
         _dbContext.Add(testInvitedMembership);
 
         await _dbContext.SaveChangesAsync();
@@ -2170,7 +2301,11 @@ public class ChannelStoreTests1
         _dbContext.Add(testChannel);
 
         ChannelMember testInviterMembership =
-            StoreTestUtils.CreateTestChannelMember(testInviter, testChannel);
+            StoreTestUtils.CreateTestChannelMember(
+                testInviter,
+                testChannel,
+                testWorkspace
+            );
         _dbContext.Add(testInviterMembership);
 
         await _dbContext.SaveChangesAsync();
@@ -2209,11 +2344,19 @@ public class ChannelStoreTests1
         _dbContext.Add(testChannel);
 
         ChannelMember testInviterMembership =
-            StoreTestUtils.CreateTestChannelMember(testInviter, testChannel);
+            StoreTestUtils.CreateTestChannelMember(
+                testInviter,
+                testChannel,
+                testWorkspace
+            );
         testInviterMembership.Admin = true;
         _dbContext.Add(testInviterMembership);
         ChannelMember testInvitedMembership =
-            StoreTestUtils.CreateTestChannelMember(testInvited, testChannel);
+            StoreTestUtils.CreateTestChannelMember(
+                testInvited,
+                testChannel,
+                testWorkspace
+            );
         _dbContext.Add(testInvitedMembership);
 
         await _dbContext.SaveChangesAsync();
@@ -2257,7 +2400,7 @@ public class ChannelStoreTests1
             Assert.True(ic.AllowThreads);
             Assert.Null(ic.Avatar);
             Assert.Null(ic.AvatarId);
-            Assert.Equal(1, ic.AllowedChannelPostersMask);
+            Assert.Equal(1, ic.AllowedPostersMask);
             Assert.NotEqual(ic.CreatedAt, default(DateTime));
             Assert.Equal(ic.CreatedBy, testUser);
             Assert.Equal(ic.CreatedById, testUser.Id);

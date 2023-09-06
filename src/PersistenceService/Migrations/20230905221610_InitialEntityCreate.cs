@@ -208,6 +208,7 @@ namespace PersistenceService.Migrations
                     Admin = table.Column<bool>(type: "boolean", nullable: false, defaultValueSql: "false"),
                     ChannelId = table.Column<Guid>(type: "uuid", nullable: false),
                     EnableNotifications = table.Column<bool>(type: "boolean", nullable: true, defaultValueSql: "true"),
+                    JoinedAt = table.Column<DateTime>(type: "timestamp", nullable: false, defaultValueSql: "now()"),
                     LastViewedAt = table.Column<DateTime>(type: "timestamp", nullable: true),
                     Starred = table.Column<bool>(type: "boolean", nullable: false, defaultValueSql: "false"),
                     UserId = table.Column<Guid>(type: "uuid", nullable: false),
@@ -407,7 +408,8 @@ namespace PersistenceService.Migrations
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "gen_random_uuid()"),
                     DirectMessageGroupId = table.Column<Guid>(type: "uuid", nullable: false),
-                    LastViewedGroupMessagesAt = table.Column<DateTime>(type: "timestamp", nullable: true),
+                    JoinedAt = table.Column<DateTime>(type: "timestamp", nullable: false, defaultValueSql: "now()"),
+                    LastViewedAt = table.Column<DateTime>(type: "timestamp", nullable: true),
                     Starred = table.Column<bool>(type: "boolean", nullable: false),
                     UserId = table.Column<Guid>(type: "uuid", nullable: false),
                     WorkspaceId = table.Column<Guid>(type: "uuid", nullable: false)

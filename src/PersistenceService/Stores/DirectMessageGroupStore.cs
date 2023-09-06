@@ -16,6 +16,7 @@ public class DirectMessageGroupStore : Store
         List<DirectMessageGroupMember>
     > InsertDirectMessageGroupMembers(
         Guid directMessageGroupId,
+        Guid workspaceId,
         List<Guid> userIds
     )
     {
@@ -47,6 +48,7 @@ public class DirectMessageGroupStore : Store
                 new DirectMessageGroupMember
                 {
                     DirectMessageGroupId = directMessageGroupId,
+                    WorkspaceId = workspaceId,
                     UserId = userId
                 }
             );
@@ -349,39 +351,34 @@ public class DirectMessageGroupStore : Store
 
     public async Task<List<DirectMessageGroup>> InsertDirectMessageGroups(
         List<DirectMessageGroup> directMessageGroups,
-        List<List<Guid>> members
+        List<List<Guid>> members,
+        Guid workspaceId
     )
     {
         using var transaction = _context.Database.BeginTransaction();
-        try
+        _context.AddRange(directMessageGroups);
+        await _context.SaveChangesAsync();
+        foreach (
+            (
+                DirectMessageGroup dmg,
+                List<Guid> groupMembers
+            ) in directMessageGroups.Zip(members)
+        )
         {
-            _context.AddRange(directMessageGroups);
-            await _context.SaveChangesAsync();
-            foreach (
-                (
-                    DirectMessageGroup dmg,
-                    List<Guid> groupMembers
-                ) in directMessageGroups.Zip(members)
-            )
+            foreach (Guid memberId in groupMembers)
             {
-                foreach (Guid memberId in groupMembers)
-                {
-                    _context.Add(
-                        new DirectMessageGroupMember
-                        {
-                            DirectMessageGroup = dmg,
-                            UserId = memberId
-                        }
-                    );
-                }
+                _context.Add(
+                    new DirectMessageGroupMember
+                    {
+                        DirectMessageGroup = dmg,
+                        UserId = memberId,
+                        WorkspaceId = workspaceId
+                    }
+                );
             }
-            await _context.SaveChangesAsync();
-            await transaction.CommitAsync();
         }
-        catch (Exception e)
-        {
-            throw new InvalidOperationException(e.Message);
-        }
+        await _context.SaveChangesAsync();
+        await transaction.CommitAsync();
 
         return directMessageGroups;
     }

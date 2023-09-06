@@ -69,10 +69,16 @@ public class StoreTestUtils
 
     public static ChannelMember CreateTestChannelMember(
         User testUser,
-        Channel testChannel
+        Channel testChannel,
+        Workspace testWorkspace
     )
     {
-        return new ChannelMember { User = testUser, Channel = testChannel };
+        return new ChannelMember
+        {
+            User = testUser,
+            Channel = testChannel,
+            Workspace = testWorkspace
+        };
     }
 
     public static ChannelMessage CreateTestChannelMessage(
@@ -164,13 +170,15 @@ public class StoreTestUtils
 
     public static DirectMessageGroupMember CreateTestDirectMessageGroupMember(
         User testUser,
+        Workspace testWorkspace,
         DirectMessageGroup testGroup
     )
     {
         return new DirectMessageGroupMember
         {
             DirectMessageGroup = testGroup,
-            User = testUser
+            User = testUser,
+            Workspace = testWorkspace
         };
     }
 
