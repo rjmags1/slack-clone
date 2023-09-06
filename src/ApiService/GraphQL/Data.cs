@@ -4,6 +4,7 @@ using SlackCloneGraphQL.Types;
 using SlackCloneGraphQL.Types.Connections;
 using PersistenceService.Utils.GraphQL;
 using File = SlackCloneGraphQL.Types.File;
+using WorkspaceStore = PersistenceService.Stores.WorkspaceStore;
 
 namespace SlackCloneGraphQL;
 
@@ -151,7 +152,7 @@ public class SlackCloneData
         {
             FileStore fileStore =
                 scope.ServiceProvider.GetRequiredService<FileStore>();
-            dbWorkspaceSkeleton.Avatar = await fileStore.GetFileById(
+            dbWorkspaceSkeleton.Avatar = fileStore.GetFileById(
                 workspaceInfo.AvatarId
             );
         }
@@ -189,5 +190,172 @@ public class SlackCloneData
         UserStore userStore =
             scope.ServiceProvider.GetRequiredService<UserStore>();
         return await userStore.RegisteredEmail(email);
+    }
+
+    public async Task<Connection<Channel>> GetChannels(
+        int first,
+        Guid? after,
+        ChannelsFilter filter,
+        FieldInfo fieldInfo
+    )
+    {
+        if (filter.WorkspaceId is null || filter.UserId is null)
+        {
+            throw new InvalidOperationException();
+        }
+        if (
+            filter.SortOrder is not null
+            || filter.Query is not null
+            || filter.With is not null
+            || filter.LastActivityAfter is not null
+            || filter.LastActivityBefore is not null
+            || filter.CreatedAfter is not null
+            || filter.CreatedBefore is not null
+        )
+        {
+            throw new NotImplementedException();
+        }
+        if (
+            fieldInfo.SubfieldNames.Contains("members")
+            || fieldInfo.SubfieldNames.Contains("messages")
+        )
+        {
+            throw new InvalidOperationException(
+                "Requested a connection within a connection"
+            );
+        }
+
+        using var scope = Provider.CreateScope();
+        ChannelStore channelStore =
+            scope.ServiceProvider.GetRequiredService<ChannelStore>();
+        (List<dynamic> dbChannels, bool lastPage) =
+            await channelStore.LoadChannels(
+                (Guid)filter.WorkspaceId,
+                (Guid)filter.UserId,
+                first,
+                fieldInfo.FieldTree,
+                after
+            );
+
+        List<Channel> channels = new();
+        foreach (dynamic dbc in dbChannels)
+        {
+            Channel channel = (Channel)
+                ModelToObjectConverters.ConvertDynamicChannel(dbc);
+            channels.Add(channel);
+        }
+
+        return ModelToObjectConverters.ToConnection<Channel>(
+            channels,
+            after is null,
+            lastPage
+        );
+    }
+
+    public async Task<Connection<DirectMessageGroup>> GetDirectMessageGroups(
+        int first,
+        Guid? after,
+        DirectMessageGroupsFilter filter,
+        FieldInfo fieldInfo
+    )
+    {
+        if (filter.SortOrder is not null)
+        {
+            throw new NotImplementedException();
+        }
+        if (
+            fieldInfo.SubfieldNames.Contains("members")
+            || fieldInfo.SubfieldNames.Contains("messages")
+        )
+        {
+            throw new InvalidOperationException(
+                "Requested a connection within a connection"
+            );
+        }
+
+        using var scope = Provider.CreateScope();
+        DirectMessageGroupStore directMessageGroupStore =
+            scope.ServiceProvider.GetRequiredService<DirectMessageGroupStore>();
+        (List<dynamic> dbDirectMessageGroups, bool lastPage) =
+            await directMessageGroupStore.LoadDirectMessageGroups(
+                filter.WorkspaceId,
+                filter.UserId,
+                first,
+                fieldInfo.FieldTree,
+                after
+            );
+
+        List<DirectMessageGroup> groups = new();
+        foreach (dynamic dbg in dbDirectMessageGroups)
+        {
+            DirectMessageGroup directMessageGroup = (DirectMessageGroup)
+                ModelToObjectConverters.ConvertDynamicDirectMessageGroup(dbg);
+            groups.Add(directMessageGroup);
+        }
+
+        return ModelToObjectConverters.ToConnection<DirectMessageGroup>(
+            groups,
+            after is null,
+            lastPage
+        );
+    }
+
+    public async Task<Connection<IGroup>> GetStarred(
+        int first,
+        Guid? after,
+        StarredFilter filter,
+        FieldInfo fieldInfo
+    )
+    {
+        if (
+            fieldInfo.SubfieldNames.Contains("members")
+            || fieldInfo.SubfieldNames.Contains("messages")
+        )
+        {
+            throw new InvalidOperationException(
+                "Requested a connection within a connection"
+            );
+        }
+
+        using var scope = Provider.CreateScope();
+        WorkspaceStore workspaceStore =
+            scope.ServiceProvider.GetRequiredService<WorkspaceStore>();
+        (List<WorkspaceStore.StarredInfo> dbStarred, bool lastPage) =
+            await workspaceStore.LoadStarred(
+                filter.WorkspaceId,
+                filter.UserId,
+                first,
+                fieldInfo.FieldTree,
+                after
+            );
+
+        List<IGroup> starred = new();
+        foreach (WorkspaceStore.StarredInfo dbg in dbStarred)
+        {
+            if (dbg.Type == WorkspaceStore.CHANNEL)
+            {
+                Channel channel = (Channel)
+                    ModelToObjectConverters.ConvertDynamicChannel(dbg.Starred);
+                starred.Add(channel);
+            }
+            else if (dbg.Type == WorkspaceStore.DIRECT_MESSAGE_GROUP)
+            {
+                DirectMessageGroup directMessageGroup = (DirectMessageGroup)
+                    ModelToObjectConverters.ConvertDynamicDirectMessageGroup(
+                        dbg.Starred
+                    );
+                starred.Add(directMessageGroup);
+            }
+            else
+            {
+                throw new InvalidOperationException();
+            }
+        }
+
+        return ModelToObjectConverters.ToConnection<IGroup>(
+            starred,
+            after is null,
+            lastPage
+        );
     }
 }
