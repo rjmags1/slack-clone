@@ -2354,6 +2354,7 @@ Github/git will be used for version control, and all tests will be run against a
       - [] all UserStore methods
       - [] all WorkspaceStore methods
       - [] all Util methods
+      - [] update migrations tests (added columns, improve impl)
     - WebClientService
       - [] signin/signout flow (playwright)
       - [] workspaces page load (playwright)
