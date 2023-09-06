@@ -569,10 +569,31 @@ public class ChannelStore : Store
     {
         IQueryable<ChannelMember> memberships = _context.ChannelMembers
             .Where(cm => cm.WorkspaceId == workspaceId && cm.UserId == userId)
-            .OrderBy(cm => cm.Id);
+            .OrderByDescending(cm => cm.LastViewedAt.HasValue)
+            .ThenByDescending(cm => cm.LastViewedAt)
+            .ThenByDescending(cm => cm.JoinedAt);
         if (!(after is null))
         {
-            memberships = memberships.Where(cm => cm.Id.CompareTo(after!) > 0);
+            ChannelMember afterMembership = memberships
+                .Where(
+                    cm =>
+                        cm.WorkspaceId == workspaceId
+                        && cm.UserId == userId
+                        && cm.ChannelId == after
+                )
+                .First();
+            if (afterMembership.LastViewedAt is null)
+            {
+                memberships = memberships.Where(
+                    cm => cm.JoinedAt < afterMembership.JoinedAt
+                );
+            }
+            else
+            {
+                memberships = memberships.Where(
+                    cm => cm.LastViewedAt < afterMembership.LastViewedAt
+                );
+            }
         }
         IQueryable<Channel> channels = memberships
             .Take(first + 1)
