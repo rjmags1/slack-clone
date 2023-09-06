@@ -293,6 +293,11 @@ namespace PersistenceService.Migrations
                         .HasColumnType("boolean")
                         .HasDefaultValueSql("true");
 
+                    b.Property<DateTime>("JoinedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp")
+                        .HasDefaultValueSql("now()");
+
                     b.Property<DateTime?>("LastViewedAt")
                         .HasColumnType("timestamp");
 
@@ -675,7 +680,12 @@ namespace PersistenceService.Migrations
                     b.Property<Guid>("DirectMessageGroupId")
                         .HasColumnType("uuid");
 
-                    b.Property<DateTime?>("LastViewedGroupMessagesAt")
+                    b.Property<DateTime>("JoinedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp")
+                        .HasDefaultValueSql("now()");
+
+                    b.Property<DateTime?>("LastViewedAt")
                         .HasColumnType("timestamp");
 
                     b.Property<bool>("Starred")

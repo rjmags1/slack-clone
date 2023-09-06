@@ -4,7 +4,7 @@ namespace SlackCloneGraphQL.Types.Connections;
 
 public abstract class ConnectionEdgeType<T, U>
     : ObjectGraphType<ConnectionEdge<U>>
-    where T : INodeGraphType<U>
+    where T : IGraphType
     where U : INode
 {
     public ConnectionEdgeType()

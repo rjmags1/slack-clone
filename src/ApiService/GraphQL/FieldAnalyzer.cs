@@ -1,5 +1,3 @@
-using System.ComponentModel;
-using GraphQL;
 using PersistenceService.Utils.GraphQL;
 
 namespace SlackCloneGraphQL;
@@ -92,6 +90,36 @@ public static class FieldAnalyzer
     {
         string workspacesFieldSlice = GetFieldSlice(opString, "workspaces");
         return CollectFields(workspacesFieldSlice, fragments);
+    }
+
+    public static FieldInfo Channels(
+        string opString,
+        Dictionary<string, string> fragments
+    )
+    {
+        string channelsFieldSlice = GetFieldSlice(opString, "channels");
+        return CollectFields(channelsFieldSlice, fragments);
+    }
+
+    public static FieldInfo DirectMessageGroups(
+        string opString,
+        Dictionary<string, string> fragments
+    )
+    {
+        string directMessageGroupsFieldSlice = GetFieldSlice(
+            opString,
+            "directMessageGroups"
+        );
+        return CollectFields(directMessageGroupsFieldSlice, fragments);
+    }
+
+    public static FieldInfo Starred(
+        string opString,
+        Dictionary<string, string> fragments
+    )
+    {
+        string starredFieldSlice = GetFieldSlice(opString, "starred");
+        return CollectFields(starredFieldSlice, fragments);
     }
 
     public static FieldInfo User(

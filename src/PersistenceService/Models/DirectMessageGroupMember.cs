@@ -17,7 +17,10 @@ public class DirectMessageGroupMember
     public Guid DirectMessageGroupId { get; set; }
 
     [Column(TypeName = "timestamp")]
-    public DateTime? LastViewedGroupMessagesAt { get; set; }
+    public DateTime JoinedAt { get; set; }
+
+    [Column(TypeName = "timestamp")]
+    public DateTime? LastViewedAt { get; set; }
 
     public bool Starred { get; set; } = false;
 

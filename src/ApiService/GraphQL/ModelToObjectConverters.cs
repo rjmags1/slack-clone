@@ -35,6 +35,122 @@ public static class ModelToObjectConverters
     private static readonly Theme DefaultTheme =
         new() { Id = Guid.Empty, Name = "DEFAULT_THEME" };
 
+    public static DirectMessageGroup ConvertDynamicDirectMessageGroup(
+        dynamic modelDirectMessageGroup
+    )
+    {
+        var expando = DynamicUtils.ToExpando(modelDirectMessageGroup);
+        DirectMessageGroup group = new();
+        if (DynamicUtils.HasProperty(expando, nameof(DirectMessageGroup.Id)))
+        {
+            group.Id = JsonSerializer.Deserialize<Guid>(expando.Id);
+        }
+        if (
+            DynamicUtils.HasProperty(
+                expando,
+                nameof(DirectMessageGroup.CreatedAt)
+            )
+        )
+        {
+            group.CreatedAt = JsonSerializer.Deserialize<DateTime>(
+                expando.CreatedAt
+            );
+        }
+        if (
+            DynamicUtils.HasProperty(
+                expando,
+                nameof(DirectMessageGroup.Workspace)
+            )
+        )
+        {
+            var dbWorkspace = JsonSerializer.Deserialize<Models.Workspace>(
+                expando.Workspace
+            );
+            group.Workspace = ConvertWorkspace(dbWorkspace);
+        }
+
+        return group;
+    }
+
+    public static Channel ConvertDynamicChannel(dynamic modelChannel)
+    {
+        var expando = DynamicUtils.ToExpando(modelChannel);
+        Channel channel = new();
+        if (DynamicUtils.HasProperty(expando, nameof(Channel.Id)))
+        {
+            channel.Id = JsonSerializer.Deserialize<Guid>(expando.Id);
+        }
+        if (DynamicUtils.HasProperty(expando, nameof(Channel.AllowThreads)))
+        {
+            channel.AllowThreads = JsonSerializer.Deserialize<bool>(
+                expando.AllowThreads
+            );
+        }
+        if (DynamicUtils.HasProperty(expando, nameof(Channel.Avatar)))
+        {
+            var dbAvatar = JsonSerializer.Deserialize<Models.File>(
+                expando.Avatar
+            );
+            channel.Avatar = ConvertAvatar(dbAvatar);
+        }
+        if (
+            DynamicUtils.HasProperty(
+                expando,
+                nameof(Channel.AllowedPostersMask)
+            )
+        )
+        {
+            channel.AllowedPostersMask = JsonSerializer.Deserialize<int>(
+                expando.AllowedPostersMask
+            );
+        }
+        if (DynamicUtils.HasProperty(expando, nameof(Channel.CreatedAt)))
+        {
+            channel.CreatedAt = JsonSerializer.Deserialize<DateTime>(
+                expando.CreatedAt
+            );
+        }
+        if (DynamicUtils.HasProperty(expando, nameof(Channel.CreatedBy)))
+        {
+            channel.CreatedBy = JsonSerializer.Deserialize<User>(
+                expando.CreatedBy
+            );
+        }
+        if (DynamicUtils.HasProperty(expando, nameof(Channel.Description)))
+        {
+            channel.Description = JsonSerializer.Deserialize<string>(
+                expando.Description
+            );
+        }
+        if (DynamicUtils.HasProperty(expando, nameof(Channel.Name)))
+        {
+            channel.Name = JsonSerializer.Deserialize<string>(expando.Name);
+        }
+        if (DynamicUtils.HasProperty(expando, nameof(Channel.NumMembers)))
+        {
+            channel.NumMembers = JsonSerializer.Deserialize<int>(
+                expando.NumMembers
+            );
+        }
+        if (DynamicUtils.HasProperty(expando, nameof(Channel.Private)))
+        {
+            channel.Private = JsonSerializer.Deserialize<bool>(expando.Private);
+        }
+        if (DynamicUtils.HasProperty(expando, nameof(Channel.Topic)))
+        {
+            channel.Topic = JsonSerializer.Deserialize<string>(expando.Topic);
+        }
+        if (DynamicUtils.HasProperty(expando, nameof(Channel.Workspace)))
+        {
+            var dbWorkspace = JsonSerializer.Deserialize<Models.Workspace>(
+                expando.Workspace
+            );
+            channel.Workspace = ConvertWorkspace(dbWorkspace);
+        }
+
+        return channel;
+    }
+
     public static Workspace ConvertDynamicWorkspace(dynamic modelWorkspace)
     {
         var expando = DynamicUtils.ToExpando(modelWorkspace);

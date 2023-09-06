@@ -44,9 +44,32 @@ public class WorkspacePageDataType : ObjectGraphType<WorkspacePageData>
             });
         Field<NonNullGraphType<ChannelsConnectionType>>("channels")
             .Argument<NonNullGraphType<ChannelsFilterInputType>>("filter")
-            .Resolve(context =>
+            .Argument<NonNullGraphType<IntGraphType>>("first")
+            .Argument<IdGraphType>("after")
+            .ResolveAsync(async context =>
             {
-                throw new NotImplementedException();
+                var first = context.GetArgument<int>("first");
+                var after = context.GetArgument<Guid?>("after");
+                ChannelsFilter channelsFilter =
+                    context.GetArgument<ChannelsFilter>("filter");
+                var fragments = (
+                    context.UserContext["fragments"]
+                    as Dictionary<string, string>
+                )!;
+                var query = GraphQLUtils.GetQuery(
+                    (context.UserContext as GraphQLUserContext)!
+                )!;
+                var channelsFieldInfo = FieldAnalyzer.Channels(
+                    query,
+                    fragments
+                );
+
+                return await data.GetChannels(
+                    first,
+                    after,
+                    channelsFilter,
+                    channelsFieldInfo
+                );
             });
         Field<NonNullGraphType<DirectMessageGroupsConnectionType>>(
                 "directMessageGroups"
@@ -54,15 +77,58 @@ public class WorkspacePageDataType : ObjectGraphType<WorkspacePageData>
             .Argument<NonNullGraphType<DirectMessageGroupsFilterInputType>>(
                 "filter"
             )
-            .Resolve(context =>
+            .Argument<NonNullGraphType<IntGraphType>>("first")
+            .Argument<IdGraphType>("after")
+            .ResolveAsync(async context =>
             {
-                throw new NotImplementedException();
+                var first = context.GetArgument<int>("first");
+                var after = context.GetArgument<Guid?>("after");
+                DirectMessageGroupsFilter directMessageGroupsFilter =
+                    context.GetArgument<DirectMessageGroupsFilter>("filter");
+
+                var fragments = (
+                    context.UserContext["fragments"]
+                    as Dictionary<string, string>
+                )!;
+                var query = GraphQLUtils.GetQuery(
+                    (context.UserContext as GraphQLUserContext)!
+                )!;
+                var directMessageGroupsFieldInfo =
+                    FieldAnalyzer.DirectMessageGroups(query, fragments);
+
+                return await data.GetDirectMessageGroups(
+                    first,
+                    after,
+                    directMessageGroupsFilter,
+                    directMessageGroupsFieldInfo
+                );
             });
         Field<NonNullGraphType<StarredConnectionType>>("starred")
             .Argument<NonNullGraphType<StarredFilterInputType>>("filter")
-            .Resolve(context =>
+            .Argument<NonNullGraphType<IntGraphType>>("first")
+            .Argument<IdGraphType>("after")
+            .ResolveAsync(async context =>
             {
-                throw new NotImplementedException();
+                var first = context.GetArgument<int>("first");
+                var after = context.GetArgument<Guid?>("after");
+                StarredFilter starredFilter =
+                    context.GetArgument<StarredFilter>("filter");
+
+                var fragments = (
+                    context.UserContext["fragments"]
+                    as Dictionary<string, string>
+                )!;
+                var query = GraphQLUtils.GetQuery(
+                    (context.UserContext as GraphQLUserContext)!
+                )!;
+                var starredFieldInfo = FieldAnalyzer.Starred(query, fragments);
+
+                return await data.GetStarred(
+                    first,
+                    after,
+                    starredFilter,
+                    starredFieldInfo
+                );
             });
     }
 }

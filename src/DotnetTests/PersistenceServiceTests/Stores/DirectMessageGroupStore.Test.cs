@@ -44,6 +44,7 @@ public class DirectMessageGroupStoreTests1
         DirectMessageGroupMember? insertedMember = (
             await _directMessageGroupStore.InsertDirectMessageGroupMembers(
                 testGroup.Id,
+                testWorkspace.Id,
                 new List<Guid> { testUser.Id }
             )
         ).FirstOrDefault();
@@ -51,7 +52,7 @@ public class DirectMessageGroupStoreTests1
         Assert.NotNull(insertedMember);
         Assert.NotEqual(insertedMember.Id, Guid.Empty);
         Assert.Equal(insertedMember.DirectMessageGroupId, testGroup.Id);
-        Assert.Null(insertedMember.LastViewedGroupMessagesAt);
+        Assert.Null(insertedMember.LastViewedAt);
         Assert.Equal(insertedMember.UserId, testUser.Id);
     }
 
@@ -78,6 +79,7 @@ public class DirectMessageGroupStoreTests1
             async () =>
                 await _directMessageGroupStore.InsertDirectMessageGroupMembers(
                     Guid.Empty,
+                    testWorkspace.Id,
                     new List<Guid> { testUser.Id }
                 )
         );
@@ -86,6 +88,7 @@ public class DirectMessageGroupStoreTests1
             async () =>
                 await _directMessageGroupStore.InsertDirectMessageGroupMembers(
                     testGroup.Id,
+                    testWorkspace.Id,
                     new List<Guid> { Guid.Empty }
                 )
         );
@@ -93,6 +96,7 @@ public class DirectMessageGroupStoreTests1
         DirectMessageGroupMember testGroupMember =
             StoreTestUtils.CreateTestDirectMessageGroupMember(
                 testUser,
+                testWorkspace,
                 testGroup
             );
         _dbContext.Add(testGroupMember);
@@ -102,6 +106,7 @@ public class DirectMessageGroupStoreTests1
             async () =>
                 await _directMessageGroupStore.InsertDirectMessageGroupMembers(
                     testGroup.Id,
+                    testWorkspace.Id,
                     new List<Guid> { testUser.Id }
                 )
         );
@@ -127,6 +132,7 @@ public class DirectMessageGroupStoreTests1
         DirectMessageGroupMember testDmgMembership =
             StoreTestUtils.CreateTestDirectMessageGroupMember(
                 testUser,
+                testWorkspace,
                 testGroup
             );
         _dbContext.Add(testDmgMembership);
@@ -173,6 +179,7 @@ public class DirectMessageGroupStoreTests1
         DirectMessageGroupMember testDmgMembership =
             StoreTestUtils.CreateTestDirectMessageGroupMember(
                 testUser,
+                testWorkspace,
                 testGroup
             );
         _dbContext.Add(testDmgMembership);
@@ -268,6 +275,7 @@ public class DirectMessageGroupStoreTests1
         DirectMessageGroupMember testDmgMembership =
             StoreTestUtils.CreateTestDirectMessageGroupMember(
                 testUser,
+                testWorkspace,
                 testGroup
             );
         _dbContext.Add(testDmgMembership);
@@ -328,6 +336,7 @@ public class DirectMessageGroupStoreTests1
         DirectMessageGroupMember testDmgMembership =
             StoreTestUtils.CreateTestDirectMessageGroupMember(
                 testUser,
+                testWorkspace,
                 testGroup
             );
         _dbContext.Add(testDmgMembership);
@@ -391,6 +400,7 @@ public class DirectMessageGroupStoreTests1
         DirectMessageGroupMember testDmgMembership =
             StoreTestUtils.CreateTestDirectMessageGroupMember(
                 testUser,
+                testWorkspace,
                 testGroup
             );
         _dbContext.Add(testDmgMembership);
@@ -445,6 +455,7 @@ public class DirectMessageGroupStoreTests1
         DirectMessageGroupMember testDmgMembership =
             StoreTestUtils.CreateTestDirectMessageGroupMember(
                 testUser,
+                testWorkspace,
                 testGroup
             );
         _dbContext.Add(testDmgMembership);
@@ -501,6 +512,7 @@ public class DirectMessageGroupStoreTests1
         DirectMessageGroupMember testDmgMembership =
             StoreTestUtils.CreateTestDirectMessageGroupMember(
                 testUser,
+                testWorkspace,
                 testGroup
             );
         _dbContext.Add(testDmgMembership);
@@ -555,6 +567,7 @@ public class DirectMessageGroupStoreTests1
         DirectMessageGroupMember testDmgMembership =
             StoreTestUtils.CreateTestDirectMessageGroupMember(
                 testUser,
+                testWorkspace,
                 testGroup
             );
         _dbContext.Add(testDmgMembership);
@@ -609,6 +622,7 @@ public class DirectMessageGroupStoreTests1
         DirectMessageGroupMember testDmgMembership =
             StoreTestUtils.CreateTestDirectMessageGroupMember(
                 testUser,
+                testWorkspace,
                 testGroup
             );
         _dbContext.Add(testDmgMembership);
@@ -656,6 +670,7 @@ public class DirectMessageGroupStoreTests1
         DirectMessageGroupMember testDmgMembership =
             StoreTestUtils.CreateTestDirectMessageGroupMember(
                 testUser,
+                testWorkspace,
                 testGroup
             );
         _dbContext.Add(testDmgMembership);
@@ -711,6 +726,7 @@ public class DirectMessageGroupStoreTests1
         DirectMessageGroupMember testDmgMembership =
             StoreTestUtils.CreateTestDirectMessageGroupMember(
                 testUser,
+                testWorkspace,
                 testGroup
             );
         _dbContext.Add(testDmgMembership);
@@ -807,6 +823,7 @@ public class DirectMessageGroupStoreTests1
         DirectMessageGroupMember testDmgMembership =
             StoreTestUtils.CreateTestDirectMessageGroupMember(
                 testUser,
+                testWorkspace,
                 testGroup
             );
         _dbContext.Add(testDmgMembership);
@@ -916,6 +933,7 @@ public class DirectMessageGroupStoreTests1
         DirectMessageGroupMember testDmgMembership =
             StoreTestUtils.CreateTestDirectMessageGroupMember(
                 testUser,
+                testWorkspace,
                 testGroup
             );
         _dbContext.Add(testDmgMembership);
@@ -977,6 +995,7 @@ public class DirectMessageGroupStoreTests1
         DirectMessageGroupMember testDmgMembership =
             StoreTestUtils.CreateTestDirectMessageGroupMember(
                 testUser,
+                testWorkspace,
                 testGroup
             );
         _dbContext.Add(testDmgMembership);
@@ -1025,6 +1044,7 @@ public class DirectMessageGroupStoreTests1
             );
             testMembers.Add(new List<User> { dmgUser1, dmgUser2 });
         }
+        _dbContext.Add(testWorkspace);
         _dbContext.AddRange(testMembers.SelectMany(pair => pair).ToList());
 
         await _dbContext.SaveChangesAsync();
@@ -1033,7 +1053,8 @@ public class DirectMessageGroupStoreTests1
             testGroups,
             testMembers
                 .Select(pair => pair.Select(member => member.Id).ToList())
-                .ToList()
+                .ToList(),
+            testWorkspace.Id
         );
 
         foreach (
