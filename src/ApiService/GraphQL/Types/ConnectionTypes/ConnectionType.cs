@@ -3,7 +3,7 @@ using GraphQL.Types;
 namespace SlackCloneGraphQL.Types.Connections;
 
 public abstract class ConnectionType<T, U, E> : ObjectGraphType<Connection<U>>
-    where T : INodeGraphType<U>
+    where T : IGraphType
     where U : INode
     where E : ConnectionEdgeType<T, U>
 {
