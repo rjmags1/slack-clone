@@ -8,6 +8,7 @@ public class ChannelType : ObjectGraphType<Channel>, INodeGraphType<Channel>
     public ChannelType()
     {
         Name = "Channel";
+        Interface<GroupInterfaceType>();
         Field<NonNullGraphType<IdGraphType>>("id")
             .Description("The UUID of the channel.")
             .Resolve(context => context.Source.Id);

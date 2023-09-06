@@ -28,7 +28,7 @@ public class MessageType : ObjectGraphType<Message>, INodeGraphType<Message>
                 "Relay connection representing the collection of files associated with the message."
             )
             .Resolve(context => throw new NotImplementedException());
-        Field<NonNullGraphType<GroupType>>("group")
+        Field<NonNullGraphType<GroupInterfaceType>>("group")
             .Description(
                 "The channel or direct message group associated with the message"
             )

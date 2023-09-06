@@ -1,7 +1,7 @@
 namespace SlackCloneGraphQL.Types.Connections;
 
 public class StarredConnectionType
-    : ConnectionType<MessageType, Message, StarredConnectionEdgeType>
+    : ConnectionType<GroupInterfaceType, IGroup, StarredConnectionEdgeType>
 {
     public StarredConnectionType()
     {

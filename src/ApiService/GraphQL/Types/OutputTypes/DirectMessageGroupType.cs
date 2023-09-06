@@ -10,6 +10,7 @@ public class DirectMessageGroupType
     public DirectMessageGroupType()
     {
         Name = "DirectMessageGroup";
+        Interface<GroupInterfaceType>();
         Field<NonNullGraphType<IdGraphType>>("id")
             .Description("The UUID of the direct message group")
             .Resolve(context => context.Source.Id);
@@ -20,12 +21,15 @@ public class DirectMessageGroupType
                 "members"
             )
             .Description("The members of the direct message group")
-            .Resolve(context => context.Source.Members);
+            .Resolve(context => throw new NotImplementedException());
         Field<NonNullGraphType<DirectMessagesConnectionType>>("messages")
             .Description(
                 "Relay connection representing messages in the direct message group conversation"
             )
             .Resolve(context => throw new NotImplementedException());
+        Field<NonNullGraphType<StringGraphType>>("name")
+            .Description("The name of the direct message group")
+            .Resolve(context => throw new NotImplementedException()); // names of members
         Field<NonNullGraphType<WorkspaceType>>("workspace")
             .Description(
                 "The workspace associated with the direct message group"
@@ -41,6 +45,7 @@ public class DirectMessageGroup : INode, IGroup
 #pragma warning disable CS8618
     public List<User> Members { get; set; }
     public Connection<Message> Messages { get; set; }
+    public string Name { get; set; }
     public Workspace Workspace { get; set; }
 #pragma warning restore CS8618
 }
