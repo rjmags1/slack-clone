@@ -481,9 +481,7 @@ public class WorkspaceStore : Store
                 .Where(s => s.Id == after)
                 .Select(s => s.CreatedAt)
                 .First();
-            stars = stars.Where(
-                s => s.CreatedAt >= afterStarredAt && s.Id != after
-            );
+            stars = stars.Where(s => s.CreatedAt > afterStarredAt);
         }
         IQueryable<Star> loadedStars = stars.Take(first + 1);
         IQueryable<Channel> starredChannels = loadedStars
@@ -492,10 +490,12 @@ public class WorkspaceStore : Store
         IQueryable<DirectMessageGroup> starredDirectMessageGroups = loadedStars
             .Where(s => s.DirectMessageGroup != null)
             .Select(s => s.DirectMessageGroup!);
-
-        // GroupType should be interface not union
-        // so can only request id, name, num messages, etc.
-        // as a result can use the connectionTree for both types of groups
+        var rows = await loadedStars.CountAsync();
+        bool lastPage = rows <= first;
+        if (!lastPage)
+        {
+            loadedStars = loadedStars.Take(first);
+        }
 
         var dynamicChannels = await starredChannels
             .Select(
@@ -507,8 +507,6 @@ public class WorkspaceStore : Store
                 DynamicLinqUtils.NodeFieldToDynamicSelectString(connectionTree)
             )
             .ToDynamicListAsync();
-        bool lastPage =
-            (dynamicChannels.Count + dynamicDirectMessageGroups.Count) <= first;
 
         List<StarredInfo> starred = new();
         foreach (var dbc in starredChannels)

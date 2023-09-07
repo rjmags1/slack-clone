@@ -6,7 +6,7 @@ public class ChannelsFilterInputType : InputObjectGraphType<ChannelsFilter>
 {
     public ChannelsFilterInputType()
     {
-        Name = "ChannelsFilterInput";
+        Name = "ChannelsFilter";
         Field<NonNullGraphType<IdGraphType>>("workspaceId");
         Field<NonNullGraphType<IdGraphType>>("userId");
         Field<IntGraphType>("sortOrder");

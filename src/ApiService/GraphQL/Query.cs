@@ -39,7 +39,7 @@ public class SlackCloneQuery : ObjectGraphType<object>
 
                 return new WorkspacesPageData { };
             });
-        Field<WorkspacePageData>("workspacePageData")
+        Field<WorkspacePageDataType>("workspacePageData")
             .Directive(
                 "requiresClaimMapping",
                 "claimName",

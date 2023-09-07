@@ -88,10 +88,17 @@ public static class ModelToObjectConverters
         }
         if (DynamicUtils.HasProperty(expando, nameof(Channel.Avatar)))
         {
-            var dbAvatar = JsonSerializer.Deserialize<Models.File>(
-                expando.Avatar
-            );
-            channel.Avatar = ConvertAvatar(dbAvatar);
+            if (expando.Avatar is null)
+            {
+                channel.Avatar = ConvertAvatar(null);
+            }
+            else
+            {
+                var dbAvatar = JsonSerializer.Deserialize<Models.File>(
+                    (Stream)expando.Avatar
+                );
+                channel.Avatar = ConvertAvatar(dbAvatar);
+            }
         }
         if (
             DynamicUtils.HasProperty(
@@ -110,7 +117,10 @@ public static class ModelToObjectConverters
                 expando.CreatedAt
             );
         }
-        if (DynamicUtils.HasProperty(expando, nameof(Channel.CreatedBy)))
+        if (
+            DynamicUtils.HasProperty(expando, nameof(Channel.CreatedBy))
+            && expando.CreatedBy is not null
+        )
         {
             channel.CreatedBy = JsonSerializer.Deserialize<User>(
                 expando.CreatedBy
@@ -136,7 +146,10 @@ public static class ModelToObjectConverters
         {
             channel.Private = JsonSerializer.Deserialize<bool>(expando.Private);
         }
-        if (DynamicUtils.HasProperty(expando, nameof(Channel.Topic)))
+        if (
+            DynamicUtils.HasProperty(expando, nameof(Channel.Topic))
+            && expando.Topic is not null
+        )
         {
             channel.Topic = JsonSerializer.Deserialize<string>(expando.Topic);
         }

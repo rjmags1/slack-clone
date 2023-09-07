@@ -6,7 +6,7 @@ public class StarredFilterInputType : InputObjectGraphType<StarredFilter>
 {
     public StarredFilterInputType()
     {
-        Name = "StarredFilterInput";
+        Name = "StarredFilter";
         Field<NonNullGraphType<IdGraphType>>("userId");
         Field<NonNullGraphType<IdGraphType>>("workspaceId");
     }

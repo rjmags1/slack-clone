@@ -3,7 +3,7 @@ using GraphQL.Types;
 namespace SlackCloneGraphQL.Types;
 
 public class DirectMessageGroupsFilterInputType
-    : ObjectGraphType<DirectMessageGroupsFilter>
+    : InputObjectGraphType<DirectMessageGroupsFilter>
 {
     public DirectMessageGroupsFilterInputType()
     {

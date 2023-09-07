@@ -400,18 +400,37 @@ public class DirectMessageGroupStore : Store
                     dmg =>
                         dmg.WorkspaceId == workspaceId && dmg.UserId == userId
                 )
-                .OrderBy(dmg => dmg.Id);
+                .OrderByDescending(dmg => dmg.LastViewedAt.HasValue)
+                .ThenByDescending(dmg => dmg.LastViewedAt)
+                .ThenByDescending(dmg => dmg.JoinedAt);
         if (!(after is null))
         {
-            memberships = memberships.Where(
-                dmg => dmg.Id.CompareTo(after!) > 0
-            );
+            DirectMessageGroupMember afterMembership = memberships
+                .Where(
+                    dmg =>
+                        dmg.WorkspaceId == workspaceId
+                        && dmg.UserId == userId
+                        && dmg.DirectMessageGroupId == after
+                )
+                .First();
+            if (afterMembership.LastViewedAt is null)
+            {
+                memberships = memberships.Where(
+                    dmg => dmg.JoinedAt < afterMembership.JoinedAt
+                );
+            }
+            else
+            {
+                memberships = memberships.Where(
+                    dmg => dmg.LastViewedAt < afterMembership.LastViewedAt
+                );
+            }
         }
         IQueryable<DirectMessageGroup> directMessageGroups = memberships
             .Take(first + 1)
             .Select(dmg => dmg.DirectMessageGroup);
 
-        var dynamicDirectMessageGroups = await memberships
+        var dynamicDirectMessageGroups = await directMessageGroups
             .Select(
                 DynamicLinqUtils.NodeFieldToDynamicSelectString(connectionTree)
             )
