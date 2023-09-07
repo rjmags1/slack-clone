@@ -36,7 +36,9 @@ public class SlackCloneData
 
     public async Task<Connection<WorkspaceMember>> GetWorkspaceMembers(
         FieldInfo fieldInfo,
-        UsersFilter filter
+        UsersFilter filter,
+        int first,
+        Guid? after
     )
     {
         using var scope = Provider.CreateScope();
@@ -45,10 +47,10 @@ public class SlackCloneData
         (List<dynamic> dbMembers, bool lastPage) =
             await workspaceStore.LoadWorkspaceMembers(
                 filter.UserId,
-                filter.Cursor.First,
+                first,
                 fieldInfo.FieldTree,
                 filter.WorkspaceId,
-                (Guid?)filter.Cursor.After
+                after
             );
 
         List<WorkspaceMember> members = new();
@@ -71,7 +73,7 @@ public class SlackCloneData
 
         return ModelToObjectConverters.ToConnection<WorkspaceMember>(
             members,
-            filter.Cursor.After is null,
+            after is null,
             lastPage
         );
     }

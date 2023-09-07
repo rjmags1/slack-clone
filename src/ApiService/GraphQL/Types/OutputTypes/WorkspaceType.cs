@@ -30,14 +30,18 @@ public class WorkspaceType
             .Resolve(context => context.Source.Avatar);
         Field<WorkspaceMembersConnectionType>("members")
             .Description("The members of the workspace")
+            .Argument<NonNullGraphType<IntGraphType>>("first")
+            .Argument<IdGraphType>("after")
             .Argument<UsersFilterInputType>(
-                "usersFilter",
+                "filter",
                 "Filter for resolving workspace members"
             )
             .ResolveAsync(async context =>
             {
+                var first = context.GetArgument<int>("first");
+                var after = context.GetArgument<Guid?>("after");
                 UsersFilter? usersFilter =
-                    context.GetArgument<UsersFilter>("usersFilter")
+                    context.GetArgument<UsersFilter>("filter")
                     ?? throw new ArgumentNullException(
                         "usersFilter required for workspace members field"
                     );
@@ -50,7 +54,12 @@ public class WorkspaceType
                     fragments
                 );
 
-                return await data.GetWorkspaceMembers(fieldInfo, usersFilter);
+                return await data.GetWorkspaceMembers(
+                    fieldInfo,
+                    usersFilter,
+                    first,
+                    after
+                );
             });
         Field<NonNullGraphType<IntGraphType>>("numMembers")
             .Description("Members in the workspace")
