@@ -430,7 +430,7 @@ public class DirectMessageGroupStore : Store
             .Take(first + 1)
             .Select(dmg => dmg.DirectMessageGroup);
 
-        var dynamicDirectMessageGroups = await memberships
+        var dynamicDirectMessageGroups = await directMessageGroups
             .Select(
                 DynamicLinqUtils.NodeFieldToDynamicSelectString(connectionTree)
             )

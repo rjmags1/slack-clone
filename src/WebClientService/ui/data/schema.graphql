@@ -3,7 +3,7 @@ interface Node {
 }
 
 type Query {
-    workspacesPageData: WorkspacesPageData
+    workspacesPageData(userId: ID!): WorkspacesPageData
     validUserEmail(
         email: String!
     ): ValidationResult

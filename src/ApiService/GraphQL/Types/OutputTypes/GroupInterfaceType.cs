@@ -7,6 +7,7 @@ public class GroupInterfaceType : InterfaceGraphType<IGroup>
 {
     public GroupInterfaceType()
     {
+        Field<NonNullGraphType<IdGraphType>>("id");
         Field<NonNullGraphType<DateTimeGraphType>>("createdAt");
         Field<NonNullGraphType<WorkspaceType>>("workspace");
         Field<NonNullGraphType<StringGraphType>>("name");

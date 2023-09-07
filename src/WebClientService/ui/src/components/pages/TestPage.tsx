@@ -65,9 +65,16 @@ function TestPage() {
 
     async function remoteApi() {
         const query = `
-        query WorkspacesPageQuery($userId: ID!, $workspacesFilter: WorkspacesFilterInput!) {
-            workspacesPageData(userId: $userId, workspacesFilter: $workspacesFilter) {
-                user {
+        query WorkspacePageQuery(
+            $userId: ID!, 
+            $workspaceId: ID!, 
+            $channelsFilter: ChannelsFilter!,
+            $directMessageGroupsFilter: DirectMessageGroupsFilter!,
+            $starredFilter: StarredFilter!
+        ) {
+            workspacePageData(userId: $userId) {
+                id
+                user(id: $userId) {
                     id
                     createdAt
                     personalInfo {
@@ -77,24 +84,76 @@ function TestPage() {
                         }
                     }
                 }
-                workspaces {
+                workspace(id: $workspaceId) {
+                    id
+                    createdAt
+                    description
+                    name
+                    avatar {
+                        id
+                        storeKey
+                    }
+                    numMembers
+                }
+                channels(first: 10, filter: $channelsFilter) {
                     totalEdges
                     pageInfo {
-                        startCursor
-                        endCursor
                         hasNextPage
-                        hasPreviousPage
+                    }
+                    edges {
+                        cursor
+                        node {
+                            id
+                            allowThreads
+                            allowedPostersMask
+                            avatar {
+                                id
+                                storeKey
+                            }
+                            createdAt
+                            createdBy {
+                                id
+                                personalInfo {
+                                    email
+                                }
+                            }
+                            description
+                            name
+                            numMembers
+                            private
+                            topic
+                            workspace {
+                                id
+                            }
+                        }
+                    }
+                }
+                directMessageGroups(first: 10, filter: $directMessageGroupsFilter) {
+                    totalEdges
+                    pageInfo {
+                        hasNextPage
                     }
                     edges {
                         node {
                             id
                             createdAt
-                            description
-                            name
-                            numMembers
-                            avatar {
+                            workspace {
                                 id
-                                storeKey
+                            }
+                        }
+                    }
+                }
+                starred(first: 10, filter: $starredFilter) {
+                    totalEdges
+                    pageInfo {
+                        hasNextPage
+                    }
+                    edges {
+                        node {
+                            id
+                            createdAt
+                            workspace {
+                                id
                             }
                         }
                     }
@@ -102,12 +161,23 @@ function TestPage() {
             }
         }`
         const variables = {
-            userId: 'e6560874-6d15-4d94-bc53-f2240ab364e0',
-            workspacesFilter: {
-                cursor: {
-                    first: 2,
-                },
-                userId: 'e6560874-6d15-4d94-bc53-f2240ab364e0',
+            userId: '48e034fc-7eb8-43f6-8a45-16da03618bd0',
+            workspaceId: '51d7e8bd-a3ff-436c-8807-15add9d9642e',
+            usersFilter: {
+                userId: '48e034fc-7eb8-43f6-8a45-16da03618bd0',
+                workspaceId: '51d7e8bd-a3ff-436c-8807-15add9d9642e',
+            },
+            channelsFilter: {
+                userId: '48e034fc-7eb8-43f6-8a45-16da03618bd0',
+                workspaceId: '51d7e8bd-a3ff-436c-8807-15add9d9642e',
+            },
+            directMessageGroupsFilter: {
+                userId: '48e034fc-7eb8-43f6-8a45-16da03618bd0',
+                workspaceId: '51d7e8bd-a3ff-436c-8807-15add9d9642e',
+            },
+            starredFilter: {
+                userId: '48e034fc-7eb8-43f6-8a45-16da03618bd0',
+                workspaceId: '51d7e8bd-a3ff-436c-8807-15add9d9642e',
             },
         }
 

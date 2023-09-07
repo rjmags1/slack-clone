@@ -26,7 +26,7 @@ public class ChannelType : ObjectGraphType<Channel>, INodeGraphType<Channel>
         Field<NonNullGraphType<DateTimeGraphType>>("createdAt")
             .Description("When the channel was created.")
             .Resolve(context => context.Source.CreatedAt);
-        Field<NonNullGraphType<ChannelMemberType>>("createdBy")
+        Field<NonNullGraphType<UserType>>("createdBy")
             .Description("Who created the channel.")
             .Resolve(context => context.Source.CreatedBy);
         Field<NonNullGraphType<StringGraphType>>("description")
@@ -53,7 +53,7 @@ public class ChannelType : ObjectGraphType<Channel>, INodeGraphType<Channel>
                 "Whether viewing the channel is restricted to certain workspace members or not."
             )
             .Resolve(context => context.Source.Private);
-        Field<NonNullGraphType<StringGraphType>>("topic")
+        Field<StringGraphType>("topic")
             .Description("The topic of the channel")
             .Resolve(context => context.Source.Topic);
         Field<NonNullGraphType<WorkspaceType>>("workspace")
@@ -70,7 +70,7 @@ public class Channel : INode, IGroup
 #pragma warning disable CS8618
     public File Avatar { get; set; }
     public DateTime CreatedAt { get; set; }
-    public ChannelMember CreatedBy { get; set; }
+    public User CreatedBy { get; set; }
     public string Description { get; set; }
     public Connection<ChannelMember> Members { get; set; }
     public Connection<Message> Messages { get; set; }

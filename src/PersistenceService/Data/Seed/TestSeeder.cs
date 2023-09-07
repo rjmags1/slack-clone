@@ -678,6 +678,7 @@ public class TestSeeder
         {
             List<List<ChannelMember>> workspaceChannelMembers =
                 new List<List<ChannelMember>>();
+            int i = 0;
             foreach (Channel testChannel in testWorkspaceChannels)
             {
                 List<ChannelMember> channelMembers;
@@ -720,10 +721,19 @@ public class TestSeeder
                         memberIds
                     );
                 }
-
                 if (testChannel.Private)
                 {
                     channelMembers[0].Admin = true;
+                    await context.SaveChangesAsync();
+                }
+                if ((i++ & 1) == 1)
+                {
+                    var testStar = CreateTestStar(
+                        devUser,
+                        testChannel.Workspace,
+                        testChannel
+                    );
+                    context.Add(testStar);
                     await context.SaveChangesAsync();
                 }
                 workspaceChannelMembers.Add(channelMembers);
@@ -732,6 +742,26 @@ public class TestSeeder
         }
 
         return members;
+    }
+
+    public static Star CreateTestStar(
+        User testUser,
+        Workspace testWorkspace,
+        Channel? testChannel = null,
+        DirectMessageGroup? testDirectMessageGroup = null
+    )
+    {
+        if (testChannel is null && testDirectMessageGroup is null)
+        {
+            throw new InvalidOperationException();
+        }
+        return new Star
+        {
+            User = testUser,
+            Workspace = testWorkspace,
+            Channel = testChannel,
+            DirectMessageGroup = testDirectMessageGroup,
+        };
     }
 
     public static Channel CreateTestChannel(
