@@ -97,7 +97,7 @@ public static class FieldAnalyzer
         Dictionary<string, string> fragments
     )
     {
-        string channelsFieldSlice = GetFieldSlice(opString, "channels");
+        string channelsFieldSlice = GetFieldSlice(opString, "channels(");
         return CollectFields(channelsFieldSlice, fragments);
     }
 
@@ -108,7 +108,7 @@ public static class FieldAnalyzer
     {
         string directMessageGroupsFieldSlice = GetFieldSlice(
             opString,
-            "directMessageGroups"
+            "directMessageGroups("
         );
         return CollectFields(directMessageGroupsFieldSlice, fragments);
     }
@@ -118,7 +118,7 @@ public static class FieldAnalyzer
         Dictionary<string, string> fragments
     )
     {
-        string starredFieldSlice = GetFieldSlice(opString, "starred");
+        string starredFieldSlice = GetFieldSlice(opString, "starred(");
         return CollectFields(starredFieldSlice, fragments);
     }
 
