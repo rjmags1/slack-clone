@@ -8,7 +8,6 @@ public class UsersFilterInputType : InputObjectGraphType<UsersFilter>
     {
         Name = "UsersFilter";
         Field<IdGraphType>("userId");
-        Field<NonNullGraphType<CursorInputType>>("cursor");
         Field<NonNullGraphType<IdGraphType>>("workspaceId");
         Field<ListGraphType<NonNullGraphType<IdGraphType>>>("users");
         Field<ListGraphType<NonNullGraphType<IdGraphType>>>("channels");
@@ -19,12 +18,9 @@ public class UsersFilterInputType : InputObjectGraphType<UsersFilter>
     }
 }
 
-public class UsersFilter : IInputFilter<User>, IInputFilter<WorkspaceMember>
+public class UsersFilter
 {
     public Guid UserId { get; set; }
-#pragma warning disable CS8618
-    public Cursor Cursor { get; set; }
-#pragma warning restore CS8618
     public Guid WorkspaceId { get; set; }
     public List<Guid>? Users { get; set; }
     public List<Guid>? Channels { get; set; }
