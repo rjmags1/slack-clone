@@ -19,11 +19,16 @@ public static class DynamicLinqUtils
 {
     public static string NodeFieldToDynamicSelectString(
         FieldTree connectionTree,
-        List<string>? nonDbMapped = null
+        List<string>? nonDbMapped = null,
+        bool forceIncludeId = false
     )
     {
         List<string> nodeFields = new List<string>();
         CollectNodeFields(connectionTree, nodeFields, nonDbMapped);
+        if (forceIncludeId && !nodeFields.Contains("id"))
+        {
+            nodeFields.Add("id");
+        }
         List<string> tokens = new List<string> { "new { " };
         if (nodeFields.Count == 1)
         {

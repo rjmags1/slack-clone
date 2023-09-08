@@ -4,13 +4,173 @@ using PersistenceService.Constants;
 using PersistenceService.Utils;
 using PersistenceService.Utils.GraphQL;
 using System.Linq.Dynamic.Core;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Query;
 
 namespace PersistenceService.Stores;
+
+public class ChannelMessageReactionCount
+{
+#pragma warning disable CS8618
+    public Guid ChannelMessageId { get; set; }
+    public int Count { get; set; }
+    public string Emoji { get; set; }
+#pragma warning restore CS8618
+    public ChannelMessageReaction? UserReaction { get; set; }
+}
 
 public class ChannelStore : Store
 {
     public ChannelStore(ApplicationDbContext context)
         : base(context) { }
+
+    public async Task<(
+        List<dynamic> dbMessages,
+        List<ChannelMessageReactionCount> reactionCounts,
+        bool lastPage
+    )> LoadChannelMessages(
+        Guid userId,
+        Guid channelId,
+        FieldInfo fieldInfo,
+        int first,
+        Guid? after
+    )
+    {
+        IQueryable<ChannelMessage> messages = _context.ChannelMessages
+            .Where(
+                cm =>
+                    cm.ChannelId == channelId
+                    && cm.SentAt != null
+                    && cm.IsReply == false
+            )
+            .OrderByDescending(cm => cm.SentAt);
+        if (after is not null)
+        {
+            DateTime prevLastSentAt = (DateTime)
+                (
+                    _context.ChannelMessages
+                        .Where(cm => cm.Id == after)
+                        .Select(cm => cm.SentAt)
+                        .First()
+                )!;
+            messages = messages.Where(cm => cm.SentAt < prevLastSentAt);
+        }
+        messages = messages.Take(first + 1);
+
+        List<dynamic> dynamicChannelMessages = await messages
+            .Select(
+                DynamicLinqUtils.NodeFieldToDynamicSelectString(
+                    fieldInfo.FieldTree,
+                    nonDbMapped: new List<string>
+                    {
+                        "group",
+                        "replyTo",
+                        "type",
+                        "reactions"
+                    },
+                    forceIncludeId: true
+                )
+            )
+            .ToDynamicListAsync();
+
+        List<ChannelMessageReactionCount> reactionCounts = new();
+        if (fieldInfo.SubfieldNames.Contains("reactions"))
+        {
+            List<Guid> messageIds = new();
+            foreach (dynamic message in messages)
+            {
+                messageIds.Add((Guid)message.Id);
+            }
+            var reactions = _context.ChannelMessageReactions
+                .Where(cmr => messageIds.Contains(cmr.ChannelMessageId))
+                .GroupBy(cmr => new { cmr.ChannelMessageId, cmr.Emoji })
+                .Select(
+                    group =>
+                        new
+                        {
+                            ChannelMessageId = group.Key.ChannelMessageId,
+                            Emoji = group.Key.Emoji,
+                            Count_ = group.Count(),
+                            UserReaction = group
+                                .Where(cmr => cmr.UserId == userId)
+                                .FirstOrDefault()
+                        }
+                )
+                .ToList();
+
+            foreach (var reaction in reactions)
+            {
+                reactionCounts.Add(
+                    new ChannelMessageReactionCount
+                    {
+                        ChannelMessageId = reaction.ChannelMessageId,
+                        Count = reaction.Count_,
+                        Emoji = reaction.Emoji,
+                        UserReaction = reaction.UserReaction
+                    }
+                );
+            }
+        }
+
+        bool lastPage = dynamicChannelMessages.Count <= first;
+        if (!lastPage)
+        {
+            dynamicChannelMessages.RemoveAt(dynamicChannelMessages.Count - 1);
+        }
+        return (dynamicChannelMessages, reactionCounts, lastPage);
+    }
+
+    public async Task<(
+        List<dynamic> dbMembers,
+        bool lastPage
+    )> LoadChannelMembers(
+        Guid userId,
+        int first,
+        FieldTree connectionTree,
+        Guid channelId,
+        Guid? after = null
+    )
+    {
+        IIncludableQueryable<ChannelMember, User> memberships =
+            _context.ChannelMembers
+                .Where(cm => cm.Id == channelId)
+                .Include(cm => cm.User);
+        if (after is not null)
+        {
+            string prevLast = memberships
+                .Where(wm => wm.Id == after)
+                .Select(cm => cm.User.NormalizedUserName)
+                .First();
+            memberships =
+                (IIncludableQueryable<ChannelMember, User>)(
+                    memberships.Where(
+                        wm => wm.User.NormalizedUserName.CompareTo(prevLast) > 0
+                    )
+                );
+        }
+
+        memberships =
+            (IIncludableQueryable<ChannelMember, User>)(
+                memberships
+                    .OrderBy(cm => cm.User.NormalizedUserName)
+                    .Take(first + 1)
+            );
+        var dynamicChannelMembers = await memberships
+            .Select(
+                DynamicLinqUtils.NodeFieldToDynamicSelectString(
+                    connectionTree,
+                    nonDbMapped: new List<string> { "memberInfo" }
+                )
+            )
+            .ToDynamicListAsync();
+
+        bool lastPage = dynamicChannelMembers.Count <= first;
+        if (!lastPage)
+        {
+            dynamicChannelMembers.RemoveAt(dynamicChannelMembers.Count - 1);
+        }
+        return (dynamicChannelMembers, lastPage);
+    }
 
     public async Task<ChannelMessageReaction> InsertMessageReaction(
         Guid channelMessageId,

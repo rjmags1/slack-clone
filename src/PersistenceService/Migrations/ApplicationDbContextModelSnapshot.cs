@@ -360,6 +360,9 @@ namespace PersistenceService.Migrations
                         .HasColumnType("boolean")
                         .HasDefaultValueSql("true");
 
+                    b.Property<bool>("IsReply")
+                        .HasColumnType("boolean");
+
                     b.Property<DateTime?>("LastEdit")
                         .HasColumnType("timestamp");
 

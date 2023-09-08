@@ -134,15 +134,17 @@ public class FieldAnalyzerTests
     private readonly string _workspaceMembersQuery =
         @"
         query WorkspaceMembersQuery {
-            members(arg: 'testArg') {
-                pageInfo {
-                    hasNextPage
-                }
-                edges {
-                    node {
-                        id
+            workspace {
+                members(arg: 'testArg') {
+                    pageInfo {
+                        hasNextPage
                     }
-                } 
+                    edges {
+                        node {
+                            id
+                        }
+                    } 
+                }
             }
         }
     ";
@@ -150,13 +152,15 @@ public class FieldAnalyzerTests
     private readonly string _workspaceMembersQueryWithFragments =
         @"
         query WorkspaceMembersQuery {
-            members(arg: 'testArg') {
-                pageInfo {
-                    hasNextPage
+            workspace {
+                members(arg: 'testArg') {
+                    pageInfo {
+                        hasNextPage
+                    }
+                    edges {
+                        ...edgeFragment
+                    } 
                 }
-                edges {
-                    ...edgeFragment
-                } 
             }
         }
 

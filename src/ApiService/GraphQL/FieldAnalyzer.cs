@@ -83,6 +83,19 @@ public static class FieldAnalyzer
         return i - 1;
     }
 
+    public static FieldInfo ChannelMembers(
+        string opString,
+        Dictionary<string, string> fragments
+    )
+    {
+        string channelMembersFieldSlice = GetFieldSlice(
+            opString,
+            "members",
+            "channel"
+        );
+        return CollectFields(channelMembersFieldSlice, fragments);
+    }
+
     public static FieldInfo Workspaces(
         string opString,
         Dictionary<string, string> fragments
@@ -136,7 +149,11 @@ public static class FieldAnalyzer
         Dictionary<string, string> fragments
     )
     {
-        string membersFieldSlice = GetFieldSlice(opString, "members");
+        string membersFieldSlice = GetFieldSlice(
+            opString,
+            "members",
+            "workspace"
+        );
         return CollectFields(membersFieldSlice, fragments);
     }
 
@@ -187,9 +204,27 @@ public static class FieldAnalyzer
     /// <summary>
     /// Gets the substring containing all subfields of a field.
     /// </summary>
-    private static string GetFieldSlice(string opString, string fieldName)
+    private static string GetFieldSlice(
+        string opString,
+        string fieldName,
+        string? afterString = null
+    )
     {
-        var start = opString.IndexOf(fieldName);
+        int start;
+        if (afterString is not null)
+        {
+            var afterIdx = opString.IndexOf(afterString);
+            if (afterIdx == -1)
+            {
+                throw new InvalidOperationException();
+            }
+            start = opString.IndexOf(fieldName, afterIdx);
+        }
+        else
+        {
+            start = opString.IndexOf(fieldName);
+        }
+
         if (start == -1)
         {
             throw new InvalidOperationException();

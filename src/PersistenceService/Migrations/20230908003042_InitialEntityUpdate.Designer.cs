@@ -12,8 +12,8 @@ using PersistenceService.Data.ApplicationDb;
 namespace PersistenceService.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20230905221610_InitialEntityCreate")]
-    partial class InitialEntityCreate
+    [Migration("20230908003042_InitialEntityUpdate")]
+    partial class InitialEntityUpdate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -362,6 +362,9 @@ namespace PersistenceService.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")
                         .HasDefaultValueSql("true");
+
+                    b.Property<bool>("IsReply")
+                        .HasColumnType("boolean");
 
                     b.Property<DateTime?>("LastEdit")
                         .HasColumnType("timestamp");

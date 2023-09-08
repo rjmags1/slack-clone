@@ -38,6 +38,8 @@ public class ChannelMessage
 
     public ICollection<File> Files { get; } = new List<File>();
 
+    public bool IsReply { get; set; }
+
     [Column(TypeName = "timestamp")]
     public DateTime? LastEdit { get; set; }
 

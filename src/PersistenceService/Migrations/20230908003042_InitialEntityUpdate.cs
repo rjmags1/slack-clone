@@ -7,7 +7,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace PersistenceService.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialEntityCreate : Migration
+    public partial class InitialEntityUpdate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -357,6 +357,7 @@ namespace PersistenceService.Migrations
                     CreatedAt = table.Column<DateTime>(type: "timestamp", nullable: false, defaultValueSql: "now()"),
                     Deleted = table.Column<bool>(type: "boolean", nullable: false, defaultValueSql: "false"),
                     Draft = table.Column<bool>(type: "boolean", nullable: true, defaultValueSql: "true"),
+                    IsReply = table.Column<bool>(type: "boolean", nullable: false),
                     LastEdit = table.Column<DateTime>(type: "timestamp", nullable: true),
                     SentAt = table.Column<DateTime>(type: "timestamp", nullable: true),
                     ThreadId = table.Column<Guid>(type: "uuid", nullable: true),
