@@ -34,6 +34,104 @@ public class SlackCloneData
         return ModelToObjectConverters.ConvertUser(dbUser, requestedFields);
     }
 
+    public async Task<Connection<Message>> GetChannelMessages(
+        Guid userId,
+        FieldInfo fieldInfo,
+        MessagesFilter filter,
+        int first,
+        Guid? after
+    )
+    {
+        if (filter.ChannelIds is null || filter.ChannelIds.Count != 1)
+        {
+            throw new InvalidOperationException();
+        }
+
+        using var scope = Provider.CreateScope();
+        ChannelStore channelStore =
+            scope.ServiceProvider.GetRequiredService<ChannelStore>();
+        (
+            List<dynamic> dbMessages,
+            List<ChannelMessageReactionCount> reactionCounts,
+            bool lastPage
+        ) = await channelStore.LoadChannelMessages(
+            userId,
+            filter.ChannelIds.First(),
+            fieldInfo,
+            first,
+            after
+        );
+
+        Dictionary<Guid, List<ChannelMessageReactionCount>> countsDict = new();
+        foreach (var reactionCount in reactionCounts)
+        {
+            if (!countsDict.ContainsKey(reactionCount.ChannelMessageId))
+            {
+                countsDict[reactionCount.ChannelMessageId] =
+                    new List<ChannelMessageReactionCount>();
+            }
+            countsDict[reactionCount.ChannelMessageId].Add(reactionCount);
+        }
+        List<Message> messages = new();
+        foreach (dynamic dbm in dbMessages)
+        {
+            Message message =
+                ModelToObjectConverters.ConvertDynamicChannelMessage(
+                    dbm,
+                    countsDict.GetValueOrDefault((Guid)dbm.Id)
+                );
+            messages.Add(message);
+        }
+
+        return ModelToObjectConverters.ToConnection<Message>(
+            messages,
+            after is null,
+            lastPage
+        );
+    }
+
+    public async Task<Connection<ChannelMember>> GetChannelMembers(
+        FieldInfo fieldInfo,
+        UsersFilter filter,
+        int first,
+        Guid? after
+    )
+    {
+        if (filter.Channels is null || filter.Channels.Count != 1)
+        {
+            throw new InvalidOperationException();
+        }
+
+        using var scope = Provider.CreateScope();
+        ChannelStore channelStore =
+            scope.ServiceProvider.GetRequiredService<ChannelStore>();
+        (List<dynamic> dbMembers, bool lastPage) =
+            await channelStore.LoadChannelMembers(
+                filter.UserId,
+                first,
+                fieldInfo.FieldTree,
+                filter.Channels.First(),
+                after
+            );
+
+        List<ChannelMember> members = new();
+        foreach (dynamic dbm in dbMembers)
+        {
+            ChannelMember member =
+                ModelToObjectConverters.ConvertDynamicChannelMember(
+                    dbm,
+                    FieldAnalyzer.ExtractUserFields("user", fieldInfo.FieldTree)
+                );
+            members.Add(member);
+        }
+
+        return ModelToObjectConverters.ToConnection<ChannelMember>(
+            members,
+            after is null,
+            lastPage
+        );
+    }
+
     public async Task<Connection<WorkspaceMember>> GetWorkspaceMembers(
         FieldInfo fieldInfo,
         UsersFilter filter,

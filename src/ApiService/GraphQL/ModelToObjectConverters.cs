@@ -1,5 +1,6 @@
 using System.Text.Json;
 using ApiService.Utils;
+using PersistenceService.Stores;
 using SlackCloneGraphQL.Types;
 using SlackCloneGraphQL.Types.Connections;
 using File = SlackCloneGraphQL.Types.File;
@@ -34,6 +35,14 @@ public static class ModelToObjectConverters
 
     private static readonly Theme DefaultTheme =
         new() { Id = Guid.Empty, Name = "DEFAULT_THEME" };
+
+    public static Message ConvertDynamicChannelMessage(
+        dynamic modelChannelMessage,
+        List<ChannelMessageReactionCount>? reactionCounts
+    )
+    {
+        throw new NotImplementedException();
+    }
 
     public static DirectMessageGroup ConvertDynamicDirectMessageGroup(
         dynamic modelDirectMessageGroup
@@ -314,6 +323,82 @@ public static class ModelToObjectConverters
         };
     }
 
+    public static ChannelMember ConvertDynamicChannelMember(
+        dynamic modelChannelMember,
+        List<string> userFields
+    )
+    {
+        var expando = DynamicUtils.ToExpando(modelChannelMember);
+        ChannelMember member = new();
+        if (DynamicUtils.HasProperty(expando, nameof(ChannelMember.Id)))
+        {
+            member.Id = JsonSerializer.Deserialize<Guid>(expando.Id);
+        }
+        if (DynamicUtils.HasProperty(expando, nameof(ChannelMember.Admin)))
+        {
+            member.Admin = JsonSerializer.Deserialize<bool>(expando.Admin);
+        }
+        if (DynamicUtils.HasProperty(expando, nameof(ChannelMember.Channel)))
+        {
+            var modelChannel = JsonSerializer.Deserialize<Models.Channel>(
+                expando.Channel
+            );
+            member.Channel = ConvertChannel(modelChannel);
+        }
+        if (DynamicUtils.HasProperty(expando, nameof(ChannelMember.User)))
+        {
+            var modelUser = JsonSerializer.Deserialize<Models.User>(
+                expando.User
+            );
+            member.User = ConvertUser(modelUser, userFields);
+        }
+        if (IncludeChannelMemberInfo(modelChannelMember))
+        {
+            member.MemberInfo = ConvertChannelMemberInfo(expando);
+        }
+        return member;
+    }
+
+    public static ChannelMemberInfo ConvertChannelMemberInfo(dynamic expando)
+    {
+        ChannelMemberInfo memberInfo = new();
+        if (
+            DynamicUtils.HasProperty(
+                expando,
+                nameof(Models.ChannelMember.EnableNotifications)
+            )
+        )
+        {
+            memberInfo.EnableNotifications = JsonSerializer.Deserialize<bool>(
+                expando.EnableNotifications
+            );
+        }
+
+        if (
+            DynamicUtils.HasProperty(
+                expando,
+                nameof(Models.ChannelMember.LastViewedAt)
+            )
+        )
+        {
+            memberInfo.LastViewedAt = JsonSerializer.Deserialize<DateTime>(
+                expando.LastViewedAt
+            );
+        }
+        if (
+            DynamicUtils.HasProperty(
+                expando,
+                nameof(Models.ChannelMember.Starred)
+            )
+        )
+        {
+            memberInfo.Starred = JsonSerializer.Deserialize<bool>(
+                expando.Starred
+            );
+        }
+        return memberInfo;
+    }
+
     public static WorkspaceMember ConvertDynamicWorkspaceMember(
         dynamic modelWorkspaceMember,
         List<string> userFields,
@@ -454,6 +539,24 @@ public static class ModelToObjectConverters
         };
     }
 
+    public static Channel ConvertChannel(Models.Channel modelChannel)
+    {
+        return new Channel
+        {
+            Id = modelChannel.Id,
+            AllowThreads = modelChannel.AllowThreads,
+            AllowedPostersMask = modelChannel.AllowedPostersMask,
+            Avatar = ConvertAvatar(modelChannel.Avatar),
+            CreatedAt = modelChannel.CreatedAt,
+            Description = modelChannel.Description ?? "",
+            Name = modelChannel.Name,
+            NumMembers = modelChannel.NumMembers,
+            Private = modelChannel.Private,
+            Topic = modelChannel.Topic ?? "",
+            Workspace = ConvertWorkspace(modelChannel.Workspace)
+        };
+    }
+
     private static bool IncludeWorkspaceMemberInfo(dynamic expando)
     {
         return (
@@ -484,6 +587,24 @@ public static class ModelToObjectConverters
             || DynamicUtils.HasProperty(
                 expando,
                 nameof(Models.WorkspaceMember.Theme)
+            )
+        );
+    }
+
+    private static bool IncludeChannelMemberInfo(dynamic expando)
+    {
+        return (
+            DynamicUtils.HasProperty(
+                expando,
+                nameof(Models.ChannelMember.EnableNotifications)
+            )
+            || DynamicUtils.HasProperty(
+                expando,
+                nameof(Models.ChannelMember.LastViewedAt)
+            )
+            || DynamicUtils.HasProperty(
+                expando,
+                nameof(Models.ChannelMember.Starred)
             )
         );
     }
