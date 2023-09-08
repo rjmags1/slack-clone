@@ -480,6 +480,7 @@ public class ChannelStore : Store
             UserId = userId,
             Draft = draft,
             SentAt = draft ? null : DateTime.Now,
+            IsReply = reply
         };
         _context.Add(message);
 
