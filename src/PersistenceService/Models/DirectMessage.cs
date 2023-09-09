@@ -34,7 +34,7 @@ public class DirectMessage
     [ForeignKey(nameof(DirectMessageGroup))]
     public Guid DirectMessageGroupId { get; set; }
 
-    public bool? Draft { get; set; }
+    public bool Draft { get; set; }
 
     [Column(TypeName = "timestamp")]
     public DateTime? LastEdit { get; set; }

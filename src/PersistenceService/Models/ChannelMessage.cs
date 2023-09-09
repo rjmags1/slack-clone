@@ -34,7 +34,7 @@ public class ChannelMessage
 
     public bool Deleted { get; set; }
 
-    public bool? Draft { get; set; }
+    public bool Draft { get; set; }
 
     public ICollection<File> Files { get; } = new List<File>();
 

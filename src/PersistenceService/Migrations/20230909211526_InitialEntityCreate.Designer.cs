@@ -12,7 +12,7 @@ using PersistenceService.Data.ApplicationDb;
 namespace PersistenceService.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20230909175047_InitialEntityCreate")]
+    [Migration("20230909211526_InitialEntityCreate")]
     partial class InitialEntityCreate
     {
         /// <inheritdoc />
@@ -358,7 +358,7 @@ namespace PersistenceService.Migrations
                         .HasColumnType("boolean")
                         .HasDefaultValueSql("false");
 
-                    b.Property<bool?>("Draft")
+                    b.Property<bool>("Draft")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")
                         .HasDefaultValueSql("true");
@@ -624,7 +624,7 @@ namespace PersistenceService.Migrations
                     b.Property<Guid>("DirectMessageGroupId")
                         .HasColumnType("uuid");
 
-                    b.Property<bool?>("Draft")
+                    b.Property<bool>("Draft")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")
                         .HasDefaultValueSql("true");
