@@ -12,8 +12,8 @@ using PersistenceService.Data.ApplicationDb;
 namespace PersistenceService.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20230908003042_InitialEntityUpdate")]
-    partial class InitialEntityUpdate
+    [Migration("20230909175047_InitialEntityCreate")]
+    partial class InitialEntityCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -369,6 +369,12 @@ namespace PersistenceService.Migrations
                     b.Property<DateTime?>("LastEdit")
                         .HasColumnType("timestamp");
 
+                    b.Property<Guid?>("LaterFlagId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("ReplyToId")
+                        .HasColumnType("uuid");
+
                     b.Property<DateTime?>("SentAt")
                         .HasColumnType("timestamp");
 
@@ -385,6 +391,10 @@ namespace PersistenceService.Migrations
                     b.HasIndex("Deleted");
 
                     b.HasIndex("Draft");
+
+                    b.HasIndex("LaterFlagId");
+
+                    b.HasIndex("ReplyToId");
 
                     b.HasIndex("SentAt");
 
@@ -619,8 +629,17 @@ namespace PersistenceService.Migrations
                         .HasColumnType("boolean")
                         .HasDefaultValueSql("true");
 
+                    b.Property<bool>("IsReply")
+                        .HasColumnType("boolean");
+
                     b.Property<DateTime?>("LastEdit")
                         .HasColumnType("timestamp");
+
+                    b.Property<Guid?>("LaterFlagId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("ReplyToId")
+                        .HasColumnType("uuid");
 
                     b.Property<DateTime?>("SentAt")
                         .HasColumnType("timestamp");
@@ -635,6 +654,10 @@ namespace PersistenceService.Migrations
                     b.HasIndex("DirectMessageGroupId");
 
                     b.HasIndex("Draft");
+
+                    b.HasIndex("LaterFlagId");
+
+                    b.HasIndex("ReplyToId");
 
                     b.HasIndex("SentAt");
 
@@ -1583,6 +1606,16 @@ namespace PersistenceService.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("PersistenceService.Models.ChannelMessageLaterFlag", "LaterFlag")
+                        .WithMany()
+                        .HasForeignKey("LaterFlagId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("PersistenceService.Models.ChannelMessage", "ReplyTo")
+                        .WithMany()
+                        .HasForeignKey("ReplyToId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("PersistenceService.Models.Thread", "Thread")
                         .WithMany("Messages")
                         .HasForeignKey("ThreadId")
@@ -1595,6 +1628,10 @@ namespace PersistenceService.Migrations
                         .IsRequired();
 
                     b.Navigation("Channel");
+
+                    b.Navigation("LaterFlag");
+
+                    b.Navigation("ReplyTo");
 
                     b.Navigation("Thread");
 
@@ -1752,6 +1789,16 @@ namespace PersistenceService.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("PersistenceService.Models.DirectMessageLaterFlag", "LaterFlag")
+                        .WithMany()
+                        .HasForeignKey("LaterFlagId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("PersistenceService.Models.DirectMessage", "ReplyTo")
+                        .WithMany()
+                        .HasForeignKey("ReplyToId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("PersistenceService.Models.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
@@ -1759,6 +1806,10 @@ namespace PersistenceService.Migrations
                         .IsRequired();
 
                     b.Navigation("DirectMessageGroup");
+
+                    b.Navigation("LaterFlag");
+
+                    b.Navigation("ReplyTo");
 
                     b.Navigation("User");
                 });

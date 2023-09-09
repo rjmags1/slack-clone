@@ -393,6 +393,7 @@ public class ChannelStore : Store
             WorkspaceId = workspaceId
         };
         _context.Add(laterFlag);
+        channelMessage.LaterFlag = laterFlag;
 
         await _context.SaveChangesAsync();
 
@@ -480,7 +481,8 @@ public class ChannelStore : Store
             UserId = userId,
             Draft = draft,
             SentAt = draft ? null : DateTime.Now,
-            IsReply = reply
+            IsReply = reply,
+            ReplyToId = messageRepliedToId
         };
         _context.Add(message);
 

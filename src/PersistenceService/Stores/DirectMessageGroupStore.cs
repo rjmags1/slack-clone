@@ -234,6 +234,7 @@ public class DirectMessageGroupStore : Store
             WorkspaceId = workspaceId
         };
         _context.Add(laterFlag);
+        directMessage.LaterFlag = laterFlag;
 
         await _context.SaveChangesAsync();
 
@@ -313,7 +314,9 @@ public class DirectMessageGroupStore : Store
             DirectMessageGroupId = directMessageGroupId,
             Draft = draft,
             SentAt = draft ? null : DateTime.Now,
-            UserId = userId
+            UserId = userId,
+            IsReply = reply,
+            ReplyToId = messageRepliedToId
         };
         _context.Add(message);
 

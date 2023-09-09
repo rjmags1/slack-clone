@@ -43,11 +43,23 @@ public class ChannelMessage
     [Column(TypeName = "timestamp")]
     public DateTime? LastEdit { get; set; }
 
+    [DeleteBehavior(DeleteBehavior.SetNull)]
+    public ChannelMessageLaterFlag? LaterFlag { get; set; }
+
+    [ForeignKey(nameof(LaterFlag))]
+    public Guid? LaterFlagId { get; set; }
+
     public ICollection<ChannelMessageMention> Mentions { get; } =
         new List<ChannelMessageMention>();
 
     public ICollection<ChannelMessageReaction> Reactions { get; } =
         new List<ChannelMessageReaction>();
+
+    [DeleteBehavior(DeleteBehavior.SetNull)]
+    public ChannelMessage? ReplyTo { get; set; }
+
+    [ForeignKey(nameof(ReplyTo))]
+    public Guid? ReplyToId { get; set; }
 
     public ICollection<ChannelMessageReply> Replies { get; } =
         new List<ChannelMessageReply>();
