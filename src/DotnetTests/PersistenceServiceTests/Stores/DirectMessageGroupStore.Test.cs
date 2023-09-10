@@ -749,7 +749,6 @@ public class DirectMessageGroupStoreTests1
         Assert.NotEqual(default(DateTime), insertedDm.CreatedAt);
         Assert.False(insertedDm.Deleted);
         Assert.Equal(testGroup.Id, insertedDm.DirectMessageGroupId);
-        Assert.False(insertedDm.Draft);
         Assert.Equal(0, insertedDm.Files.Count);
         Assert.Null(insertedDm.LastEdit);
         Assert.Equal(1, insertedDm.Mentions.Count);
@@ -775,7 +774,6 @@ public class DirectMessageGroupStoreTests1
         Assert.NotEqual(default(DateTime), insertedDm2.CreatedAt);
         Assert.False(insertedDm2.Deleted);
         Assert.Equal(testGroup.Id, insertedDm2.DirectMessageGroupId);
-        Assert.True(insertedDm2.Draft);
         Assert.Equal(0, insertedDm2.Files.Count);
         Assert.Null(insertedDm2.LastEdit);
         Assert.Equal(0, insertedDm2.Mentions.Count);
@@ -1019,7 +1017,6 @@ public class DirectMessageGroupStoreTests1
         Assert.NotEqual(default(DateTime), insertedDm.CreatedAt);
         Assert.False(insertedDm.Deleted);
         Assert.Equal(testGroup.Id, insertedDm.DirectMessageGroupId);
-        Assert.True(insertedDm.Draft);
         Assert.Equal(0, insertedDm.Files.Count);
         Assert.Null(insertedDm.LastEdit);
         Assert.Equal(0, insertedDm.Mentions.Count);

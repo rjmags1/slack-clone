@@ -6,7 +6,6 @@ namespace PersistenceService.Models;
 
 [Index(nameof(DirectMessageGroupId))]
 [Index(nameof(Deleted))]
-[Index(nameof(Draft))]
 [Index(nameof(SentAt))]
 [Index(nameof(UserId))]
 public class DirectMessage
@@ -34,18 +33,30 @@ public class DirectMessage
     [ForeignKey(nameof(DirectMessageGroup))]
     public Guid DirectMessageGroupId { get; set; }
 
-    public bool? Draft { get; set; }
-
     [Column(TypeName = "timestamp")]
     public DateTime? LastEdit { get; set; }
 
+    [DeleteBehavior(DeleteBehavior.SetNull)]
+    public DirectMessageLaterFlag? LaterFlag { get; set; }
+
+    [ForeignKey(nameof(LaterFlag))]
+    public Guid? LaterFlagId { get; set; }
+
     public ICollection<File> Files { get; } = new List<File>();
+
+    public bool IsReply { get; set; }
 
     public ICollection<DirectMessageMention> Mentions { get; } =
         new List<DirectMessageMention>();
 
     public ICollection<DirectMessageReaction> Reactions { get; } =
         new List<DirectMessageReaction>();
+
+    [DeleteBehavior(DeleteBehavior.SetNull)]
+    public DirectMessage? ReplyTo { get; set; }
+
+    [ForeignKey(nameof(ReplyTo))]
+    public Guid? ReplyToId { get; set; }
 
     public ICollection<DirectMessageReply> Replies { get; } =
         new List<DirectMessageReply>();

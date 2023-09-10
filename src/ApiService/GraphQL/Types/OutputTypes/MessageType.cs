@@ -8,6 +8,9 @@ public class MessageType : ObjectGraphType<Message>, INodeGraphType<Message>
     public MessageType()
     {
         Name = "Message";
+        Field<NonNullGraphType<IdGraphType>>("id")
+            .Description("The UUID of the message")
+            .Resolve(context => context.Source.Id);
         Field<NonNullGraphType<UserType>>("user")
             .Description("The author of the message.")
             .Resolve(context => context.Source.User);
@@ -36,6 +39,11 @@ public class MessageType : ObjectGraphType<Message>, INodeGraphType<Message>
         Field<NonNullGraphType<BooleanGraphType>>("isReply")
             .Description("If the message is a reply to another message or not")
             .Resolve(context => context.Source.IsReply);
+        Field<LaterFlagType>("laterFlag")
+            .Description(
+                "The later flag, if any, set on this message by the user"
+            )
+            .Resolve(context => context.Source.LaterFlag);
         Field<ListGraphType<MentionType>>("mentions")
             .Description(
                 "Relay connection representing mentions of other workspace members contained in the sent message"
@@ -58,9 +66,6 @@ public class MessageType : ObjectGraphType<Message>, INodeGraphType<Message>
         Field<NonNullGraphType<IntGraphType>>("type")
             .Description("Bitmask representing the message type")
             .Resolve(context => context.Source.Type);
-        Field<NonNullGraphType<WorkspaceType>>("workspace")
-            .Description("The workspace associated with the message")
-            .Resolve(context => context.Source.Workspace);
     }
 }
 
@@ -78,11 +83,10 @@ public class Message : INode
     public bool IsReply { get; set; }
     public LaterFlag? LaterFlag { get; set; }
     public List<Mention>? Mentions { get; set; }
-    public List<ReactionCountType>? Reactions { get; set; }
+    public List<ReactionCount>? Reactions { get; set; }
     public Message? ReplyTo { get; set; }
     public DateTime? SentAt { get; set; }
     public Thread? Thread { get; set; }
     public int Type { get; set; }
-    public Workspace Workspace { get; set; }
 #pragma warning restore CS8618
 }

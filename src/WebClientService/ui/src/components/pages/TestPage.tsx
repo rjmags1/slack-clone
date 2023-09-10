@@ -67,34 +67,12 @@ function TestPage() {
         const query = `
         query WorkspacePageQuery(
             $userId: ID!, 
-            $workspaceId: ID!, 
             $channelsFilter: ChannelsFilter!,
             $directMessageGroupsFilter: DirectMessageGroupsFilter!,
-            $starredFilter: StarredFilter!
+            $starredFilter: StarredFilter!,
         ) {
             workspacePageData(userId: $userId) {
                 id
-                user(id: $userId) {
-                    id
-                    createdAt
-                    personalInfo {
-                        email
-                        userNotificationsPreferences {
-                            notifSound
-                        }
-                    }
-                }
-                workspace(id: $workspaceId) {
-                    id
-                    createdAt
-                    description
-                    name
-                    avatar {
-                        id
-                        storeKey
-                    }
-                    numMembers
-                }
                 channels(first: 10, filter: $channelsFilter) {
                     totalEdges
                     pageInfo {
@@ -104,46 +82,45 @@ function TestPage() {
                         cursor
                         node {
                             id
-                            allowThreads
-                            allowedPostersMask
-                            avatar {
-                                id
-                                storeKey
-                            }
-                            createdAt
-                            createdBy {
-                                id
-                                personalInfo {
-                                    email
+                            messages(first: 3) {
+                                totalEdges
+                                pageInfo {
+                                    hasNextPage
+                                }
+                                edges {
+                                    node {
+                                        id
+                                        user {
+                                            id
+                                        }
+                                        content
+                                        createdAt
+                                        lastEdit
+                                        files {
+                                            storeKey
+                                        }
+                                        isReply
+                                        reactions {
+                                            id
+                                            count
+                                            emoji
+                                            userReactionId
+                                        }
+                                        replyTo {
+                                            id
+                                        }
+                                        sentAt
+                                        type
+                                    }
                                 }
                             }
-                            description
-                            name
-                            numMembers
-                            private
-                            topic
-                            workspace {
-                                id
-                            }
                         }
                     }
                 }
-                directMessageGroups(first: 10, filter: $directMessageGroupsFilter) {
+                directMessageGroups(first: 1, filter: $directMessageGroupsFilter) {
                     totalEdges
-                    pageInfo {
-                        hasNextPage
-                    }
-                    edges {
-                        node {
-                            id
-                            createdAt
-                            workspace {
-                                id
-                            }
-                        }
-                    }
                 }
-                starred(first: 10, filter: $starredFilter) {
+                starred(first: 1, filter: $starredFilter) {
                     totalEdges
                     pageInfo {
                         hasNextPage
@@ -160,24 +137,22 @@ function TestPage() {
                 }
             }
         }`
+        const userId = '28cc4c1f-34b4-419b-abb6-a71f11cae350'
+        const workspaceId = '02174c99-03cf-4eb7-8990-905ffbe6d200'
         const variables = {
-            userId: '48e034fc-7eb8-43f6-8a45-16da03618bd0',
-            workspaceId: '51d7e8bd-a3ff-436c-8807-15add9d9642e',
-            usersFilter: {
-                userId: '48e034fc-7eb8-43f6-8a45-16da03618bd0',
-                workspaceId: '51d7e8bd-a3ff-436c-8807-15add9d9642e',
-            },
+            userId,
+            workspaceId,
             channelsFilter: {
-                userId: '48e034fc-7eb8-43f6-8a45-16da03618bd0',
-                workspaceId: '51d7e8bd-a3ff-436c-8807-15add9d9642e',
+                userId,
+                workspaceId,
             },
             directMessageGroupsFilter: {
-                userId: '48e034fc-7eb8-43f6-8a45-16da03618bd0',
-                workspaceId: '51d7e8bd-a3ff-436c-8807-15add9d9642e',
+                userId,
+                workspaceId,
             },
             starredFilter: {
-                userId: '48e034fc-7eb8-43f6-8a45-16da03618bd0',
-                workspaceId: '51d7e8bd-a3ff-436c-8807-15add9d9642e',
+                userId,
+                workspaceId,
             },
         }
 

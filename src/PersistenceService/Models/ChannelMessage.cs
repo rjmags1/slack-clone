@@ -6,7 +6,6 @@ namespace PersistenceService.Models;
 
 [Index(nameof(ChannelId))]
 [Index(nameof(Deleted))]
-[Index(nameof(Draft))]
 [Index(nameof(SentAt))]
 [Index(nameof(UserId))]
 public class ChannelMessage
@@ -34,8 +33,6 @@ public class ChannelMessage
 
     public bool Deleted { get; set; }
 
-    public bool? Draft { get; set; }
-
     public ICollection<File> Files { get; } = new List<File>();
 
     public bool IsReply { get; set; }
@@ -43,11 +40,23 @@ public class ChannelMessage
     [Column(TypeName = "timestamp")]
     public DateTime? LastEdit { get; set; }
 
+    [DeleteBehavior(DeleteBehavior.SetNull)]
+    public ChannelMessageLaterFlag? LaterFlag { get; set; }
+
+    [ForeignKey(nameof(LaterFlag))]
+    public Guid? LaterFlagId { get; set; }
+
     public ICollection<ChannelMessageMention> Mentions { get; } =
         new List<ChannelMessageMention>();
 
     public ICollection<ChannelMessageReaction> Reactions { get; } =
         new List<ChannelMessageReaction>();
+
+    [DeleteBehavior(DeleteBehavior.SetNull)]
+    public ChannelMessage? ReplyTo { get; set; }
+
+    [ForeignKey(nameof(ReplyTo))]
+    public Guid? ReplyToId { get; set; }
 
     public ICollection<ChannelMessageReply> Replies { get; } =
         new List<ChannelMessageReply>();

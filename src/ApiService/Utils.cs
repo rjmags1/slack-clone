@@ -83,4 +83,9 @@ public static class GraphQLUtils
     {
         return (string?)context["query"];
     }
+
+    public static Guid GetSubClaim(GraphQLUserContext context)
+    {
+        return (Guid)context["sub"]!;
+    }
 }

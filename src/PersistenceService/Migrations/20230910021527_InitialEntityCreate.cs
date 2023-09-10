@@ -7,7 +7,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace PersistenceService.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialEntityUpdate : Migration
+    public partial class InitialEntityCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -356,9 +356,10 @@ namespace PersistenceService.Migrations
                     ConcurrencyStamp = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "gen_random_uuid()"),
                     CreatedAt = table.Column<DateTime>(type: "timestamp", nullable: false, defaultValueSql: "now()"),
                     Deleted = table.Column<bool>(type: "boolean", nullable: false, defaultValueSql: "false"),
-                    Draft = table.Column<bool>(type: "boolean", nullable: true, defaultValueSql: "true"),
                     IsReply = table.Column<bool>(type: "boolean", nullable: false),
                     LastEdit = table.Column<DateTime>(type: "timestamp", nullable: true),
+                    LaterFlagId = table.Column<Guid>(type: "uuid", nullable: true),
+                    ReplyToId = table.Column<Guid>(type: "uuid", nullable: true),
                     SentAt = table.Column<DateTime>(type: "timestamp", nullable: true),
                     ThreadId = table.Column<Guid>(type: "uuid", nullable: true),
                     UserId = table.Column<Guid>(type: "uuid", nullable: false)
@@ -372,6 +373,18 @@ namespace PersistenceService.Migrations
                         principalTable: "AspNetUsers",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_ChannelMessages_ChannelMessageLaterFlags_LaterFlagId",
+                        column: x => x.LaterFlagId,
+                        principalTable: "ChannelMessageLaterFlags",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.SetNull);
+                    table.ForeignKey(
+                        name: "FK_ChannelMessages_ChannelMessages_ReplyToId",
+                        column: x => x.ReplyToId,
+                        principalTable: "ChannelMessages",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.SetNull);
                 });
 
             migrationBuilder.CreateTable(
@@ -442,6 +455,35 @@ namespace PersistenceService.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "DirectMessageLaterFlags",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "gen_random_uuid()"),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp", nullable: false, defaultValueSql: "now()"),
+                    DirectMessageLaterFlagStatus = table.Column<int>(type: "integer", nullable: false, defaultValueSql: "1"),
+                    DirectMessageGroupId = table.Column<Guid>(type: "uuid", nullable: false),
+                    DirectMessageId = table.Column<Guid>(type: "uuid", nullable: false),
+                    UserId = table.Column<Guid>(type: "uuid", nullable: false),
+                    WorkspaceId = table.Column<Guid>(type: "uuid", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_DirectMessageLaterFlags", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_DirectMessageLaterFlags_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_DirectMessageLaterFlags_DirectMessageGroups_DirectMessageGr~",
+                        column: x => x.DirectMessageGroupId,
+                        principalTable: "DirectMessageGroups",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "DirectMessages",
                 columns: table => new
                 {
@@ -451,8 +493,10 @@ namespace PersistenceService.Migrations
                     CreatedAt = table.Column<DateTime>(type: "timestamp", nullable: false, defaultValueSql: "now()"),
                     Deleted = table.Column<bool>(type: "boolean", nullable: false, defaultValueSql: "false"),
                     DirectMessageGroupId = table.Column<Guid>(type: "uuid", nullable: false),
-                    Draft = table.Column<bool>(type: "boolean", nullable: true, defaultValueSql: "true"),
                     LastEdit = table.Column<DateTime>(type: "timestamp", nullable: true),
+                    LaterFlagId = table.Column<Guid>(type: "uuid", nullable: true),
+                    IsReply = table.Column<bool>(type: "boolean", nullable: false),
+                    ReplyToId = table.Column<Guid>(type: "uuid", nullable: true),
                     SentAt = table.Column<DateTime>(type: "timestamp", nullable: true),
                     UserId = table.Column<Guid>(type: "uuid", nullable: false)
                 },
@@ -471,6 +515,18 @@ namespace PersistenceService.Migrations
                         principalTable: "DirectMessageGroups",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_DirectMessages_DirectMessageLaterFlags_LaterFlagId",
+                        column: x => x.LaterFlagId,
+                        principalTable: "DirectMessageLaterFlags",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.SetNull);
+                    table.ForeignKey(
+                        name: "FK_DirectMessages_DirectMessages_ReplyToId",
+                        column: x => x.ReplyToId,
+                        principalTable: "DirectMessages",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.SetNull);
                 });
 
             migrationBuilder.CreateTable(
@@ -663,47 +719,6 @@ namespace PersistenceService.Migrations
                         principalTable: "Files",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.SetNull);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "DirectMessageLaterFlags",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "gen_random_uuid()"),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp", nullable: false, defaultValueSql: "now()"),
-                    DirectMessageLaterFlagStatus = table.Column<int>(type: "integer", nullable: false, defaultValueSql: "1"),
-                    DirectMessageGroupId = table.Column<Guid>(type: "uuid", nullable: false),
-                    DirectMessageId = table.Column<Guid>(type: "uuid", nullable: false),
-                    UserId = table.Column<Guid>(type: "uuid", nullable: false),
-                    WorkspaceId = table.Column<Guid>(type: "uuid", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_DirectMessageLaterFlags", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_DirectMessageLaterFlags_AspNetUsers_UserId",
-                        column: x => x.UserId,
-                        principalTable: "AspNetUsers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_DirectMessageLaterFlags_DirectMessageGroups_DirectMessageGr~",
-                        column: x => x.DirectMessageGroupId,
-                        principalTable: "DirectMessageGroups",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_DirectMessageLaterFlags_DirectMessages_DirectMessageId",
-                        column: x => x.DirectMessageId,
-                        principalTable: "DirectMessages",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_DirectMessageLaterFlags_Workspaces_WorkspaceId",
-                        column: x => x.WorkspaceId,
-                        principalTable: "Workspaces",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -1156,9 +1171,14 @@ namespace PersistenceService.Migrations
                 column: "Deleted");
 
             migrationBuilder.CreateIndex(
-                name: "IX_ChannelMessages_Draft",
+                name: "IX_ChannelMessages_LaterFlagId",
                 table: "ChannelMessages",
-                column: "Draft");
+                column: "LaterFlagId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ChannelMessages_ReplyToId",
+                table: "ChannelMessages",
+                column: "ReplyToId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_ChannelMessages_SentAt",
@@ -1322,9 +1342,14 @@ namespace PersistenceService.Migrations
                 column: "DirectMessageGroupId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_DirectMessages_Draft",
+                name: "IX_DirectMessages_LaterFlagId",
                 table: "DirectMessages",
-                column: "Draft");
+                column: "LaterFlagId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_DirectMessages_ReplyToId",
+                table: "DirectMessages",
+                column: "ReplyToId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_DirectMessages_SentAt",
@@ -1692,11 +1717,31 @@ namespace PersistenceService.Migrations
                 principalTable: "Workspaces",
                 principalColumn: "Id",
                 onDelete: ReferentialAction.Cascade);
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_DirectMessageLaterFlags_DirectMessages_DirectMessageId",
+                table: "DirectMessageLaterFlags",
+                column: "DirectMessageId",
+                principalTable: "DirectMessages",
+                principalColumn: "Id",
+                onDelete: ReferentialAction.Cascade);
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_DirectMessageLaterFlags_Workspaces_WorkspaceId",
+                table: "DirectMessageLaterFlags",
+                column: "WorkspaceId",
+                principalTable: "Workspaces",
+                principalColumn: "Id",
+                onDelete: ReferentialAction.Cascade);
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropForeignKey(
+                name: "FK_ChannelMessageLaterFlags_AspNetUsers_UserId",
+                table: "ChannelMessageLaterFlags");
+
             migrationBuilder.DropForeignKey(
                 name: "FK_ChannelMessages_AspNetUsers_UserId",
                 table: "ChannelMessages");
@@ -1704,6 +1749,10 @@ namespace PersistenceService.Migrations
             migrationBuilder.DropForeignKey(
                 name: "FK_Channels_AspNetUsers_CreatedById",
                 table: "Channels");
+
+            migrationBuilder.DropForeignKey(
+                name: "FK_DirectMessageLaterFlags_AspNetUsers_UserId",
+                table: "DirectMessageLaterFlags");
 
             migrationBuilder.DropForeignKey(
                 name: "FK_DirectMessages_AspNetUsers_UserId",
@@ -1718,6 +1767,10 @@ namespace PersistenceService.Migrations
                 table: "Workspaces");
 
             migrationBuilder.DropForeignKey(
+                name: "FK_ChannelMessageLaterFlags_Channels_ChannelId",
+                table: "ChannelMessageLaterFlags");
+
+            migrationBuilder.DropForeignKey(
                 name: "FK_ChannelMessages_Channels_ChannelId",
                 table: "ChannelMessages");
 
@@ -1726,12 +1779,40 @@ namespace PersistenceService.Migrations
                 table: "Threads");
 
             migrationBuilder.DropForeignKey(
+                name: "FK_ChannelMessageLaterFlags_Workspaces_WorkspaceId",
+                table: "ChannelMessageLaterFlags");
+
+            migrationBuilder.DropForeignKey(
+                name: "FK_DirectMessageGroups_Workspaces_WorkspaceId",
+                table: "DirectMessageGroups");
+
+            migrationBuilder.DropForeignKey(
+                name: "FK_DirectMessageLaterFlags_Workspaces_WorkspaceId",
+                table: "DirectMessageLaterFlags");
+
+            migrationBuilder.DropForeignKey(
                 name: "FK_Threads_Workspaces_WorkspaceId",
                 table: "Threads");
 
             migrationBuilder.DropForeignKey(
+                name: "FK_ChannelMessageLaterFlags_ChannelMessages_ChannelMessageId",
+                table: "ChannelMessageLaterFlags");
+
+            migrationBuilder.DropForeignKey(
                 name: "FK_Threads_ChannelMessages_FirstMessageId",
                 table: "Threads");
+
+            migrationBuilder.DropForeignKey(
+                name: "FK_DirectMessageLaterFlags_DirectMessageGroups_DirectMessageGr~",
+                table: "DirectMessageLaterFlags");
+
+            migrationBuilder.DropForeignKey(
+                name: "FK_DirectMessages_DirectMessageGroups_DirectMessageGroupId",
+                table: "DirectMessages");
+
+            migrationBuilder.DropForeignKey(
+                name: "FK_DirectMessageLaterFlags_DirectMessages_DirectMessageId",
+                table: "DirectMessageLaterFlags");
 
             migrationBuilder.DropTable(
                 name: "AspNetRoleClaims");
@@ -1755,9 +1836,6 @@ namespace PersistenceService.Migrations
                 name: "ChannelMembers");
 
             migrationBuilder.DropTable(
-                name: "ChannelMessageLaterFlags");
-
-            migrationBuilder.DropTable(
                 name: "ChannelMessageMentions");
 
             migrationBuilder.DropTable(
@@ -1771,9 +1849,6 @@ namespace PersistenceService.Migrations
 
             migrationBuilder.DropTable(
                 name: "DirectMessageGroupMembers");
-
-            migrationBuilder.DropTable(
-                name: "DirectMessageLaterFlags");
 
             migrationBuilder.DropTable(
                 name: "DirectMessageMentions");
@@ -1818,12 +1893,6 @@ namespace PersistenceService.Migrations
                 name: "Files");
 
             migrationBuilder.DropTable(
-                name: "DirectMessages");
-
-            migrationBuilder.DropTable(
-                name: "DirectMessageGroups");
-
-            migrationBuilder.DropTable(
                 name: "Channels");
 
             migrationBuilder.DropTable(
@@ -1833,7 +1902,19 @@ namespace PersistenceService.Migrations
                 name: "ChannelMessages");
 
             migrationBuilder.DropTable(
+                name: "ChannelMessageLaterFlags");
+
+            migrationBuilder.DropTable(
                 name: "Threads");
+
+            migrationBuilder.DropTable(
+                name: "DirectMessageGroups");
+
+            migrationBuilder.DropTable(
+                name: "DirectMessages");
+
+            migrationBuilder.DropTable(
+                name: "DirectMessageLaterFlags");
         }
     }
 }

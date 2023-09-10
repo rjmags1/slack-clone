@@ -22,6 +22,9 @@ public class ThreadType : ObjectGraphType<Thread>, INodeGraphType<Thread>
         Field<NonNullGraphType<ChannelMessagesConnectionType>>("messages")
             .Description("Relay connection representing messages of the thread")
             .Resolve(context => throw new NotImplementedException());
+        Field<NonNullGraphType<IntGraphType>>("numMessages")
+            .Description("The number of messages in the thread")
+            .Resolve(context => context.Source.NumMessages);
         Field<NonNullGraphType<WorkspaceType>>("workspace")
             .Description("The workspace containing the thread")
             .Resolve(context => context.Source.Workspace);
@@ -35,6 +38,7 @@ public class Thread : INode
     public Channel Channel { get; set; }
     public Message? FirstMessage { get; set; }
     public Connection<Message> Messages { get; set; }
+    public int NumMessages { get; set; }
     public Workspace Workspace { get; set; }
 #pragma warning restore CS8618
 }

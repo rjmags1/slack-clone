@@ -8,6 +8,7 @@ using Microsoft.Extensions.Options;
 using SlackCloneGraphQL;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using AuthorizeAttribute = Microsoft.AspNetCore.Authorization.AuthorizeAttribute;
+using ApiService.Utils;
 
 namespace ApiService.Controllers;
 
@@ -45,7 +46,13 @@ public class ApiController : Controller
             {
                 { "claims", HttpContext.User },
                 { "queryName", FieldAnalyzer.GetQueryName(request.Query) },
-                { "query", request.Query }
+                { "query", request.Query },
+                {
+                    "sub",
+                    Guid.Parse(
+                        AuthUtils.GetClaim("sub", HttpContext.User)!.Value
+                    )
+                }
             };
             s.Schema = _schema;
             s.Query = request.Query;

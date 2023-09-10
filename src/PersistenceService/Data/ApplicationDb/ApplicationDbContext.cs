@@ -158,11 +158,6 @@ public class ApplicationDbContext
     {
         modelBuilder
             .Entity<ChannelMessage>()
-            .Property(e => e.Draft)
-            .HasDefaultValueSql("true");
-
-        modelBuilder
-            .Entity<ChannelMessage>()
             .Property(e => e.Deleted)
             .HasDefaultValueSql("false");
 
@@ -239,11 +234,6 @@ public class ApplicationDbContext
             .WithOne(e => e.MessageRepliedTo)
             .HasForeignKey(e => e.MessageRepliedToId)
             .IsRequired();
-
-        modelBuilder
-            .Entity<DirectMessage>()
-            .Property(e => e.Draft)
-            .HasDefaultValueSql("true");
 
         modelBuilder
             .Entity<DirectMessage>()

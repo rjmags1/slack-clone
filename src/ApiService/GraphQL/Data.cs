@@ -36,15 +36,16 @@ public class SlackCloneData
 
     public async Task<Connection<Message>> GetChannelMessages(
         Guid userId,
+        Guid channelId,
         FieldInfo fieldInfo,
-        MessagesFilter filter,
+        MessagesFilter? filter,
         int first,
         Guid? after
     )
     {
-        if (filter.ChannelIds is null || filter.ChannelIds.Count != 1)
+        if (filter is not null)
         {
-            throw new InvalidOperationException();
+            throw new NotImplementedException();
         }
 
         using var scope = Provider.CreateScope();
@@ -56,21 +57,21 @@ public class SlackCloneData
             bool lastPage
         ) = await channelStore.LoadChannelMessages(
             userId,
-            filter.ChannelIds.First(),
+            channelId,
             fieldInfo,
             first,
             after
         );
 
-        Dictionary<Guid, List<ChannelMessageReactionCount>> countsDict = new();
-        foreach (var reactionCount in reactionCounts)
+        Dictionary<Guid, List<ChannelMessageReactionCount>?> countsDict = new();
+        foreach (ChannelMessageReactionCount reactionCount in reactionCounts)
         {
             if (!countsDict.ContainsKey(reactionCount.ChannelMessageId))
             {
                 countsDict[reactionCount.ChannelMessageId] =
                     new List<ChannelMessageReactionCount>();
             }
-            countsDict[reactionCount.ChannelMessageId].Add(reactionCount);
+            countsDict[reactionCount.ChannelMessageId]!.Add(reactionCount);
         }
         List<Message> messages = new();
         foreach (dynamic dbm in dbMessages)
@@ -78,7 +79,8 @@ public class SlackCloneData
             Message message =
                 ModelToObjectConverters.ConvertDynamicChannelMessage(
                     dbm,
-                    countsDict.GetValueOrDefault((Guid)dbm.Id)
+                    countsDict.GetValueOrDefault((Guid)dbm.Id, null),
+                    FieldAnalyzer.ExtractUserFields("user", fieldInfo.FieldTree)
                 );
             messages.Add(message);
         }
@@ -92,16 +94,12 @@ public class SlackCloneData
 
     public async Task<Connection<ChannelMember>> GetChannelMembers(
         FieldInfo fieldInfo,
+        Guid channelId,
         UsersFilter filter,
         int first,
         Guid? after
     )
     {
-        if (filter.Channels is null || filter.Channels.Count != 1)
-        {
-            throw new InvalidOperationException();
-        }
-
         using var scope = Provider.CreateScope();
         ChannelStore channelStore =
             scope.ServiceProvider.GetRequiredService<ChannelStore>();
@@ -110,7 +108,7 @@ public class SlackCloneData
                 filter.UserId,
                 first,
                 fieldInfo.FieldTree,
-                filter.Channels.First(),
+                channelId,
                 after
             );
 
@@ -281,7 +279,7 @@ public class SlackCloneData
             )
         ).First();
 
-        return ModelToObjectConverters.ConvertAvatar(dbAvatar);
+        return ModelToObjectConverters.ConvertFile(dbAvatar);
     }
 
     public async Task<bool> ValidUserEmail(string email)

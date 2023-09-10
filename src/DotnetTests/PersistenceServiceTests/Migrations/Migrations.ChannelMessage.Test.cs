@@ -91,15 +91,6 @@ public class ChannelMessageMigrationsTests
     }
 
     [Fact]
-    public void DraftColumn()
-    {
-        var draftProperty = _entityType.FindProperty(
-            nameof(ChannelMessage.Draft)
-        )!;
-        Assert.Equal("true", draftProperty.GetDefaultValueSql());
-    }
-
-    [Fact]
     public void LastEditColumn()
     {
         var lastEditProperty = _entityType.FindProperty(
@@ -172,10 +163,6 @@ public class ChannelMessageMigrationsTests
             nameof(ChannelMessage.Deleted)
         )!;
         Assert.NotNull(_entityType.FindIndex(deletedProperty));
-        var draftProperty = _entityType.FindProperty(
-            nameof(ChannelMessage.Draft)
-        )!;
-        Assert.NotNull(_entityType.FindIndex(draftProperty));
         var sentAtProperty = _entityType.FindProperty(
             nameof(ChannelMessage.SentAt)
         )!;
