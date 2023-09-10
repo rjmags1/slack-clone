@@ -472,11 +472,11 @@ public class ChannelStore : Store
             Content = content,
             ThreadId = threadId,
             UserId = userId,
-            Draft = draft,
             SentAt = draft ? null : DateTime.Now,
             IsReply = reply,
             ReplyToId = messageRepliedToId
         };
+        _context.Add(message);
 
         if (reply)
         {

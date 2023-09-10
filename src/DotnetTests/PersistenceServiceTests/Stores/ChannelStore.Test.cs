@@ -870,7 +870,6 @@ public class ChannelStoreTests1
         Assert.NotEqual(insertedChannelMessage.ConcurrencyStamp, Guid.Empty);
         Assert.NotEqual(insertedChannelMessage.CreatedAt, default(DateTime));
         Assert.False(insertedChannelMessage.Deleted);
-        Assert.False(insertedChannelMessage.Draft);
         Assert.Null(insertedChannelMessage.LastEdit);
         Assert.NotNull(insertedChannelMessage.SentAt);
         Assert.NotEqual(insertedChannelMessage.SentAt, default(DateTime));
@@ -900,7 +899,6 @@ public class ChannelStoreTests1
         Assert.NotEqual(insertedChannelMessage2.ConcurrencyStamp, Guid.Empty);
         Assert.NotEqual(insertedChannelMessage2.CreatedAt, default(DateTime));
         Assert.False(insertedChannelMessage2.Deleted);
-        Assert.True(insertedChannelMessage2.Draft);
         Assert.Null(insertedChannelMessage2.LastEdit);
         Assert.Null(insertedChannelMessage2.SentAt);
         Assert.NotEqual(insertedChannelMessage2.ThreadId, Guid.Empty);

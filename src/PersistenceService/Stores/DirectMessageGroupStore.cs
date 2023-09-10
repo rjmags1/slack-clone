@@ -312,7 +312,6 @@ public class DirectMessageGroupStore : Store
         {
             Content = content,
             DirectMessageGroupId = directMessageGroupId,
-            Draft = draft,
             SentAt = draft ? null : DateTime.Now,
             UserId = userId,
             IsReply = reply,

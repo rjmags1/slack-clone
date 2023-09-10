@@ -241,7 +241,6 @@ public static class ModelToObjectConverters
                 User = ConvertUser(dbMessage.User),
                 Content = dbMessage.Content,
                 CreatedAt = dbMessage.CreatedAt,
-                Draft = dbMessage.Draft,
                 LastEdit = dbMessage.LastEdit,
                 Files = dbMessage.Files.Select(f => ConvertFile(f)).ToList(),
                 Group = ConvertChannel(dbMessage.Channel),

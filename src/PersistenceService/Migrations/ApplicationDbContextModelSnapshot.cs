@@ -355,11 +355,6 @@ namespace PersistenceService.Migrations
                         .HasColumnType("boolean")
                         .HasDefaultValueSql("false");
 
-                    b.Property<bool>("Draft")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
-                        .HasDefaultValueSql("true");
-
                     b.Property<bool>("IsReply")
                         .HasColumnType("boolean");
 
@@ -386,8 +381,6 @@ namespace PersistenceService.Migrations
                     b.HasIndex("ChannelId");
 
                     b.HasIndex("Deleted");
-
-                    b.HasIndex("Draft");
 
                     b.HasIndex("LaterFlagId");
 
@@ -621,11 +614,6 @@ namespace PersistenceService.Migrations
                     b.Property<Guid>("DirectMessageGroupId")
                         .HasColumnType("uuid");
 
-                    b.Property<bool>("Draft")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
-                        .HasDefaultValueSql("true");
-
                     b.Property<bool>("IsReply")
                         .HasColumnType("boolean");
 
@@ -649,8 +637,6 @@ namespace PersistenceService.Migrations
                     b.HasIndex("Deleted");
 
                     b.HasIndex("DirectMessageGroupId");
-
-                    b.HasIndex("Draft");
 
                     b.HasIndex("LaterFlagId");
 

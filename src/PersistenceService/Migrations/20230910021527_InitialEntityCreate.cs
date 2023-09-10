@@ -356,7 +356,6 @@ namespace PersistenceService.Migrations
                     ConcurrencyStamp = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "gen_random_uuid()"),
                     CreatedAt = table.Column<DateTime>(type: "timestamp", nullable: false, defaultValueSql: "now()"),
                     Deleted = table.Column<bool>(type: "boolean", nullable: false, defaultValueSql: "false"),
-                    Draft = table.Column<bool>(type: "boolean", nullable: false, defaultValueSql: "true"),
                     IsReply = table.Column<bool>(type: "boolean", nullable: false),
                     LastEdit = table.Column<DateTime>(type: "timestamp", nullable: true),
                     LaterFlagId = table.Column<Guid>(type: "uuid", nullable: true),
@@ -494,7 +493,6 @@ namespace PersistenceService.Migrations
                     CreatedAt = table.Column<DateTime>(type: "timestamp", nullable: false, defaultValueSql: "now()"),
                     Deleted = table.Column<bool>(type: "boolean", nullable: false, defaultValueSql: "false"),
                     DirectMessageGroupId = table.Column<Guid>(type: "uuid", nullable: false),
-                    Draft = table.Column<bool>(type: "boolean", nullable: false, defaultValueSql: "true"),
                     LastEdit = table.Column<DateTime>(type: "timestamp", nullable: true),
                     LaterFlagId = table.Column<Guid>(type: "uuid", nullable: true),
                     IsReply = table.Column<bool>(type: "boolean", nullable: false),
@@ -1173,11 +1171,6 @@ namespace PersistenceService.Migrations
                 column: "Deleted");
 
             migrationBuilder.CreateIndex(
-                name: "IX_ChannelMessages_Draft",
-                table: "ChannelMessages",
-                column: "Draft");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_ChannelMessages_LaterFlagId",
                 table: "ChannelMessages",
                 column: "LaterFlagId");
@@ -1347,11 +1340,6 @@ namespace PersistenceService.Migrations
                 name: "IX_DirectMessages_DirectMessageGroupId",
                 table: "DirectMessages",
                 column: "DirectMessageGroupId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_DirectMessages_Draft",
-                table: "DirectMessages",
-                column: "Draft");
 
             migrationBuilder.CreateIndex(
                 name: "IX_DirectMessages_LaterFlagId",

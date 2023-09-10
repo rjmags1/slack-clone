@@ -6,7 +6,6 @@ namespace PersistenceService.Models;
 
 [Index(nameof(ChannelId))]
 [Index(nameof(Deleted))]
-[Index(nameof(Draft))]
 [Index(nameof(SentAt))]
 [Index(nameof(UserId))]
 public class ChannelMessage
@@ -33,8 +32,6 @@ public class ChannelMessage
     public DateTime CreatedAt { get; set; }
 
     public bool Deleted { get; set; }
-
-    public bool Draft { get; set; }
 
     public ICollection<File> Files { get; } = new List<File>();
 
