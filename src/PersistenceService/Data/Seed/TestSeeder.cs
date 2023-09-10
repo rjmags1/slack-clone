@@ -51,7 +51,7 @@ public class TestSeeder
         int minMembersPerChannel = 2;
         int dmGroupsPerWorkspace = size == Large ? 1000 : 10;
         int threadsPerChannel = size == Large ? 10 : 2;
-        int messagesPerChannel = size == Large ? 400 : 20;
+        int messagesPerChannel = size == Large ? 400 : 40;
         int messagesInLargeThread = size == Large ? 200 : 10;
         int messagesInSmallThreads = size == Large ? 5 : 3;
         int messagesPerDmGroup = size == Large ? 20 : 5;

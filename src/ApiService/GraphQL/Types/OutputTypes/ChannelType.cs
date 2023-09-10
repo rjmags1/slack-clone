@@ -1,11 +1,14 @@
+using ApiService.Utils;
+using GraphQL;
 using GraphQL.Types;
+using PersistenceService.Utils.GraphQL;
 using SlackCloneGraphQL.Types.Connections;
 
 namespace SlackCloneGraphQL.Types;
 
 public class ChannelType : ObjectGraphType<Channel>, INodeGraphType<Channel>
 {
-    public ChannelType()
+    public ChannelType(SlackCloneData data)
     {
         Name = "Channel";
         Interface<GroupInterfaceType>();
@@ -36,12 +39,71 @@ public class ChannelType : ObjectGraphType<Channel>, INodeGraphType<Channel>
             .Description(
                 "Relay connection representing collection of channel members."
             )
-            .Resolve(context => throw new NotImplementedException());
+            .Argument<NonNullGraphType<IntGraphType>>("first")
+            .Argument<IdGraphType>("after")
+            .Argument<NonNullGraphType<UsersFilterInputType>>("filter")
+            .ResolveAsync(async context =>
+            {
+                var first = context.GetArgument<int>("first");
+                var after = context.GetArgument<Guid?>("after");
+                UsersFilter usersFilter = context.GetArgument<UsersFilter>(
+                    "filter"
+                );
+                if (usersFilter.Channels is not null)
+                {
+                    throw new InvalidOperationException();
+                }
+                string query = GraphQLUtils.GetQuery(
+                    (context.UserContext as GraphQLUserContext)!
+                )!;
+                var fragments = FieldAnalyzer.GetFragments(query);
+                FieldInfo fieldInfo = FieldAnalyzer.ChannelMembers(
+                    query,
+                    fragments
+                );
+
+                return await data.GetChannelMembers(
+                    fieldInfo,
+                    context.Source.Id,
+                    usersFilter,
+                    first,
+                    after
+                );
+            });
         Field<NonNullGraphType<ChannelMessagesConnectionType>>("messages")
+            .Argument<NonNullGraphType<IntGraphType>>("first")
+            .Argument<IdGraphType>("after")
+            .Argument<MessagesFilterInputType>("filter")
             .Description(
                 "Relay connection representing collection of channel messages."
             )
-            .Resolve(context => throw new NotImplementedException());
+            .ResolveAsync(async context =>
+            {
+                var first = context.GetArgument<int>("first");
+                var after = context.GetArgument<Guid?>("after");
+                MessagesFilter? messagesFilter =
+                    context.GetArgument<MessagesFilter>("filter");
+                string query = GraphQLUtils.GetQuery(
+                    (context.UserContext as GraphQLUserContext)!
+                )!;
+                var fragments = FieldAnalyzer.GetFragments(query);
+                FieldInfo fieldInfo = FieldAnalyzer.ChannelMessages(
+                    query,
+                    fragments
+                );
+                Guid sub = GraphQLUtils.GetSubClaim(
+                    (context.UserContext as GraphQLUserContext)!
+                );
+
+                return await data.GetChannelMessages(
+                    sub,
+                    context.Source.Id,
+                    fieldInfo,
+                    messagesFilter,
+                    first,
+                    after
+                );
+            });
         Field<NonNullGraphType<StringGraphType>>("name")
             .Description("The name of the channel.")
             .Resolve(context => context.Source.Name);

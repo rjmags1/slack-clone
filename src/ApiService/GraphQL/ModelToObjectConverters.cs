@@ -5,6 +5,7 @@ using SlackCloneGraphQL.Types;
 using SlackCloneGraphQL.Types.Connections;
 using File = SlackCloneGraphQL.Types.File;
 using Models = PersistenceService.Models;
+using Thread = SlackCloneGraphQL.Types.Thread;
 
 namespace SlackCloneGraphQL;
 
@@ -38,10 +39,224 @@ public static class ModelToObjectConverters
 
     public static Message ConvertDynamicChannelMessage(
         dynamic modelChannelMessage,
-        List<ChannelMessageReactionCount>? reactionCounts
+        List<ChannelMessageReactionCount>? reactionCounts,
+        List<string> userFields
     )
     {
-        throw new NotImplementedException();
+        var expando = DynamicUtils.ToExpando(modelChannelMessage);
+        Message message = new();
+        if (DynamicUtils.HasProperty(expando, nameof(Message.Id)))
+        {
+            message.Id = JsonSerializer.Deserialize<Guid>(expando.Id);
+        }
+        if (DynamicUtils.HasProperty(expando, nameof(Message.User)))
+        {
+            Models.User dbUser = JsonSerializer.Deserialize<Models.User>(
+                expando.User
+            );
+            message.User = ConvertUser(dbUser, userFields);
+        }
+        if (DynamicUtils.HasProperty(expando, nameof(Message.Content)))
+        {
+            message.Content = JsonSerializer.Deserialize<string>(
+                expando.Content
+            );
+        }
+        if (DynamicUtils.HasProperty(expando, nameof(Message.CreatedAt)))
+        {
+            message.CreatedAt = JsonSerializer.Deserialize<DateTime>(
+                expando.CreatedAt
+            );
+        }
+        if (DynamicUtils.HasProperty(expando, nameof(Message.Draft)))
+        {
+            message.Draft = JsonSerializer.Deserialize<bool>(expando.Draft);
+        }
+        if (DynamicUtils.HasProperty(expando, nameof(Message.LastEdit)))
+        {
+            message.LastEdit = expando.LastEdit is null
+                ? null
+                : JsonSerializer.Deserialize<DateTime>(expando.LastEdit);
+        }
+        if (DynamicUtils.HasProperty(expando, nameof(Message.Files)))
+        {
+            List<Models.File> dbFiles = JsonSerializer.Deserialize<
+                List<Models.File>
+            >(expando.Files);
+            List<File> files = new();
+            foreach (Models.File dbFile in dbFiles)
+            {
+                files.Add(ConvertFile(dbFile));
+            }
+            message.Files = files;
+        }
+        if (
+            DynamicUtils.HasProperty(
+                expando,
+                nameof(Models.ChannelMessage.Channel)
+            )
+        )
+        {
+            Models.Channel dbChannel =
+                JsonSerializer.Deserialize<Models.Channel>(expando.Channel);
+            message.Group = ConvertChannel(dbChannel, skipWorkspace: true);
+        }
+        if (DynamicUtils.HasProperty(expando, nameof(Message.IsReply)))
+        {
+            message.IsReply = JsonSerializer.Deserialize<bool>(expando.IsReply);
+        }
+        if (DynamicUtils.HasProperty(expando, nameof(Message.LastEdit)))
+        {
+            message.LastEdit = expando.LastEdit is null
+                ? null
+                : JsonSerializer.Deserialize<DateTime>(expando.LastEdit);
+        }
+        if (DynamicUtils.HasProperty(expando, nameof(Message.LaterFlag)))
+        {
+            message.LaterFlag = null;
+            if (expando.LaterFlag is not null)
+            {
+                Models.ChannelMessageLaterFlag dbLaterFlag =
+                    JsonSerializer.Deserialize<Models.ChannelMessageLaterFlag>(
+                        expando.LaterFlag
+                    );
+                LaterFlag? laterFlag = ConvertChannelMessageLaterFlag(
+                    dbLaterFlag
+                );
+                message.LaterFlag = laterFlag;
+            }
+        }
+        if (DynamicUtils.HasProperty(expando, nameof(Message.Mentions)))
+        {
+            List<Models.ChannelMessageMention> dbMentions =
+                JsonSerializer.Deserialize<List<Models.ChannelMessageMention>>(
+                    expando.Mentions
+                );
+            List<Mention> mentions = new();
+            foreach (Models.ChannelMessageMention dbMention in dbMentions)
+            {
+                Console.WriteLine(dbMention.Id);
+                mentions.Add(ConvertChannelMessageMention(dbMention));
+            }
+            message.Mentions = mentions;
+        }
+        if (reactionCounts is not null && reactionCounts.Count > 0)
+        {
+            message.Reactions = ConvertReactionCounts(reactionCounts);
+        }
+        if (DynamicUtils.HasProperty(expando, nameof(Message.ReplyTo)))
+        {
+            message.ReplyTo = null;
+            if (expando.ReplyTo is not null)
+            {
+                Models.ChannelMessage dbReplyTo =
+                    JsonSerializer.Deserialize<Models.ChannelMessage>(
+                        expando.ReplyTo
+                    );
+                message.ReplyTo = ConvertChannelMessage(dbReplyTo);
+            }
+        }
+        if (DynamicUtils.HasProperty(expando, nameof(Message.SentAt)))
+        {
+            message.SentAt = expando.SentAt is null
+                ? null
+                : JsonSerializer.Deserialize<DateTime>(expando.SentAt);
+        }
+        if (DynamicUtils.HasProperty(expando, nameof(Message.Thread)))
+        {
+            Models.Thread dbThread = JsonSerializer.Deserialize<Models.Thread>(
+                expando.Thread
+            );
+            message.Thread = ConvertThread(dbThread);
+        }
+        message.Type = 1;
+
+        return message;
+    }
+
+    public static Thread ConvertThread(Models.Thread dbThread)
+    {
+        return new Thread
+        {
+            Id = dbThread.Id,
+            Channel = ConvertChannel(dbThread.Channel),
+            FirstMessage = ConvertChannelMessage(dbThread.FirstMessage),
+            NumMessages = dbThread.NumMessages,
+            Workspace = ConvertWorkspace(dbThread.Workspace)
+        };
+    }
+
+    public static LaterFlag? ConvertChannelMessageLaterFlag(
+        Models.ChannelMessageLaterFlag? dbLaterFlag
+    )
+    {
+        return dbLaterFlag is null
+            ? null
+            : new LaterFlag
+            {
+                Id = dbLaterFlag.Id,
+                Message = ConvertChannelMessage(dbLaterFlag.ChannelMessage)!,
+                Status = dbLaterFlag.ChannelLaterFlagStatus
+            };
+    }
+
+    public static List<ReactionCount> ConvertReactionCounts(
+        List<ChannelMessageReactionCount> dbReactionCounts
+    )
+    {
+        return dbReactionCounts
+            .Select(
+                dbrc =>
+                    new ReactionCount
+                    {
+                        Count = dbrc.Count,
+                        Emoji = dbrc.Emoji,
+                        UserReactionId = dbrc.UserReaction?.Id
+                    }
+            )
+            .ToList();
+    }
+
+    public static Mention ConvertChannelMessageMention(
+        Models.ChannelMessageMention dbMention
+    )
+    {
+        return new Mention
+        {
+            Id = dbMention.Id,
+            CreatedAt = dbMention.CreatedAt
+        };
+    }
+
+    public static Message? ConvertChannelMessage(
+        Models.ChannelMessage? dbMessage,
+        List<ChannelMessageReactionCount>? reactionsCounts = null
+    )
+    {
+        return dbMessage is null
+            ? null
+            : new Message
+            {
+                Id = dbMessage.Id,
+                User = ConvertUser(dbMessage.User),
+                Content = dbMessage.Content,
+                CreatedAt = dbMessage.CreatedAt,
+                Draft = dbMessage.Draft,
+                LastEdit = dbMessage.LastEdit,
+                Files = dbMessage.Files.Select(f => ConvertFile(f)).ToList(),
+                Group = ConvertChannel(dbMessage.Channel),
+                IsReply = dbMessage.IsReply,
+                LaterFlag = ConvertChannelMessageLaterFlag(dbMessage.LaterFlag),
+                Mentions = dbMessage.Mentions
+                    .Select(m => ConvertChannelMessageMention(m))
+                    .ToList(),
+                Reactions = reactionsCounts is null
+                    ? null
+                    : ConvertReactionCounts(reactionsCounts),
+                ReplyTo = ConvertChannelMessage(dbMessage.ReplyTo),
+                SentAt = dbMessage.SentAt,
+                Type = 1
+            };
     }
 
     public static DirectMessageGroup ConvertDynamicDirectMessageGroup(
@@ -99,14 +314,14 @@ public static class ModelToObjectConverters
         {
             if (expando.Avatar is null)
             {
-                channel.Avatar = ConvertAvatar(null);
+                channel.Avatar = ConvertFile(null);
             }
             else
             {
                 var dbAvatar = JsonSerializer.Deserialize<Models.File>(
                     (Stream)expando.Avatar
                 );
-                channel.Avatar = ConvertAvatar(dbAvatar);
+                channel.Avatar = ConvertFile(dbAvatar);
             }
         }
         if (
@@ -192,7 +407,7 @@ public static class ModelToObjectConverters
                 Models.File dbAvatar = JsonSerializer.Deserialize<Models.File>(
                     expando.Avatar
                 );
-                workspace.Avatar = ConvertAvatar(dbAvatar);
+                workspace.Avatar = ConvertFile(dbAvatar);
             }
         }
         if (DynamicUtils.HasProperty(expando, nameof(Workspace.CreatedAt)))
@@ -221,6 +436,42 @@ public static class ModelToObjectConverters
         return workspace;
     }
 
+    public static User ConvertUser(Models.User modelUser)
+    {
+        User user =
+            new()
+            {
+                Id = modelUser.Id,
+                Avatar = ConvertFile(modelUser.Avatar),
+                OnlineStatus = modelUser.OnlineStatus ?? DEFAULT_ONLINE_STATUS,
+                OnlineStatusUntil = modelUser.OnlineStatusUntil,
+                Username = modelUser.UserName,
+                CreatedAt = modelUser.CreatedAt,
+            };
+        IncludePersonalInfo(user, modelUser);
+        return user;
+    }
+
+    public static void IncludePersonalInfo(User user, Models.User modelUser)
+    {
+        user.PersonalInfo = new UserInfo
+        {
+            Email = modelUser.Email,
+            EmailConfirmed = modelUser.EmailConfirmed,
+            FirstName = modelUser.FirstName,
+            LastName = modelUser.LastName,
+            UserNotificationsPreferences = new UserNotificationsPreferences
+            {
+                NotifSound = modelUser.NotificationSound,
+                AllowAlertsStartTimeUTC = modelUser.NotificationsAllowStartTime,
+                AllowAlertsEndTimeUTC = modelUser.NotificationsAllowEndTime,
+                PauseAlertsUntil = modelUser.NotificationsPauseUntil
+            },
+            Theme = ConvertTheme(modelUser.Theme),
+            Timezone = modelUser.Timezone
+        };
+    }
+
     public static User ConvertUser(
         Models.User modelUser,
         IEnumerable<string> requestedFields
@@ -230,7 +481,7 @@ public static class ModelToObjectConverters
             new()
             {
                 Id = modelUser.Id,
-                Avatar = ConvertAvatar(modelUser.Avatar),
+                Avatar = ConvertFile(modelUser.Avatar),
                 OnlineStatus = modelUser.OnlineStatus ?? DEFAULT_ONLINE_STATUS,
                 OnlineStatusUntil = modelUser.OnlineStatusUntil,
                 Username = modelUser.UserName,
@@ -260,16 +511,16 @@ public static class ModelToObjectConverters
         return user;
     }
 
-    public static File ConvertAvatar(Models.File? avatar)
+    public static File ConvertFile(Models.File? dbFile)
     {
-        return avatar is null
+        return dbFile is null
             ? DefaultAvatar
             : new File
             {
-                Id = avatar.Id,
-                Name = avatar.Name,
-                StoreKey = avatar.StoreKey,
-                UploadedAt = avatar.UploadedAt
+                Id = dbFile.Id,
+                Name = dbFile.Name,
+                StoreKey = dbFile.StoreKey,
+                UploadedAt = dbFile.UploadedAt
             };
     }
 
@@ -338,13 +589,6 @@ public static class ModelToObjectConverters
         {
             member.Admin = JsonSerializer.Deserialize<bool>(expando.Admin);
         }
-        if (DynamicUtils.HasProperty(expando, nameof(ChannelMember.Channel)))
-        {
-            var modelChannel = JsonSerializer.Deserialize<Models.Channel>(
-                expando.Channel
-            );
-            member.Channel = ConvertChannel(modelChannel);
-        }
         if (DynamicUtils.HasProperty(expando, nameof(ChannelMember.User)))
         {
             var modelUser = JsonSerializer.Deserialize<Models.User>(
@@ -352,7 +596,7 @@ public static class ModelToObjectConverters
             );
             member.User = ConvertUser(modelUser, userFields);
         }
-        if (IncludeChannelMemberInfo(modelChannelMember))
+        if (IncludeChannelMemberInfo(expando))
         {
             member.MemberInfo = ConvertChannelMemberInfo(expando);
         }
@@ -381,9 +625,11 @@ public static class ModelToObjectConverters
             )
         )
         {
-            memberInfo.LastViewedAt = JsonSerializer.Deserialize<DateTime>(
-                expando.LastViewedAt
-            );
+            memberInfo.LastViewedAt = expando.LastViewedAt is null
+                ? null
+                : JsonSerializer.Deserialize<DateTime>(
+                    (Stream)expando.LastViewedAt
+                );
         }
         if (
             DynamicUtils.HasProperty(
@@ -531,7 +777,7 @@ public static class ModelToObjectConverters
         return new Workspace
         {
             Id = modelWorkspace.Id,
-            Avatar = ConvertAvatar(modelWorkspace.Avatar),
+            Avatar = ConvertFile(modelWorkspace.Avatar),
             CreatedAt = modelWorkspace.CreatedAt,
             Description = modelWorkspace.Description,
             Name = modelWorkspace.Name,
@@ -539,22 +785,29 @@ public static class ModelToObjectConverters
         };
     }
 
-    public static Channel ConvertChannel(Models.Channel modelChannel)
+    public static Channel ConvertChannel(
+        Models.Channel modelChannel,
+        bool skipWorkspace = false
+    )
     {
-        return new Channel
+        var channel = new Channel
         {
             Id = modelChannel.Id,
             AllowThreads = modelChannel.AllowThreads,
             AllowedPostersMask = modelChannel.AllowedPostersMask,
-            Avatar = ConvertAvatar(modelChannel.Avatar),
+            Avatar = ConvertFile(modelChannel.Avatar),
             CreatedAt = modelChannel.CreatedAt,
             Description = modelChannel.Description ?? "",
             Name = modelChannel.Name,
             NumMembers = modelChannel.NumMembers,
             Private = modelChannel.Private,
             Topic = modelChannel.Topic ?? "",
-            Workspace = ConvertWorkspace(modelChannel.Workspace)
         };
+        if (!skipWorkspace)
+        {
+            channel.Workspace = ConvertWorkspace(modelChannel.Workspace);
+        }
+        return channel;
     }
 
     private static bool IncludeWorkspaceMemberInfo(dynamic expando)

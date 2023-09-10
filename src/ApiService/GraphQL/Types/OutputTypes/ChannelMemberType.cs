@@ -18,9 +18,6 @@ public class ChannelMemberType
                 "Whether the member is an admin of the channel or not."
             )
             .Resolve(context => context.Source.Admin);
-        Field<NonNullGraphType<ChannelType>>("channel")
-            .Description("The channel associated with the channel membership.")
-            .Resolve(context => context.Source.Channel);
         Field<NonNullGraphType<ChannelMemberInfoType>>("memberInfo")
             .Description("Additional metadata about the channel membership")
             .Resolve(context => context.Source.MemberInfo);
@@ -35,7 +32,6 @@ public class ChannelMember : INode
     public Guid Id { get; set; }
     public bool Admin { get; set; }
 #pragma warning disable CS8618
-    public Channel Channel { get; set; }
     public ChannelMemberInfo MemberInfo { get; set; }
     public User User { get; set; }
 #pragma warning restore CS8618

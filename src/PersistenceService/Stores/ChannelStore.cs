@@ -61,14 +61,9 @@ public class ChannelStore : Store
             .Select(
                 DynamicLinqUtils.NodeFieldToDynamicSelectString(
                     fieldInfo.FieldTree,
-                    nonDbMapped: new List<string>
-                    {
-                        "group",
-                        "replyTo",
-                        "type",
-                        "reactions"
-                    },
-                    forceIncludeId: true
+                    nonDbMapped: new List<string> { "type" },
+                    forceIncludeId: true,
+                    skip: new List<string> { "reactions", "channel" }
                 )
             )
             .ToDynamicListAsync();
@@ -133,12 +128,13 @@ public class ChannelStore : Store
     {
         IIncludableQueryable<ChannelMember, User> memberships =
             _context.ChannelMembers
-                .Where(cm => cm.Id == channelId)
+                .Where(cm => cm.ChannelId == channelId)
                 .Include(cm => cm.User);
         if (after is not null)
         {
             string prevLast = memberships
-                .Where(wm => wm.Id == after)
+                .Where(cm => cm.Id == after)
+                .Include(cm => cm.User)
                 .Select(cm => cm.User.NormalizedUserName)
                 .First();
             memberships =
@@ -149,13 +145,10 @@ public class ChannelStore : Store
                 );
         }
 
-        memberships =
-            (IIncludableQueryable<ChannelMember, User>)(
-                memberships
-                    .OrderBy(cm => cm.User.NormalizedUserName)
-                    .Take(first + 1)
-            );
-        var dynamicChannelMembers = await memberships
+        var memberships_ = memberships
+            .OrderBy(cm => cm.User.NormalizedUserName)
+            .Take(first + 1);
+        var dynamicChannelMembers = await memberships_
             .Select(
                 DynamicLinqUtils.NodeFieldToDynamicSelectString(
                     connectionTree,
@@ -484,7 +477,6 @@ public class ChannelStore : Store
             IsReply = reply,
             ReplyToId = messageRepliedToId
         };
-        _context.Add(message);
 
         if (reply)
         {
@@ -762,11 +754,11 @@ public class ChannelStore : Store
             .Take(first + 1)
             .Select(cm => cm.Channel);
 
-        var dynamicChannels = await channels
-            .Select(
-                DynamicLinqUtils.NodeFieldToDynamicSelectString(connectionTree)
-            )
-            .ToDynamicListAsync();
+        var asdf = DynamicLinqUtils.NodeFieldToDynamicSelectString(
+            connectionTree,
+            skip: new List<string> { "members", "messages" }
+        );
+        var dynamicChannels = await channels.Select(asdf).ToDynamicListAsync();
 
         bool lastPage = dynamicChannels.Count <= first;
         if (!lastPage)

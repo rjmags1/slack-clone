@@ -20,11 +20,19 @@ public static class DynamicLinqUtils
     public static string NodeFieldToDynamicSelectString(
         FieldTree connectionTree,
         List<string>? nonDbMapped = null,
-        bool forceIncludeId = false
+        bool forceIncludeId = false,
+        List<string>? skip = null,
+        Dictionary<string, string>? map = null
     )
     {
         List<string> nodeFields = new List<string>();
-        CollectNodeFields(connectionTree, nodeFields, nonDbMapped);
+        CollectNodeFields(
+            connectionTree,
+            nodeFields,
+            nonDbMapped: nonDbMapped,
+            skip: skip,
+            map: map
+        );
         if (forceIncludeId && !nodeFields.Contains("id"))
         {
             nodeFields.Add("id");
@@ -57,7 +65,9 @@ public static class DynamicLinqUtils
         FieldTree root,
         List<string> fields,
         List<string>? nonDbMapped = null,
-        bool parentIsNonDbMapped = false
+        bool parentIsNonDbMapped = false,
+        List<string>? skip = null,
+        Dictionary<string, string>? map = null
     )
     {
         if (parentIsNonDbMapped)
@@ -70,11 +80,36 @@ public static class DynamicLinqUtils
             : nonDbMapped.Contains(root.FieldName);
         foreach (FieldTree child in root.Children)
         {
-            if (nodeLevel && child.FieldName.Substring(0, 2) != "__")
+            bool skippedField =
+                nodeLevel
+                && skip is not null
+                && skip.Any(s => child.FieldName.StartsWith(s));
+            if (
+                nodeLevel
+                && child.FieldName.Substring(0, 2) != "__"
+                && !skippedField
+            )
             {
-                fields.Add(child.FieldName);
+                if (map is not null && map.ContainsKey(child.FieldName))
+                {
+                    fields.Add(map[child.FieldName]);
+                }
+                else
+                {
+                    fields.Add(child.FieldName);
+                }
             }
-            CollectNodeFields(child, fields, nonDbMapped, rootInNonDbMapped);
+            if (!skippedField)
+            {
+                CollectNodeFields(
+                    child,
+                    fields,
+                    nonDbMapped,
+                    rootInNonDbMapped,
+                    skip,
+                    map
+                );
+            }
         }
     }
 }

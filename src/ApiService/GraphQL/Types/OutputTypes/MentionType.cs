@@ -21,7 +21,7 @@ public class MentionType : ObjectGraphType<Mention>, INodeGraphType<Mention>
             .Resolve(context => context.Source.Mentioned);
         Field<NonNullGraphType<UserType>>("mentioner")
             .Description("The person who created the mention.")
-            .Resolve(context => context.Source.Mentioned);
+            .Resolve(context => context.Source.Mentioner);
     }
 }
 

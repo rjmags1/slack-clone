@@ -20,11 +20,11 @@ public class ReactionCountType : ObjectGraphType<ReactionCount>
         Field<NonNullGraphType<StringGraphType>>("emoji")
             .Description("The emoji associated with the reaction.")
             .Resolve(context => context.Source.Emoji);
-        Field<IdGraphType>("userReaction")
+        Field<IdGraphType>("userReactionId")
             .Description(
                 "The reaction of this type by the user to the associated message."
             )
-            .Resolve(context => context.Source.UserReaction);
+            .Resolve(context => context.Source.UserReactionId);
     }
 }
 
@@ -34,6 +34,6 @@ public class ReactionCount
     public int Count { get; set; }
 #pragma warning disable CS8618
     public string Emoji { get; set; }
-    public Reaction? UserReaction { get; set; }
+    public Guid? UserReactionId { get; set; }
 #pragma warning restore CS8618
 }

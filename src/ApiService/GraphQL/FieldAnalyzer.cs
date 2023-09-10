@@ -83,6 +83,19 @@ public static class FieldAnalyzer
         return i - 1;
     }
 
+    public static FieldInfo ChannelMessages(
+        string opString,
+        Dictionary<string, string> fragments
+    )
+    {
+        string channelMessagesFieldSlice = GetFieldSlice(
+            opString,
+            "messages",
+            "channel"
+        );
+        return CollectFields(channelMessagesFieldSlice, fragments);
+    }
+
     public static FieldInfo ChannelMembers(
         string opString,
         Dictionary<string, string> fragments
