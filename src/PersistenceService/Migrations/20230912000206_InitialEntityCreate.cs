@@ -396,7 +396,7 @@ namespace PersistenceService.Migrations
                     AvatarId = table.Column<Guid>(type: "uuid", nullable: true),
                     AllowedPostersMask = table.Column<int>(type: "integer", nullable: false, defaultValueSql: "1"),
                     CreatedAt = table.Column<DateTime>(type: "timestamp", nullable: false, defaultValueSql: "now()"),
-                    CreatedById = table.Column<Guid>(type: "uuid", nullable: false),
+                    CreatedById = table.Column<Guid>(type: "uuid", nullable: true),
                     ConcurrencyStamp = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "gen_random_uuid()"),
                     Description = table.Column<string>(type: "character varying(120)", maxLength: 120, nullable: true),
                     Name = table.Column<string>(type: "character varying(40)", maxLength: 40, nullable: false),
@@ -413,7 +413,7 @@ namespace PersistenceService.Migrations
                         column: x => x.CreatedById,
                         principalTable: "AspNetUsers",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.SetNull);
                 });
 
             migrationBuilder.CreateTable(
