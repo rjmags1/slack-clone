@@ -44,6 +44,25 @@ public static class ModelToObjectConverters
     )
     {
         var expando = DynamicUtils.ToExpando(modelChannelMessage);
+        if (
+            !DynamicUtils.HasProperty(
+                expando,
+                nameof(Models.ChannelMessage.Deleted)
+            )
+        )
+        {
+            throw new InvalidOperationException("Must query deleted column");
+        }
+        if (
+            DynamicUtils.HasProperty(
+                expando,
+                nameof(Models.ChannelMessage.Channel)
+            )
+        )
+        {
+            throw new InvalidOperationException("Channel column redundant");
+        }
+
         Message message = new();
         if (DynamicUtils.HasProperty(expando, nameof(Message.Id)))
         {
@@ -51,26 +70,29 @@ public static class ModelToObjectConverters
         }
         if (DynamicUtils.HasProperty(expando, nameof(Message.User)))
         {
-            Models.User dbUser = JsonSerializer.Deserialize<Models.User>(
-                expando.User
-            );
-            message.User = ConvertUser(dbUser, userFields);
+            if (expando.Deleted)
+            {
+                message.User = null;
+            }
+            else
+            {
+                Models.User dbUser = JsonSerializer.Deserialize<Models.User>(
+                    expando.User
+                );
+                message.User = ConvertUser(dbUser, userFields);
+            }
         }
         if (DynamicUtils.HasProperty(expando, nameof(Message.Content)))
         {
-            message.Content = JsonSerializer.Deserialize<string>(
-                expando.Content
-            );
+            message.Content = expando.Deleted
+                ? "deleted"
+                : JsonSerializer.Deserialize<string>(expando.Content);
         }
         if (DynamicUtils.HasProperty(expando, nameof(Message.CreatedAt)))
         {
             message.CreatedAt = JsonSerializer.Deserialize<DateTime>(
                 expando.CreatedAt
             );
-        }
-        if (DynamicUtils.HasProperty(expando, nameof(Message.Draft)))
-        {
-            message.Draft = JsonSerializer.Deserialize<bool>(expando.Draft);
         }
         if (DynamicUtils.HasProperty(expando, nameof(Message.LastEdit)))
         {
@@ -83,23 +105,19 @@ public static class ModelToObjectConverters
             List<Models.File> dbFiles = JsonSerializer.Deserialize<
                 List<Models.File>
             >(expando.Files);
-            List<File> files = new();
-            foreach (Models.File dbFile in dbFiles)
+            if (expando.Deleted)
             {
-                files.Add(ConvertFile(dbFile));
+                message.Files = null;
             }
-            message.Files = files;
-        }
-        if (
-            DynamicUtils.HasProperty(
-                expando,
-                nameof(Models.ChannelMessage.Channel)
-            )
-        )
-        {
-            Models.Channel dbChannel =
-                JsonSerializer.Deserialize<Models.Channel>(expando.Channel);
-            message.Group = ConvertChannel(dbChannel, skipWorkspace: true);
+            else
+            {
+                List<File> files = new();
+                foreach (Models.File dbFile in dbFiles)
+                {
+                    files.Add(ConvertFile(dbFile));
+                }
+                message.Files = files;
+            }
         }
         if (DynamicUtils.HasProperty(expando, nameof(Message.IsReply)))
         {
@@ -114,7 +132,7 @@ public static class ModelToObjectConverters
         if (DynamicUtils.HasProperty(expando, nameof(Message.LaterFlag)))
         {
             message.LaterFlag = null;
-            if (expando.LaterFlag is not null)
+            if (!expando.Deleted && expando.LaterFlag is not null)
             {
                 Models.ChannelMessageLaterFlag dbLaterFlag =
                     JsonSerializer.Deserialize<Models.ChannelMessageLaterFlag>(
@@ -128,32 +146,35 @@ public static class ModelToObjectConverters
         }
         if (DynamicUtils.HasProperty(expando, nameof(Message.Mentions)))
         {
+            List<Mention> mentions = new();
             List<Models.ChannelMessageMention> dbMentions =
                 JsonSerializer.Deserialize<List<Models.ChannelMessageMention>>(
                     expando.Mentions
                 );
-            List<Mention> mentions = new();
-            foreach (Models.ChannelMessageMention dbMention in dbMentions)
+            message.Mentions = null;
+            if (!expando.Deleted && dbMentions.Count > 0)
             {
-                Console.WriteLine(dbMention.Id);
-                mentions.Add(ConvertChannelMessageMention(dbMention));
+                foreach (Models.ChannelMessageMention dbMention in dbMentions)
+                {
+                    mentions.Add(ConvertChannelMessageMention(dbMention));
+                }
+                message.Mentions = mentions;
             }
-            message.Mentions = mentions;
         }
         if (reactionCounts is not null && reactionCounts.Count > 0)
         {
-            message.Reactions = ConvertReactionCounts(reactionCounts);
+            message.Reactions = expando.Deleted
+                ? null
+                : ConvertReactionCounts(reactionCounts);
         }
-        if (DynamicUtils.HasProperty(expando, nameof(Message.ReplyTo)))
+        if (DynamicUtils.HasProperty(expando, nameof(Message.ReplyToId)))
         {
-            message.ReplyTo = null;
-            if (expando.ReplyTo is not null)
+            message.ReplyToId = null;
+            if (expando.ReplyToId is not null)
             {
-                Models.ChannelMessage dbReplyTo =
-                    JsonSerializer.Deserialize<Models.ChannelMessage>(
-                        expando.ReplyTo
-                    );
-                message.ReplyTo = ConvertChannelMessage(dbReplyTo);
+                message.ReplyToId = JsonSerializer.Deserialize<Guid>(
+                    expando.ReplyToId
+                );
             }
         }
         if (DynamicUtils.HasProperty(expando, nameof(Message.SentAt)))
@@ -161,13 +182,17 @@ public static class ModelToObjectConverters
             message.SentAt = expando.SentAt is null
                 ? null
                 : JsonSerializer.Deserialize<DateTime>(expando.SentAt);
+            message.Draft = expando.SentAt is null;
         }
-        if (DynamicUtils.HasProperty(expando, nameof(Message.Thread)))
+        if (DynamicUtils.HasProperty(expando, nameof(Message.ThreadId)))
         {
-            Models.Thread dbThread = JsonSerializer.Deserialize<Models.Thread>(
-                expando.Thread
-            );
-            message.Thread = ConvertThread(dbThread);
+            message.ThreadId = null;
+            if (expando.ThreadId is not null)
+            {
+                message.ThreadId = JsonSerializer.Deserialize<Guid>(
+                    expando.ThreadId
+                );
+            }
         }
         message.Type = 1;
 
@@ -252,7 +277,7 @@ public static class ModelToObjectConverters
                 Reactions = reactionsCounts is null
                     ? null
                     : ConvertReactionCounts(reactionsCounts),
-                ReplyTo = ConvertChannelMessage(dbMessage.ReplyTo),
+                ReplyToId = dbMessage.ReplyToId,
                 SentAt = dbMessage.SentAt,
                 Type = 1
             };
@@ -263,6 +288,22 @@ public static class ModelToObjectConverters
     )
     {
         var expando = DynamicUtils.ToExpando(modelDirectMessageGroup);
+        if (
+            DynamicUtils.HasProperty(
+                expando,
+                nameof(Models.DirectMessageGroup.DirectMessageGroupMembers)
+            )
+            || DynamicUtils.HasProperty(
+                expando,
+                nameof(Models.DirectMessageGroup.DirectMessages)
+            )
+        )
+        {
+            throw new InvalidOperationException(
+                "Cannot load a collection within a collection"
+            );
+        }
+
         DirectMessageGroup group = new();
         if (DynamicUtils.HasProperty(expando, nameof(DirectMessageGroup.Id)))
         {
@@ -298,6 +339,22 @@ public static class ModelToObjectConverters
     public static Channel ConvertDynamicChannel(dynamic modelChannel)
     {
         var expando = DynamicUtils.ToExpando(modelChannel);
+        if (
+            DynamicUtils.HasProperty(
+                expando,
+                nameof(Models.Channel.ChannelMembers)
+            )
+            || DynamicUtils.HasProperty(
+                expando,
+                nameof(Models.Channel.ChannelMessages)
+            )
+        )
+        {
+            throw new InvalidOperationException(
+                "Cannot load a collection within a collection"
+            );
+        }
+
         Channel channel = new();
         if (DynamicUtils.HasProperty(expando, nameof(Channel.Id)))
         {
@@ -345,15 +402,24 @@ public static class ModelToObjectConverters
             && expando.CreatedBy is not null
         )
         {
-            channel.CreatedBy = JsonSerializer.Deserialize<User>(
-                expando.CreatedBy
-            );
+            channel.CreatedBy = null;
+            if (expando.CreatedBy is not null)
+            {
+                Models.User dbUser = JsonSerializer.Deserialize<Models.User>(
+                    expando.CreatedBy
+                );
+                channel.CreatedBy = ConvertUser(dbUser);
+            }
         }
         if (DynamicUtils.HasProperty(expando, nameof(Channel.Description)))
         {
-            channel.Description = JsonSerializer.Deserialize<string>(
-                expando.Description
-            );
+            channel.Description = null;
+            if (expando.Description is not null)
+            {
+                channel.Description = JsonSerializer.Deserialize<string>(
+                    expando.Description
+                );
+            }
         }
         if (DynamicUtils.HasProperty(expando, nameof(Channel.Name)))
         {
@@ -369,12 +435,15 @@ public static class ModelToObjectConverters
         {
             channel.Private = JsonSerializer.Deserialize<bool>(expando.Private);
         }
-        if (
-            DynamicUtils.HasProperty(expando, nameof(Channel.Topic))
-            && expando.Topic is not null
-        )
+        if (DynamicUtils.HasProperty(expando, nameof(Channel.Topic)))
         {
-            channel.Topic = JsonSerializer.Deserialize<string>(expando.Topic);
+            channel.Topic = null;
+            if (expando.Topic is not null)
+            {
+                channel.Topic = JsonSerializer.Deserialize<string>(
+                    expando.Topic
+                );
+            }
         }
         if (DynamicUtils.HasProperty(expando, nameof(Channel.Workspace)))
         {

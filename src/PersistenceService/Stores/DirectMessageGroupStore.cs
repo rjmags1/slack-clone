@@ -418,13 +418,17 @@ public class DirectMessageGroupStore : Store
             if (afterMembership.LastViewedAt is null)
             {
                 memberships = memberships.Where(
-                    dmg => dmg.JoinedAt < afterMembership.JoinedAt
+                    dmg =>
+                        dmg.LastViewedAt != null
+                        || dmg.JoinedAt < afterMembership.JoinedAt
                 );
             }
             else
             {
                 memberships = memberships.Where(
-                    dmg => dmg.LastViewedAt < afterMembership.LastViewedAt
+                    dmg =>
+                        dmg.LastViewedAt != null
+                        || dmg.LastViewedAt < afterMembership.LastViewedAt
                 );
             }
         }
