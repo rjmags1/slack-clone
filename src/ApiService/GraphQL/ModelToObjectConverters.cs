@@ -369,18 +369,6 @@ public static class ModelToObjectConverters
     )
     {
         var expando = DynamicUtils.ToExpando(modelDirectMessageGroup);
-        if (
-            DynamicUtils.HasProperty(
-                expando,
-                nameof(Models.DirectMessageGroup.DirectMessages)
-            )
-        )
-        {
-            throw new InvalidOperationException(
-                "Cannot load a paginated collection within a collection"
-            );
-        }
-
         DirectMessageGroup group = new();
         if (DynamicUtils.HasProperty(expando, nameof(DirectMessageGroup.Id)))
         {
@@ -594,22 +582,6 @@ public static class ModelToObjectConverters
     public static Channel ConvertDynamicChannel(dynamic modelChannel)
     {
         var expando = DynamicUtils.ToExpando(modelChannel);
-        if (
-            DynamicUtils.HasProperty(
-                expando,
-                nameof(Models.Channel.ChannelMembers)
-            )
-            || DynamicUtils.HasProperty(
-                expando,
-                nameof(Models.Channel.ChannelMessages)
-            )
-        )
-        {
-            throw new InvalidOperationException(
-                "Cannot load a paginated collection within a collection"
-            );
-        }
-
         Channel channel = new();
         if (DynamicUtils.HasProperty(expando, nameof(Channel.Id)))
         {
@@ -700,7 +672,10 @@ public static class ModelToObjectConverters
                 );
             }
         }
-        if (DynamicUtils.HasProperty(expando, nameof(Channel.Workspace)))
+        if (
+            DynamicUtils.HasProperty(expando, nameof(Channel.Workspace))
+            && expando.Workspace is not null
+        )
         {
             var dbWorkspace = JsonSerializer.Deserialize<Models.Workspace>(
                 expando.Workspace
