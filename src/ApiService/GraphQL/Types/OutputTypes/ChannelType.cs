@@ -29,10 +29,10 @@ public class ChannelType : ObjectGraphType<Channel>, INodeGraphType<Channel>
         Field<NonNullGraphType<DateTimeGraphType>>("createdAt")
             .Description("When the channel was created.")
             .Resolve(context => context.Source.CreatedAt);
-        Field<NonNullGraphType<UserType>>("createdBy")
+        Field<UserType>("createdBy")
             .Description("Who created the channel.")
             .Resolve(context => context.Source.CreatedBy);
-        Field<NonNullGraphType<StringGraphType>>("description")
+        Field<StringGraphType>("description")
             .Description("A brief description of the channel.")
             .Resolve(context => context.Source.Description);
         Field<NonNullGraphType<ChannelMembersConnectionType>>("members")
@@ -132,14 +132,14 @@ public class Channel : INode, IGroup
 #pragma warning disable CS8618
     public File Avatar { get; set; }
     public DateTime CreatedAt { get; set; }
-    public User CreatedBy { get; set; }
-    public string Description { get; set; }
+    public User? CreatedBy { get; set; }
+    public string? Description { get; set; }
     public Connection<ChannelMember> Members { get; set; }
     public Connection<Message> Messages { get; set; }
     public string Name { get; set; }
     public int NumMembers { get; set; }
     public bool Private { get; set; }
-    public string Topic { get; set; }
+    public string? Topic { get; set; }
     public Workspace Workspace { get; set; }
 #pragma warning restore CS8618
 }

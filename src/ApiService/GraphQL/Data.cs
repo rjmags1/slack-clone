@@ -361,10 +361,7 @@ public class SlackCloneData
         {
             throw new NotImplementedException();
         }
-        if (
-            fieldInfo.SubfieldNames.Contains("members")
-            || fieldInfo.SubfieldNames.Contains("messages")
-        )
+        if (fieldInfo.SubfieldNames.Contains("messages"))
         {
             throw new InvalidOperationException(
                 "Requested a connection within a connection"
@@ -452,6 +449,64 @@ public class SlackCloneData
 
         return ModelToObjectConverters.ToConnection<IGroup>(
             starred,
+            after is null,
+            lastPage
+        );
+    }
+
+    public async Task<Connection<Message>> GetDirectMessages(
+        Guid userId,
+        Guid directMessageGroupId,
+        FieldInfo fieldInfo,
+        MessagesFilter? filter,
+        int first,
+        Guid? after
+    )
+    {
+        if (filter is not null)
+        {
+            throw new NotImplementedException();
+        }
+
+        using var scope = Provider.CreateScope();
+        DirectMessageGroupStore directMessageGroupStore =
+            scope.ServiceProvider.GetRequiredService<DirectMessageGroupStore>();
+        (
+            List<dynamic> dbMessages,
+            List<DirectMessageReactionCount> reactionCounts,
+            bool lastPage
+        ) = await directMessageGroupStore.LoadDirectMessages(
+            userId,
+            directMessageGroupId,
+            fieldInfo,
+            first,
+            after
+        );
+
+        Dictionary<Guid, List<DirectMessageReactionCount>?> countsDict = new();
+        foreach (DirectMessageReactionCount reactionCount in reactionCounts)
+        {
+            if (!countsDict.ContainsKey(reactionCount.DirectMessageId))
+            {
+                countsDict[reactionCount.DirectMessageId] =
+                    new List<DirectMessageReactionCount>();
+            }
+            countsDict[reactionCount.DirectMessageId]!.Add(reactionCount);
+        }
+        List<Message> messages = new();
+        foreach (dynamic dbm in dbMessages)
+        {
+            Message message =
+                ModelToObjectConverters.ConvertDynamicDirectMessage(
+                    dbm,
+                    countsDict.GetValueOrDefault((Guid)dbm.Id, null),
+                    FieldAnalyzer.ExtractUserFields("user", fieldInfo.FieldTree)
+                );
+            messages.Add(message);
+        }
+
+        return ModelToObjectConverters.ToConnection<Message>(
+            messages,
             after is null,
             lastPage
         );

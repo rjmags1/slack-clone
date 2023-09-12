@@ -1,4 +1,7 @@
+using ApiService.Utils;
+using GraphQL;
 using GraphQL.Types;
+using PersistenceService.Utils.GraphQL;
 using SlackCloneGraphQL.Types.Connections;
 
 namespace SlackCloneGraphQL.Types;
@@ -7,7 +10,7 @@ public class DirectMessageGroupType
     : ObjectGraphType<DirectMessageGroup>,
         INodeGraphType<DirectMessageGroup>
 {
-    public DirectMessageGroupType()
+    public DirectMessageGroupType(SlackCloneData data)
     {
         Name = "DirectMessageGroup";
         Interface<GroupInterfaceType>();
@@ -17,19 +20,47 @@ public class DirectMessageGroupType
         Field<NonNullGraphType<DateTimeGraphType>>("createdAt")
             .Description("When the direct message group was created")
             .Resolve(context => context.Source.CreatedAt);
-        Field<NonNullGraphType<ListGraphType<NonNullGraphType<UserType>>>>(
-                "members"
-            )
+        Field<
+            NonNullGraphType<
+                ListGraphType<NonNullGraphType<DirectMessageGroupMemberType>>
+            >
+        >("members")
             .Description("The members of the direct message group")
-            .Resolve(context => throw new NotImplementedException());
+            .Resolve(context => context.Source.Members);
         Field<NonNullGraphType<DirectMessagesConnectionType>>("messages")
+            .Argument<NonNullGraphType<IntGraphType>>("first")
+            .Argument<IdGraphType>("after")
+            .Argument<MessagesFilterInputType>("filter")
             .Description(
                 "Relay connection representing messages in the direct message group conversation"
             )
-            .Resolve(context => throw new NotImplementedException());
-        Field<NonNullGraphType<StringGraphType>>("name")
-            .Description("The name of the direct message group")
-            .Resolve(context => throw new NotImplementedException()); // names of members
+            .ResolveAsync(async context =>
+            {
+                var first = context.GetArgument<int>("first");
+                var after = context.GetArgument<Guid?>("after");
+                MessagesFilter? messagesFilter =
+                    context.GetArgument<MessagesFilter>("filter");
+                string query = GraphQLUtils.GetQuery(
+                    (context.UserContext as GraphQLUserContext)!
+                )!;
+                var fragments = FieldAnalyzer.GetFragments(query);
+                FieldInfo fieldInfo = FieldAnalyzer.ChannelMessages(
+                    query,
+                    fragments
+                );
+                Guid sub = GraphQLUtils.GetSubClaim(
+                    (context.UserContext as GraphQLUserContext)!
+                );
+
+                return await data.GetDirectMessages(
+                    sub,
+                    context.Source.Id,
+                    fieldInfo,
+                    messagesFilter,
+                    first,
+                    after
+                );
+            });
         Field<NonNullGraphType<WorkspaceType>>("workspace")
             .Description(
                 "The workspace associated with the direct message group"
@@ -43,9 +74,8 @@ public class DirectMessageGroup : INode, IGroup
     public Guid Id { get; set; }
     public DateTime CreatedAt { get; set; }
 #pragma warning disable CS8618
-    public List<User> Members { get; set; }
+    public List<DirectMessageGroupMember> Members { get; set; }
     public Connection<Message> Messages { get; set; }
-    public string Name { get; set; }
     public Workspace Workspace { get; set; }
 #pragma warning restore CS8618
 }

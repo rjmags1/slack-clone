@@ -53,7 +53,9 @@ public class ChannelStore : Store
                         .Select(cm => cm.SentAt)
                         .First()
                 )!;
-            messages = messages.Where(cm => cm.SentAt < prevLastSentAt);
+            messages = messages.Where(
+                cm => cm.SentAt <= prevLastSentAt && cm.Id != after
+            );
         }
         messages = messages.Take(first + 1);
 
@@ -61,9 +63,8 @@ public class ChannelStore : Store
             .Select(
                 DynamicLinqUtils.NodeFieldToDynamicSelectString(
                     fieldInfo.FieldTree,
-                    nonDbMapped: new List<string> { "type" },
-                    forceIncludeId: true,
-                    skip: new List<string> { "reactions", "channel" }
+                    forceInclude: new List<string> { "id", "deleted" },
+                    skip: new List<string> { "reactions", "group", "type" }
                 )
             )
             .ToDynamicListAsync();
@@ -126,28 +127,25 @@ public class ChannelStore : Store
         Guid? after = null
     )
     {
-        IIncludableQueryable<ChannelMember, User> memberships =
-            _context.ChannelMembers
-                .Where(cm => cm.ChannelId == channelId)
-                .Include(cm => cm.User);
+        IOrderedQueryable<ChannelMember> memberships = _context.ChannelMembers
+            .Where(cm => cm.ChannelId == channelId)
+            .Include(cm => cm.User)
+            .OrderBy(cm => cm.User.NormalizedUserName);
         if (after is not null)
         {
             string prevLast = memberships
                 .Where(cm => cm.Id == after)
-                .Include(cm => cm.User)
                 .Select(cm => cm.User.NormalizedUserName)
                 .First();
             memberships =
-                (IIncludableQueryable<ChannelMember, User>)(
+                (IOrderedQueryable<ChannelMember>)(
                     memberships.Where(
                         wm => wm.User.NormalizedUserName.CompareTo(prevLast) > 0
                     )
                 );
         }
 
-        var memberships_ = memberships
-            .OrderBy(cm => cm.User.NormalizedUserName)
-            .Take(first + 1);
+        var memberships_ = memberships.Take(first + 1);
         var dynamicChannelMembers = await memberships_
             .Select(
                 DynamicLinqUtils.NodeFieldToDynamicSelectString(
@@ -740,13 +738,17 @@ public class ChannelStore : Store
             if (afterMembership.LastViewedAt is null)
             {
                 memberships = memberships.Where(
-                    cm => cm.JoinedAt < afterMembership.JoinedAt
+                    cm =>
+                        cm.LastViewedAt != null
+                        || cm.JoinedAt < afterMembership.JoinedAt
                 );
             }
             else
             {
                 memberships = memberships.Where(
-                    cm => cm.LastViewedAt < afterMembership.LastViewedAt
+                    cm =>
+                        cm.LastViewedAt != null
+                        && cm.LastViewedAt < afterMembership.LastViewedAt
                 );
             }
         }
@@ -754,11 +756,14 @@ public class ChannelStore : Store
             .Take(first + 1)
             .Select(cm => cm.Channel);
 
-        var asdf = DynamicLinqUtils.NodeFieldToDynamicSelectString(
-            connectionTree,
-            skip: new List<string> { "members", "messages" }
-        );
-        var dynamicChannels = await channels.Select(asdf).ToDynamicListAsync();
+        var dynamicChannels = await channels
+            .Select(
+                DynamicLinqUtils.NodeFieldToDynamicSelectString(
+                    connectionTree,
+                    skip: new List<string> { "members", "messages" }
+                )
+            )
+            .ToDynamicListAsync();
 
         bool lastPage = dynamicChannels.Count <= first;
         if (!lastPage)

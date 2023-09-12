@@ -100,9 +100,9 @@ public class ChannelMigrationsTests
             .SingleOrDefault();
 
         Assert.NotNull(foreignKey);
-        Assert.Equal(DeleteBehavior.Cascade, foreignKey.DeleteBehavior);
+        Assert.Equal(DeleteBehavior.SetNull, foreignKey.DeleteBehavior);
         Assert.Equal("uuid", createdByIdProperty.GetColumnType());
-        Assert.False(createdByIdProperty.IsColumnNullable());
+        Assert.True(createdByIdProperty.IsColumnNullable());
     }
 
     [Fact]

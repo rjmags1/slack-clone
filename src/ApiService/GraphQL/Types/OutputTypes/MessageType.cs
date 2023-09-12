@@ -11,7 +11,7 @@ public class MessageType : ObjectGraphType<Message>, INodeGraphType<Message>
         Field<NonNullGraphType<IdGraphType>>("id")
             .Description("The UUID of the message")
             .Resolve(context => context.Source.Id);
-        Field<NonNullGraphType<UserType>>("user")
+        Field<UserType>("user")
             .Description("The author of the message.")
             .Resolve(context => context.Source.User);
         Field<NonNullGraphType<StringGraphType>>("content")
@@ -54,15 +54,15 @@ public class MessageType : ObjectGraphType<Message>, INodeGraphType<Message>
                 "Relay connection representing reactions to the message by other workspace members"
             )
             .Resolve(context => context.Source.Reactions);
-        Field<MessageType>("replyTo")
+        Field<IdGraphType>("replyToId")
             .Description("The message this message was a reply to, if any.")
-            .Resolve(context => context.Source.ReplyTo);
+            .Resolve(context => context.Source.ReplyToId);
         Field<DateTimeGraphType>("sentAt")
             .Description("When the message was sent.")
             .Resolve(context => context.Source.SentAt);
-        Field<ThreadType>("thread")
+        Field<IdGraphType>("threadId")
             .Description("The thread associated with the message, if any.")
-            .Resolve(context => context.Source.Thread);
+            .Resolve(context => context.Source.ThreadId);
         Field<NonNullGraphType<IntGraphType>>("type")
             .Description("Bitmask representing the message type")
             .Resolve(context => context.Source.Type);
@@ -73,20 +73,20 @@ public class Message : INode
 {
     public Guid Id { get; set; }
 #pragma warning disable CS8618
-    public User User { get; set; }
+    public User? User { get; set; }
     public string Content { get; set; }
     public DateTime CreatedAt { get; set; }
     public bool Draft { get; set; }
     public DateTime? LastEdit { get; set; }
-    public List<File> Files { get; set; }
+    public List<File>? Files { get; set; }
     public IGroup Group { get; set; }
     public bool IsReply { get; set; }
     public LaterFlag? LaterFlag { get; set; }
     public List<Mention>? Mentions { get; set; }
     public List<ReactionCount>? Reactions { get; set; }
-    public Message? ReplyTo { get; set; }
+    public Guid? ReplyToId { get; set; }
     public DateTime? SentAt { get; set; }
-    public Thread? Thread { get; set; }
+    public Guid? ThreadId { get; set; }
     public int Type { get; set; }
 #pragma warning restore CS8618
 }

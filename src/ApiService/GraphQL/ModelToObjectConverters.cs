@@ -44,51 +44,14 @@ public static class ModelToObjectConverters
     )
     {
         var expando = DynamicUtils.ToExpando(modelChannelMessage);
-        Message message = new();
-        if (DynamicUtils.HasProperty(expando, nameof(Message.Id)))
+        if (
+            !DynamicUtils.HasProperty(
+                expando,
+                nameof(Models.ChannelMessage.Deleted)
+            )
+        )
         {
-            message.Id = JsonSerializer.Deserialize<Guid>(expando.Id);
-        }
-        if (DynamicUtils.HasProperty(expando, nameof(Message.User)))
-        {
-            Models.User dbUser = JsonSerializer.Deserialize<Models.User>(
-                expando.User
-            );
-            message.User = ConvertUser(dbUser, userFields);
-        }
-        if (DynamicUtils.HasProperty(expando, nameof(Message.Content)))
-        {
-            message.Content = JsonSerializer.Deserialize<string>(
-                expando.Content
-            );
-        }
-        if (DynamicUtils.HasProperty(expando, nameof(Message.CreatedAt)))
-        {
-            message.CreatedAt = JsonSerializer.Deserialize<DateTime>(
-                expando.CreatedAt
-            );
-        }
-        if (DynamicUtils.HasProperty(expando, nameof(Message.Draft)))
-        {
-            message.Draft = JsonSerializer.Deserialize<bool>(expando.Draft);
-        }
-        if (DynamicUtils.HasProperty(expando, nameof(Message.LastEdit)))
-        {
-            message.LastEdit = expando.LastEdit is null
-                ? null
-                : JsonSerializer.Deserialize<DateTime>(expando.LastEdit);
-        }
-        if (DynamicUtils.HasProperty(expando, nameof(Message.Files)))
-        {
-            List<Models.File> dbFiles = JsonSerializer.Deserialize<
-                List<Models.File>
-            >(expando.Files);
-            List<File> files = new();
-            foreach (Models.File dbFile in dbFiles)
-            {
-                files.Add(ConvertFile(dbFile));
-            }
-            message.Files = files;
+            throw new InvalidOperationException("Must query deleted column");
         }
         if (
             DynamicUtils.HasProperty(
@@ -97,9 +60,58 @@ public static class ModelToObjectConverters
             )
         )
         {
-            Models.Channel dbChannel =
-                JsonSerializer.Deserialize<Models.Channel>(expando.Channel);
-            message.Group = ConvertChannel(dbChannel, skipWorkspace: true);
+            throw new InvalidOperationException("Channel column redundant");
+        }
+
+        Message message = new();
+        if (DynamicUtils.HasProperty(expando, nameof(Message.Id)))
+        {
+            message.Id = JsonSerializer.Deserialize<Guid>(expando.Id);
+        }
+        if (DynamicUtils.HasProperty(expando, nameof(Message.User)))
+        {
+            if (expando.Deleted)
+            {
+                message.User = null;
+            }
+            else
+            {
+                Models.User dbUser = JsonSerializer.Deserialize<Models.User>(
+                    expando.User
+                );
+                message.User = ConvertUser(dbUser, userFields);
+            }
+        }
+        if (DynamicUtils.HasProperty(expando, nameof(Message.Content)))
+        {
+            message.Content = expando.Deleted
+                ? "deleted"
+                : JsonSerializer.Deserialize<string>(expando.Content);
+        }
+        if (DynamicUtils.HasProperty(expando, nameof(Message.CreatedAt)))
+        {
+            message.CreatedAt = JsonSerializer.Deserialize<DateTime>(
+                expando.CreatedAt
+            );
+        }
+        if (DynamicUtils.HasProperty(expando, nameof(Message.Files)))
+        {
+            List<Models.File> dbFiles = JsonSerializer.Deserialize<
+                List<Models.File>
+            >(expando.Files);
+            if (expando.Deleted)
+            {
+                message.Files = null;
+            }
+            else
+            {
+                List<File> files = new();
+                foreach (Models.File dbFile in dbFiles)
+                {
+                    files.Add(ConvertFile(dbFile));
+                }
+                message.Files = files;
+            }
         }
         if (DynamicUtils.HasProperty(expando, nameof(Message.IsReply)))
         {
@@ -114,7 +126,7 @@ public static class ModelToObjectConverters
         if (DynamicUtils.HasProperty(expando, nameof(Message.LaterFlag)))
         {
             message.LaterFlag = null;
-            if (expando.LaterFlag is not null)
+            if (!expando.Deleted && expando.LaterFlag is not null)
             {
                 Models.ChannelMessageLaterFlag dbLaterFlag =
                     JsonSerializer.Deserialize<Models.ChannelMessageLaterFlag>(
@@ -128,32 +140,35 @@ public static class ModelToObjectConverters
         }
         if (DynamicUtils.HasProperty(expando, nameof(Message.Mentions)))
         {
+            List<Mention> mentions = new();
             List<Models.ChannelMessageMention> dbMentions =
                 JsonSerializer.Deserialize<List<Models.ChannelMessageMention>>(
                     expando.Mentions
                 );
-            List<Mention> mentions = new();
-            foreach (Models.ChannelMessageMention dbMention in dbMentions)
+            message.Mentions = null;
+            if (!expando.Deleted && dbMentions.Count > 0)
             {
-                Console.WriteLine(dbMention.Id);
-                mentions.Add(ConvertChannelMessageMention(dbMention));
+                foreach (Models.ChannelMessageMention dbMention in dbMentions)
+                {
+                    mentions.Add(ConvertChannelMessageMention(dbMention));
+                }
+                message.Mentions = mentions;
             }
-            message.Mentions = mentions;
         }
         if (reactionCounts is not null && reactionCounts.Count > 0)
         {
-            message.Reactions = ConvertReactionCounts(reactionCounts);
+            message.Reactions = expando.Deleted
+                ? null
+                : ConvertChannelMessageReactionCounts(reactionCounts);
         }
-        if (DynamicUtils.HasProperty(expando, nameof(Message.ReplyTo)))
+        if (DynamicUtils.HasProperty(expando, nameof(Message.ReplyToId)))
         {
-            message.ReplyTo = null;
-            if (expando.ReplyTo is not null)
+            message.ReplyToId = null;
+            if (expando.ReplyToId is not null)
             {
-                Models.ChannelMessage dbReplyTo =
-                    JsonSerializer.Deserialize<Models.ChannelMessage>(
-                        expando.ReplyTo
-                    );
-                message.ReplyTo = ConvertChannelMessage(dbReplyTo);
+                message.ReplyToId = JsonSerializer.Deserialize<Guid>(
+                    expando.ReplyToId
+                );
             }
         }
         if (DynamicUtils.HasProperty(expando, nameof(Message.SentAt)))
@@ -161,13 +176,17 @@ public static class ModelToObjectConverters
             message.SentAt = expando.SentAt is null
                 ? null
                 : JsonSerializer.Deserialize<DateTime>(expando.SentAt);
+            message.Draft = expando.SentAt is null;
         }
-        if (DynamicUtils.HasProperty(expando, nameof(Message.Thread)))
+        if (DynamicUtils.HasProperty(expando, nameof(Message.ThreadId)))
         {
-            Models.Thread dbThread = JsonSerializer.Deserialize<Models.Thread>(
-                expando.Thread
-            );
-            message.Thread = ConvertThread(dbThread);
+            message.ThreadId = null;
+            if (expando.ThreadId is not null)
+            {
+                message.ThreadId = JsonSerializer.Deserialize<Guid>(
+                    expando.ThreadId
+                );
+            }
         }
         message.Type = 1;
 
@@ -186,6 +205,76 @@ public static class ModelToObjectConverters
         };
     }
 
+    public static LaterFlag? ConvertDirectMessageLaterFlag(
+        Models.DirectMessageLaterFlag? dbLaterFlag
+    )
+    {
+        return dbLaterFlag is null
+            ? null
+            : new LaterFlag
+            {
+                Id = dbLaterFlag.Id,
+                Message = ConvertDirectMessage(dbLaterFlag.DirectMessage)!,
+                Status = dbLaterFlag.DirectMessageLaterFlagStatus
+            };
+    }
+
+    public static Message? ConvertDirectMessage(
+        Models.DirectMessage? dbMessage,
+        List<DirectMessageReactionCount>? reactionsCounts = null
+    )
+    {
+        return dbMessage is null
+            ? null
+            : new Message
+            {
+                Id = dbMessage.Id,
+                User = ConvertUser(dbMessage.User),
+                Content = dbMessage.Content,
+                CreatedAt = dbMessage.CreatedAt,
+                LastEdit = dbMessage.LastEdit,
+                Files = dbMessage.Files.Select(f => ConvertFile(f)).ToList(),
+                Group = ConvertDirectMessageGroup(dbMessage.DirectMessageGroup),
+                IsReply = dbMessage.IsReply,
+                LaterFlag = ConvertDirectMessageLaterFlag(dbMessage.LaterFlag),
+                Mentions = dbMessage.Mentions
+                    .Select(m => ConvertDirectMessageMention(m))
+                    .ToList(),
+                Reactions = reactionsCounts is null
+                    ? null
+                    : ConvertDirectMessageReactionCounts(reactionsCounts),
+                ReplyToId = dbMessage.ReplyToId,
+                SentAt = dbMessage.SentAt,
+                Type = 1
+            };
+    }
+
+    public static Mention ConvertDirectMessageMention(
+        Models.DirectMessageMention dbMention
+    )
+    {
+        return new Mention
+        {
+            Id = dbMention.Id,
+            CreatedAt = dbMention.CreatedAt
+        };
+    }
+
+    public static DirectMessageGroup ConvertDirectMessageGroup(
+        Models.DirectMessageGroup dbGroup
+    )
+    {
+        return new DirectMessageGroup
+        {
+            Id = dbGroup.Id,
+            CreatedAt = dbGroup.CreatedAt,
+            Members = dbGroup.DirectMessageGroupMembers
+                .Select(dbMember => ConvertDirectMessageGroupMember(dbMember))
+                .ToList(),
+            Workspace = ConvertWorkspace(dbGroup.Workspace)
+        };
+    }
+
     public static LaterFlag? ConvertChannelMessageLaterFlag(
         Models.ChannelMessageLaterFlag? dbLaterFlag
     )
@@ -200,8 +289,25 @@ public static class ModelToObjectConverters
             };
     }
 
-    public static List<ReactionCount> ConvertReactionCounts(
+    public static List<ReactionCount> ConvertChannelMessageReactionCounts(
         List<ChannelMessageReactionCount> dbReactionCounts
+    )
+    {
+        return dbReactionCounts
+            .Select(
+                dbrc =>
+                    new ReactionCount
+                    {
+                        Count = dbrc.Count,
+                        Emoji = dbrc.Emoji,
+                        UserReactionId = dbrc.UserReaction?.Id
+                    }
+            )
+            .ToList();
+    }
+
+    public static List<ReactionCount> ConvertDirectMessageReactionCounts(
+        List<DirectMessageReactionCount> dbReactionCounts
     )
     {
         return dbReactionCounts
@@ -251,8 +357,8 @@ public static class ModelToObjectConverters
                     .ToList(),
                 Reactions = reactionsCounts is null
                     ? null
-                    : ConvertReactionCounts(reactionsCounts),
-                ReplyTo = ConvertChannelMessage(dbMessage.ReplyTo),
+                    : ConvertChannelMessageReactionCounts(reactionsCounts),
+                ReplyToId = dbMessage.ReplyToId,
                 SentAt = dbMessage.SentAt,
                 Type = 1
             };
@@ -263,6 +369,18 @@ public static class ModelToObjectConverters
     )
     {
         var expando = DynamicUtils.ToExpando(modelDirectMessageGroup);
+        if (
+            DynamicUtils.HasProperty(
+                expando,
+                nameof(Models.DirectMessageGroup.DirectMessages)
+            )
+        )
+        {
+            throw new InvalidOperationException(
+                "Cannot load a paginated collection within a collection"
+            );
+        }
+
         DirectMessageGroup group = new();
         if (DynamicUtils.HasProperty(expando, nameof(DirectMessageGroup.Id)))
         {
@@ -282,6 +400,21 @@ public static class ModelToObjectConverters
         if (
             DynamicUtils.HasProperty(
                 expando,
+                nameof(Models.DirectMessageGroup.DirectMessageGroupMembers)
+            )
+        )
+        {
+            List<Models.DirectMessageGroupMember> dbMembers =
+                JsonSerializer.Deserialize<
+                    List<Models.DirectMessageGroupMember>
+                >(expando.DirectMessageGroupMembers);
+            group.Members = dbMembers
+                .Select(dbMember => ConvertDirectMessageGroupMember(dbMember))
+                .ToList();
+        }
+        if (
+            DynamicUtils.HasProperty(
+                expando,
                 nameof(DirectMessageGroup.Workspace)
             )
         )
@@ -295,9 +428,188 @@ public static class ModelToObjectConverters
         return group;
     }
 
+    public static DirectMessageGroupMember ConvertDirectMessageGroupMember(
+        Models.DirectMessageGroupMember dbMember
+    )
+    {
+        return new DirectMessageGroupMember
+        {
+            Id = dbMember.Id,
+            DirectMessageGroupId = dbMember.DirectMessageGroupId,
+            JoinedAt = dbMember.JoinedAt,
+            LastViewedAt = dbMember.LastViewedAt,
+            Starred = dbMember.Starred,
+            User = ConvertUser(dbMember.User)
+        };
+    }
+
+    public static Message ConvertDynamicDirectMessage(
+        dynamic modelDirectMessage,
+        List<DirectMessageReactionCount> reactionCounts,
+        List<string> userFields
+    )
+    {
+        var expando = DynamicUtils.ToExpando(modelDirectMessage);
+        if (
+            !DynamicUtils.HasProperty(
+                expando,
+                nameof(Models.ChannelMessage.Deleted)
+            )
+        )
+        {
+            throw new InvalidOperationException("Must query deleted column");
+        }
+        if (
+            DynamicUtils.HasProperty(
+                expando,
+                nameof(Models.DirectMessage.DirectMessageGroup)
+            )
+        )
+        {
+            throw new InvalidOperationException(
+                "DirectMessage column redundant"
+            );
+        }
+
+        Message message = new();
+        if (DynamicUtils.HasProperty(expando, nameof(Message.Id)))
+        {
+            message.Id = JsonSerializer.Deserialize<Guid>(expando.Id);
+        }
+        if (DynamicUtils.HasProperty(expando, nameof(Message.User)))
+        {
+            if (expando.Deleted)
+            {
+                message.User = null;
+            }
+            else
+            {
+                Models.User dbUser = JsonSerializer.Deserialize<Models.User>(
+                    expando.User
+                );
+                message.User = ConvertUser(dbUser, userFields);
+            }
+        }
+        if (DynamicUtils.HasProperty(expando, nameof(Message.Content)))
+        {
+            message.Content = expando.Deleted
+                ? "deleted"
+                : JsonSerializer.Deserialize<string>(expando.Content);
+        }
+        if (DynamicUtils.HasProperty(expando, nameof(Message.CreatedAt)))
+        {
+            message.CreatedAt = JsonSerializer.Deserialize<DateTime>(
+                expando.CreatedAt
+            );
+        }
+        if (DynamicUtils.HasProperty(expando, nameof(Message.Files)))
+        {
+            List<Models.File> dbFiles = JsonSerializer.Deserialize<
+                List<Models.File>
+            >(expando.Files);
+            if (expando.Deleted)
+            {
+                message.Files = null;
+            }
+            else
+            {
+                List<File> files = new();
+                foreach (Models.File dbFile in dbFiles)
+                {
+                    files.Add(ConvertFile(dbFile));
+                }
+                message.Files = files;
+            }
+        }
+        if (DynamicUtils.HasProperty(expando, nameof(Message.IsReply)))
+        {
+            message.IsReply = JsonSerializer.Deserialize<bool>(expando.IsReply);
+        }
+        if (DynamicUtils.HasProperty(expando, nameof(Message.LastEdit)))
+        {
+            message.LastEdit = expando.LastEdit is null
+                ? null
+                : JsonSerializer.Deserialize<DateTime>(expando.LastEdit);
+        }
+        if (DynamicUtils.HasProperty(expando, nameof(Message.LaterFlag)))
+        {
+            message.LaterFlag = null;
+            if (!expando.Deleted && expando.LaterFlag is not null)
+            {
+                Models.ChannelMessageLaterFlag dbLaterFlag =
+                    JsonSerializer.Deserialize<Models.DirectMessageLaterFlag>(
+                        expando.LaterFlag
+                    );
+                LaterFlag? laterFlag = ConvertChannelMessageLaterFlag(
+                    dbLaterFlag
+                );
+                message.LaterFlag = laterFlag;
+            }
+        }
+        if (DynamicUtils.HasProperty(expando, nameof(Message.Mentions)))
+        {
+            List<Mention> mentions = new();
+            List<Models.DirectMessageMention> dbMentions =
+                JsonSerializer.Deserialize<List<Models.DirectMessageMention>>(
+                    expando.Mentions
+                );
+            message.Mentions = null;
+            if (!expando.Deleted && dbMentions.Count > 0)
+            {
+                foreach (Models.DirectMessageMention dbMention in dbMentions)
+                {
+                    mentions.Add(ConvertDirectMessageMention(dbMention));
+                }
+                message.Mentions = mentions;
+            }
+        }
+        if (reactionCounts is not null && reactionCounts.Count > 0)
+        {
+            message.Reactions = expando.Deleted
+                ? null
+                : ConvertDirectMessageReactionCounts(reactionCounts);
+        }
+        if (DynamicUtils.HasProperty(expando, nameof(Message.ReplyToId)))
+        {
+            message.ReplyToId = null;
+            if (expando.ReplyToId is not null)
+            {
+                message.ReplyToId = JsonSerializer.Deserialize<Guid>(
+                    expando.ReplyToId
+                );
+            }
+        }
+        if (DynamicUtils.HasProperty(expando, nameof(Message.SentAt)))
+        {
+            message.SentAt = expando.SentAt is null
+                ? null
+                : JsonSerializer.Deserialize<DateTime>(expando.SentAt);
+            message.Draft = expando.SentAt is null;
+        }
+        message.Type = 2;
+
+        return message;
+    }
+
     public static Channel ConvertDynamicChannel(dynamic modelChannel)
     {
         var expando = DynamicUtils.ToExpando(modelChannel);
+        if (
+            DynamicUtils.HasProperty(
+                expando,
+                nameof(Models.Channel.ChannelMembers)
+            )
+            || DynamicUtils.HasProperty(
+                expando,
+                nameof(Models.Channel.ChannelMessages)
+            )
+        )
+        {
+            throw new InvalidOperationException(
+                "Cannot load a paginated collection within a collection"
+            );
+        }
+
         Channel channel = new();
         if (DynamicUtils.HasProperty(expando, nameof(Channel.Id)))
         {
@@ -345,15 +657,24 @@ public static class ModelToObjectConverters
             && expando.CreatedBy is not null
         )
         {
-            channel.CreatedBy = JsonSerializer.Deserialize<User>(
-                expando.CreatedBy
-            );
+            channel.CreatedBy = null;
+            if (expando.CreatedBy is not null)
+            {
+                Models.User dbUser = JsonSerializer.Deserialize<Models.User>(
+                    expando.CreatedBy
+                );
+                channel.CreatedBy = ConvertUser(dbUser);
+            }
         }
         if (DynamicUtils.HasProperty(expando, nameof(Channel.Description)))
         {
-            channel.Description = JsonSerializer.Deserialize<string>(
-                expando.Description
-            );
+            channel.Description = null;
+            if (expando.Description is not null)
+            {
+                channel.Description = JsonSerializer.Deserialize<string>(
+                    expando.Description
+                );
+            }
         }
         if (DynamicUtils.HasProperty(expando, nameof(Channel.Name)))
         {
@@ -369,12 +690,15 @@ public static class ModelToObjectConverters
         {
             channel.Private = JsonSerializer.Deserialize<bool>(expando.Private);
         }
-        if (
-            DynamicUtils.HasProperty(expando, nameof(Channel.Topic))
-            && expando.Topic is not null
-        )
+        if (DynamicUtils.HasProperty(expando, nameof(Channel.Topic)))
         {
-            channel.Topic = JsonSerializer.Deserialize<string>(expando.Topic);
+            channel.Topic = null;
+            if (expando.Topic is not null)
+            {
+                channel.Topic = JsonSerializer.Deserialize<string>(
+                    expando.Topic
+                );
+            }
         }
         if (DynamicUtils.HasProperty(expando, nameof(Channel.Workspace)))
         {

@@ -7,6 +7,16 @@ using System.Linq.Dynamic.Core;
 
 namespace PersistenceService.Stores;
 
+public class DirectMessageReactionCount
+{
+#pragma warning disable CS8618
+    public Guid DirectMessageId { get; set; }
+    public int Count { get; set; }
+    public string Emoji { get; set; }
+#pragma warning restore CS8618
+    public DirectMessageReaction? UserReaction { get; set; }
+}
+
 public class DirectMessageGroupStore : Store
 {
     public DirectMessageGroupStore(ApplicationDbContext context)
@@ -418,13 +428,17 @@ public class DirectMessageGroupStore : Store
             if (afterMembership.LastViewedAt is null)
             {
                 memberships = memberships.Where(
-                    dmg => dmg.JoinedAt < afterMembership.JoinedAt
+                    dmg =>
+                        dmg.LastViewedAt != null
+                        || dmg.JoinedAt < afterMembership.JoinedAt
                 );
             }
             else
             {
                 memberships = memberships.Where(
-                    dmg => dmg.LastViewedAt < afterMembership.LastViewedAt
+                    dmg =>
+                        dmg.LastViewedAt != null
+                        || dmg.LastViewedAt < afterMembership.LastViewedAt
                 );
             }
         }
@@ -434,7 +448,13 @@ public class DirectMessageGroupStore : Store
 
         var dynamicDirectMessageGroups = await directMessageGroups
             .Select(
-                DynamicLinqUtils.NodeFieldToDynamicSelectString(connectionTree)
+                DynamicLinqUtils.NodeFieldToDynamicSelectString(
+                    connectionTree,
+                    map: new Dictionary<string, string>
+                    {
+                        { "members", "directMessageGroupMembers" }
+                    }
+                )
             )
             .ToDynamicListAsync();
 
@@ -446,5 +466,94 @@ public class DirectMessageGroupStore : Store
             );
         }
         return (dynamicDirectMessageGroups, lastPage);
+    }
+
+    public async Task<(
+        List<dynamic> dbMessages,
+        List<DirectMessageReactionCount> reactionCounts,
+        bool lastPage
+    )> LoadDirectMessages(
+        Guid userId,
+        Guid groupId,
+        FieldInfo fieldInfo,
+        int first,
+        Guid? after
+    )
+    {
+        IQueryable<DirectMessage> messages = _context.DirectMessages
+            .Where(
+                dm => dm.DirectMessageGroupId == groupId && dm.SentAt != null
+            )
+            .OrderByDescending(dm => dm.SentAt);
+        if (after is not null)
+        {
+            DateTime prevLastSentAt = (DateTime)
+                (
+                    _context.DirectMessages
+                        .Where(dm => dm.Id == after)
+                        .Select(dm => dm.SentAt)
+                        .First()
+                )!;
+            messages = messages.Where(
+                dm => dm.SentAt <= prevLastSentAt && dm.Id != after
+            );
+        }
+        messages = messages.Take(first + 1);
+
+        List<dynamic> dynamicDirectMessages = await messages
+            .Select(
+                DynamicLinqUtils.NodeFieldToDynamicSelectString(
+                    fieldInfo.FieldTree,
+                    forceInclude: new List<string> { "id", "deleted" },
+                    skip: new List<string> { "reactions", "group", "type" }
+                )
+            )
+            .ToDynamicListAsync();
+
+        List<DirectMessageReactionCount> reactionCounts = new();
+        if (fieldInfo.SubfieldNames.Contains("reactions"))
+        {
+            List<Guid> messageIds = new();
+            foreach (dynamic message in messages)
+            {
+                messageIds.Add((Guid)message.Id);
+            }
+            var reactions = _context.DirectMessageReactions
+                .Where(dmr => messageIds.Contains(dmr.DirectMessageId))
+                .GroupBy(dmr => new { dmr.DirectMessageId, dmr.Emoji })
+                .Select(
+                    group =>
+                        new
+                        {
+                            DirectMessageId = group.Key.DirectMessageId,
+                            Emoji = group.Key.Emoji,
+                            Count_ = group.Count(),
+                            UserReaction = group
+                                .Where(dmr => dmr.UserId == userId)
+                                .FirstOrDefault()
+                        }
+                )
+                .ToList();
+
+            foreach (var reaction in reactions)
+            {
+                reactionCounts.Add(
+                    new DirectMessageReactionCount
+                    {
+                        DirectMessageId = reaction.DirectMessageId,
+                        Count = reaction.Count_,
+                        Emoji = reaction.Emoji,
+                        UserReaction = reaction.UserReaction
+                    }
+                );
+            }
+        }
+
+        bool lastPage = dynamicDirectMessages.Count <= first;
+        if (!lastPage)
+        {
+            dynamicDirectMessages.RemoveAt(dynamicDirectMessages.Count - 1);
+        }
+        return (dynamicDirectMessages, reactionCounts, lastPage);
     }
 }

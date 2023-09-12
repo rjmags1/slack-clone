@@ -184,7 +184,7 @@ namespace PersistenceService.Migrations
                         .HasColumnType("timestamp")
                         .HasDefaultValueSql("now()");
 
-                    b.Property<Guid>("CreatedById")
+                    b.Property<Guid?>("CreatedById")
                         .HasColumnType("uuid");
 
                     b.Property<string>("Description")
@@ -1503,8 +1503,7 @@ namespace PersistenceService.Migrations
                     b.HasOne("PersistenceService.Models.User", "CreatedBy")
                         .WithMany()
                         .HasForeignKey("CreatedById")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.HasOne("PersistenceService.Models.Workspace", "Workspace")
                         .WithMany()
