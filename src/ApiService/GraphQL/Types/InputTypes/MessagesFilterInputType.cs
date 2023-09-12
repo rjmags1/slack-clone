@@ -14,7 +14,7 @@ public class MessagesFilterInputType : InputObjectGraphType<MessagesFilter>
         Field<BooleanGraphType>("directMessages");
         Field<BooleanGraphType>("channelMessages");
         Field<ListGraphType<IdGraphType>>("channelIds");
-        Field<IntGraphType>("sortOder");
+        Field<IntGraphType>("sortOrder");
         Field<ListGraphType<IdGraphType>>("from");
         Field<ListGraphType<IdGraphType>>("to");
         Field<ListGraphType<IdGraphType>>("mentioning");

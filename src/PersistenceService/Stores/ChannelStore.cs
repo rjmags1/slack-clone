@@ -64,7 +64,7 @@ public class ChannelStore : Store
                 DynamicLinqUtils.NodeFieldToDynamicSelectString(
                     fieldInfo.FieldTree,
                     forceInclude: new List<string> { "id", "deleted" },
-                    skip: new List<string> { "reactions", "channel", "type" }
+                    skip: new List<string> { "reactions", "group", "type" }
                 )
             )
             .ToDynamicListAsync();

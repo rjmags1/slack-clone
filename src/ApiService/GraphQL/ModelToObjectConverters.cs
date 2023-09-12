@@ -94,12 +94,6 @@ public static class ModelToObjectConverters
                 expando.CreatedAt
             );
         }
-        if (DynamicUtils.HasProperty(expando, nameof(Message.LastEdit)))
-        {
-            message.LastEdit = expando.LastEdit is null
-                ? null
-                : JsonSerializer.Deserialize<DateTime>(expando.LastEdit);
-        }
         if (DynamicUtils.HasProperty(expando, nameof(Message.Files)))
         {
             List<Models.File> dbFiles = JsonSerializer.Deserialize<
@@ -165,7 +159,7 @@ public static class ModelToObjectConverters
         {
             message.Reactions = expando.Deleted
                 ? null
-                : ConvertReactionCounts(reactionCounts);
+                : ConvertChannelMessageReactionCounts(reactionCounts);
         }
         if (DynamicUtils.HasProperty(expando, nameof(Message.ReplyToId)))
         {
@@ -211,6 +205,76 @@ public static class ModelToObjectConverters
         };
     }
 
+    public static LaterFlag? ConvertDirectMessageLaterFlag(
+        Models.DirectMessageLaterFlag? dbLaterFlag
+    )
+    {
+        return dbLaterFlag is null
+            ? null
+            : new LaterFlag
+            {
+                Id = dbLaterFlag.Id,
+                Message = ConvertDirectMessage(dbLaterFlag.DirectMessage)!,
+                Status = dbLaterFlag.DirectMessageLaterFlagStatus
+            };
+    }
+
+    public static Message? ConvertDirectMessage(
+        Models.DirectMessage? dbMessage,
+        List<DirectMessageReactionCount>? reactionsCounts = null
+    )
+    {
+        return dbMessage is null
+            ? null
+            : new Message
+            {
+                Id = dbMessage.Id,
+                User = ConvertUser(dbMessage.User),
+                Content = dbMessage.Content,
+                CreatedAt = dbMessage.CreatedAt,
+                LastEdit = dbMessage.LastEdit,
+                Files = dbMessage.Files.Select(f => ConvertFile(f)).ToList(),
+                Group = ConvertDirectMessageGroup(dbMessage.DirectMessageGroup),
+                IsReply = dbMessage.IsReply,
+                LaterFlag = ConvertDirectMessageLaterFlag(dbMessage.LaterFlag),
+                Mentions = dbMessage.Mentions
+                    .Select(m => ConvertDirectMessageMention(m))
+                    .ToList(),
+                Reactions = reactionsCounts is null
+                    ? null
+                    : ConvertDirectMessageReactionCounts(reactionsCounts),
+                ReplyToId = dbMessage.ReplyToId,
+                SentAt = dbMessage.SentAt,
+                Type = 1
+            };
+    }
+
+    public static Mention ConvertDirectMessageMention(
+        Models.DirectMessageMention dbMention
+    )
+    {
+        return new Mention
+        {
+            Id = dbMention.Id,
+            CreatedAt = dbMention.CreatedAt
+        };
+    }
+
+    public static DirectMessageGroup ConvertDirectMessageGroup(
+        Models.DirectMessageGroup dbGroup
+    )
+    {
+        return new DirectMessageGroup
+        {
+            Id = dbGroup.Id,
+            CreatedAt = dbGroup.CreatedAt,
+            Members = dbGroup.DirectMessageGroupMembers
+                .Select(dbMember => ConvertDirectMessageGroupMember(dbMember))
+                .ToList(),
+            Workspace = ConvertWorkspace(dbGroup.Workspace)
+        };
+    }
+
     public static LaterFlag? ConvertChannelMessageLaterFlag(
         Models.ChannelMessageLaterFlag? dbLaterFlag
     )
@@ -225,8 +289,25 @@ public static class ModelToObjectConverters
             };
     }
 
-    public static List<ReactionCount> ConvertReactionCounts(
+    public static List<ReactionCount> ConvertChannelMessageReactionCounts(
         List<ChannelMessageReactionCount> dbReactionCounts
+    )
+    {
+        return dbReactionCounts
+            .Select(
+                dbrc =>
+                    new ReactionCount
+                    {
+                        Count = dbrc.Count,
+                        Emoji = dbrc.Emoji,
+                        UserReactionId = dbrc.UserReaction?.Id
+                    }
+            )
+            .ToList();
+    }
+
+    public static List<ReactionCount> ConvertDirectMessageReactionCounts(
+        List<DirectMessageReactionCount> dbReactionCounts
     )
     {
         return dbReactionCounts
@@ -276,7 +357,7 @@ public static class ModelToObjectConverters
                     .ToList(),
                 Reactions = reactionsCounts is null
                     ? null
-                    : ConvertReactionCounts(reactionsCounts),
+                    : ConvertChannelMessageReactionCounts(reactionsCounts),
                 ReplyToId = dbMessage.ReplyToId,
                 SentAt = dbMessage.SentAt,
                 Type = 1
@@ -291,16 +372,12 @@ public static class ModelToObjectConverters
         if (
             DynamicUtils.HasProperty(
                 expando,
-                nameof(Models.DirectMessageGroup.DirectMessageGroupMembers)
-            )
-            || DynamicUtils.HasProperty(
-                expando,
                 nameof(Models.DirectMessageGroup.DirectMessages)
             )
         )
         {
             throw new InvalidOperationException(
-                "Cannot load a collection within a collection"
+                "Cannot load a paginated collection within a collection"
             );
         }
 
@@ -323,6 +400,21 @@ public static class ModelToObjectConverters
         if (
             DynamicUtils.HasProperty(
                 expando,
+                nameof(Models.DirectMessageGroup.DirectMessageGroupMembers)
+            )
+        )
+        {
+            List<Models.DirectMessageGroupMember> dbMembers =
+                JsonSerializer.Deserialize<
+                    List<Models.DirectMessageGroupMember>
+                >(expando.DirectMessageGroupMembers);
+            group.Members = dbMembers
+                .Select(dbMember => ConvertDirectMessageGroupMember(dbMember))
+                .ToList();
+        }
+        if (
+            DynamicUtils.HasProperty(
+                expando,
                 nameof(DirectMessageGroup.Workspace)
             )
         )
@@ -334,6 +426,169 @@ public static class ModelToObjectConverters
         }
 
         return group;
+    }
+
+    public static DirectMessageGroupMember ConvertDirectMessageGroupMember(
+        Models.DirectMessageGroupMember dbMember
+    )
+    {
+        return new DirectMessageGroupMember
+        {
+            Id = dbMember.Id,
+            DirectMessageGroupId = dbMember.DirectMessageGroupId,
+            JoinedAt = dbMember.JoinedAt,
+            LastViewedAt = dbMember.LastViewedAt,
+            Starred = dbMember.Starred,
+            User = ConvertUser(dbMember.User)
+        };
+    }
+
+    public static Message ConvertDynamicDirectMessage(
+        dynamic modelDirectMessage,
+        List<DirectMessageReactionCount> reactionCounts,
+        List<string> userFields
+    )
+    {
+        var expando = DynamicUtils.ToExpando(modelDirectMessage);
+        if (
+            !DynamicUtils.HasProperty(
+                expando,
+                nameof(Models.ChannelMessage.Deleted)
+            )
+        )
+        {
+            throw new InvalidOperationException("Must query deleted column");
+        }
+        if (
+            DynamicUtils.HasProperty(
+                expando,
+                nameof(Models.DirectMessage.DirectMessageGroup)
+            )
+        )
+        {
+            throw new InvalidOperationException(
+                "DirectMessage column redundant"
+            );
+        }
+
+        Message message = new();
+        if (DynamicUtils.HasProperty(expando, nameof(Message.Id)))
+        {
+            message.Id = JsonSerializer.Deserialize<Guid>(expando.Id);
+        }
+        if (DynamicUtils.HasProperty(expando, nameof(Message.User)))
+        {
+            if (expando.Deleted)
+            {
+                message.User = null;
+            }
+            else
+            {
+                Models.User dbUser = JsonSerializer.Deserialize<Models.User>(
+                    expando.User
+                );
+                message.User = ConvertUser(dbUser, userFields);
+            }
+        }
+        if (DynamicUtils.HasProperty(expando, nameof(Message.Content)))
+        {
+            message.Content = expando.Deleted
+                ? "deleted"
+                : JsonSerializer.Deserialize<string>(expando.Content);
+        }
+        if (DynamicUtils.HasProperty(expando, nameof(Message.CreatedAt)))
+        {
+            message.CreatedAt = JsonSerializer.Deserialize<DateTime>(
+                expando.CreatedAt
+            );
+        }
+        if (DynamicUtils.HasProperty(expando, nameof(Message.Files)))
+        {
+            List<Models.File> dbFiles = JsonSerializer.Deserialize<
+                List<Models.File>
+            >(expando.Files);
+            if (expando.Deleted)
+            {
+                message.Files = null;
+            }
+            else
+            {
+                List<File> files = new();
+                foreach (Models.File dbFile in dbFiles)
+                {
+                    files.Add(ConvertFile(dbFile));
+                }
+                message.Files = files;
+            }
+        }
+        if (DynamicUtils.HasProperty(expando, nameof(Message.IsReply)))
+        {
+            message.IsReply = JsonSerializer.Deserialize<bool>(expando.IsReply);
+        }
+        if (DynamicUtils.HasProperty(expando, nameof(Message.LastEdit)))
+        {
+            message.LastEdit = expando.LastEdit is null
+                ? null
+                : JsonSerializer.Deserialize<DateTime>(expando.LastEdit);
+        }
+        if (DynamicUtils.HasProperty(expando, nameof(Message.LaterFlag)))
+        {
+            message.LaterFlag = null;
+            if (!expando.Deleted && expando.LaterFlag is not null)
+            {
+                Models.ChannelMessageLaterFlag dbLaterFlag =
+                    JsonSerializer.Deserialize<Models.DirectMessageLaterFlag>(
+                        expando.LaterFlag
+                    );
+                LaterFlag? laterFlag = ConvertChannelMessageLaterFlag(
+                    dbLaterFlag
+                );
+                message.LaterFlag = laterFlag;
+            }
+        }
+        if (DynamicUtils.HasProperty(expando, nameof(Message.Mentions)))
+        {
+            List<Mention> mentions = new();
+            List<Models.DirectMessageMention> dbMentions =
+                JsonSerializer.Deserialize<List<Models.DirectMessageMention>>(
+                    expando.Mentions
+                );
+            message.Mentions = null;
+            if (!expando.Deleted && dbMentions.Count > 0)
+            {
+                foreach (Models.DirectMessageMention dbMention in dbMentions)
+                {
+                    mentions.Add(ConvertDirectMessageMention(dbMention));
+                }
+                message.Mentions = mentions;
+            }
+        }
+        if (reactionCounts is not null && reactionCounts.Count > 0)
+        {
+            message.Reactions = expando.Deleted
+                ? null
+                : ConvertDirectMessageReactionCounts(reactionCounts);
+        }
+        if (DynamicUtils.HasProperty(expando, nameof(Message.ReplyToId)))
+        {
+            message.ReplyToId = null;
+            if (expando.ReplyToId is not null)
+            {
+                message.ReplyToId = JsonSerializer.Deserialize<Guid>(
+                    expando.ReplyToId
+                );
+            }
+        }
+        if (DynamicUtils.HasProperty(expando, nameof(Message.SentAt)))
+        {
+            message.SentAt = expando.SentAt is null
+                ? null
+                : JsonSerializer.Deserialize<DateTime>(expando.SentAt);
+            message.Draft = expando.SentAt is null;
+        }
+        message.Type = 2;
+
+        return message;
     }
 
     public static Channel ConvertDynamicChannel(dynamic modelChannel)
@@ -351,7 +606,7 @@ public static class ModelToObjectConverters
         )
         {
             throw new InvalidOperationException(
-                "Cannot load a collection within a collection"
+                "Cannot load a paginated collection within a collection"
             );
         }
 
