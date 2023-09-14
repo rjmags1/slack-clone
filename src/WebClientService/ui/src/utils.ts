@@ -15,3 +15,5 @@ export const uploadToStore = (file: File): string => {
     // TODO
     return generateRandomString(64)
 }
+
+export const debounce = (fn: () => void, delay: number) => setTimeout(fn, delay)
