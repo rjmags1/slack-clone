@@ -1,22 +1,23 @@
-import { useState } from 'react'
-import Button from '../../lib/Button'
-import WorkspaceSearchFilterForm from './WorkspaceSearchFilterForm'
+import ModalTriggerButton from '../../lib/ModalTriggerButton'
+import WorkspaceSearchFilterModal from './WorkspaceFilterModal'
 
 function WorkspaceSearchFilterBtn() {
-    const [renderFilterForm, setRenderFilterForm] = useState(false)
-    const onClick = () => {
-        // TODO
-    }
-
     return (
-        <Button
-            onClick={onClick}
-            className="h-6 w-6 rounded-lg bg-zinc-300 p-[0.3rem]
+        <div
+            className="relative flex h-6 w-6 items-center justify-center 
+                rounded-lg bg-zinc-300 p-[0.3rem] outline-none 
                 hover:bg-zinc-400"
         >
-            <img src="/filter.png" alt="filter" />
-            {renderFilterForm && <WorkspaceSearchFilterForm />}
-        </Button>
+            <img src="/filter.png" alt="" />
+            <ModalTriggerButton
+                className="absolute left-0 top-0 z-10 h-full w-full 
+                    outline-none"
+            >
+                {(close) => (
+                    <WorkspaceSearchFilterModal close={close as () => void} />
+                )}
+            </ModalTriggerButton>
+        </div>
     )
 }
 

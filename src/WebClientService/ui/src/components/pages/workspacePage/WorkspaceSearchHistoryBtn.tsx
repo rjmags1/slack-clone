@@ -1,21 +1,19 @@
-import { useState } from 'react'
 import Button from '../../lib/Button'
-import WorkspaceSearchHistoryDropdown from './WorkspaceSearchHistoryDropdown'
 
-function WorkspaceSearchHistoryBtn() {
-    const [renderDropdown, setRenderDropdown] = useState(false)
-    const onClick = () => {
-        // TODO
-    }
+type WorkspaceSearchHistoryBtnProps = {
+    toggleDropdown: () => void
+}
 
+function WorkspaceSearchHistoryBtn({
+    toggleDropdown,
+}: WorkspaceSearchHistoryBtnProps) {
     return (
         <Button
-            onClick={onClick}
+            onClick={toggleDropdown}
             className="h-6 w-6 rounded-lg bg-zinc-300 p-[0.3rem]
-                hover:bg-zinc-400"
+                outline-none hover:bg-zinc-400"
         >
             <img src="/history.png" alt="history" />
-            {renderDropdown && <WorkspaceSearchHistoryDropdown />}
         </Button>
     )
 }
