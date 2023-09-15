@@ -5,7 +5,7 @@ import React, { JSXElementConstructor, ReactElement } from 'react'
 import Modal from './Modal'
 
 type ModalTriggerProps = OverlayTriggerProps & {
-    label: string
+    label?: string
     className?: string
     children: (
         props: object
