@@ -16,9 +16,12 @@ function Dialog({ title, children, className, close, ...props }: DialogProps) {
     return (
         <div {...dialogProps} ref={ref} className={className}>
             {close && (
-                <div className="flex h-10 w-full items-center justify-between font-thin">
+                <div className="flex h-fit w-full items-center justify-between font-thin">
                     {title && (
-                        <h3 {...titleProps} className="left-0 mt-0">
+                        <h3
+                            {...titleProps}
+                            className="left-0 mt-0 font-semibold"
+                        >
                             {title}
                         </h3>
                     )}
