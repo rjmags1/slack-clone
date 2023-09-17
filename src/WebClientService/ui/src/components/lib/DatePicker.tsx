@@ -7,7 +7,11 @@ import Button from './Button'
 import DateField from './DateField'
 import { useRef } from 'react'
 
-function DatePicker(props: AriaDatePickerProps<DateValue>) {
+type DatePickerProps = AriaDatePickerProps<DateValue> & {
+    containerClassName?: string
+}
+
+function DatePicker({ containerClassName, ...props }: DatePickerProps) {
     const state = useDatePickerState(props)
     const ref = useRef(null)
     const {
@@ -20,7 +24,11 @@ function DatePicker(props: AriaDatePickerProps<DateValue>) {
     } = useDatePicker(props, state, ref)
 
     return (
-        <div className="flex min-w-max gap-x-2 font-extralight">
+        <div
+            className={
+                containerClassName || 'flex min-w-max gap-x-2 font-extralight'
+            }
+        >
             <div {...labelProps}>{props.label}</div>
             <div
                 {...groupProps}

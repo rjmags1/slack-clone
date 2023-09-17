@@ -1,5 +1,5 @@
 import CreateWorkspaceBtn from './CreateWorkspaceBtn'
-import LogoutBtn from './LogoutBtn'
+import LogoutBtn from '../../lib/LogoutBtn'
 
 function WorkspacesPageNavbar() {
     return (

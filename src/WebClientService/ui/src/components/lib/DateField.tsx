@@ -21,7 +21,7 @@ function DateField(props: AriaDateFieldOptions<DateValue>) {
             <div
                 {...fieldProps}
                 ref={ref}
-                className="flex h-full min-w-max items-center gap-x-[1px] 
+                className="flex h-full min-w-max items-center gap-x-[2px] 
                     border-b border-white"
             >
                 {state.segments.map((segment, i) => (
@@ -39,7 +39,7 @@ function DateField(props: AriaDateFieldOptions<DateValue>) {
     )
 }
 
-function DateSegmentComponent({
+export function DateSegmentComponent({
     segment,
     state,
 }: {
