@@ -8,7 +8,10 @@ function WorkspacePageNavbar() {
                 justify-center bg-sky-950 px-8 text-white"
         >
             <WorkspaceSearchBar />
-            <UserProfileBtn className="absolute right-0 mr-8" />
+            <UserProfileBtn
+                className="absolute right-0 mr-8 
+                    rounded-full outline-none"
+            />
         </nav>
     )
 }

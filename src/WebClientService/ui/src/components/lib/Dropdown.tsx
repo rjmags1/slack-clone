@@ -9,7 +9,7 @@ type DropdownProps = {
     className?: string
     selectedClassName?: string
     items: ReactNode[]
-    noItemsListing: ReactNode
+    noItemsListing?: ReactNode
     close: () => void
 }
 
@@ -64,7 +64,14 @@ function Dropdown({
                                 {...hoverProps}
                                 id={`${dropdownItemIdPrefix}${i}`}
                                 className={
-                                    i === selected ? selectedClassName : ''
+                                    (i === selected ? selectedClassName : '') +
+                                    `${
+                                        i === 0
+                                            ? ' rounded-t-md'
+                                            : i === items.length - 1
+                                            ? ' rounded-b-md'
+                                            : ''
+                                    }`
                                 }
                             >
                                 {item}
