@@ -1,10 +1,11 @@
+import WorkspacePageViewManagementPaneHeader from './WorkspaceViewManagementPaneHeader'
+import MessageTypesInteractionsSidebar from './MessageTypesInteractionsSidebarSection'
 import { useState } from 'react'
 import { useMove } from 'react-aria'
 
 const bodySize = () => document.body.getBoundingClientRect().width
 
 const MAX_WIDTH_RATIO = 0.35
-const SEPARATOR_WIDTH = 4 //px
 
 function WorkspacePageViewManagementPane() {
     const [separatorX, setSeparatorX] = useState<number>(bodySize() * 0.33)
@@ -18,7 +19,7 @@ function WorkspacePageViewManagementPane() {
                 }
                 document.getElementById(
                     'workspace-page-view-management-pane'
-                )!.style.width = `${Math.max(SEPARATOR_WIDTH, x)}px`
+                )!.style.width = `${Math.max(5, x)}px`
                 return x
             })
         },
@@ -27,19 +28,23 @@ function WorkspacePageViewManagementPane() {
     return (
         <div
             id="workspace-page-view-management-pane"
-            className="flex h-full"
+            className="flex h-full text-white"
             tabIndex={0}
             style={{ width: separatorX }}
         >
-            <div className="shrink-1 h-full grow bg-zinc-500"></div>
+            <div
+                className="flex h-full w-max grow flex-col 
+                    justify-start overflow-hidden"
+            >
+                <WorkspacePageViewManagementPaneHeader />
+                <MessageTypesInteractionsSidebar />
+            </div>
             <div
                 {...moveProps}
-                className="flex h-full min-w-[4px] max-w-[4px] 
-                    shrink-0 bg-zinc-500 hover:cursor-ew-resize"
+                className="flex h-full min-w-[5px] max-w-[5px] 
+                    shrink-0 justify-center hover:cursor-ew-resize"
             >
-                <div className="h-full min-w-[1.5px] max-w-[1px] bg-inherit" />
-                <div className="h-full min-w-[1px] max-w-[2px] bg-zinc-800" />
-                <div className="h-full min-w-[1.5px] max-w-[1px] bg-inherit" />
+                <div className="h-full min-w-[1px] max-w-[1px] bg-zinc-500" />
             </div>
         </div>
     )
