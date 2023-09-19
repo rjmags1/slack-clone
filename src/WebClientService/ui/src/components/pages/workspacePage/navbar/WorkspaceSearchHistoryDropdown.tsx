@@ -1,4 +1,4 @@
-import Dropdown from '../../lib/Dropdown'
+import Dropdown from '../../../lib/Dropdown'
 import WorkspaceSearchHistoryListing from './WorkspaceSearchHistoryListing'
 
 type WorkspaceSearchHistoryDropdownProps = {

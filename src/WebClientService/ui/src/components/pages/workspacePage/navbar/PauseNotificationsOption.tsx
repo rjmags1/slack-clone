@@ -1,5 +1,5 @@
 import { AriaButtonProps } from 'react-aria'
-import Button from '../../lib/Button'
+import Button from '../../../lib/Button'
 
 type PauseNotificationsOptionProps = {
     onClick: () => void

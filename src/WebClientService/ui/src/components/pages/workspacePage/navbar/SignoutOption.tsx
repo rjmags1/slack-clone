@@ -1,4 +1,4 @@
-import LogoutBtn from '../../lib/LogoutBtn'
+import LogoutBtn from '../../../lib/LogoutBtn'
 
 function SignoutOption() {
     return (

@@ -1,6 +1,6 @@
-import Button from '../../lib/Button'
-import DatePicker from '../../lib/DatePicker'
-import TimeField from '../../lib/TimeField'
+import Button from '../../../lib/Button'
+import DatePicker from '../../../lib/DatePicker'
+import TimeField from '../../../lib/TimeField'
 
 function PauseNotificationsForm() {
     return (

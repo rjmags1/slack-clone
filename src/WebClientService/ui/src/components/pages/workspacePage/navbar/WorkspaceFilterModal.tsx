@@ -1,4 +1,4 @@
-import Dialog from '../../lib/Dialog'
+import Dialog from '../../../lib/Dialog'
 import WorkspaceSearchFilterForm from './WorkspaceSearchFilterForm'
 
 type WorkspaceFilterModalProps = {

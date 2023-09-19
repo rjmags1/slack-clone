@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import Avatar from '../../lib/Avatar'
-import Button from '../../lib/Button'
+import Avatar from '../../../lib/Avatar'
+import Button from '../../../lib/Button'
 import UserProfileDropdown from './UserProfileDropdown'
 import UpdateUserStatusModal from './UpdateUserStatusModal'
 import { useOverlayTriggerState } from 'react-stately'

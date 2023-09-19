@@ -1,7 +1,7 @@
 import { OverlayTriggerState } from 'react-stately'
-import Modal from '../../lib/Modal'
-import Dialog from '../../lib/Dialog'
 import PauseNotificationsForm from './PauseNotificationsForm'
+import Modal from '../../../lib/Modal'
+import Dialog from '../../../lib/Dialog'
 
 type PauseNotificationsModalProps = {
     close: () => void

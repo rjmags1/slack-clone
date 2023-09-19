@@ -27,16 +27,20 @@ function WorkspacePageViewManagementPane() {
     return (
         <div
             id="workspace-page-view-management-pane"
-            {...moveProps}
             className="flex h-full"
             tabIndex={0}
             style={{ width: separatorX }}
         >
-            <div className="shrink-1 h-full grow bg-black"></div>
+            <div className="shrink-1 h-full grow bg-zinc-500"></div>
             <div
-                className="h-full min-w-[4px] max-w-[4px] shrink-0 
-                    bg-zinc-500 hover:cursor-ew-resize"
-            ></div>
+                {...moveProps}
+                className="flex h-full min-w-[4px] max-w-[4px] 
+                    shrink-0 bg-zinc-500 hover:cursor-ew-resize"
+            >
+                <div className="h-full min-w-[1.5px] max-w-[1px] bg-inherit" />
+                <div className="h-full min-w-[1px] max-w-[2px] bg-zinc-800" />
+                <div className="h-full min-w-[1.5px] max-w-[1px] bg-inherit" />
+            </div>
         </div>
     )
 }

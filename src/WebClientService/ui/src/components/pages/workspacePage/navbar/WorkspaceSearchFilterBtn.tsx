@@ -1,4 +1,4 @@
-import ModalTriggerButton from '../../lib/ModalTriggerButton'
+import ModalTriggerButton from '../../../lib/ModalTriggerButton'
 import WorkspaceSearchFilterModal from './WorkspaceFilterModal'
 
 function WorkspaceSearchFilterBtn() {

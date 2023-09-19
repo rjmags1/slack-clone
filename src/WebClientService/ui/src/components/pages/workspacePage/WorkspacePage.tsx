@@ -1,6 +1,6 @@
-import WorkspacePageNavbar from './WorkspacePageNavbar'
-import WorkspacePageViewManagementPane from './WorkspacePageViewManagementPane'
-import WorkspacePageViewPane from './WorkspacePageViewPane'
+import WorkspacePageNavbar from './navbar/WorkspacePageNavbar'
+import WorkspacePageViewManagementPane from './viewManagementPane/WorkspacePageViewManagementPane'
+import WorkspacePageViewPane from './viewPane/WorkspacePageViewPane'
 
 function WorkspacePage() {
     return (
