@@ -4,7 +4,7 @@ import WorkspaceSearchFilterBtn from './WorkspaceSearchFilterBtn'
 import WorkspaceSearchInput from './WorkspaceSearchInput'
 import WorkspaceSearchHistoryDropdown from './WorkspaceSearchHistoryDropdown'
 import { useParams } from 'react-router-dom'
-import useWorkspaceSearchHistory from '../../../hooks/useWorkspaceSearchHistory'
+import useWorkspaceSearchHistory from '../../../../hooks/useWorkspaceSearchHistory'
 
 function WorkspaceSearchBar() {
     const [searchText, setSearchText] = useState('')

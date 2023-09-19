@@ -1,4 +1,4 @@
-import SearchField from '../../lib/SearchField'
+import SearchField from '../../../lib/SearchField'
 
 type WorkspaceSearchInputProps = {
     searchText: string

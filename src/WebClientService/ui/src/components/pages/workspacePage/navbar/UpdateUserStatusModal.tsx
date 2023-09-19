@@ -1,7 +1,7 @@
 import { OverlayTriggerState } from 'react-stately'
-import Dialog from '../../lib/Dialog'
-import Modal from '../../lib/Modal'
 import UpdateUserStatusForm from './UpdateUserStatusForm'
+import Modal from '../../../lib/Modal'
+import Dialog from '../../../lib/Dialog'
 
 type UpdateUserStatusModalProps = {
     close: () => void

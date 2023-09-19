@@ -1,5 +1,5 @@
 import { AriaButtonProps } from 'react-aria'
-import Dropdown from '../../lib/Dropdown'
+import Dropdown from '../../../lib/Dropdown'
 import PauseNotificationsOption from './PauseNotificationsOption'
 import PreferencesOption from './PreferencesOption'
 import ProfileOption from './ProfileOption'
