@@ -6,7 +6,7 @@ function WorkspacePage() {
     return (
         <div className="h-full w-full">
             <WorkspacePageNavbar />
-            <div className="flex h-[calc(100%_-_2.5rem)] w-full">
+            <div className="flex h-[calc(100%_-_2.5rem)] w-full bg-zinc-800">
                 <WorkspacePageViewManagementPane />
                 <WorkspacePageViewPane />
             </div>
