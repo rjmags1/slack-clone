@@ -4,7 +4,10 @@ import WorkspaceSettingsBtn from './WorkspaceSettingsBtn'
 
 function WorkspacePageViewManagementPaneHeader() {
     return (
-        <div className="flex w-full flex-col gap-y-1 border-b border-zinc-500 p-2">
+        <div
+            className="flex w-full shrink-0 grow-0 flex-col gap-y-1 
+                border-b border-zinc-500 p-2"
+        >
             <div className="flex w-full justify-start gap-x-2">
                 <h3 className="w-max truncate">workspace-name</h3>
                 <Button onClick={() => alert('not implemented')}>⌄</Button>
