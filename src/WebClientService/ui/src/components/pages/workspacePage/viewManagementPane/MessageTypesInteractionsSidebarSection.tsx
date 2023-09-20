@@ -9,7 +9,7 @@ import WorkspaceSidebarUnreadsBtn from './WorkspaceSidebarUnreadsBtn'
 function MessageTypesInteractionsSidebarSection() {
     return (
         <div
-            className="flex w-full flex-col
+            className="flex w-full shrink-0 grow-0 flex-col
                 border-b border-zinc-500 p-2 text-xs font-light"
         >
             <WorkspaceSidebarUnreadsBtn />
