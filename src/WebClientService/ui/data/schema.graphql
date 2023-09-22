@@ -23,80 +23,6 @@ type Mutation {
 }
 
 
-type WorkspacePageData implements Node {
-    id: ID!
-    user(id: ID!): User!
-    workspace(id: ID!): Workspace!
-    channels(filter: ChannelsFilter!, first: Int!, after: ID): ChannelsConnection!
-    directMessageGroups(filter: DirectMessageGroupsFilter!, first: Int!, after: ID): DirectMessageGroupsConnection!
-    starred(filter: StarredFilter!, first: Int!, after: ID): StarredConnection!
-}
-
-input ChannelsFilter {
-    userId: ID!
-    workspaceId: ID!
-    sortOrder: Int
-    query: String
-    with: [UserInput!]
-    lastActivityBeforeUTC: String
-    lastActivityAfterUTC: String
-    createdBeforeUTC: String
-    createdAfterUTC: String
-}
-
-input UserInput {
-    id: ID
-    avatarId: ID
-    onlineStatus: String
-    onlineStatusUntilUTC: String
-    userInfo: UserInfoInput
-    username: String
-}
-
-input UserInfoInput {
-    email: String
-    firstName: String
-    lastName: String
-    themeId: ID
-    timezone: String
-    notificationsPreferences: UserNotificationsPreferencesInput
-}
-
-input UserNotificationsPreferencesInput {
-    allMessages: Boolean
-    noMessages: Boolean
-    mentions: Boolean
-    dms: Boolean
-    replies: Boolean
-    threadWatch: Boolean
-    notifSound: ID
-    allowAlertsStartTimeUTC: String
-    allowAlertsEndTimeUTC: String
-    pauseAlertsUntilUTC: String
-}
-
-input DirectMessageGroupsFilter {
-    userId: ID!
-    workspaceId: ID!
-    sortOrder: Int
-}
-
-input StarredFilter {
-    userId: ID!
-    workspaceId: ID!
-}
-
-type ChannelsConnection {
-    totalEdges: Int!
-    edges: [ChannelsConnectionEdge!]!
-    pageInfo: PageInfo!
-}
-
-type ChannelsConnectionEdge {
-    node: Channel!
-    cursor: ID!
-}
-
 type Channel implements Group {
     id: ID!
     allowThreads: Boolean!
@@ -114,32 +40,96 @@ type Channel implements Group {
     workspace: Workspace!
 }
 
-input MessagesFilter {
-    workspaceId: ID
-    receiverId: ID
-    senderId: ID
-    unread: Boolean
-    directMessages: Boolean
-    channelMessages: Boolean
-    channelIds: [ID!]
-    sortOrder: Int
-    from: [ID!]
-    to: [ID!]
-    mentioning: [ID!]
-    beforeUTC: String
-    afterUTC: String
-    query: String
+type ChannelsConnection {
+    totalEdges: Int!
+    edges: [ChannelsConnectionEdge!]!
+    pageInfo: PageInfo!
 }
 
-type MessagesConnection {
+type ChannelsConnectionEdge {
+    node: Channel!
+    cursor: ID!
+}
+
+type ChannelMember {
+    id: ID!
+    admin: Boolean!
+    memberInfo: ChannelMemberInfo!
+    user: User!
+}
+
+type ChannelMemberInfo {
+    enableNotifications: Boolean!
+    lastViewedAtUTC: String
+    starred: Boolean!
+}
+
+type ChannelMembersConnection {
     totalEdges: Int!
     pageInfo: PageInfo!
-    edges: [MessagesConnectionEdge!]!
+    edges: [ChannelMembersConnectionEdge!]!
 }
 
-type MessagesConnectionEdge {
+type ChannelMembersConnectionEdge {
     cursor: ID!
-    node: Message!
+    node: ChannelMember!
+}
+
+type DirectMessageGroup implements Group {
+    id: ID!
+    createdAtUTC: String!
+    name: String!
+    members: [DirectMessageGroupMember!]!
+    messages(first: Int!, after: ID, filter: MessagesFilter): MessagesConnection!
+    workspace: Workspace!
+}
+
+type DirectMessageGroupMember {
+    id: ID!
+    groupId: ID!
+    joinedAtUTC: String!
+    lastViewedAtUTC: String
+    starred: Boolean!
+    user: User!
+}
+
+type DirectMessageGroupsConnection {
+    totalEdges: Int!
+    pageInfo: PageInfo!
+    edges: [DirectMessageGroupsConnectionEdge!]!
+}
+
+type DirectMessageGroupsConnectionEdge {
+    cursor: ID!
+    node: DirectMessageGroup
+}
+
+type File implements Node {
+    id: ID!
+    name: String!
+    storeKey: String!
+    uploadedAt: String!
+}
+
+interface Group {
+    id: ID!
+    createdAtUTC: String!
+    workspace: Workspace!
+    name: String!
+}
+
+type LaterFlag {
+    id: ID!
+    message: Message!
+    status: Int!
+}
+
+type Mention {
+    id: ID!
+    createdAtUTC: String!
+    message: Message!
+    mentioned: User!
+    mentioner: User!
 }
 
 type Message {
@@ -161,83 +151,29 @@ type Message {
     type: Int!
 }
 
+type MessagesConnection {
+    totalEdges: Int!
+    pageInfo: PageInfo!
+    edges: [MessagesConnectionEdge!]!
+}
+
+type MessagesConnectionEdge {
+    cursor: ID!
+    node: Message!
+}
+
+type PageInfo {
+    startCursor: ID
+    endCursor: ID
+    hasNextPage: Boolean!
+    hasPreviousPage: Boolean!
+}
+
 type ReactionCount {
     id: ID!
     count: Int!
     emoji: String!
     userReactionId: ID
-}
-
-type Mention {
-    id: ID!
-    createdAtUTC: String!
-    message: Message!
-    mentioned: User!
-    mentioner: User!
-}
-
-type LaterFlag {
-    id: ID!
-    message: Message!
-    status: Int!
-}
-
-interface Group {
-    id: ID!
-    createdAtUTC: String!
-    workspace: Workspace!
-}
-
-type ChannelMembersConnection {
-    totalEdges: Int!
-    pageInfo: PageInfo!
-    edges: [ChannelMembersConnectionEdge!]!
-}
-
-type ChannelMembersConnectionEdge {
-    cursor: ID!
-    node: ChannelMember!
-}
-
-type ChannelMember {
-    id: ID!
-    admin: Boolean!
-    memberInfo: ChannelMemberInfo!
-    user: User!
-}
-
-type ChannelMemberInfo {
-    enableNotifications: Boolean!
-    lastViewedAtUTC: String
-    starred: Boolean!
-}
-
-type DirectMessageGroupsConnection {
-    totalEdges: Int!
-    pageInfo: PageInfo!
-    edges: [DirectMessageGroupsConnectionEdge!]!
-}
-
-type DirectMessageGroupsConnectionEdge {
-    cursor: ID!
-    node: DirectMessageGroup
-}
-
-type DirectMessageGroup implements Group {
-    id: ID!
-    createdAtUTC: String!
-    members: [DirectMessageGroupMember!]!
-    messages(first: Int!, after: ID, filter: MessagesFilter): MessagesConnection!
-    workspace: Workspace!
-}
-
-type DirectMessageGroupMember {
-    id: ID!
-    groupId: ID!
-    joinedAtUTC: String!
-    lastViewedAtUTC: String
-    starred: Boolean!
-    user: User!
 }
 
 type StarredConnection {
@@ -251,22 +187,18 @@ type StarredConnectionEdge {
     node: Group!
 }
 
-type WorkspacesPageData implements Node {
-    id: ID!
-    user(id: ID!): User!
-    workspaces(filter: WorkspacesFilter, first: Int!, after: ID): WorkspacesConnection!
-}
-
-type File implements Node {
-    id: ID!
-    name: String!
-    storeKey: String!
-    uploadedAt: String!
-}
-
 type Theme implements Node {
     id: ID!
     name: String!
+}
+
+type User implements Node {
+    id: ID!
+    avatar: File!
+    createdAt: String!
+    onlineStatus: String!
+    personalInfo: UserInfo
+    username: String!
 }
 
 type UserInfo {
@@ -292,17 +224,18 @@ type UserNotificationsPreferences {
     pauseAlertsUntil: String
 }
 
-type User implements Node {
+type ValidationResult {
+    valid: Boolean!
+}
+
+type Workspace implements Node {
     id: ID!
     avatar: File!
     createdAt: String!
-    onlineStatus: String!
-    personalInfo: UserInfo
-    username: String!
-}
-
-type ValidationResult {
-    valid: Boolean!
+    description: String!
+    name: String!
+    numMembers: Int!
+    members(usersFilter: UsersFilter, first: Int!, after: ID): WorkspaceMembersConnection
 }
 
 type WorkspaceAdminPermissions {
@@ -318,13 +251,6 @@ type WorkspaceAdminPermissions {
     deleteMessages: Boolean!
 }
 
-type WorkspaceMemberInfo {
-    admin: Boolean!
-    owner: Boolean!
-    workspaceAdminPermissions: WorkspaceAdminPermissions
-    theme: Theme
-}
-
 type WorkspaceMember implements Node {
     id: ID!
     avatar: File
@@ -335,14 +261,11 @@ type WorkspaceMember implements Node {
     workspaceMemberInfo: WorkspaceMemberInfo
 }
 
-type Workspace implements Node {
-    id: ID!
-    avatar: File!
-    createdAt: String!
-    description: String!
-    name: String!
-    numMembers: Int!
-    members(usersFilter: UsersFilter, first: Int!, after: ID): WorkspaceMembersConnection
+type WorkspaceMemberInfo {
+    admin: Boolean!
+    owner: Boolean!
+    workspaceAdminPermissions: WorkspaceAdminPermissions
+    theme: Theme
 }
 
 type WorkspaceMembersConnection {
@@ -351,16 +274,18 @@ type WorkspaceMembersConnection {
     pageInfo: PageInfo!
 }
 
-type PageInfo {
-    startCursor: ID
-    endCursor: ID
-    hasNextPage: Boolean!
-    hasPreviousPage: Boolean!
-}
-
 type WorkspaceMembersConnectionEdge {
     node: WorkspaceMember!
     cursor: ID!
+}
+
+type WorkspacePageData implements Node {
+    id: ID!
+    user(id: ID!): User!
+    workspace(id: ID!): Workspace!
+    channels(filter: ChannelsFilter!, first: Int!, after: ID): ChannelsConnection!
+    directMessageGroups(filter: DirectMessageGroupsFilter!, first: Int!, after: ID): DirectMessageGroupsConnection!
+    starred(filter: StarredFilter!, first: Int!, after: ID): StarredConnection!
 }
 
 type WorkspacesConnection {
@@ -374,6 +299,85 @@ type WorkspacesConnectionEdge {
     cursor: ID!
 }
 
+type WorkspacesPageData implements Node {
+    id: ID!
+    user(id: ID!): User!
+    workspaces(filter: WorkspacesFilter, first: Int!, after: ID): WorkspacesConnection!
+}
+
+
+input ChannelsFilter {
+    userId: ID!
+    workspaceId: ID!
+    sortOrder: Int
+    query: String
+    with: [UserInput!]
+    lastActivityBeforeUTC: String
+    lastActivityAfterUTC: String
+    createdBeforeUTC: String
+    createdAfterUTC: String
+}
+
+input DirectMessageGroupsFilter {
+    userId: ID!
+    workspaceId: ID!
+    sortOrder: Int
+}
+
+input FileInput {
+    name: String!
+    storeKey: String!
+    uploaderId: ID!
+}
+
+input MessagesFilter {
+    workspaceId: ID
+    receiverId: ID
+    senderId: ID
+    unread: Boolean
+    directMessages: Boolean
+    channelMessages: Boolean
+    channelIds: [ID!]
+    sortOrder: Int
+    from: [ID!]
+    to: [ID!]
+    mentioning: [ID!]
+    beforeUTC: String
+    afterUTC: String
+    query: String
+}
+
+input UserInfoInput {
+    email: String
+    firstName: String
+    lastName: String
+    themeId: ID
+    timezone: String
+    notificationsPreferences: UserNotificationsPreferencesInput
+}
+
+input UserInput {
+    id: ID
+    avatarId: ID
+    onlineStatus: String
+    onlineStatusUntilUTC: String
+    userInfo: UserInfoInput
+    username: String
+}
+
+input UserNotificationsPreferencesInput {
+    allMessages: Boolean
+    noMessages: Boolean
+    mentions: Boolean
+    dms: Boolean
+    replies: Boolean
+    threadWatch: Boolean
+    notifSound: ID
+    allowAlertsStartTimeUTC: String
+    allowAlertsEndTimeUTC: String
+    pauseAlertsUntilUTC: String
+}
+
 input UsersFilter {
     userId: ID
     workspaceId: ID!
@@ -385,9 +389,9 @@ input UsersFilter {
     queryTypeMask: Int # 1 - email, 2 - username
 }
 
-input WorkspacesFilter {
-    nameQuery: String
+input StarredFilter {
     userId: ID!
+    workspaceId: ID!
 }
 
 input WorkspaceInput {
@@ -397,8 +401,7 @@ input WorkspaceInput {
     invitedUserEmails: [String!]
 }
 
-input FileInput {
-    name: String!
-    storeKey: String!
-    uploaderId: ID!
+input WorkspacesFilter {
+    nameQuery: String
+    userId: ID!
 }
