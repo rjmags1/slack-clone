@@ -442,7 +442,7 @@ public class DirectMessageGroupStore : Store
                 );
             }
         }
-        IQueryable<DirectMessageGroup> directMessageGroups = memberships
+        var directMessageGroups = memberships
             .Take(first + 1)
             .Select(dmg => dmg.DirectMessageGroup);
 
@@ -450,6 +450,8 @@ public class DirectMessageGroupStore : Store
             .Select(
                 DynamicLinqUtils.NodeFieldToDynamicSelectString(
                     connectionTree,
+                    forceInclude: new List<string> { "members" },
+                    skip: new List<string> { "name" },
                     map: new Dictionary<string, string>
                     {
                         { "members", "directMessageGroupMembers" }

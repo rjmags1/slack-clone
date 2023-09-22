@@ -17,7 +17,7 @@ public class DirectMessageGroupType
         Field<NonNullGraphType<IdGraphType>>("id")
             .Description("The UUID of the direct message group")
             .Resolve(context => context.Source.Id);
-        Field<NonNullGraphType<DateTimeGraphType>>("createdAt")
+        Field<NonNullGraphType<DateTimeGraphType>>("createdAtUTC")
             .Description("When the direct message group was created")
             .Resolve(context => context.Source.CreatedAt);
         Field<
@@ -61,6 +61,28 @@ public class DirectMessageGroupType
                     after
                 );
             });
+        Field<NonNullGraphType<StringGraphType>>("name")
+            .Description("The name of the group")
+            .ResolveAsync(async context =>
+            {
+                Guid sub = GraphQLUtils.GetSubClaim(
+                    (context.UserContext as GraphQLUserContext)!
+                );
+                List<Guid> memberIds = context.Source.Members
+                    .Where(member => member.UserId != sub)
+                    .Select(member => member.UserId)
+                    .ToList();
+                List<string> memberNames = new();
+                foreach (Guid memberId in memberIds)
+                {
+                    var user = await data.GetUserById(
+                        memberId,
+                        new List<string> { "username" }
+                    );
+                    memberNames.Add(user.Username);
+                }
+                return string.Join(", ", memberNames);
+            });
         Field<NonNullGraphType<WorkspaceType>>("workspace")
             .Description(
                 "The workspace associated with the direct message group"
@@ -76,6 +98,7 @@ public class DirectMessageGroup : INode, IGroup
 #pragma warning disable CS8618
     public List<DirectMessageGroupMember> Members { get; set; }
     public Connection<Message> Messages { get; set; }
+    public string Name { get; set; }
     public Workspace Workspace { get; set; }
 #pragma warning restore CS8618
 }

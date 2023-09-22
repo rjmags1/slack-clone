@@ -24,9 +24,10 @@ public static class DynamicLinqUtils
         {
             foreach (string include in forceInclude)
             {
-                if (!nodeFields.Contains(include))
+                string s = map.GetValueOrDefault(include, include);
+                if (!nodeFields.Contains(s))
                 {
-                    nodeFields.Add(include);
+                    nodeFields.Add(s);
                 }
             }
         }

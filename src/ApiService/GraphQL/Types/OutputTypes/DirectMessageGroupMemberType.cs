@@ -32,6 +32,9 @@ public class DirectMessageGroupMemberType
         Field<NonNullGraphType<UserType>>("user")
             .Description("The user associated with the channel membership")
             .Resolve(context => context.Source.User);
+        Field<NonNullGraphType<IdGraphType>>("userId")
+            .Description("The user associated with the channel membership")
+            .Resolve(context => context.Source.UserId);
     }
 }
 
@@ -45,4 +48,5 @@ public class DirectMessageGroupMember : INode
 #pragma warning disable CS8618
     public User User { get; set; }
 #pragma warning restore CS8618
+    public Guid UserId { get; set; }
 }

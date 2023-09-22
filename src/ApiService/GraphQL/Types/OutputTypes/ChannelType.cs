@@ -26,7 +26,7 @@ public class ChannelType : ObjectGraphType<Channel>, INodeGraphType<Channel>
         Field<NonNullGraphType<FileType>>("avatar")
             .Description("The avatar of the channel.")
             .Resolve(context => context.Source.Avatar);
-        Field<NonNullGraphType<DateTimeGraphType>>("createdAt")
+        Field<NonNullGraphType<DateTimeGraphType>>("createdAtUTC")
             .Description("When the channel was created.")
             .Resolve(context => context.Source.CreatedAt);
         Field<UserType>("createdBy")

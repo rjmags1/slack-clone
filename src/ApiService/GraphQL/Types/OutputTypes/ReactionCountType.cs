@@ -1,6 +1,4 @@
 using GraphQL.Types;
-using SlackCloneGraphQL.Types.Connections;
-using SlackCloneGraphQL.Types;
 
 public class ReactionCountType : ObjectGraphType<ReactionCount>
 {
