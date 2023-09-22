@@ -427,7 +427,7 @@ public static class ModelToObjectConverters
             JoinedAt = dbMember.JoinedAt,
             LastViewedAt = dbMember.LastViewedAt,
             Starred = dbMember.Starred,
-            User = ConvertUser(dbMember.User)
+            UserId = dbMember.UserId
         };
     }
 

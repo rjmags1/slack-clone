@@ -497,14 +497,23 @@ public class WorkspaceStore : Store
             loadedStars = loadedStars.Take(first);
         }
 
-        string selectString = DynamicLinqUtils.NodeFieldToDynamicSelectString(
-            connectionTree
-        );
+        string channelSelectString =
+            DynamicLinqUtils.NodeFieldToDynamicSelectString(connectionTree);
+        string dmgSelectString =
+            DynamicLinqUtils.NodeFieldToDynamicSelectString(
+                connectionTree,
+                forceInclude: new List<string> { "members" },
+                skip: new List<string> { "name" },
+                map: new Dictionary<string, string>
+                {
+                    { "members", "directMessageGroupMembers" }
+                }
+            );
         var dynamicChannels = await starredChannels
-            .Select(selectString)
+            .Select(channelSelectString)
             .ToDynamicListAsync();
         var dynamicDirectMessageGroups = await starredDirectMessageGroups
-            .Select(selectString)
+            .Select(dmgSelectString)
             .ToDynamicListAsync();
 
         List<StarredInfo> starred = new();
