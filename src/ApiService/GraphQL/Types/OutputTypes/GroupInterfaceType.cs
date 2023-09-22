@@ -8,7 +8,7 @@ public class GroupInterfaceType : InterfaceGraphType<IGroup>
     public GroupInterfaceType()
     {
         Field<NonNullGraphType<IdGraphType>>("id");
-        Field<NonNullGraphType<DateTimeGraphType>>("createdAt");
+        Field<NonNullGraphType<DateTimeGraphType>>("createdAtUTC");
         Field<NonNullGraphType<WorkspaceType>>("workspace");
     }
 }

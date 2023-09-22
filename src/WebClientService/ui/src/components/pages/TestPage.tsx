@@ -82,45 +82,19 @@ function TestPage() {
                         cursor
                         node {
                             id
-                            messages(first: 3) {
-                                totalEdges
-                                pageInfo {
-                                    hasNextPage
-                                }
-                                edges {
-                                    node {
-                                        id
-                                        user {
-                                            id
-                                        }
-                                        content
-                                        createdAt
-                                        lastEdit
-                                        files {
-                                            storeKey
-                                        }
-                                        isReply
-                                        reactions {
-                                            id
-                                            count
-                                            emoji
-                                            userReactionId
-                                        }
-                                        replyTo {
-                                            id
-                                        }
-                                        sentAt
-                                        type
-                                    }
-                                }
-                            }
                         }
                     }
                 }
-                directMessageGroups(first: 1, filter: $directMessageGroupsFilter) {
+                directMessageGroups(first: 10, filter: $directMessageGroupsFilter) {
                     totalEdges
+                    edges {
+                        cursor
+                        node {
+                            id
+                        }
+                    }
                 }
-                starred(first: 1, filter: $starredFilter) {
+                starred(first: 10, filter: $starredFilter) {
                     totalEdges
                     pageInfo {
                         hasNextPage
@@ -129,16 +103,13 @@ function TestPage() {
                         node {
                             id
                             createdAt
-                            workspace {
-                                id
-                            }
                         }
                     }
                 }
             }
         }`
-        const userId = '28cc4c1f-34b4-419b-abb6-a71f11cae350'
-        const workspaceId = '02174c99-03cf-4eb7-8990-905ffbe6d200'
+        const userId = 'aea5a17c-b73e-43a5-be7b-8352a2adce5d'
+        const workspaceId = '2286c703-e564-4cd2-9df1-25924abb9900'
         const variables = {
             userId,
             workspaceId,

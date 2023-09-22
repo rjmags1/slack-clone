@@ -348,6 +348,10 @@ public static class FieldAnalyzer
                 }
 
                 string fieldName = fieldSlice[i..k];
+                if (fieldName.EndsWith("UTC"))
+                {
+                    fieldName = fieldName[..(fieldName.Length - 3)];
+                }
                 subFieldNames.Add(fieldName);
                 FieldTree field = new(fieldName);
                 root.Children.Add(field);

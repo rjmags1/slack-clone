@@ -17,7 +17,7 @@ public class DirectMessageGroupType
         Field<NonNullGraphType<IdGraphType>>("id")
             .Description("The UUID of the direct message group")
             .Resolve(context => context.Source.Id);
-        Field<NonNullGraphType<DateTimeGraphType>>("createdAt")
+        Field<NonNullGraphType<DateTimeGraphType>>("createdAtUTC")
             .Description("When the direct message group was created")
             .Resolve(context => context.Source.CreatedAt);
         Field<

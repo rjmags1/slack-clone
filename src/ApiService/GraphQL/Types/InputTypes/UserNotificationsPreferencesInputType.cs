@@ -15,9 +15,9 @@ public class UserNotificationsPreferencesInputType
         Field<BooleanGraphType>("replies");
         Field<BooleanGraphType>("threadWatch");
         Field<IdGraphType>("notifSound");
-        Field<DateTimeGraphType>("allowAlertsStartTime");
-        Field<DateTimeGraphType>("allowAlertsEndTime");
-        Field<DateTimeGraphType>("pauseAlertsUntil");
+        Field<DateTimeGraphType>("allowAlertsStartTimeUTC");
+        Field<DateTimeGraphType>("allowAlertsEndTimeUTC");
+        Field<DateTimeGraphType>("pauseAlertsUntilUTC");
     }
 }
 
