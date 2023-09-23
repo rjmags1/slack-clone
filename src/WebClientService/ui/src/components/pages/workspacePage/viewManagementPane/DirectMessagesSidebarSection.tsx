@@ -1,9 +1,16 @@
 import { useState } from 'react'
 import Button from '../../../lib/Button'
 import WorkspaceSidebarDirectMessagesList from './WorkspaceSidebarDirectMessagesList'
+import { WorkspacePageSidebarDirectMessageGroupsFragment$key } from '../../../../relay/fragments/__generated__/WorkspacePageSidebarDirectMessageGroupsFragment.graphql'
 
-function DirectMessagesSidebarSection() {
-    const [expand, setExpand] = useState(false)
+type DirectMessageGroupsSidebarSectionProps = {
+    directMessageGroups: WorkspacePageSidebarDirectMessageGroupsFragment$key
+}
+
+function DirectMessagesSidebarSection({
+    directMessageGroups,
+}: DirectMessageGroupsSidebarSectionProps) {
+    const [expand, setExpand] = useState(true)
 
     const open = () => {
         // TODO
@@ -30,7 +37,11 @@ function DirectMessagesSidebarSection() {
                     + New DM
                 </Button>
             </div>
-            {expand && <WorkspaceSidebarDirectMessagesList />}
+            {expand && (
+                <WorkspaceSidebarDirectMessagesList
+                    groups={directMessageGroups}
+                />
+            )}
         </div>
     )
 }

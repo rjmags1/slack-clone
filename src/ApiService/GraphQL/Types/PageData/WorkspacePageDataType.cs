@@ -43,7 +43,7 @@ public class WorkspacePageDataType : ObjectGraphType<WorkspacePageData>
                 return await data.GetWorkspace(workspaceId);
             });
         Field<NonNullGraphType<ChannelsConnectionType>>("channels")
-            .Argument<NonNullGraphType<ChannelsFilterInputType>>("filter")
+            .Argument<ChannelsFilterInputType>("filter")
             .Argument<NonNullGraphType<IntGraphType>>("first")
             .Argument<IdGraphType>("after")
             .ResolveAsync(async context =>
@@ -51,7 +51,19 @@ public class WorkspacePageDataType : ObjectGraphType<WorkspacePageData>
                 var first = context.GetArgument<int>("first");
                 var after = context.GetArgument<Guid?>("after");
                 ChannelsFilter channelsFilter =
-                    context.GetArgument<ChannelsFilter>("filter");
+                    context.GetArgument<ChannelsFilter>("filter")
+                    ?? new ChannelsFilter
+                    {
+                        UserId = GraphQLUtils.GetSubClaim(
+                            (context.UserContext as GraphQLUserContext)!
+                        ),
+                        WorkspaceId = Guid.Parse(
+                            (string)
+                                context.Variables
+                                    .First(v => v.Name == "workspaceId")
+                                    .Value!
+                        )
+                    };
                 var fragments = (
                     context.UserContext["fragments"]
                     as Dictionary<string, string>
@@ -74,9 +86,7 @@ public class WorkspacePageDataType : ObjectGraphType<WorkspacePageData>
         Field<NonNullGraphType<DirectMessageGroupsConnectionType>>(
                 "directMessageGroups"
             )
-            .Argument<NonNullGraphType<DirectMessageGroupsFilterInputType>>(
-                "filter"
-            )
+            .Argument<DirectMessageGroupsFilterInputType>("filter")
             .Argument<NonNullGraphType<IntGraphType>>("first")
             .Argument<IdGraphType>("after")
             .ResolveAsync(async context =>
@@ -84,7 +94,19 @@ public class WorkspacePageDataType : ObjectGraphType<WorkspacePageData>
                 var first = context.GetArgument<int>("first");
                 var after = context.GetArgument<Guid?>("after");
                 DirectMessageGroupsFilter directMessageGroupsFilter =
-                    context.GetArgument<DirectMessageGroupsFilter>("filter");
+                    context.GetArgument<DirectMessageGroupsFilter>("filter")
+                    ?? new DirectMessageGroupsFilter
+                    {
+                        UserId = GraphQLUtils.GetSubClaim(
+                            (context.UserContext as GraphQLUserContext)!
+                        ),
+                        WorkspaceId = Guid.Parse(
+                            (string)
+                                context.Variables
+                                    .First(v => v.Name == "workspaceId")
+                                    .Value!
+                        )
+                    };
 
                 var fragments = (
                     context.UserContext["fragments"]
@@ -104,7 +126,7 @@ public class WorkspacePageDataType : ObjectGraphType<WorkspacePageData>
                 );
             });
         Field<NonNullGraphType<StarredConnectionType>>("starred")
-            .Argument<NonNullGraphType<StarredFilterInputType>>("filter")
+            .Argument<StarredFilterInputType>("filter")
             .Argument<NonNullGraphType<IntGraphType>>("first")
             .Argument<IdGraphType>("after")
             .ResolveAsync(async context =>
@@ -112,7 +134,19 @@ public class WorkspacePageDataType : ObjectGraphType<WorkspacePageData>
                 var first = context.GetArgument<int>("first");
                 var after = context.GetArgument<Guid?>("after");
                 StarredFilter starredFilter =
-                    context.GetArgument<StarredFilter>("filter");
+                    context.GetArgument<StarredFilter>("filter")
+                    ?? new StarredFilter
+                    {
+                        UserId = GraphQLUtils.GetSubClaim(
+                            (context.UserContext as GraphQLUserContext)!
+                        ),
+                        WorkspaceId = Guid.Parse(
+                            (string)
+                                context.Variables
+                                    .First(v => v.Name == "workspaceId")
+                                    .Value!
+                        )
+                    };
 
                 var fragments = (
                     context.UserContext["fragments"]
