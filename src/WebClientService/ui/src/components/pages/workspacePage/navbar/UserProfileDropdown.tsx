@@ -5,8 +5,11 @@ import PreferencesOption from './PreferencesOption'
 import ProfileOption from './ProfileOption'
 import SignoutOption from './SignoutOption'
 import UpdateUserStatusOption from './UpdateUserStatusOption'
+import { UserProfileBtnFragment$data } from '../../../../relay/fragments/__generated__/UserProfileBtnFragment.graphql'
+import UserBanner from './UserBanner'
 
 type UserProfileDropdownProps = {
+    user: UserProfileBtnFragment$data
     close: () => void
     renderStatusModal: () => void
     userStatusTriggerProps: AriaButtonProps<'button'>
@@ -20,6 +23,7 @@ function UserProfileDropdown({
     userStatusTriggerProps,
     renderPauseNotifsModal,
     pauseNotifsTriggerProps,
+    user,
 }: UserProfileDropdownProps) {
     return (
         <Dropdown
@@ -28,6 +32,7 @@ function UserProfileDropdown({
                 rounded-md bg-sky-950 shadow-2xl outline-none"
             selectedClassName="bg-sky-900"
             items={[
+                <UserBanner user={user} />,
                 <UpdateUserStatusOption
                     onClick={renderStatusModal}
                     triggerProps={userStatusTriggerProps}

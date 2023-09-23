@@ -29,7 +29,7 @@ function WorkspacePage() {
     console.log(data)
     return (
         <div className="h-full w-full">
-            <WorkspacePageNavbar />
+            <WorkspacePageNavbar data={data} />
             <div className="flex h-[calc(100%_-_2.5rem)] w-full bg-zinc-800">
                 <WorkspacePageViewManagementPane />
                 <WorkspacePageViewPane />

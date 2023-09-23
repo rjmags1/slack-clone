@@ -4,6 +4,8 @@ type AvatarProps = {
     className?: string
 }
 
+export const DEFAULT_AVATAR_NAME = 'DEFAULT_AVATAR'
+
 function Avatar({ src, alt, className }: AvatarProps) {
     return (
         <img

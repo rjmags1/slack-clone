@@ -1,7 +1,12 @@
+import { WorkspacePageQuery$data } from '../../../../relay/queries/__generated__/WorkspacePageQuery.graphql'
 import UserProfileBtn from './UserProfileBtn'
 import WorkspaceSearchBar from './WorkspaceSearchBar'
 
-function WorkspacePageNavbar() {
+type WorkspacePageNavbarProps = {
+    data: WorkspacePageQuery$data
+}
+
+function WorkspacePageNavbar({ data }: WorkspacePageNavbarProps) {
     return (
         <nav
             className="sticky top-0 flex h-10 w-full items-center 
@@ -9,6 +14,7 @@ function WorkspacePageNavbar() {
         >
             <WorkspaceSearchBar />
             <UserProfileBtn
+                user={data.workspacePageData!.user!}
                 className="absolute right-0 mr-8 
                     rounded-full outline-none"
             />

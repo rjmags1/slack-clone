@@ -10,6 +10,9 @@ const WorkspacePageDataQuery = graphql`
     ) {
         workspacePageData(userId: $userId) {
             id
+            user(id: $userId) {
+                ...UserProfileBtnFragment
+            }
             workspace(id: $workspaceId) {
                 id
                 name

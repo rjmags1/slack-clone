@@ -6,12 +6,16 @@ import UpdateUserStatusModal from './UpdateUserStatusModal'
 import { useOverlayTriggerState } from 'react-stately'
 import { useOverlayTrigger } from 'react-aria'
 import PauseNotificationsModal from './PauseNotificationsModal'
+import { useFragment } from 'react-relay'
+import UserProfileBtnFragment from '../../../../relay/fragments/UserProfileBtn'
+import type { UserProfileBtnFragment$key } from '../../../../relay/fragments/__generated__/UserProfileBtnFragment.graphql'
 
 type UserProfileBtnProps = {
     className?: string
+    user: UserProfileBtnFragment$key
 }
 
-function UserProfileBtn({ className, ...props }: UserProfileBtnProps) {
+function UserProfileBtn({ className, user, ...props }: UserProfileBtnProps) {
     const [renderDropdown, setRenderDropdown] = useState(false)
     const userStatusModalState = useOverlayTriggerState(props)
     const pauseNotifsModalState = useOverlayTriggerState(props)
@@ -23,6 +27,7 @@ function UserProfileBtn({ className, ...props }: UserProfileBtnProps) {
         triggerProps: pauseNotifsModalTriggerProps,
         overlayProps: pauseNotifsModalOverlayProps,
     } = useOverlayTrigger({ type: 'dialog' }, pauseNotifsModalState)
+    const data = useFragment(UserProfileBtnFragment, user)
 
     return (
         <>
@@ -38,6 +43,7 @@ function UserProfileBtn({ className, ...props }: UserProfileBtnProps) {
                 />
                 {renderDropdown && (
                     <UserProfileDropdown
+                        user={data}
                         close={() => setRenderDropdown(false)}
                         renderStatusModal={() =>
                             userStatusModalState.setOpen(true)
