@@ -1,9 +1,14 @@
 import { useState } from 'react'
 import Button from '../../../lib/Button'
 import WorkspaceSidebarStarredList from './WorkspaceSidebarStarredList'
+import { WorkspacePageSidebarStarredsFragment$key } from '../../../../relay/fragments/__generated__/WorkspacePageSidebarStarredsFragment.graphql'
 
-function StarredSidebarSection() {
-    const [expand, setExpand] = useState(false)
+type StarredSidebarSectionProps = {
+    starred: WorkspacePageSidebarStarredsFragment$key
+}
+
+function StarredSidebarSection({ starred }: StarredSidebarSectionProps) {
+    const [expand, setExpand] = useState(true)
 
     const open = () => {
         // TODO
@@ -23,7 +28,7 @@ function StarredSidebarSection() {
                     {`${expand ? '⌃' : '⌄'} Starred`}
                 </Button>
             </div>
-            {expand && <WorkspaceSidebarStarredList />}
+            {expand && <WorkspaceSidebarStarredList starred={starred} />}
         </div>
     )
 }

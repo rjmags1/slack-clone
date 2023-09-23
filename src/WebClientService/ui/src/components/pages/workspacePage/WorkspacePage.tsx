@@ -12,21 +12,14 @@ function WorkspacePage() {
     const claims = useContext(SessionContext)!
     const sub = getSubClaim(claims)
     const { workspaceId } = useParams() as { workspaceId: string }
-    const filter = {
-        userId: sub,
-        workspaceId,
-    }
     const data = useLazyLoadQuery<WorkspacePageQueryType>(
         WorkspacePageDataQuery,
         {
             userId: sub,
             workspaceId,
-            channelsFilter: filter,
-            directMessageGroupsFilter: filter,
-            starredFilter: filter,
         }
     )
-    console.log(data)
+
     return (
         <div className="h-full w-full">
             <WorkspacePageNavbar data={data} />

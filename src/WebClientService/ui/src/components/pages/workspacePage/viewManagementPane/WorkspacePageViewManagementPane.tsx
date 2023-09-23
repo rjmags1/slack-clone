@@ -59,9 +59,13 @@ function WorkspacePageViewManagementPane({
                 />
                 <MessageTypesInteractionsSidebar />
                 <div className="flex h-full w-full grow flex-col overflow-hidden">
-                    <ChannelsSidebarSection />
-                    <DirectMessagesSidebarSection />
-                    <StarredSidebarSection />
+                    <ChannelsSidebarSection
+                        channels={data.workspacePageData!}
+                    />
+                    <DirectMessagesSidebarSection
+                        directMessageGroups={data.workspacePageData!}
+                    />
+                    <StarredSidebarSection starred={data.workspacePageData!} />
                 </div>
             </div>
             <div

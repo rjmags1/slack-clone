@@ -1,8 +1,13 @@
 import { useState } from 'react'
 import Button from '../../../lib/Button'
 import WorkspaceSidebarChannelsList from './WorkspaceSidebarChannelsList'
+import { WorkspacePageSidebarChannelsFragment$key } from '../../../../relay/fragments/__generated__/WorkspacePageSidebarChannelsFragment.graphql'
 
-function ChannelsSidebarSection() {
+type ChannelsSidebarSectionProps = {
+    channels: WorkspacePageSidebarChannelsFragment$key
+}
+
+function ChannelsSidebarSection({ channels }: ChannelsSidebarSectionProps) {
     const [expand, setExpand] = useState(true)
 
     const open = () => {
@@ -33,7 +38,7 @@ function ChannelsSidebarSection() {
                     + New channel
                 </Button>
             </div>
-            {expand && <WorkspaceSidebarChannelsList />}
+            {expand && <WorkspaceSidebarChannelsList channels={channels} />}
         </div>
     )
 }
