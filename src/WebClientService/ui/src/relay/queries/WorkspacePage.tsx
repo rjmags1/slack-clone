@@ -14,8 +14,7 @@ const WorkspacePageDataQuery = graphql`
                 ...UserProfileBtnFragment
             }
             workspace(id: $workspaceId) {
-                id
-                name
+                ...WorkspacePageSidebarHeaderFragment
             }
             channels(first: 10, filter: $channelsFilter) {
                 totalEdges

@@ -5,12 +5,19 @@ import { useMove } from 'react-aria'
 import ChannelsSidebarSection from './ChannelsSidebarSection'
 import DirectMessagesSidebarSection from './DirectMessagesSidebarSection'
 import StarredSidebarSection from './StarredSidebarSection'
+import { WorkspacePageQuery$data } from '../../../../relay/queries/__generated__/WorkspacePageQuery.graphql'
 
 const bodySize = () => document.body.getBoundingClientRect().width
 
 const MAX_WIDTH_RATIO = 0.35
 
-function WorkspacePageViewManagementPane() {
+type WorkspacePageViewManagementPaneProps = {
+    data: WorkspacePageQuery$data
+}
+
+function WorkspacePageViewManagementPane({
+    data,
+}: WorkspacePageViewManagementPaneProps) {
     const [separatorX, setSeparatorX] = useState<number>()
     const { moveProps } = useMove({
         onMove: (e) => {
@@ -47,7 +54,9 @@ function WorkspacePageViewManagementPane() {
             style={{ width: separatorX }}
         >
             <div className="flex h-full w-max grow flex-col justify-start">
-                <WorkspacePageViewManagementPaneHeader />
+                <WorkspacePageViewManagementPaneHeader
+                    workspace={data.workspacePageData!.workspace}
+                />
                 <MessageTypesInteractionsSidebar />
                 <div className="flex h-full w-full grow flex-col overflow-hidden">
                     <ChannelsSidebarSection />
