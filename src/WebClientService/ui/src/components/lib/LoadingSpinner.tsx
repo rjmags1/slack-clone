@@ -4,7 +4,11 @@ type LoadingSpinnerProps = {
 
 function LoadingSpinner({ className }: LoadingSpinnerProps) {
     return (
-        <div className={className}>
+        <div
+            className={
+                className || 'flex h-full w-full items-center justify-center'
+            }
+        >
             <div className="lds-ring">
                 <div></div>
                 <div></div>

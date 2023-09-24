@@ -5,6 +5,8 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import SessionProvider from './session/SessionProvider'
 import AuthGuard from './session/AuthGuard'
 import WorkspacePage from './pages/workspacePage/WorkspacePage'
+import { Suspense } from 'react'
+import LoadingSpinner from './lib/LoadingSpinner'
 
 const router = createBrowserRouter([
     {
@@ -42,7 +44,9 @@ function App() {
         <div id="App" className="h-screen w-screen bg-zinc-700">
             <RelayEnvironment>
                 <SessionProvider>
-                    <RouterProvider router={router} />
+                    <Suspense fallback={<LoadingSpinner />}>
+                        <RouterProvider router={router} />
+                    </Suspense>
                 </SessionProvider>
             </RelayEnvironment>
         </div>
