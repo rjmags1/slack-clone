@@ -318,6 +318,10 @@ public static class FieldAnalyzer
             else if (c == '.')
             {
                 int stop = fieldSlice.IndexOf("Fragment", i) + 8;
+                if (stop < fieldSlice.Length && fieldSlice[stop] == '_')
+                {
+                    stop += 7;
+                }
                 string fragmentName = fieldSlice.Substring(
                     i + 3,
                     stop - (i + 3)
