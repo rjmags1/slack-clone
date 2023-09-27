@@ -4,9 +4,9 @@ const WorkspacePageSidebarChannelsFragment = graphql`
     fragment WorkspacePageSidebarChannelsFragment on WorkspacePageData
     @refetchable(queryName: "ChannelsListPaginationQuery")
     @argumentDefinitions(
-        first: { type: "Int", defaultValue: 10 }
+        first: { type: "Int", defaultValue: 35 }
         after: { type: "ID" }
-        filter: { type: "ChannelsFilter" }
+        filter: { type: "ChannelsFilter!" }
     ) {
         channels(filter: $filter, first: $first, after: $after)
             @connection(key: "WorkspacePageSidebarChannelsFragment_channels") {

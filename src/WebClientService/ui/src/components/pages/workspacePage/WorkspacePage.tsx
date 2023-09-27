@@ -12,11 +12,13 @@ function WorkspacePage() {
     const claims = useContext(SessionContext)!
     const sub = getSubClaim(claims)
     const { workspaceId } = useParams() as { workspaceId: string }
+    const baseFilter = { workspaceId, userId: sub }
     const data = useLazyLoadQuery<WorkspacePageQueryType>(
         WorkspacePageDataQuery,
         {
             userId: sub,
             workspaceId,
+            channelsFilter: baseFilter,
         }
     )
 

@@ -80,7 +80,12 @@ public class SlackCloneQuery : ObjectGraphType<object>
 
                     return new WorkspacesPageData { Id = id };
                 }
-
+                else if (queryName == "ChannelsListPaginationQuery")
+                {
+                    var fragments = FieldAnalyzer.GetFragments(query);
+                    context.UserContext.Add("fragments", fragments);
+                    return new WorkspacePageData { Id = id };
+                }
                 return null;
             });
     }

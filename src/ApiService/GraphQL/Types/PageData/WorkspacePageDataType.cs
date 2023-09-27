@@ -43,7 +43,7 @@ public class WorkspacePageDataType : ObjectGraphType<WorkspacePageData>
                 return await data.GetWorkspace(workspaceId);
             });
         Field<NonNullGraphType<ChannelsConnectionType>>("channels")
-            .Argument<ChannelsFilterInputType>("filter")
+            .Argument<NonNullGraphType<ChannelsFilterInputType>>("filter")
             .Argument<NonNullGraphType<IntGraphType>>("first")
             .Argument<IdGraphType>("after")
             .ResolveAsync(async context =>
@@ -51,19 +51,7 @@ public class WorkspacePageDataType : ObjectGraphType<WorkspacePageData>
                 var first = context.GetArgument<int>("first");
                 var after = context.GetArgument<Guid?>("after");
                 ChannelsFilter channelsFilter =
-                    context.GetArgument<ChannelsFilter>("filter")
-                    ?? new ChannelsFilter
-                    {
-                        UserId = GraphQLUtils.GetSubClaim(
-                            (context.UserContext as GraphQLUserContext)!
-                        ),
-                        WorkspaceId = Guid.Parse(
-                            (string)
-                                context.Variables
-                                    .First(v => v.Name == "workspaceId")
-                                    .Value!
-                        )
-                    };
+                    context.GetArgument<ChannelsFilter>("filter");
                 var fragments = (
                     context.UserContext["fragments"]
                     as Dictionary<string, string>
