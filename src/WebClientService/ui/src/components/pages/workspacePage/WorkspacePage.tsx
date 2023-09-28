@@ -19,6 +19,7 @@ function WorkspacePage() {
             userId: sub,
             workspaceId,
             channelsFilter: baseFilter,
+            directMessageGroupsFilter: baseFilter,
         }
     )
 

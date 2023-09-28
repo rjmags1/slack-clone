@@ -6,7 +6,7 @@ const WorkspacePageSidebarDirectMessageGroupsFragment = graphql`
     @argumentDefinitions(
         first: { type: "Int", defaultValue: 10 }
         after: { type: "ID" }
-        filter: { type: "DirectMessageGroupsFilter" }
+        filter: { type: "DirectMessageGroupsFilter!" }
     ) {
         directMessageGroups(first: $first, after: $after, filter: $filter)
             @connection(
