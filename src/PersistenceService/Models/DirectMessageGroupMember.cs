@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json.Serialization;
 
 namespace PersistenceService.Models;
 
@@ -9,6 +10,7 @@ public class DirectMessageGroupMember
     public Guid Id { get; set; }
 
 #pragma warning disable CS8618
+    [JsonIgnore]
     [DeleteBehavior(DeleteBehavior.Cascade)]
     public DirectMessageGroup DirectMessageGroup { get; set; }
 #pragma warning restore CS8618

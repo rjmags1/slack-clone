@@ -4,7 +4,7 @@ const WorkspacePageSidebarDirectMessageGroupsFragment = graphql`
     fragment WorkspacePageSidebarDirectMessageGroupsFragment on WorkspacePageData
     @refetchable(queryName: "DirectMessageGroupsListPaginationQuery")
     @argumentDefinitions(
-        first: { type: "Int", defaultValue: 10 }
+        first: { type: "Int", defaultValue: 35 }
         after: { type: "ID" }
         filter: { type: "DirectMessageGroupsFilter!" }
     ) {

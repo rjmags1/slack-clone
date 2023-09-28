@@ -6,6 +6,7 @@ const WorkspacePageDataQuery = graphql`
         $workspaceId: ID!
         $channelsFilter: ChannelsFilter!
         $directMessageGroupsFilter: DirectMessageGroupsFilter!
+        $starredFilter: StarredFilter!
     ) {
         workspacePageData(userId: $userId) {
             id
@@ -20,6 +21,7 @@ const WorkspacePageDataQuery = graphql`
             ...WorkspacePageSidebarDirectMessageGroupsFragment
                 @arguments(filter: $directMessageGroupsFilter)
             ...WorkspacePageSidebarStarredsFragment
+                @arguments(filter: $starredFilter)
         }
     }
 `

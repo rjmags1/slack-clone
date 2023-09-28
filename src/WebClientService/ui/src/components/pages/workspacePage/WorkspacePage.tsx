@@ -20,6 +20,7 @@ function WorkspacePage() {
             workspaceId,
             channelsFilter: baseFilter,
             directMessageGroupsFilter: baseFilter,
+            starredFilter: baseFilter,
         }
     )
 

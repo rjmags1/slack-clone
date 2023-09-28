@@ -92,6 +92,12 @@ public class SlackCloneQuery : ObjectGraphType<object>
                     context.UserContext.Add("fragments", fragments);
                     return new WorkspacePageData { Id = id };
                 }
+                else if (queryName == "StarredsListPaginationQuery")
+                {
+                    var fragments = FieldAnalyzer.GetFragments(query);
+                    context.UserContext.Add("fragments", fragments);
+                    return new WorkspacePageData { Id = id };
+                }
                 return null;
             });
     }

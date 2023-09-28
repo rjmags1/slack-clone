@@ -103,7 +103,7 @@ public class WorkspacePageDataType : ObjectGraphType<WorkspacePageData>
                 );
             });
         Field<NonNullGraphType<StarredConnectionType>>("starred")
-            .Argument<StarredFilterInputType>("filter")
+            .Argument<NonNullGraphType<StarredFilterInputType>>("filter")
             .Argument<NonNullGraphType<IntGraphType>>("first")
             .Argument<IdGraphType>("after")
             .ResolveAsync(async context =>
@@ -111,20 +111,7 @@ public class WorkspacePageDataType : ObjectGraphType<WorkspacePageData>
                 var first = context.GetArgument<int>("first");
                 var after = context.GetArgument<Guid?>("after");
                 StarredFilter starredFilter =
-                    context.GetArgument<StarredFilter>("filter")
-                    ?? new StarredFilter
-                    {
-                        UserId = GraphQLUtils.GetSubClaim(
-                            (context.UserContext as GraphQLUserContext)!
-                        ),
-                        WorkspaceId = Guid.Parse(
-                            (string)
-                                context.Variables
-                                    .First(v => v.Name == "workspaceId")
-                                    .Value!
-                        )
-                    };
-
+                    context.GetArgument<StarredFilter>("filter");
                 var fragments = (
                     context.UserContext["fragments"]
                     as Dictionary<string, string>
