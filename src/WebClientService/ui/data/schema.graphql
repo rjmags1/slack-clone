@@ -284,8 +284,8 @@ type WorkspacePageData implements Node {
     user(id: ID!): User!
     workspace(id: ID!): Workspace!
     channels(filter: ChannelsFilter!, first: Int!, after: ID): ChannelsConnection!
-    directMessageGroups(filter: DirectMessageGroupsFilter, first: Int!, after: ID): DirectMessageGroupsConnection!
-    starred(filter: StarredFilter, first: Int!, after: ID): StarredConnection!
+    directMessageGroups(filter: DirectMessageGroupsFilter!, first: Int!, after: ID): DirectMessageGroupsConnection!
+    starred(filter: StarredFilter!, first: Int!, after: ID): StarredConnection!
 }
 
 type WorkspacesConnection {

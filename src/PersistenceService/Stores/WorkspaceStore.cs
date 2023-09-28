@@ -474,60 +474,64 @@ public class WorkspaceStore : Store
     {
         IQueryable<Star> stars = _context.Stars
             .Where(s => s.UserId == userId && s.WorkspaceId == workspaceId)
-            .OrderBy(s => s.CreatedAt);
+            .OrderByDescending(s => s.CreatedAt);
         if (!(after is null))
         {
             DateTime afterStarredAt = stars
-                .Where(s => s.Id == after)
+                .Where(
+                    s => s.ChannelId == after || s.DirectMessageGroupId == after
+                )
                 .Select(s => s.CreatedAt)
                 .First();
-            stars = stars.Where(s => s.CreatedAt > afterStarredAt);
-        }
-        IQueryable<Star> loadedStars = stars.Take(first + 1);
-        IQueryable<Channel> starredChannels = loadedStars
-            .Where(s => s.Channel != null)
-            .Select(s => s.Channel!);
-        IQueryable<DirectMessageGroup> starredDirectMessageGroups = loadedStars
-            .Where(s => s.DirectMessageGroup != null)
-            .Select(s => s.DirectMessageGroup!);
-        var rows = await loadedStars.CountAsync();
-        bool lastPage = rows <= first;
-        if (!lastPage)
-        {
-            loadedStars = loadedStars.Take(first);
-        }
-
-        string channelSelectString =
-            DynamicLinqUtils.NodeFieldToDynamicSelectString(connectionTree);
-        string dmgSelectString =
-            DynamicLinqUtils.NodeFieldToDynamicSelectString(
-                connectionTree,
-                forceInclude: new List<string> { "members" },
-                skip: new List<string> { "name" },
-                map: new Dictionary<string, string>
-                {
-                    { "members", "directMessageGroupMembers" }
-                }
+            stars = stars.Where(
+                s =>
+                    s.CreatedAt <= afterStarredAt
+                    && s.ChannelId != after
+                    && s.DirectMessageGroupId != after
             );
-        var dynamicChannels = await starredChannels
-            .Select(channelSelectString)
-            .ToDynamicListAsync();
-        var dynamicDirectMessageGroups = await starredDirectMessageGroups
-            .Select(dmgSelectString)
-            .ToDynamicListAsync();
+        }
+        var starredRows = await stars
+            .Take(first + 1)
+            .Include(s => s.DirectMessageGroup)
+            .ThenInclude(dmg => dmg.DirectMessageGroupMembers)
+            .Select(
+                s =>
+                    new
+                    {
+                        s.Id,
+                        s.CreatedAt,
+                        s.Channel,
+                        s.DirectMessageGroup
+                    }
+            )
+            .ToListAsync();
 
         List<StarredInfo> starred = new();
-        foreach (var dbc in starredChannels)
+        foreach (var row in starredRows)
         {
-            starred.Add(new StarredInfo { Type = CHANNEL, Starred = dbc });
-        }
-        foreach (var dbg in starredDirectMessageGroups)
-        {
-            starred.Add(
-                new StarredInfo { Type = DIRECT_MESSAGE_GROUP, Starred = dbg }
-            );
+            if (row.Channel is not null)
+            {
+                starred.Add(
+                    new StarredInfo { Type = CHANNEL, Starred = row.Channel }
+                );
+            }
+            else
+            {
+                starred.Add(
+                    new StarredInfo
+                    {
+                        Type = DIRECT_MESSAGE_GROUP,
+                        Starred = row.DirectMessageGroup
+                    }
+                );
+            }
         }
 
+        bool lastPage = starred.Count <= first;
+        if (!lastPage)
+        {
+            starred.RemoveAt(starred.Count - 1);
+        }
         return (starred, lastPage);
     }
 }

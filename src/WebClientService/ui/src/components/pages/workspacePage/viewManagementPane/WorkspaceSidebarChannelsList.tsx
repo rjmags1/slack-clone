@@ -4,7 +4,7 @@ import WorkspaceSidebarChannelListing from './WorkspaceSidebarChannelListing'
 import { WorkspacePageSidebarChannelsFragment$key } from '../../../../relay/fragments/__generated__/WorkspacePageSidebarChannelsFragment.graphql'
 import WorkspacePageSidebarChannelsFragment from '../../../../relay/fragments/WorkspacePageSidebarChannels'
 import { usePaginationFragment } from 'react-relay'
-import Button from '../../../lib/Button'
+import SidebarLoadMoreBtn from './SidebarLoadMoreBtn'
 
 type WorkspaceSidebarChannelsListProps = {
     channels: WorkspacePageSidebarChannelsFragment$key
@@ -35,13 +35,7 @@ function WorkspaceSidebarChannelsList({
                 )}
             </ListBox>
             {!isLoadingNext && hasNext && (
-                <Button
-                    className="mt-1 w-full rounded-md bg-sky-800 py-1 
-                        text-xs hover:bg-sky-950"
-                    onClick={() => loadNext(35)}
-                >
-                    Load more
-                </Button>
+                <SidebarLoadMoreBtn loadMore={() => loadNext(35)} />
             )}
         </div>
     )

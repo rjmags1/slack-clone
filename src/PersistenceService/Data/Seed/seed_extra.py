@@ -2,6 +2,7 @@ import random
 import string
 from sqlalchemy import Connection, create_engine
 from sqlalchemy.sql import text
+from time import sleep
 
 DEV_USER_ID = 'aea5a17c-b73e-43a5-be7b-8352a2adce5d'
 DEV_OTHER_USER_IN_WORKSPACE_ID = '7e6756cb-d233-4560-bbd4-43c6b25ad675'
@@ -68,6 +69,38 @@ def insert_direct_message_groups(conn: Connection, num_groups):
         conn.execute(text('UPDATE "DirectMessageGroups" SET "Size" = 2 WHERE "Id" = :id'), { "id": id })
     conn.commit()
 
+def insert_stars(conn: Connection, num_stars):
+    # get dev users channel and dmg memberships in the workspace
+    # for every other unstarred membership:
+        # star it by:
+            # updating the membership starred column
+            # creating a new Star row
+    statement = text('SELECT "ChannelId" FROM "ChannelMembers" WHERE "WorkspaceId" = :workspaceId AND "UserId" = :userId')
+    params = { "workspaceId": DEV_WORKSPACE_ID, "userId": DEV_USER_ID}
+    rows = conn.execute(statement, params)
+    channel_ids = list(str(row[0]) for row in rows)
+    statement = text('SELECT "DirectMessageGroupId" FROM "DirectMessageGroupMembers" WHERE "WorkspaceId" = :workspaceId AND "UserId" = :userId')
+    rows = conn.execute(statement, params)
+    dm_group_ids = list(str(row[0]) for row in rows)
+    for i in range(min(len(channel_ids) + len(dm_group_ids), num_stars)):
+        id = None
+        channel = False
+        if i & 1 or i // 2 >= len(channel_ids):
+            id = dm_group_ids[i // 2]
+        else:
+            id = channel_ids[i // 2]
+            channel = True
+        s = 'UPDATE ' + ('"ChannelMembers"' if channel else '"DirectMessageGroupMembers"') + ' SET "Starred" = TRUE WHERE "WorkspaceId" = :workspaceId AND "UserId" = :userId'
+        statement = text(s)
+        conn.execute(statement, params)
+        s = 'INSERT INTO "Stars" ("UserId", ' + ('"ChannelId",' if channel else '"DirectMessageGroupId",') + ' "WorkspaceId") VALUES (:userId, :id, :workspaceId)'
+        statement = text(s)
+        conn.execute(statement, { **params, "id": id })
+        conn.commit()
+        sleep(1)
+        
+
 with engine.connect() as conn:
-    insert_channels(conn, 20)
-    insert_direct_message_groups(conn, 20)
+    # insert_channels(conn, 20)
+    # insert_direct_message_groups(conn, 20)
+    insert_stars(conn, 50)

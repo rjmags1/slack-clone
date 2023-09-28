@@ -400,18 +400,6 @@ public static class ModelToObjectConverters
                 .Select(dbMember => ConvertDirectMessageGroupMember(dbMember))
                 .ToList();
         }
-        if (
-            DynamicUtils.HasProperty(
-                expando,
-                nameof(DirectMessageGroup.Workspace)
-            )
-        )
-        {
-            var dbWorkspace = JsonSerializer.Deserialize<Models.Workspace>(
-                expando.Workspace
-            );
-            group.Workspace = ConvertWorkspace(dbWorkspace);
-        }
 
         return group;
     }
