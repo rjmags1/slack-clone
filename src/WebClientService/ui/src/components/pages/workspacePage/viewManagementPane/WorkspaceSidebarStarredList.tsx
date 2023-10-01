@@ -27,7 +27,10 @@ function WorkspaceSidebarStarredList({
             >
                 {(item) => (
                     <Item key={item.node.id}>
-                        <WorkspaceSidebarStarredListing starred={item.node} />
+                        <WorkspaceSidebarStarredListing
+                            starred={item.node}
+                            id={item.node.id}
+                        />
                     </Item>
                 )}
             </ListBox>

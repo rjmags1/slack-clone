@@ -1,6 +1,6 @@
 import ListBox from '../../../lib/Listbox'
 import { Item } from 'react-stately'
-import WorkspaceSidebarDirectMessagesListing from './WorkspacesSidebarDirectMessagesListing'
+import WorkspaceSidebarDirectMessagesListing from './WorkspaceSidebarDirectMessagesListing'
 import { WorkspacePageSidebarDirectMessageGroupsFragment$key } from '../../../../relay/fragments/__generated__/WorkspacePageSidebarDirectMessageGroupsFragment.graphql'
 import { usePaginationFragment } from 'react-relay'
 import WorkspacePageSidebarDirectMessageGroupsFragment from '../../../../relay/fragments/WorkspacePageSidebarDirectMessageGroups'
@@ -28,6 +28,7 @@ function WorkspaceSidebarDirectMessagesList({
                 {(item) => (
                     <Item key={item.node.id}>
                         <WorkspaceSidebarDirectMessagesListing
+                            id={item.node.id}
                             group={item.node}
                         />
                     </Item>

@@ -7,6 +7,7 @@ import AuthGuard from './session/AuthGuard'
 import WorkspacePage from './pages/workspacePage/WorkspacePage'
 import { Suspense } from 'react'
 import LoadingSpinner from './lib/LoadingSpinner'
+import { ViewPaneContent } from './pages/workspacePage/viewPane/WorkspacePageViewPane'
 
 const router = createBrowserRouter([
     {
@@ -30,6 +31,26 @@ const router = createBrowserRouter([
         element: (
             <AuthGuard>
                 <WorkspacePage />
+            </AuthGuard>
+        ),
+    },
+    {
+        path: '/workspace/:workspaceId/channel/:channelId',
+        element: (
+            <AuthGuard>
+                <WorkspacePage
+                    content={ViewPaneContent.ChannelViewPaneContent}
+                />
+            </AuthGuard>
+        ),
+    },
+    {
+        path: '/workspace/:workspaceId/dms/:directMessageGroupId',
+        element: (
+            <AuthGuard>
+                <WorkspacePage
+                    content={ViewPaneContent.DirectMessageGroupViewPaneContent}
+                />
             </AuthGuard>
         ),
     },
