@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json.Serialization;
 
 namespace PersistenceService.Models;
 
@@ -41,6 +42,7 @@ public class ChannelMessage
     public DateTime? LastEdit { get; set; }
 
     [DeleteBehavior(DeleteBehavior.SetNull)]
+    [JsonIgnore]
     public ChannelMessageLaterFlag? LaterFlag { get; set; }
 
     [ForeignKey(nameof(LaterFlag))]

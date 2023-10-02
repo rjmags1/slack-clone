@@ -30,7 +30,10 @@ function WorkspaceSidebarChannelsList({
             >
                 {(item) => (
                     <Item key={item.node.id}>
-                        <WorkspaceSidebarChannelListing channel={item.node} />
+                        <WorkspaceSidebarChannelListing
+                            channel={item.node}
+                            id={item.node.id}
+                        />
                     </Item>
                 )}
             </ListBox>

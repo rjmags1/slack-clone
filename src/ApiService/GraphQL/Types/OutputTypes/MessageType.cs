@@ -17,13 +17,13 @@ public class MessageType : ObjectGraphType<Message>, INodeGraphType<Message>
         Field<NonNullGraphType<StringGraphType>>("content")
             .Description("The content of the message")
             .Resolve(context => context.Source.Content);
-        Field<NonNullGraphType<DateTimeGraphType>>("createdAt")
+        Field<NonNullGraphType<DateTimeGraphType>>("createdAtUTC")
             .Description("When the message was created.")
             .Resolve(context => context.Source.CreatedAt);
         Field<NonNullGraphType<BooleanGraphType>>("draft")
             .Description("If the message is a draft or not")
             .Resolve(context => context.Source.Draft);
-        Field<DateTimeGraphType>("lastEdit")
+        Field<DateTimeGraphType>("lastEditUTC")
             .Description("When the message was last edited")
             .Resolve(context => context.Source.LastEdit);
         Field<ListGraphType<FileType>>("files")
@@ -57,7 +57,7 @@ public class MessageType : ObjectGraphType<Message>, INodeGraphType<Message>
         Field<IdGraphType>("replyToId")
             .Description("The message this message was a reply to, if any.")
             .Resolve(context => context.Source.ReplyToId);
-        Field<DateTimeGraphType>("sentAt")
+        Field<DateTimeGraphType>("sentAtUTC")
             .Description("When the message was sent.")
             .Resolve(context => context.Source.SentAt);
         Field<IdGraphType>("threadId")
