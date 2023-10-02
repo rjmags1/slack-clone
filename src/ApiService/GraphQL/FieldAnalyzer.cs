@@ -52,7 +52,7 @@ public static class FieldAnalyzer
         while (!done)
         {
             i += fragmentKeywordLength;
-            int fragmentNameStop = document.IndexOf("on", i) - 1;
+            int fragmentNameStop = document.IndexOf(" on ", i);
             string fragmentName = document[i..fragmentNameStop];
             int fragmentOpeningIdx = document.IndexOf('{', fragmentNameStop);
             k = GetMatchingClosingParenIdx(document, fragmentOpeningIdx);

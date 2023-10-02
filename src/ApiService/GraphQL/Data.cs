@@ -34,6 +34,19 @@ public class SlackCloneData
         return ModelToObjectConverters.ConvertUser(dbUser, requestedFields);
     }
 
+    public async Task<Channel> GetChannel(Guid channelId)
+    {
+        using var scope = Provider.CreateScope();
+        ChannelStore channelStore =
+            scope.ServiceProvider.GetRequiredService<ChannelStore>();
+        Models.Channel dbChannel = await channelStore.LoadChannel(channelId);
+
+        return ModelToObjectConverters.ConvertChannel(
+            dbChannel,
+            skipWorkspace: true
+        );
+    }
+
     public async Task<Connection<Message>> GetChannelMessages(
         Guid userId,
         Guid channelId,
@@ -43,10 +56,7 @@ public class SlackCloneData
         Guid? after
     )
     {
-        if (filter is not null)
-        {
-            throw new NotImplementedException();
-        }
+        // TODO: add filtering capabilities
 
         using var scope = Provider.CreateScope();
         ChannelStore channelStore =

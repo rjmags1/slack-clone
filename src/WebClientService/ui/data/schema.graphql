@@ -8,6 +8,7 @@ type Query {
     validUserEmail(
         email: String!
     ): ValidationResult
+    viewChannel(userId: ID!, channelId: ID!): Channel
     node(id: ID!): Node
 }
 
@@ -23,7 +24,7 @@ type Mutation {
 }
 
 
-type Channel implements Group {
+type Channel implements Group & Node {
     id: ID!
     allowThreads: Boolean!
     allowedPostersMask: Int!

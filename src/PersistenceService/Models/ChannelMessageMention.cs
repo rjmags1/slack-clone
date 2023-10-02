@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json.Serialization;
 
 namespace PersistenceService.Models;
 
@@ -15,6 +16,7 @@ public class ChannelMessageMention
     public Guid Id { get; set; }
 
 #pragma warning disable CS8618
+    [JsonIgnore]
     [DeleteBehavior(DeleteBehavior.Cascade)]
     public ChannelMessage ChannelMessage { get; set; }
 #pragma warning restore CS8618

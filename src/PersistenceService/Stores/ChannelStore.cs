@@ -24,6 +24,13 @@ public class ChannelStore : Store
     public ChannelStore(ApplicationDbContext context)
         : base(context) { }
 
+    public async Task<Channel> LoadChannel(Guid channelId)
+    {
+        return await _context.Channels
+            .Where(c => c.Id == channelId)
+            .FirstAsync();
+    }
+
     public async Task<(
         List<dynamic> dbMessages,
         List<ChannelMessageReactionCount> reactionCounts,

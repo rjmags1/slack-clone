@@ -53,6 +53,7 @@ public static class ModelToObjectConverters
         {
             throw new InvalidOperationException("Must query deleted column");
         }
+        bool deleted = JsonSerializer.Deserialize<bool>(expando.Deleted);
         if (
             DynamicUtils.HasProperty(
                 expando,
@@ -70,7 +71,7 @@ public static class ModelToObjectConverters
         }
         if (DynamicUtils.HasProperty(expando, nameof(Message.User)))
         {
-            if (expando.Deleted)
+            if (deleted)
             {
                 message.User = null;
             }
@@ -84,7 +85,7 @@ public static class ModelToObjectConverters
         }
         if (DynamicUtils.HasProperty(expando, nameof(Message.Content)))
         {
-            message.Content = expando.Deleted
+            message.Content = deleted
                 ? "deleted"
                 : JsonSerializer.Deserialize<string>(expando.Content);
         }
@@ -99,7 +100,7 @@ public static class ModelToObjectConverters
             List<Models.File> dbFiles = JsonSerializer.Deserialize<
                 List<Models.File>
             >(expando.Files);
-            if (expando.Deleted)
+            if (deleted)
             {
                 message.Files = null;
             }
@@ -126,7 +127,7 @@ public static class ModelToObjectConverters
         if (DynamicUtils.HasProperty(expando, nameof(Message.LaterFlag)))
         {
             message.LaterFlag = null;
-            if (!expando.Deleted && expando.LaterFlag is not null)
+            if (!deleted && expando.LaterFlag is not null)
             {
                 Models.ChannelMessageLaterFlag dbLaterFlag =
                     JsonSerializer.Deserialize<Models.ChannelMessageLaterFlag>(
@@ -146,18 +147,20 @@ public static class ModelToObjectConverters
                     expando.Mentions
                 );
             message.Mentions = null;
-            if (!expando.Deleted && dbMentions.Count > 0)
+            if (!deleted && dbMentions.Count > 0)
             {
                 foreach (Models.ChannelMessageMention dbMention in dbMentions)
                 {
-                    mentions.Add(ConvertChannelMessageMention(dbMention));
+                    mentions.Add(
+                        ConvertChannelMessageMention(dbMention, false)
+                    );
                 }
                 message.Mentions = mentions;
             }
         }
         if (reactionCounts is not null && reactionCounts.Count > 0)
         {
-            message.Reactions = expando.Deleted
+            message.Reactions = deleted
                 ? null
                 : ConvertChannelMessageReactionCounts(reactionCounts);
         }
@@ -276,17 +279,28 @@ public static class ModelToObjectConverters
     }
 
     public static LaterFlag? ConvertChannelMessageLaterFlag(
-        Models.ChannelMessageLaterFlag? dbLaterFlag
+        Models.ChannelMessageLaterFlag? dbLaterFlag,
+        bool ignoreMessage = true
     )
     {
-        return dbLaterFlag is null
-            ? null
-            : new LaterFlag
+        if (dbLaterFlag is null)
+        {
+            return null;
+        }
+
+        LaterFlag laterFlag =
+            new()
             {
                 Id = dbLaterFlag.Id,
-                Message = ConvertChannelMessage(dbLaterFlag.ChannelMessage)!,
                 Status = dbLaterFlag.ChannelLaterFlagStatus
             };
+        if (!ignoreMessage)
+        {
+            laterFlag.Message = ConvertChannelMessage(
+                dbLaterFlag.ChannelMessage
+            )!;
+        }
+        return laterFlag;
     }
 
     public static List<ReactionCount> ConvertChannelMessageReactionCounts(
@@ -324,14 +338,21 @@ public static class ModelToObjectConverters
     }
 
     public static Mention ConvertChannelMessageMention(
-        Models.ChannelMessageMention dbMention
+        Models.ChannelMessageMention dbMention,
+        bool ignoreMention = true
     )
     {
-        return new Mention
+        var mention = new Mention
         {
             Id = dbMention.Id,
             CreatedAt = dbMention.CreatedAt
         };
+        if (!ignoreMention)
+        {
+            mention.Mentioned = ConvertUser(dbMention.Mentioned);
+        }
+
+        return mention;
     }
 
     public static Message? ConvertChannelMessage(

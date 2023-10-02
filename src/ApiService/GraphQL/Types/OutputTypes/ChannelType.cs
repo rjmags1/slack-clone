@@ -17,24 +17,54 @@ public class ChannelType : ObjectGraphType<Channel>, INodeGraphType<Channel>
             .Resolve(context => context.Source.Id);
         Field<NonNullGraphType<BooleanGraphType>>("allowThreads")
             .Description("Whether threads are allowed in the channel.")
-            .Resolve(context => context.Source.AllowThreads);
+            .Resolve(
+                context =>
+                    GetSourceFromContext(context) is null
+                        ? context.Source.AllowThreads
+                        : GetSourceFromContext(context)!.AllowThreads
+            );
         Field<NonNullGraphType<IntGraphType>>("allowedPostersMask")
             .Description(
                 "Bitmask representing who is allowed to post in the channel."
             )
-            .Resolve(context => context.Source.AllowedPostersMask);
+            .Resolve(
+                context =>
+                    GetSourceFromContext(context) is null
+                        ? context.Source.AllowedPostersMask
+                        : GetSourceFromContext(context)!.AllowedPostersMask
+            );
         Field<NonNullGraphType<FileType>>("avatar")
             .Description("The avatar of the channel.")
-            .Resolve(context => context.Source.Avatar);
+            .Resolve(
+                context =>
+                    GetSourceFromContext(context) is null
+                        ? context.Source.Avatar
+                        : GetSourceFromContext(context)!.Avatar
+            );
         Field<NonNullGraphType<DateTimeGraphType>>("createdAtUTC")
             .Description("When the channel was created.")
-            .Resolve(context => context.Source.CreatedAt);
+            .Resolve(
+                context =>
+                    GetSourceFromContext(context) is null
+                        ? context.Source.CreatedAt
+                        : GetSourceFromContext(context)!.CreatedAt
+            );
         Field<UserType>("createdBy")
             .Description("Who created the channel.")
-            .Resolve(context => context.Source.CreatedBy);
+            .Resolve(
+                context =>
+                    GetSourceFromContext(context) is null
+                        ? context.Source.CreatedBy
+                        : GetSourceFromContext(context)!.CreatedBy
+            );
         Field<StringGraphType>("description")
             .Description("A brief description of the channel.")
-            .Resolve(context => context.Source.Description);
+            .Resolve(
+                context =>
+                    GetSourceFromContext(context) is null
+                        ? context.Source.Description
+                        : GetSourceFromContext(context)!.Description
+            );
         Field<NonNullGraphType<ChannelMembersConnectionType>>("members")
             .Description(
                 "Relay connection representing collection of channel members."
@@ -106,21 +136,53 @@ public class ChannelType : ObjectGraphType<Channel>, INodeGraphType<Channel>
             });
         Field<NonNullGraphType<StringGraphType>>("name")
             .Description("The name of the channel.")
-            .Resolve(context => context.Source.Name);
+            .Resolve(
+                context =>
+                    GetSourceFromContext(context) is null
+                        ? context.Source.Name
+                        : GetSourceFromContext(context)!.Name
+            );
         Field<NonNullGraphType<IntGraphType>>("numMembers")
             .Description("The number of members of the channel")
-            .Resolve(context => context.Source.NumMembers);
+            .Resolve(
+                context =>
+                    GetSourceFromContext(context) is null
+                        ? context.Source.NumMembers
+                        : GetSourceFromContext(context)!.NumMembers
+            );
         Field<NonNullGraphType<BooleanGraphType>>("private")
             .Description(
                 "Whether viewing the channel is restricted to certain workspace members or not."
             )
-            .Resolve(context => context.Source.Private);
+            .Resolve(
+                context =>
+                    GetSourceFromContext(context) is null
+                        ? context.Source.Private
+                        : GetSourceFromContext(context)!.Private
+            );
         Field<StringGraphType>("topic")
             .Description("The topic of the channel")
-            .Resolve(context => context.Source.Topic);
+            .Resolve(
+                context =>
+                    GetSourceFromContext(context) is null
+                        ? context.Source.Topic
+                        : GetSourceFromContext(context)!.Topic
+            );
         Field<NonNullGraphType<WorkspaceType>>("workspace")
             .Description("The workspace containing the channel")
-            .Resolve(context => context.Source.Workspace);
+            .Resolve(
+                context =>
+                    GetSourceFromContext(context) is null
+                        ? context.Source.Workspace
+                        : GetSourceFromContext(context)!.Workspace
+            );
+    }
+
+    private Channel? GetSourceFromContext(IResolveFieldContext<Channel> context)
+    {
+        return context.UserContext.ContainsKey("source")
+            ? (Channel)context.UserContext["source"]!
+            : null;
     }
 }
 
