@@ -9,7 +9,7 @@ function ChannelMessageBody({
     files,
     mentions,
 }: ChannelMessageBodyProps) {
-    return <div className="max-h-[150px] w-full">{content}</div>
+    return <div className="w-full">{content}</div>
 }
 
 export default ChannelMessageBody
