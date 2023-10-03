@@ -14,7 +14,10 @@ function ChannelViewPaneMessageList({
 }: ChannelViewPaneMessageListProps) {
     const data = useFragment(ChannelMessagesFragment, messages)
     return (
-        <List items={data.messages.edges}>
+        <List
+            items={data.messages.edges}
+            className="h-full w-full overflow-y-auto"
+        >
             {(item) => (
                 <Item key={(item as any).node.id}>
                     <ChannelMessage
