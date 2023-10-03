@@ -17,9 +17,8 @@ type ChannelPermissionsType = {
     allowThreads: boolean
 }
 
-const ChannelPermissionsContext = createContext<ChannelPermissionsType | null>(
-    null
-)
+export const ChannelPermissionsContext =
+    createContext<ChannelPermissionsType | null>(null)
 
 function ChannelViewPaneContent() {
     const { channelId, workspaceId } = useParams()
@@ -42,7 +41,7 @@ function ChannelViewPaneContent() {
                     allowThreads: data.viewChannel!.allowThreads,
                 }}
             >
-                <div className="h-full w-full">
+                <div className="h-full w-full overflow-hidden">
                     <ChannelViewPaneContentHeader
                         headerInfo={data.viewChannel!}
                     />
