@@ -22,6 +22,16 @@ function ChannelViewPaneMessageList({
     const observerRef = useRef<IntersectionObserver | null>(null)
 
     useEffect(() => {
+        const firstMessageId = data.messages.edges[0]?.node.id
+        document.getElementById(firstMessageId)!.scrollIntoView({
+            behavior: 'instant',
+            block: 'end',
+            inline: 'nearest',
+        } as any)
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [])
+
+    useEffect(() => {
         if (!hasNext || isLoadingNext) return
 
         if (observerRef.current) observerRef.current.disconnect()
@@ -32,7 +42,6 @@ function ChannelViewPaneMessageList({
                     entry.target.id === lastMessageId &&
                     entry.intersectionRatio > 0
                 ) {
-                    console.log('triggered')
                     loadNext(10)
                 }
             }
@@ -43,11 +52,9 @@ function ChannelViewPaneMessageList({
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [hasNext, isLoadingNext, lastMessageId])
 
-    console.log(data.messages.edges.length)
-
     return (
         <List
-            items={data.messages.edges}
+            items={(data.messages.edges as any).toReversed()}
             className="w-full grow overflow-hidden overflow-y-auto"
         >
             {(item) => (
