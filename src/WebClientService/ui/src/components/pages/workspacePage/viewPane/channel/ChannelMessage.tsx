@@ -37,6 +37,7 @@ function ChannelMessage({ message, id }: ChannelMessageProps) {
             value={{ messageId: id, authorId: user?.id || null, content }}
         >
             <div
+                id={id}
                 className="m-1 flex w-full flex-col items-start justify-start 
                 gap-y-1 rounded px-3 py-2 text-sm text-white hover:bg-zinc-700"
             >

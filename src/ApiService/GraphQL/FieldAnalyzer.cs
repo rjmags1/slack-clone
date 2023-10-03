@@ -85,13 +85,14 @@ public static class FieldAnalyzer
 
     public static FieldInfo ChannelMessages(
         string opString,
-        Dictionary<string, string> fragments
+        Dictionary<string, string> fragments,
+        string? queryName = null
     )
     {
         string channelMessagesFieldSlice = GetFieldSlice(
             opString,
             "messages",
-            "channel"
+            queryName == "ChannelMessagesListPaginationQuery" ? null : "channel"
         );
         return CollectFields(channelMessagesFieldSlice, fragments);
     }

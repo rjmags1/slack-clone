@@ -14,8 +14,8 @@ function ChannelViewPaneContentHeader({
 
     return (
         <div
-            className="flex h-fit w-full items-center justify-start gap-x-1 
-                truncate border-b border-b-zinc-500 px-2 py-1 font-medium 
+            className="flex h-max w-full items-center justify-start gap-x-1 truncate 
+                border-b border-b-zinc-500 p-2 font-medium 
                 text-white"
         >
             {data.name}

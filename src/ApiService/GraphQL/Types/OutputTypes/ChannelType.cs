@@ -12,6 +12,7 @@ public class ChannelType : ObjectGraphType<Channel>, INodeGraphType<Channel>
     {
         Name = "Channel";
         Interface<GroupInterfaceType>();
+        Interface<RelayNodeInterfaceType>();
         Field<NonNullGraphType<IdGraphType>>("id")
             .Description("The UUID of the channel.")
             .Resolve(context => context.Source.Id);
@@ -117,9 +118,13 @@ public class ChannelType : ObjectGraphType<Channel>, INodeGraphType<Channel>
                     (context.UserContext as GraphQLUserContext)!
                 )!;
                 var fragments = FieldAnalyzer.GetFragments(query);
+                var queryName = GraphQLUtils.GetQueryName(
+                    (context.UserContext as GraphQLUserContext)!
+                );
                 FieldInfo fieldInfo = FieldAnalyzer.ChannelMessages(
                     query,
-                    fragments
+                    fragments,
+                    queryName
                 );
                 Guid sub = GraphQLUtils.GetSubClaim(
                     (context.UserContext as GraphQLUserContext)!

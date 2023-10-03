@@ -122,6 +122,12 @@ public class SlackCloneQuery : ObjectGraphType<object>
                     context.UserContext.Add("fragments", fragments);
                     return new WorkspacePageData { Id = id };
                 }
+                else if (queryName == "ChannelMessagesListPaginationQuery")
+                {
+                    var fragments = FieldAnalyzer.GetFragments(query);
+                    context.UserContext.Add("fragments", fragments);
+                    return new Channel { Id = id };
+                }
                 return null;
             });
     }

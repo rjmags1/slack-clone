@@ -4,7 +4,7 @@ const ChannelMessagesFragment = graphql`
     fragment ChannelMessagesFragment on Channel
     @refetchable(queryName: "ChannelMessagesListPaginationQuery")
     @argumentDefinitions(
-        first: { type: "Int", defaultValue: 50 }
+        first: { type: "Int", defaultValue: 10 }
         after: { type: "ID" }
         filter: { type: "MessagesFilter!" }
     ) {

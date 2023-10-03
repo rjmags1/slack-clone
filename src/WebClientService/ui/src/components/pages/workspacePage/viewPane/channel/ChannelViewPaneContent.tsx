@@ -47,7 +47,7 @@ function ChannelViewPaneContent() {
                     allowThreads: data.viewChannel!.allowThreads,
                 }}
             >
-                <div className="h-full w-full overflow-hidden">
+                <div className="flex h-full w-full flex-col">
                     <ChannelViewPaneContentHeader
                         headerInfo={data.viewChannel!}
                     />
