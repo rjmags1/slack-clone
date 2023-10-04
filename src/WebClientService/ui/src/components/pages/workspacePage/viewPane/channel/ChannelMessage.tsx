@@ -11,13 +11,13 @@ type ChannelMessageProps = {
     id: string
 }
 
-type MessageContextType = {
+export type MessageContextType = {
     messageId: string
     authorId: string | null
     content: string
 } | null
 
-export const MessageContext = createContext<MessageContextType>(null)
+export const ChannelMessageContext = createContext<MessageContextType>(null)
 
 function ChannelMessage({ message, id }: ChannelMessageProps) {
     const {
@@ -33,7 +33,7 @@ function ChannelMessage({ message, id }: ChannelMessageProps) {
     } = useFragment(ChannelMessageFragment, message)
 
     return (
-        <MessageContext.Provider
+        <ChannelMessageContext.Provider
             value={{ messageId: id, authorId: user?.id || null, content }}
         >
             <div
@@ -54,7 +54,7 @@ function ChannelMessage({ message, id }: ChannelMessageProps) {
                     threadId={threadId}
                 />
             </div>
-        </MessageContext.Provider>
+        </ChannelMessageContext.Provider>
     )
 }
 

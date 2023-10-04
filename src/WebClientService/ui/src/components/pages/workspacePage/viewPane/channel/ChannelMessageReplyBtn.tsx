@@ -1,9 +1,9 @@
 import { useContext } from 'react'
-import { MessageContext } from './ChannelMessage'
+import { ChannelMessageContext } from './ChannelMessage'
 import Button from '../../../../lib/Button'
 
 function ChannelMessageReplyBtn() {
-    const { messageId } = useContext(MessageContext)!
+    const { messageId } = useContext(ChannelMessageContext)!
 
     return (
         <Button

@@ -17,7 +17,7 @@ function ChannelMessageHeader({ user, sentAtUTC }: ChannelMessageHeaderProps) {
     return (
         <div
             className="flex w-full items-center justify-start gap-x-2 
-            text-sm"
+                text-sm"
         >
             <Avatar
                 src={

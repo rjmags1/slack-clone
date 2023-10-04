@@ -4,7 +4,8 @@ import { ChannelMessagesFragment$key } from '../../../../../relay/fragments/__ge
 import List from '../../../../lib/List'
 import ChannelMessage from './ChannelMessage'
 import { Item } from 'react-stately'
-import { useEffect, useRef } from 'react'
+import useScrollIntoView from '../../../../../hooks/useScrollIntoView'
+import useIntersectionObserver from '../../../../../hooks/useIntersectionObserver'
 
 type ChannelViewPaneMessageListProps = {
     messages: ChannelMessagesFragment$key
@@ -17,40 +18,24 @@ function ChannelViewPaneMessageList({
         ChannelMessagesFragment,
         messages
     )
+    const firstMessageId = data.messages.edges[0]?.node.id
     const lastMessageId =
         data.messages.edges[data.messages.edges.length - 1].node.id
-    const observerRef = useRef<IntersectionObserver | null>(null)
-
-    useEffect(() => {
-        const firstMessageId = data.messages.edges[0]?.node.id
-        document.getElementById(firstMessageId)!.scrollIntoView({
-            behavior: 'instant',
-            block: 'end',
-            inline: 'nearest',
-        } as any)
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [])
-
-    useEffect(() => {
-        if (!hasNext || isLoadingNext) return
-
-        if (observerRef.current) observerRef.current.disconnect()
-
-        observerRef.current = new IntersectionObserver((entries) => {
-            for (const entry of entries) {
-                if (
-                    entry.target.id === lastMessageId &&
-                    entry.intersectionRatio > 0
-                ) {
-                    loadNext(10)
-                }
-            }
-        })
-        observerRef.current.observe(document.getElementById(lastMessageId)!)
-
-        return () => observerRef.current!.disconnect()
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [hasNext, isLoadingNext, lastMessageId])
+    useScrollIntoView(
+        firstMessageId,
+        {
+            behavior: 'instant' as ScrollBehavior,
+            block: 'end' as ScrollLogicalPosition,
+            inline: 'nearest' as ScrollLogicalPosition,
+        },
+        []
+    )
+    useIntersectionObserver(
+        lastMessageId,
+        [hasNext, isLoadingNext, lastMessageId],
+        [!hasNext, isLoadingNext],
+        () => loadNext(10)
+    )
 
     return (
         <List
