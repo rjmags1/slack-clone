@@ -3,6 +3,7 @@ import { ChannelPermissionsContext } from './ChannelViewPaneContent'
 import ChannelMessageReplyBtn from './ChannelMessageReplyBtn'
 import ChannelMessageLaterFlagBtn from './ChannelMessageLaterFlagBtn'
 import ChannelMessageReactionBtn from './ChannelMessageReactionBtn'
+import MoreReactionsBtn from './MoreReactionsBtn'
 
 type ChannelMessageInteractionBarProps = {
     laterFlag: { id: string } | null
@@ -44,8 +45,8 @@ function ChannelMessageInteractionBar({
 
     return (
         <div
-            className="flex h-max gap-x-1 rounded border border-zinc-600 
-                text-[.7rem]"
+            className="flex h-max gap-x-1 overflow-hidden rounded border 
+                border-zinc-600 text-[.7rem]"
         >
             {allowThreads && <ChannelMessageReplyBtn />}
             <ChannelMessageLaterFlagBtn laterFlagId={laterFlag?.id} />
@@ -53,6 +54,7 @@ function ChannelMessageInteractionBar({
             {renderedReactions.map((reaction) => (
                 <ChannelMessageReactionBtn reaction={reaction} />
             ))}
+            <MoreReactionsBtn />
         </div>
     )
 }

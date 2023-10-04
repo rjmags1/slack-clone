@@ -47,6 +47,20 @@ public class SlackCloneData
         );
     }
 
+    public async Task<DirectMessageGroup> GetDirectMessageGroup(Guid groupId)
+    {
+        using var scope = Provider.CreateScope();
+        DirectMessageGroupStore directMessageGroupStore =
+            scope.ServiceProvider.GetRequiredService<DirectMessageGroupStore>();
+        Models.DirectMessageGroup dbGroup =
+            await directMessageGroupStore.LoadDirectMessageGroup(groupId);
+
+        return ModelToObjectConverters.ConvertDirectMessageGroup(
+            dbGroup,
+            skipWorkspace: true
+        );
+    }
+
     public async Task<Connection<Message>> GetChannelMessages(
         Guid userId,
         Guid channelId,

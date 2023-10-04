@@ -1,7 +1,7 @@
 import Avatar, { DEFAULT_AVATAR_NAME } from '../../../../lib/Avatar'
 import DatetimeStamp from '../../../../lib/DatetimeStamp'
 
-type ChannelMessageHeaderProps = {
+type DirectMessageHeaderProps = {
     user: {
         id: string
         username: string
@@ -11,9 +11,14 @@ type ChannelMessageHeaderProps = {
         }
     } | null
     sentAtUTC: string
+    replyToId: string | null
 }
 
-function ChannelMessageHeader({ user, sentAtUTC }: ChannelMessageHeaderProps) {
+function DirectMessageHeader({
+    user,
+    sentAtUTC,
+    replyToId,
+}: DirectMessageHeaderProps) {
     return (
         <div
             className="flex w-full items-center justify-start gap-x-2 
@@ -39,4 +44,4 @@ function ChannelMessageHeader({ user, sentAtUTC }: ChannelMessageHeaderProps) {
     )
 }
 
-export default ChannelMessageHeader
+export default DirectMessageHeader

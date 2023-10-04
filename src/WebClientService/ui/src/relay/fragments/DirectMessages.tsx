@@ -1,15 +1,14 @@
 import graphql from 'babel-plugin-relay/macro'
 
-const ChannelMessagesFragment = graphql`
-    fragment ChannelMessagesFragment on Channel
-    @refetchable(queryName: "ChannelMessagesListPaginationQuery")
+const DirectMessagesFragment = graphql`
+    fragment DirectMessagesFragment on DirectMessageGroup
+    @refetchable(queryName: "DirectMessagesListPaginationQuery")
     @argumentDefinitions(
         first: { type: "Int", defaultValue: 10 }
         after: { type: "ID" }
-        filter: { type: "MessagesFilter!" }
     ) {
-        messages(filter: $filter, first: $first, after: $after)
-            @connection(key: "ChannelMessagesFragment_messages") {
+        messages(first: $first, after: $after)
+            @connection(key: "DirectMessagesFragment_messages") {
             totalEdges
             pageInfo {
                 startCursor
@@ -18,14 +17,13 @@ const ChannelMessagesFragment = graphql`
                 hasPreviousPage
             }
             edges {
-                cursor
                 node {
                     id
-                    ...ChannelMessageFragment
+                    ...DirectMessageFragment
                 }
             }
         }
     }
 `
 
-export default ChannelMessagesFragment
+export default DirectMessagesFragment

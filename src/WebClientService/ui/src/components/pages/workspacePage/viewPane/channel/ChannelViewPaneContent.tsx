@@ -24,14 +24,20 @@ function ChannelViewPaneContent() {
     const { channelId, workspaceId } = useParams()
     const claims = useContext(SessionContext)!
     const sub = getSubClaim(claims)
-    const data = useLazyLoadQuery<ChannelMessagesQueryType>(ChannelQuery, {
-        userId: sub,
-        channelId: channelId!,
-        messagesFilter: {
-            workspaceId,
-            channelIds: [channelId!],
+    const data = useLazyLoadQuery<ChannelMessagesQueryType>(
+        ChannelQuery,
+        {
+            userId: sub,
+            channelId: channelId!,
+            messagesFilter: {
+                workspaceId,
+                channelIds: [channelId!],
+            },
         },
-    })
+        {
+            fetchPolicy: 'network-only',
+        }
+    )
 
     return (
         <Suspense fallback={<LoadingSpinner />}>
@@ -41,7 +47,7 @@ function ChannelViewPaneContent() {
                     allowThreads: data.viewChannel!.allowThreads,
                 }}
             >
-                <div className="h-full w-full overflow-hidden">
+                <div className="flex h-full w-full flex-col">
                     <ChannelViewPaneContentHeader
                         headerInfo={data.viewChannel!}
                     />
