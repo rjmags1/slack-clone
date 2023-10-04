@@ -1,3 +1,4 @@
+import datetime
 import random
 import string
 from sqlalchemy import Connection, create_engine
@@ -137,10 +138,11 @@ def insert_dms(conn: Connection, num_messages, group_id=None):
         group_id = inserted_ids[0]
 
     test_dm_content = "test dm content"
-    statement = text('INSERT INTO "DirectMessages" ("Content", "DirectMessageGroupId", "UserId", "IsReply") VALUES (:content, :groupId, :userId, :isReply)')
+    statement = text('INSERT INTO "DirectMessages" ("Content", "DirectMessageGroupId", "UserId", "IsReply", "SentAt") VALUES (:content, :groupId, :userId, :isReply, :sentAt)')
     for _ in range(num_messages):
-        conn.execute(statement, { "content": test_dm_content, "groupId": group_id, "userId": DEV_USER_ID, "isReply": False })
-    conn.commit()
+        conn.execute(statement, { "content": test_dm_content, "groupId": group_id, "userId": DEV_USER_ID, "isReply": False, "sentAt": datetime.datetime.now(datetime.timezone.utc) })
+        conn.commit()
+        sleep(0.1)
     
     
 

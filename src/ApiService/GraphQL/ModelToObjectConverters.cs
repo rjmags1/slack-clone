@@ -465,12 +465,13 @@ public static class ModelToObjectConverters
         if (
             !DynamicUtils.HasProperty(
                 expando,
-                nameof(Models.ChannelMessage.Deleted)
+                nameof(Models.DirectMessage.Deleted)
             )
         )
         {
             throw new InvalidOperationException("Must query deleted column");
         }
+        bool deleted = JsonSerializer.Deserialize<bool>(expando.Deleted);
         if (
             DynamicUtils.HasProperty(
                 expando,
@@ -490,7 +491,7 @@ public static class ModelToObjectConverters
         }
         if (DynamicUtils.HasProperty(expando, nameof(Message.User)))
         {
-            if (expando.Deleted)
+            if (deleted)
             {
                 message.User = null;
             }
@@ -504,7 +505,7 @@ public static class ModelToObjectConverters
         }
         if (DynamicUtils.HasProperty(expando, nameof(Message.Content)))
         {
-            message.Content = expando.Deleted
+            message.Content = deleted
                 ? "deleted"
                 : JsonSerializer.Deserialize<string>(expando.Content);
         }
@@ -519,7 +520,7 @@ public static class ModelToObjectConverters
             List<Models.File> dbFiles = JsonSerializer.Deserialize<
                 List<Models.File>
             >(expando.Files);
-            if (expando.Deleted)
+            if (deleted)
             {
                 message.Files = null;
             }
@@ -546,7 +547,7 @@ public static class ModelToObjectConverters
         if (DynamicUtils.HasProperty(expando, nameof(Message.LaterFlag)))
         {
             message.LaterFlag = null;
-            if (!expando.Deleted && expando.LaterFlag is not null)
+            if (!deleted && expando.LaterFlag is not null)
             {
                 Models.ChannelMessageLaterFlag dbLaterFlag =
                     JsonSerializer.Deserialize<Models.DirectMessageLaterFlag>(
@@ -566,7 +567,7 @@ public static class ModelToObjectConverters
                     expando.Mentions
                 );
             message.Mentions = null;
-            if (!expando.Deleted && dbMentions.Count > 0)
+            if (!deleted && dbMentions.Count > 0)
             {
                 foreach (Models.DirectMessageMention dbMention in dbMentions)
                 {
@@ -577,7 +578,7 @@ public static class ModelToObjectConverters
         }
         if (reactionCounts is not null && reactionCounts.Count > 0)
         {
-            message.Reactions = expando.Deleted
+            message.Reactions = deleted
                 ? null
                 : ConvertDirectMessageReactionCounts(reactionCounts);
         }
