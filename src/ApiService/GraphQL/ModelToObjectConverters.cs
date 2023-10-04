@@ -264,18 +264,26 @@ public static class ModelToObjectConverters
     }
 
     public static DirectMessageGroup ConvertDirectMessageGroup(
-        Models.DirectMessageGroup dbGroup
+        Models.DirectMessageGroup dbGroup,
+        bool skipWorkspace = false
     )
     {
-        return new DirectMessageGroup
+        var group = new DirectMessageGroup
         {
             Id = dbGroup.Id,
             CreatedAt = dbGroup.CreatedAt,
             Members = dbGroup.DirectMessageGroupMembers
-                .Select(dbMember => ConvertDirectMessageGroupMember(dbMember))
+                .Select(
+                    dbMember => ConvertDirectMessageGroupMember(dbMember, true)
+                )
                 .ToList(),
-            Workspace = ConvertWorkspace(dbGroup.Workspace)
         };
+        if (!skipWorkspace)
+        {
+            group.Workspace = ConvertWorkspace(dbGroup.Workspace);
+        }
+
+        return group;
     }
 
     public static LaterFlag? ConvertChannelMessageLaterFlag(
@@ -426,10 +434,11 @@ public static class ModelToObjectConverters
     }
 
     public static DirectMessageGroupMember ConvertDirectMessageGroupMember(
-        Models.DirectMessageGroupMember dbMember
+        Models.DirectMessageGroupMember dbMember,
+        bool includeUser = false
     )
     {
-        return new DirectMessageGroupMember
+        var member = new DirectMessageGroupMember
         {
             Id = dbMember.Id,
             DirectMessageGroupId = dbMember.DirectMessageGroupId,
@@ -438,6 +447,12 @@ public static class ModelToObjectConverters
             Starred = dbMember.Starred,
             UserId = dbMember.UserId
         };
+        if (includeUser)
+        {
+            member.User = ConvertUser(dbMember.User);
+        }
+
+        return member;
     }
 
     public static Message ConvertDynamicDirectMessage(

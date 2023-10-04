@@ -1,6 +1,7 @@
 using ApiService.Utils;
 using GraphQL;
 using GraphQL.Types;
+using PersistenceService.Models;
 using PersistenceService.Utils.GraphQL;
 using SlackCloneGraphQL.Types.Connections;
 
@@ -14,19 +15,30 @@ public class DirectMessageGroupType
     {
         Name = "DirectMessageGroup";
         Interface<GroupInterfaceType>();
+        Interface<RelayNodeInterfaceType>();
         Field<NonNullGraphType<IdGraphType>>("id")
             .Description("The UUID of the direct message group")
             .Resolve(context => context.Source.Id);
         Field<NonNullGraphType<DateTimeGraphType>>("createdAtUTC")
             .Description("When the direct message group was created")
-            .Resolve(context => context.Source.CreatedAt);
+            .Resolve(
+                context =>
+                    GetSourceFromContext(context) is null
+                        ? context.Source.CreatedAt
+                        : GetSourceFromContext(context)!.CreatedAt
+            );
         Field<
             NonNullGraphType<
                 ListGraphType<NonNullGraphType<DirectMessageGroupMemberType>>
             >
         >("members")
             .Description("The members of the direct message group")
-            .Resolve(context => context.Source.Members);
+            .Resolve(
+                context =>
+                    GetSourceFromContext(context) is null
+                        ? context.Source.Members
+                        : GetSourceFromContext(context)!.Members
+            );
         Field<NonNullGraphType<DirectMessagesConnectionType>>("messages")
             .Argument<NonNullGraphType<IntGraphType>>("first")
             .Argument<IdGraphType>("after")
@@ -44,7 +56,7 @@ public class DirectMessageGroupType
                     (context.UserContext as GraphQLUserContext)!
                 )!;
                 var fragments = FieldAnalyzer.GetFragments(query);
-                FieldInfo fieldInfo = FieldAnalyzer.ChannelMessages(
+                FieldInfo fieldInfo = FieldAnalyzer.DirectMessages(
                     query,
                     fragments
                 );
@@ -68,6 +80,10 @@ public class DirectMessageGroupType
                 Guid sub = GraphQLUtils.GetSubClaim(
                     (context.UserContext as GraphQLUserContext)!
                 );
+                if (context.Source.Members is null)
+                {
+                    return "DEFER_TO_CLIENT";
+                }
                 List<Guid> memberIds = context.Source.Members
                     .Where(member => member.UserId != sub)
                     .Select(member => member.UserId)
@@ -87,7 +103,21 @@ public class DirectMessageGroupType
             .Description(
                 "The workspace associated with the direct message group"
             )
-            .Resolve(context => context.Source.Workspace);
+            .Resolve(
+                context =>
+                    GetSourceFromContext(context) is null
+                        ? context.Source.Workspace
+                        : GetSourceFromContext(context)!.Workspace
+            );
+    }
+
+    private DirectMessageGroup? GetSourceFromContext(
+        IResolveFieldContext<DirectMessageGroup> context
+    )
+    {
+        return context.UserContext.ContainsKey("source")
+            ? (DirectMessageGroup)context.UserContext["source"]!
+            : null;
     }
 }
 

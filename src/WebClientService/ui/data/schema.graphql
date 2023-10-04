@@ -9,6 +9,7 @@ type Query {
         email: String!
     ): ValidationResult
     viewChannel(userId: ID!, channelId: ID!): Channel
+    viewDirectMessageGroup(userId: ID!, directMessageGroupId: ID!): DirectMessageGroup
     node(id: ID!): Node
 }
 
@@ -76,7 +77,7 @@ type ChannelMembersConnectionEdge {
     node: ChannelMember!
 }
 
-type DirectMessageGroup implements Group {
+type DirectMessageGroup implements Group & Node {
     id: ID!
     createdAtUTC: String!
     name: String!

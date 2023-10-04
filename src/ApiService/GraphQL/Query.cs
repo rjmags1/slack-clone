@@ -76,11 +76,33 @@ public class SlackCloneQuery : ObjectGraphType<object>
                 var fragments = FieldAnalyzer.GetFragments(query);
                 context.UserContext.Add("fragments", fragments);
                 var channelId = context.GetArgument<Guid>("channelId");
-                var userId = context.GetArgument<Guid>("userId");
 
                 var channel = await data.GetChannel(channelId);
                 context.UserContext.Add("source", channel);
                 return new Channel { Id = channelId };
+            });
+        Field<DirectMessageGroupType>("viewDirectMessageGroup")
+            .Directive(
+                "requiresClaimMapping",
+                "claimName",
+                "sub",
+                "constraint",
+                "equivalent-userId"
+            )
+            .Argument<NonNullGraphType<IdGraphType>>("userId")
+            .Argument<NonNullGraphType<IdGraphType>>("directMessageGroupId")
+            .ResolveAsync(async context =>
+            {
+                string query = GraphQLUtils.GetQuery(
+                    (context.UserContext as GraphQLUserContext)!
+                )!;
+                var fragments = FieldAnalyzer.GetFragments(query);
+                context.UserContext.Add("fragments", fragments);
+                var groupId = context.GetArgument<Guid>("directMessageGroupId");
+
+                var group = await data.GetDirectMessageGroup(groupId);
+                context.UserContext.Add("source", group);
+                return new DirectMessageGroup { Id = groupId };
             });
         Field<RelayNodeInterfaceType>("node")
             .Argument<NonNullGraphType<IdGraphType>>("id")
@@ -127,6 +149,12 @@ public class SlackCloneQuery : ObjectGraphType<object>
                     var fragments = FieldAnalyzer.GetFragments(query);
                     context.UserContext.Add("fragments", fragments);
                     return new Channel { Id = id };
+                }
+                else if (queryName == "DirectMessagesListPaginationQuery")
+                {
+                    var fragments = FieldAnalyzer.GetFragments(query);
+                    context.UserContext.Add("fragments", fragments);
+                    return new DirectMessageGroup { Id = id };
                 }
                 return null;
             });

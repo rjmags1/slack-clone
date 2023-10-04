@@ -4,6 +4,7 @@ using PersistenceService.Models;
 using PersistenceService.Utils;
 using PersistenceService.Utils.GraphQL;
 using System.Linq.Dynamic.Core;
+using Microsoft.EntityFrameworkCore;
 
 namespace PersistenceService.Stores;
 
@@ -21,6 +22,32 @@ public class DirectMessageGroupStore : Store
 {
     public DirectMessageGroupStore(ApplicationDbContext context)
         : base(context) { }
+
+    public async Task<DirectMessageGroup> LoadDirectMessageGroup(Guid groupId)
+    {
+        var query =
+            from g in _context
+                .Set<DirectMessageGroup>()
+                .Where(g => g.Id == groupId)
+            from m in _context
+                .Set<DirectMessageGroupMember>()
+                .Where(m => m.DirectMessageGroupId == g.Id)
+            from u in _context.Set<User>().Where(u => u.Id == m.UserId)
+            select new
+            {
+                g,
+                m,
+                u
+            };
+        var queryResult = await query.ToListAsync();
+        var group = queryResult.First().g;
+        foreach (var row in queryResult)
+        {
+            row.m.User = row.u;
+        }
+
+        return group;
+    }
 
     public async Task<
         List<DirectMessageGroupMember>
