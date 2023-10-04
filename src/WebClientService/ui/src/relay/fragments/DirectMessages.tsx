@@ -7,7 +7,8 @@ const DirectMessagesFragment = graphql`
         first: { type: "Int", defaultValue: 10 }
         after: { type: "ID" }
     ) {
-        messages(first: $first, after: $after) {
+        messages(first: $first, after: $after)
+            @connection(key: "DirectMessagesFragment_messages") {
             totalEdges
             pageInfo {
                 startCursor
@@ -17,6 +18,7 @@ const DirectMessagesFragment = graphql`
             }
             edges {
                 node {
+                    id
                     ...DirectMessageFragment
                 }
             }

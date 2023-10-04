@@ -2,7 +2,6 @@ import graphql from 'babel-plugin-relay/macro'
 
 const DirectMessageFragment = graphql`
     fragment DirectMessageFragment on Message {
-        id
         user {
             id
             username

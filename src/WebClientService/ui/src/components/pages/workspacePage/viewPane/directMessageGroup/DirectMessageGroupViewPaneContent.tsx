@@ -26,14 +26,15 @@ function DirectMessageGroupViewPaneContent() {
             fetchPolicy: 'network-only',
         }
     )
-    console.log(data)
 
     return (
         <Suspense fallback={<LoadingSpinner />}>
             <div className="flex h-full w-full flex-col">
-                <DmGroupViewPaneContentHeader //headerInfo={data.viewDirectMessageGroup!}
+                <DmGroupViewPaneContentHeader
+                    headerInfo={data.viewDirectMessageGroup!}
                 />
-                <DmGroupViewPaneMessageList //messages={data.viewChannel!}
+                <DmGroupViewPaneMessageList
+                    messages={data.viewDirectMessageGroup!}
                 />
                 <DmGroupMessageEditor />
             </div>
