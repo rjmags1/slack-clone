@@ -1,8 +1,8 @@
 import { useContext } from 'react'
-import { ChannelPermissionsContext } from './ChannelViewPaneContent'
-import ChannelMessageReplyBtn from './ChannelMessageReplyBtn'
-import ChannelMessageLaterFlagBtn from './ChannelMessageLaterFlagBtn'
-import ChannelMessageReactionBtn from './ChannelMessageReactionBtn'
+import { ChannelPermissionsContext } from './channel/ChannelViewPaneContent'
+import MessageReplyBtn from './MessageReplyBtn'
+import MessageLaterFlagBtn from './MessageLaterFlagBtn'
+import MessageReactionBtn from './MessageReactionBtn'
 import MoreReactionsBtn from './MoreReactionsBtn'
 
 type ChannelMessageInteractionBarProps = {
@@ -20,13 +20,12 @@ type ChannelMessageInteractionBarProps = {
 const DEFAULT_EMOJIS = ['🙋', '😃', '👍', '😠', '👎']
 const MAX_EMOJIS = 16
 
-function ChannelMessageInteractionBar({
+function MessageInteractionBar({
     laterFlag,
     reactions,
 }: ChannelMessageInteractionBarProps) {
-    const { allowThreads, allowedPostersMask } = useContext(
-        ChannelPermissionsContext
-    )!
+    const channelPermissionsContext = useContext(ChannelPermissionsContext)
+    // TODO: handle channel allowedPostersMask
     const reactions_ = (reactions || []) as any[]
     reactions_.sort((r1, r2) => r2.count - r1.count)
     const includedEmojis = reactions_.map((r) => r.emoji)
@@ -48,15 +47,15 @@ function ChannelMessageInteractionBar({
             className="flex h-max gap-x-1 overflow-hidden rounded border 
                 border-zinc-600 text-[.7rem]"
         >
-            {allowThreads && <ChannelMessageReplyBtn />}
-            <ChannelMessageLaterFlagBtn laterFlagId={laterFlag?.id} />
+            {channelPermissionsContext?.allowThreads && <MessageReplyBtn />}
+            <MessageLaterFlagBtn laterFlagId={laterFlag?.id} />
             <div className="min-h-full min-w-[1px] bg-zinc-600" />
             {renderedReactions.map((reaction) => (
-                <ChannelMessageReactionBtn reaction={reaction} />
+                <MessageReactionBtn reaction={reaction} />
             ))}
             <MoreReactionsBtn />
         </div>
     )
 }
 
-export default ChannelMessageInteractionBar
+export default MessageInteractionBar

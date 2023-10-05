@@ -1,8 +1,8 @@
 import { useContext } from 'react'
-import { ChannelMessageContext } from './ChannelMessage'
-import Button from '../../../../lib/Button'
+import { ChannelMessageContext } from './channel/ChannelMessage'
+import Button from '../../../lib/Button'
 
-function ChannelMessageReplyBtn() {
+function MessageReplyBtn() {
     const { messageId } = useContext(ChannelMessageContext)!
 
     return (
@@ -16,4 +16,4 @@ function ChannelMessageReplyBtn() {
     )
 }
 
-export default ChannelMessageReplyBtn
+export default MessageReplyBtn

@@ -1,6 +1,6 @@
 import DatetimeStamp from '../../../../lib/DatetimeStamp'
-import ChannelMessageInteractionBar from './ChannelMessageInteractionBar'
-import ChannelMessageRepliesBtn from './ChannelMessageRepliesBtn'
+import MessageInteractionBar from '../MessageInteractionBar'
+import ChannelMessageRepliesBtn from './ChannelMessageViewRepliesBtn'
 
 type ChannelMessageFooterProps = {
     lastEditUTC: string | null
@@ -33,7 +33,7 @@ function ChannelMessageFooter({
             )}
             <div className="flex w-max gap-x-2">
                 {threadId && <ChannelMessageRepliesBtn threadId={threadId} />}
-                <ChannelMessageInteractionBar
+                <MessageInteractionBar
                     laterFlag={laterFlag}
                     reactions={reactions}
                 />

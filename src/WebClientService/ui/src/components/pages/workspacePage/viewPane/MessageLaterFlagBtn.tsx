@@ -1,12 +1,10 @@
-import Button from '../../../../lib/Button'
+import Button from '../../../lib/Button'
 
-type ChannelMessageLaterFlagBtnProps = {
+type MessageLaterFlagBtnProps = {
     laterFlagId?: string
 }
 
-function ChannelMessageLaterFlagBtn({
-    laterFlagId,
-}: ChannelMessageLaterFlagBtnProps) {
+function MessageLaterFlagBtn({ laterFlagId }: MessageLaterFlagBtnProps) {
     return (
         <Button
             onClick={() => alert('not implemented')}
@@ -17,4 +15,4 @@ function ChannelMessageLaterFlagBtn({
     )
 }
 
-export default ChannelMessageLaterFlagBtn
+export default MessageLaterFlagBtn

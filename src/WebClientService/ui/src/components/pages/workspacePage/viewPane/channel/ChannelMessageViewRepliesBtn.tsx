@@ -6,7 +6,9 @@ type ChannelMessageRepliesBtnProps = {
     threadId: string
 }
 
-function ChannelMessageRepliesBtn({ threadId }: ChannelMessageRepliesBtnProps) {
+function ChannelMessageViewRepliesBtn({
+    threadId,
+}: ChannelMessageRepliesBtnProps) {
     const [expand, setExpand] = useState(false)
 
     return (
@@ -21,4 +23,4 @@ function ChannelMessageRepliesBtn({ threadId }: ChannelMessageRepliesBtnProps) {
     )
 }
 
-export default ChannelMessageRepliesBtn
+export default ChannelMessageViewRepliesBtn
