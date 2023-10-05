@@ -4,7 +4,7 @@ const DirectMessagesFragment = graphql`
     fragment DirectMessagesFragment on DirectMessageGroup
     @refetchable(queryName: "DirectMessagesListPaginationQuery")
     @argumentDefinitions(
-        first: { type: "Int", defaultValue: 10 }
+        first: { type: "Int", defaultValue: 25 }
         after: { type: "ID" }
     ) {
         messages(first: $first, after: $after)
