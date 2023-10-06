@@ -40,7 +40,7 @@ function ChannelViewPaneMessageList({
     return (
         <List
             items={(data.messages.edges as any).toReversed()}
-            className="w-full grow overflow-hidden overflow-y-auto"
+            className="h-full w-full overflow-hidden overflow-y-auto"
         >
             {(item) => (
                 <Item key={(item as any).node.id}>

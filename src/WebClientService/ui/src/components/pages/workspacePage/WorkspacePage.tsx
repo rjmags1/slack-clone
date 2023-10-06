@@ -33,7 +33,10 @@ function WorkspacePage({ content }: WorkspacePageProps) {
     return (
         <div className="h-full w-full">
             <WorkspacePageNavbar data={data} />
-            <div className="flex h-[calc(100%_-_2.5rem)] w-full bg-zinc-800">
+            <div
+                className="flex h-[calc(100vh_-_2.5rem)] w-[100vw] 
+                    overflow-hidden bg-zinc-800"
+            >
                 <WorkspacePageViewManagementPane data={data} />
                 <WorkspacePageViewPane />
             </div>

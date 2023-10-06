@@ -21,21 +21,21 @@ function DmGroupViewPaneMessageList({
     const firstMessageId = data.messages.edges[0]?.node.id
     const lastMessageId =
         data.messages.edges[data.messages.edges.length - 1].node.id
-    //useScrollIntoView(
-    //firstMessageId,
-    //{
-    //behavior: 'instant' as ScrollBehavior,
-    //block: 'end' as ScrollLogicalPosition,
-    //inline: 'nearest' as ScrollLogicalPosition,
-    //},
-    //[]
-    //)
-    //useIntersectionObserver(
-    //lastMessageId,
-    //[hasNext, isLoadingNext, lastMessageId],
-    //[!hasNext, isLoadingNext],
-    //() => loadNext(10)
-    //)
+    useScrollIntoView(
+        firstMessageId,
+        {
+            behavior: 'instant' as ScrollBehavior,
+            block: 'end' as ScrollLogicalPosition,
+            inline: 'nearest' as ScrollLogicalPosition,
+        },
+        []
+    )
+    useIntersectionObserver(
+        lastMessageId,
+        [hasNext, isLoadingNext, lastMessageId],
+        [!hasNext, isLoadingNext],
+        () => loadNext(25)
+    )
 
     return (
         <List

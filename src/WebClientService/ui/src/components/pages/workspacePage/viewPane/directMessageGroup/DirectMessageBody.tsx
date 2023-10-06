@@ -9,7 +9,7 @@ function DirectMessageBody({
     files,
     mentions,
 }: DirectMessageBodyProps) {
-    return null
+    return <div className="w-full">{content}</div>
 }
 
 export default DirectMessageBody

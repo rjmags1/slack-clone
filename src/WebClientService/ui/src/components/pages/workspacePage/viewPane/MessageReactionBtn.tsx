@@ -1,6 +1,6 @@
-import Button from '../../../../lib/Button'
+import Button from '../../../lib/Button'
 
-type ChannelMessageReactionBtnProps = {
+type MessageReactionBtnProps = {
     reaction: {
         count: number
         emoji: string
@@ -9,9 +9,7 @@ type ChannelMessageReactionBtnProps = {
     }
 }
 
-function ChannelMessageReactionBtn({
-    reaction,
-}: ChannelMessageReactionBtnProps) {
+function MessageReactionBtn({ reaction }: MessageReactionBtnProps) {
     const { emoji, count } = reaction
     return (
         <Button
@@ -26,4 +24,4 @@ function ChannelMessageReactionBtn({
     )
 }
 
-export default ChannelMessageReactionBtn
+export default MessageReactionBtn

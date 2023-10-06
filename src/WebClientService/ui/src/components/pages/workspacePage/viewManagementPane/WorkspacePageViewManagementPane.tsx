@@ -53,7 +53,10 @@ function WorkspacePageViewManagementPane({
             tabIndex={0}
             style={{ width: separatorX }}
         >
-            <div className="flex h-full w-max grow flex-col justify-start">
+            <div
+                className="flex h-full w-max grow flex-col justify-start 
+                    overflow-hidden"
+            >
                 <WorkspacePageViewManagementPaneHeader
                     workspace={data.workspacePageData!.workspace}
                 />
@@ -70,7 +73,7 @@ function WorkspacePageViewManagementPane({
             </div>
             <div
                 {...moveProps}
-                className="flex h-full min-w-[5px] max-w-[5px] 
+                className="flex h-full min-w-[1px] max-w-[1px] 
                     shrink-0 justify-center hover:cursor-ew-resize"
             >
                 <div className="h-full min-w-[1px] max-w-[1px] bg-zinc-500" />
