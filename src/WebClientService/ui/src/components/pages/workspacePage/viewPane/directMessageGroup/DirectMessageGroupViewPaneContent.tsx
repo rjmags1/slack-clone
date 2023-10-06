@@ -8,9 +8,9 @@ import { useLazyLoadQuery } from 'react-relay'
 import LoadingSpinner from '../../../../lib/LoadingSpinner'
 import DmGroupViewPaneContentHeader from './DmGroupViewPaneContentHeader'
 import DmGroupViewPaneMessageList from './DmGroupViewPaneMessageList'
-import DmGroupMessageEditor from './DmGroupMessageEditor'
 import type { DirectMessageGroupQuery as DirectMessageGroupQueryType } from '../../../../../relay/queries/__generated__/DirectMessageGroupQuery.graphql'
 import DirectMessageGroupQuery from '../../../../../relay/queries/DirectMessageGroup'
+import MessageEditor from '../../../../lib/MessageEditor'
 
 function DirectMessageGroupViewPaneContent() {
     const { directMessageGroupId, workspaceId } = useParams()
@@ -36,7 +36,7 @@ function DirectMessageGroupViewPaneContent() {
                 <DmGroupViewPaneMessageList
                     messages={data.viewDirectMessageGroup!}
                 />
-                <DmGroupMessageEditor />
+                <MessageEditor />
             </div>
         </Suspense>
     )

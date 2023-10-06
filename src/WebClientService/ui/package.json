@@ -11,6 +11,7 @@
     "@types/react": "^18.2.18",
     "@types/react-dom": "^18.2.7",
     "@types/react-router-dom": "^5.3.3",
+    "@uiw/react-md-editor": "^3.23.6",
     "react": "^18.2.0",
     "react-aria": "^3.26.0",
     "react-dom": "^18.2.0",
@@ -18,6 +19,7 @@
     "react-router-dom": "^6.14.2",
     "react-scripts": "5.0.1",
     "react-stately": "^3.24.0",
+    "rehype-sanitize": "^6.0.0",
     "relay-runtime": "^15.0.0",
     "typescript": "^4.9.5",
     "web-vitals": "^2.1.4"

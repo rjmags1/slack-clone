@@ -1,7 +1,3 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
 .no-scrollbar {
   scrollbar-width: none;
   -ms-overflow-style: none;
@@ -56,3 +52,45 @@
     font-size: 0.5rem;
     line-height: 0.7rem;
 }
+
+.editor-container {
+    border: none;
+    outline: none;
+    padding: 0;
+    margin: 0;
+}
+
+.editor-container * {
+    border: none;
+    outline: none;
+}
+
+.w-md-editor-toolbar {
+    background-color: inherit;
+    border-width: 1px;
+    border-color: rgb(113, 113, 122);
+    border-style: solid;
+}
+
+.w-md-editor {
+    background-color: inherit;
+    width: 100%;
+}
+
+.w-md-editor-content {
+    background-color: inherit;
+    border-left-width: 1px;
+    border-left-color: rgb(113, 113, 122);
+    border-left-style: solid;
+    border-right-width: 1px;
+    border-right-color: rgb(113, 113, 122);
+    border-right-style: solid;
+}
+
+.w-md-editor-toolbar > ul:last-child {
+    display: none;
+}
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;

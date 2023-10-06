@@ -8,9 +8,9 @@ import {
     getSubClaim,
 } from '../../../../session/SessionProvider'
 import { useParams } from 'react-router-dom'
-import ChannelMessageEditor from './ChannelMessageEditor'
 import type { ChannelMessagesQuery as ChannelMessagesQueryType } from '../../../../../relay/queries/__generated__/ChannelMessagesQuery.graphql'
 import LoadingSpinner from '../../../../lib/LoadingSpinner'
+import MessageEditor from '../../../../lib/MessageEditor'
 
 type ChannelPermissionsType = {
     allowedPostersMask: number
@@ -52,7 +52,7 @@ function ChannelViewPaneContent() {
                         headerInfo={data.viewChannel!}
                     />
                     <ChannelViewPaneMessageList messages={data.viewChannel!} />
-                    <ChannelMessageEditor />
+                    <MessageEditor />
                 </div>
             </ChannelPermissionsContext.Provider>
         </Suspense>
