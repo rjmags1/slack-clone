@@ -91,6 +91,10 @@
     display: none;
 }
 
+.w-md-editor-bar {
+    display: none;
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

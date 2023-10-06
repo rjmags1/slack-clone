@@ -15,6 +15,7 @@ function MessageEditor() {
                     }}
                     preview="edit"
                     autoFocus={true}
+                    height="100%"
                 />
                 <MDEditor.Markdown
                     source={value}

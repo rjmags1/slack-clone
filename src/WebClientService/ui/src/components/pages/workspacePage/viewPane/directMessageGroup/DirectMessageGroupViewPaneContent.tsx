@@ -11,6 +11,7 @@ import DmGroupViewPaneMessageList from './DmGroupViewPaneMessageList'
 import type { DirectMessageGroupQuery as DirectMessageGroupQueryType } from '../../../../../relay/queries/__generated__/DirectMessageGroupQuery.graphql'
 import DirectMessageGroupQuery from '../../../../../relay/queries/DirectMessageGroup'
 import MessageEditor from '../../../../lib/MessageEditor'
+import SendButton from '../../../../lib/SendButton'
 
 function DirectMessageGroupViewPaneContent() {
     const { directMessageGroupId, workspaceId } = useParams()
@@ -37,6 +38,13 @@ function DirectMessageGroupViewPaneContent() {
                     messages={data.viewDirectMessageGroup!}
                 />
                 <MessageEditor />
+                <div className="border-t-1 h-fit w-full bg-zinc-900 px-2 py-1">
+                    <SendButton
+                        className="h-max w-max justify-end rounded-md 
+                            bg-sky-800 px-2 py-1 text-xs text-white 
+                            hover:bg-sky-900"
+                    />
+                </div>
             </div>
         </Suspense>
     )
