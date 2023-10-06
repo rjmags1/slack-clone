@@ -53,7 +53,10 @@ function WorkspacePageViewManagementPane({
             tabIndex={0}
             style={{ width: separatorX }}
         >
-            <div className="flex h-full w-max grow flex-col justify-start">
+            <div
+                className="flex h-full w-max grow flex-col justify-start 
+                    overflow-hidden"
+            >
                 <WorkspacePageViewManagementPaneHeader
                     workspace={data.workspacePageData!.workspace}
                 />
