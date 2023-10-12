@@ -9,6 +9,7 @@ import { useParams } from 'react-router-dom'
 import { useLazyLoadQuery } from 'react-relay'
 import WorkspacePageDataQuery from '../../../relay/queries/WorkspacePage'
 import type { WorkspacePageQuery as WorkspacePageQueryType } from '../../../relay/queries/__generated__/WorkspacePageQuery.graphql'
+import SignalRProvider from '../../session/SignalRProvider'
 
 type WorkspacePageProps = {
     content?: ViewPaneContent
@@ -31,16 +32,18 @@ function WorkspacePage({ content }: WorkspacePageProps) {
     )
 
     return (
-        <div className="h-full w-full">
-            <WorkspacePageNavbar data={data} />
-            <div
-                className="flex h-[calc(100vh_-_2.5rem)] w-[100vw] 
+        <SignalRProvider>
+            <div className="h-full w-full">
+                <WorkspacePageNavbar data={data} />
+                <div
+                    className="flex h-[calc(100vh_-_2.5rem)] w-[100vw] 
                     overflow-hidden bg-zinc-800"
-            >
-                <WorkspacePageViewManagementPane data={data} />
-                <WorkspacePageViewPane />
+                >
+                    <WorkspacePageViewManagementPane data={data} />
+                    <WorkspacePageViewPane />
+                </div>
             </div>
-        </div>
+        </SignalRProvider>
     )
 }
 
