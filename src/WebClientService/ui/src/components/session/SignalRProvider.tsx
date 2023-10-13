@@ -32,8 +32,6 @@ function SignalRProvider({ children }: { children: React.ReactNode }) {
         }
     }, [signalRConnection])
 
-    console.log(signalRConnection)
-
     return (
         <SignalRContext.Provider value={signalRConnection}>
             {children}
