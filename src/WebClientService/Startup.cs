@@ -4,11 +4,18 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.AspNetCore.Authentication;
+using WebClientService.Middleware;
+using Microsoft.AspNetCore.DataProtection;
 
 namespace WebClientService;
 
 public class Startup
 {
+    static private readonly string DATA_PROTECTION_KEY_PATH =
+        "../../keys/data_protection_keys";
+    static private readonly string DATA_PROTECTION_APPLICATION_NAME =
+        "slack-clone";
+
     public Startup(IConfiguration configuration)
     {
         Configuration = configuration;
@@ -21,6 +28,15 @@ public class Startup
         services.AddAuthorization();
 
         services.AddBff().AddRemoteApis();
+
+        services.AddHttpClient();
+
+        services
+            .AddDataProtection()
+            .SetApplicationName(DATA_PROTECTION_APPLICATION_NAME)
+            .PersistKeysToFileSystem(
+                new DirectoryInfo(DATA_PROTECTION_KEY_PATH)
+            );
 
         JwtSecurityTokenHandler.DefaultMapInboundClaims = false;
         services
@@ -68,6 +84,7 @@ public class Startup
             app.UseDeveloperExceptionPage();
         }
 
+        app.UseRealtimeAuthMiddleware();
         app.UseDefaultFiles();
         app.UseStaticFiles();
 
