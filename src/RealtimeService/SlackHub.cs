@@ -13,6 +13,11 @@ public class SlackCloneHub : Hub
         // TODO: update db online status
         // TODO: send online notification
 
+        var cookies = Context.GetHttpContext().Request.Cookies;
+        foreach (var c in cookies)
+        {
+            Console.WriteLine($"{c.Key}->{c.Value}");
+        }
         Console.WriteLine("########");
         Console.WriteLine("connected!");
         Console.WriteLine("########");

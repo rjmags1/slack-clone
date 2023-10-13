@@ -4,7 +4,7 @@ namespace WebClientService.Middleware;
 
 // TODO:
 // move this logic to identity server
-// make the cookie be sent to RealtimeService by browser
+// memcached server for realtime keys
 
 public class RealtimeAuthMiddleware
 {
@@ -82,25 +82,32 @@ public class RealtimeAuthMiddleware
             }
 
             var realtimeKey = Guid.NewGuid().ToString();
-            var expiresAt = DateTime.Now
-                .AddMinutes(30)
-                .ToUniversalTime()
-                .ToString("R");
+            var now = DateTime.Now;
+            var expiresAt = now.AddMinutes(30).ToUniversalTime();
 
-            PersistRealtimeKey(realtimeKey, expiresAt);
+            PersistRealtimeKey(realtimeKey, expiresAt.ToString("R"));
 
             var protector = DataProtectionProvider.CreateProtector(
                 REALTIME_KEY_DATA_PROTECTION_PURPOSE
             );
             var signedCookieValue = protector.Protect(realtimeKey);
-            context.Response.Headers.Add(
+
+            // TODO: add domain attribute
+            context.Response.Cookies.Append(
                 REALTIME_KEY_COOKIE_NAME,
-                signedCookieValue
+                signedCookieValue,
+                new CookieOptions
+                {
+                    Expires = expiresAt,
+                    HttpOnly = true,
+                    Path = "/realtime-hub",
+                    SameSite = SameSiteMode.None,
+                    Secure = true,
+                }
             );
         });
     }
 
-    // TODO: memcached server for realtime keys
     private void PersistRealtimeKey(string key, string expiresAt)
     {
         var filePath =
