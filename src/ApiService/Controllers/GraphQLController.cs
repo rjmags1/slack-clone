@@ -9,6 +9,7 @@ using SlackCloneGraphQL;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using AuthorizeAttribute = Microsoft.AspNetCore.Authorization.AuthorizeAttribute;
 using ApiService.Utils;
+using ApiService.Kafka.Producer;
 
 namespace ApiService.Controllers;
 
@@ -21,16 +22,19 @@ public class ApiController : Controller
     private readonly IDocumentExecuter _documentExecuter;
     private readonly ISchema _schema;
     private readonly IOptions<GraphQLSettings> _graphQLOptions;
+    private readonly KafkaProducer _kafkaProducer;
 
     public ApiController(
         IDocumentExecuter documentExecuter,
         ISchema schema,
-        IOptions<GraphQLSettings> options
+        IOptions<GraphQLSettings> options,
+        KafkaProducer kafkaProducer
     )
     {
         _documentExecuter = documentExecuter;
         _schema = schema;
         _graphQLOptions = options;
+        _kafkaProducer = kafkaProducer;
     }
 
     [HttpPost]
@@ -75,6 +79,8 @@ public class ApiController : Controller
         {
             result.EnrichWithApolloTracing(startTime);
         }
+
+        _kafkaProducer.ProduceMessageEvent("query event", "query executed");
 
         return new ExecutionResultActionResult(result);
     }

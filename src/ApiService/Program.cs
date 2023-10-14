@@ -13,6 +13,7 @@ using System.Security.Cryptography;
 using System.Text.Json;
 using ApiService.Auth;
 using Microsoft.AspNetCore.Authorization;
+using ApiService.Kafka.Producer;
 
 DotNetEnv.Env.Load();
 
@@ -45,6 +46,8 @@ builder.Services
             }
         };
     });
+
+builder.Services.AddSingleton<KafkaProducer>();
 
 builder.Services.AddSingleton<IAuthorizationHandler, RequiredScopeHandler>();
 
