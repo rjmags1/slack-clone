@@ -1,4 +1,4 @@
-import { createContext, useEffect, useState } from 'react'
+import { createContext, useEffect, useRef } from 'react'
 import { HubConnection, HubConnectionBuilder } from '@microsoft/signalr'
 
 const signalRURL = 'https://localhost:6002/realtime-hub'
@@ -6,34 +6,30 @@ const signalRURL = 'https://localhost:6002/realtime-hub'
 export const SignalRContext = createContext<HubConnection | null>(null)
 
 function SignalRProvider({ children }: { children: React.ReactNode }) {
-    const [signalRConnection, setSignalRConnection] =
-        useState<HubConnection | null>(null)
+    const connectionRef = useRef<HubConnection | null>(null)
 
     useEffect(() => {
-        if (signalRConnection !== null) return
-
         const connect = async () => {
             const builder = new HubConnectionBuilder().withUrl(signalRURL)
             const connection = builder.build()
+            connectionRef.current = connection
             try {
                 await connection.start()
-                setSignalRConnection(connection)
             } catch (e) {
                 console.error(e)
             }
         }
+        const disconnect = async () => await connectionRef.current!.stop()
 
         connect()
 
         return () => {
-            if (signalRConnection !== null) {
-                ;(signalRConnection as HubConnection).stop()
-            }
+            disconnect()
         }
-    }, [signalRConnection])
+    }, [])
 
     return (
-        <SignalRContext.Provider value={signalRConnection}>
+        <SignalRContext.Provider value={connectionRef.current}>
             {children}
         </SignalRContext.Provider>
     )
