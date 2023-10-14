@@ -5,7 +5,7 @@ namespace ApiService.Kafka.Producer;
 public class KafkaProducer
 {
     private static readonly string MESSAGE_TOPIC = "dev-realtime-messages";
-    private IProducer<string, string> Producer { get; set; }
+    private readonly IProducer<string, string> Producer;
 
     public KafkaProducer()
     {
@@ -34,7 +34,11 @@ public class KafkaProducer
         else
         {
             Console.WriteLine(
-                $"Produced event to topic {deliveryReport.Topic}: key = {deliveryReport.Key} value = {deliveryReport.Value} at {deliveryReport.Timestamp}"
+                @$"Produced event to topic {deliveryReport.Topic}: 
+    key = {deliveryReport.Key} 
+    value = {deliveryReport.Value} 
+    at {deliveryReport.Message.Timestamp}
+"
             );
         }
     }

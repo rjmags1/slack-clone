@@ -80,8 +80,6 @@ public class ApiController : Controller
             result.EnrichWithApolloTracing(startTime);
         }
 
-        _kafkaProducer.ProduceMessageEvent("query event", "query executed");
-
         return new ExecutionResultActionResult(result);
     }
 }

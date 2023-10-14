@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.Cors;
 using RealtimeService.Hubs;
 using Microsoft.AspNetCore.DataProtection;
+using RealtimeService.Kafka.Consumer;
 
 const string DATA_PROTECTION_KEY_PATH = "../../keys/data_protection_keys";
 const string DATA_PROTECTION_APPLICATION_NAME = "slack-clone";
@@ -37,5 +38,10 @@ var app = builder.Build();
 app.UseCors("AllowSpecificOrigin");
 
 app.MapHub<SlackCloneHub>("/realtime-hub");
+
+var consumer = new KafkaConsumer(
+    app.Services.GetRequiredService<IHubContext<SlackCloneHub>>()
+);
+consumer.InitConsumer(new List<string> { "dev-realtime-messages" });
 
 app.Run();
