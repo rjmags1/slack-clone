@@ -22,19 +22,16 @@ public class ApiController : Controller
     private readonly IDocumentExecuter _documentExecuter;
     private readonly ISchema _schema;
     private readonly IOptions<GraphQLSettings> _graphQLOptions;
-    private readonly KafkaProducer _kafkaProducer;
 
     public ApiController(
         IDocumentExecuter documentExecuter,
         ISchema schema,
-        IOptions<GraphQLSettings> options,
-        KafkaProducer kafkaProducer
+        IOptions<GraphQLSettings> options
     )
     {
         _documentExecuter = documentExecuter;
         _schema = schema;
         _graphQLOptions = options;
-        _kafkaProducer = kafkaProducer;
     }
 
     [HttpPost]

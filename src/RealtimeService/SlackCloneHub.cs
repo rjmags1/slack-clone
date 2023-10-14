@@ -30,7 +30,9 @@ public class SlackCloneHub : Hub
         AuthenticateConnection();
 
         Console.WriteLine("########");
-        Console.WriteLine("authenticated and connected!");
+        Console.WriteLine(
+            $"authenticated and connected user {Context.GetHttpContext().Request.Query["sub"]}!"
+        );
         Console.WriteLine("########");
 
         await base.OnConnectedAsync();
@@ -42,7 +44,9 @@ public class SlackCloneHub : Hub
         // TODO: send offline notification
 
         Console.WriteLine("########");
-        Console.WriteLine("disconnected!");
+        Console.WriteLine(
+            $"disconnected user {Context.GetHttpContext().Request.Query["sub"]}!"
+        );
         Console.WriteLine("########");
 
         await base.OnDisconnectedAsync(exception);
@@ -106,13 +110,25 @@ public class SlackCloneHub : Hub
                 var entry = line.Substring(0, i);
                 if (entry == key)
                 {
-                    var expiryString = line.Substring(i + 1);
+                    int j = line.LastIndexOf(',');
+                    var expiryString = line[(i + 1)..j];
                     var expiresAt = ParseHttpDateTimeString(expiryString);
                     TimeSpan timeDiff = DateTime.UtcNow - expiresAt;
                     if (timeDiff.TotalMinutes >= 30)
                     {
                         throw new InvalidOperationException(
                             "Expired realtime key"
+                        );
+                    }
+                    var hc = Context.GetHttpContext();
+                    var queryStringSub = hc.Request.Query["sub"];
+                    var realtimeKeyAssociatedSub = line.Substring(j + 1);
+                    Console.WriteLine(queryStringSub);
+                    Console.WriteLine(realtimeKeyAssociatedSub);
+                    if (queryStringSub != realtimeKeyAssociatedSub)
+                    {
+                        throw new InvalidOperationException(
+                            "Invalid sub query parameter"
                         );
                     }
                     return;
@@ -124,6 +140,7 @@ public class SlackCloneHub : Hub
 
     private DateTimeOffset ParseHttpDateTimeString(string s)
     {
+        Console.WriteLine(s);
         DateTimeOffset parsed;
         if (
             DateTimeOffset.TryParseExact(

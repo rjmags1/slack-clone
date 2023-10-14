@@ -25,12 +25,6 @@ public class Startup
 
     public void ConfigureServices(IServiceCollection services)
     {
-        services.AddAuthorization();
-
-        services.AddBff().AddRemoteApis();
-
-        services.AddHttpClient();
-
         services
             .AddDataProtection()
             .SetApplicationName(DATA_PROTECTION_APPLICATION_NAME)
@@ -73,7 +67,9 @@ public class Startup
                     options.GetClaimsFromUserInfoEndpoint = true;
                 }
             );
-
+        services.AddAuthorization();
+        services.AddBff().AddRemoteApis();
+        services.AddHttpClient();
         services.AddAccessTokenManagement();
     }
 
