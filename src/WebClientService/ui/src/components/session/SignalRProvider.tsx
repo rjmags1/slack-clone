@@ -1,22 +1,20 @@
-import { createContext, useEffect, useRef } from 'react'
+import { createContext, useContext, useEffect, useRef } from 'react'
 import { HubConnection, HubConnectionBuilder } from '@microsoft/signalr'
-import useClaims from '../../hooks/useClaims'
-import { getSubClaim } from './SessionProvider'
+import { SessionContext, getSubClaim } from './SessionProvider'
 
-const signalRURL = 'https://localhost:6002/realtime-hub'
+const SIGNAL_R_URL = 'https://localhost:6002/realtime-hub'
 
 export const SignalRContext = createContext<HubConnection | null>(null)
 
 function SignalRProvider({ children }: { children: React.ReactNode }) {
     const connectionRef = useRef<HubConnection | null>(null)
-    const { claims } = useClaims()
+    const claims = useContext(SessionContext)!
 
     useEffect(() => {
-        if (claims === null) return
         const sub = getSubClaim(claims)
         const connect = async () => {
             const builder = new HubConnectionBuilder().withUrl(
-                signalRURL + `?sub=${sub}`
+                SIGNAL_R_URL + `?sub=${sub}`
             )
             const connection = builder.build()
             connectionRef.current = connection
@@ -33,7 +31,7 @@ function SignalRProvider({ children }: { children: React.ReactNode }) {
         return () => {
             if (connectionRef.current !== null) disconnect()
         }
-    }, [claims])
+    })
 
     return (
         <SignalRContext.Provider value={connectionRef.current}>
