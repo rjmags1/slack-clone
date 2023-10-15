@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.DataProtection;
 
 namespace WebClientService.Middleware;
@@ -63,13 +64,25 @@ public class RealtimeAuthMiddleware
 
         if (missingValidSignalRKey)
         {
-            context.Response.OnStarting(() => InsertRealtimeKeyCookie(context));
+            var result = await context.AuthenticateAsync();
+            if (!result.Succeeded)
+            {
+                throw new InvalidOperationException(
+                    "Could not authenticate user during realtime key setup"
+                );
+            }
+            string sub = result.Principal.Claims
+                .First(c => c.Type == "sub")
+                .Value;
+            context.Response.OnStarting(
+                () => InsertRealtimeKeyCookie(context, sub)
+            );
         }
 
         await _next(context);
     }
 
-    private async Task InsertRealtimeKeyCookie(HttpContext context)
+    private async Task InsertRealtimeKeyCookie(HttpContext context, string sub)
     {
         await Task.Run(() =>
         {
@@ -84,8 +97,7 @@ public class RealtimeAuthMiddleware
             var realtimeKey = Guid.NewGuid().ToString();
             var now = DateTime.Now;
             var expiresAt = now.AddMinutes(30).ToUniversalTime();
-
-            PersistRealtimeKey(realtimeKey, expiresAt.ToString("R"));
+            PersistRealtimeKey(realtimeKey, expiresAt.ToString("R"), sub);
 
             var protector = DataProtectionProvider.CreateProtector(
                 REALTIME_KEY_DATA_PROTECTION_PURPOSE
@@ -108,7 +120,7 @@ public class RealtimeAuthMiddleware
         });
     }
 
-    private void PersistRealtimeKey(string key, string expiresAt)
+    private void PersistRealtimeKey(string key, string expiresAt, string sub)
     {
         var filePath =
             Directory.GetCurrentDirectory() + "/" + REALTIME_KEYS_FILE_PATH;
@@ -116,7 +128,7 @@ public class RealtimeAuthMiddleware
         {
             throw new FileNotFoundException($"Could not locate {filePath}");
         }
-        File.AppendAllText(filePath, $"{key},{expiresAt}\n");
+        File.AppendAllText(filePath, $"{key},{expiresAt},{sub}\n");
     }
 }
 
