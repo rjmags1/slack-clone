@@ -22,16 +22,19 @@ public class ApiController : Controller
     private readonly IDocumentExecuter _documentExecuter;
     private readonly ISchema _schema;
     private readonly IOptions<GraphQLSettings> _graphQLOptions;
+    private readonly KafkaProducer _kafkaProducer;
 
     public ApiController(
         IDocumentExecuter documentExecuter,
         ISchema schema,
-        IOptions<GraphQLSettings> options
+        IOptions<GraphQLSettings> options,
+        KafkaProducer kafkaProducer
     )
     {
         _documentExecuter = documentExecuter;
         _schema = schema;
         _graphQLOptions = options;
+        _kafkaProducer = kafkaProducer;
     }
 
     [HttpPost]
@@ -76,6 +79,15 @@ public class ApiController : Controller
         {
             result.EnrichWithApolloTracing(startTime);
         }
+
+        _ = Task.Run(() =>
+        {
+            Thread.Sleep(5000);
+            _kafkaProducer.ProduceMessageEvent(
+                "dev user",
+                $"signin to {request.Variables!["workspaceId"]}"
+            );
+        });
 
         return new ExecutionResultActionResult(result);
     }

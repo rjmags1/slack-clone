@@ -1,11 +1,13 @@
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.DataProtection;
+using WorkspaceStore = PersistenceService.Stores.WorkspaceStore;
 
 namespace RealtimeService.Hubs;
 
 public class SlackCloneHub : Hub
 {
     private IDataProtectionProvider DataProtectionProvider { get; set; }
+    private IServiceProvider ServiceProvider { get; set; }
 
     static private readonly string REALTIME_KEY_COOKIE_NAME = "realtime-key";
     static private readonly string REALTIME_KEY_DATA_PROTECTION_PURPOSE =
@@ -13,9 +15,74 @@ public class SlackCloneHub : Hub
     static private readonly string REALTIME_KEYS_FILE_PATH =
         "../../keys/rtks.txt";
 
-    public SlackCloneHub(IDataProtectionProvider dataProtectionProvider)
+    public SlackCloneHub(
+        IDataProtectionProvider dataProtectionProvider,
+        IServiceProvider serviceProvider
+    )
     {
         DataProtectionProvider = dataProtectionProvider;
+        ServiceProvider = serviceProvider;
+    }
+
+    private string? GetSubFromQueryString(HttpContext context)
+    {
+        return context.Request.Query["sub"];
+    }
+
+    private string? GetWorkspaceIdFromQueryString(HttpContext context)
+    {
+        return context.Request.Query["workspace"];
+    }
+
+    private async Task<List<Guid>> GetGroupIds(Guid userId, Guid workspaceId)
+    {
+        using var scope = ServiceProvider.CreateScope();
+        WorkspaceStore workspaceStore =
+            scope.ServiceProvider.GetRequiredService<WorkspaceStore>();
+        List<Guid> groupIds = await workspaceStore.LoadUserGroups(
+            userId,
+            workspaceId
+        );
+        groupIds.Add(workspaceId);
+
+        return groupIds;
+    }
+
+    private async Task AddToGroups(
+        Guid userId,
+        Guid workspaceId,
+        List<Guid> groupIds
+    )
+    {
+        foreach (Guid groupId in groupIds)
+        {
+            await AddToGroup(groupId);
+        }
+    }
+
+    private async Task RemoveFromGroups(
+        Guid userId,
+        Guid workspaceId,
+        List<Guid> groupIds
+    )
+    {
+        foreach (Guid groupId in groupIds)
+        {
+            await RemoveFromGroup(groupId);
+        }
+    }
+
+    private async Task AddToGroup(Guid groupId)
+    {
+        await Groups.AddToGroupAsync(Context.ConnectionId, groupId.ToString());
+    }
+
+    private async Task RemoveFromGroup(Guid groupId)
+    {
+        await Groups.RemoveFromGroupAsync(
+            Context.ConnectionId,
+            groupId.ToString()
+        );
     }
 
     public async Task NewMessage(Guid userId, string message) =>
@@ -23,19 +90,43 @@ public class SlackCloneHub : Hub
 
     public override async Task OnConnectedAsync()
     {
-        // TODO: add to correct groups using Context member
-        // TODO: update db online status
-        // TODO: send online notification
+        try
+        {
+            var httpContext = Context.GetHttpContext()!;
+            var userId = Guid.Parse(
+                GetSubFromQueryString(httpContext)
+                    ?? throw new InvalidOperationException()
+            );
+            var workspaceId = Guid.Parse(
+                GetWorkspaceIdFromQueryString(httpContext)
+                    ?? throw new InvalidOperationException()
+            );
+            var groupIds = await GetGroupIds(userId, workspaceId);
+            AuthenticateConnection();
+            await AddToGroups(userId, workspaceId, groupIds);
 
-        AuthenticateConnection();
+            // TODO: update db online status
 
-        Console.WriteLine("########");
-        Console.WriteLine(
-            $"authenticated and connected user {Context.GetHttpContext().Request.Query["sub"]}!"
-        );
-        Console.WriteLine("########");
+            // TODO: send online notification
 
-        await base.OnConnectedAsync();
+            Console.WriteLine($"authenticated and connected user {userId}!");
+            await base.OnConnectedAsync();
+        }
+        catch (Exception e)
+        {
+            var httpContext = Context.GetHttpContext()!;
+            var userId = Guid.Parse(GetSubFromQueryString(httpContext));
+            var workspaceId = Guid.Parse(
+                GetWorkspaceIdFromQueryString(httpContext)
+            );
+            if (userId != Guid.Empty && workspaceId != Guid.Empty)
+            {
+                var groupIds = await GetGroupIds(userId, workspaceId);
+                await RemoveFromGroups(userId, workspaceId, groupIds);
+            }
+            Console.WriteLine(e);
+            Context.Abort();
+        }
     }
 
     public override async Task OnDisconnectedAsync(Exception? exception)
@@ -43,23 +134,23 @@ public class SlackCloneHub : Hub
         // TODO: update db user online status
         // TODO: send offline notification
 
-        Console.WriteLine("########");
-        Console.WriteLine(
-            $"disconnected user {Context.GetHttpContext().Request.Query["sub"]}!"
+        var httpContext = Context.GetHttpContext()!;
+        var userId = Guid.Parse(GetSubFromQueryString(httpContext)!);
+        var workspaceId = Guid.Parse(
+            GetWorkspaceIdFromQueryString(httpContext)!
         );
-        Console.WriteLine("########");
+        var groupIds = await GetGroupIds(userId, workspaceId);
+        await RemoveFromGroups(userId, workspaceId, groupIds);
+        Console.WriteLine(
+            $"disconnected user {Context.GetHttpContext()!.Request.Query["sub"]}!"
+        );
 
         await base.OnDisconnectedAsync(exception);
     }
 
-    private void AddToGroups()
-    {
-        // TODO: get channel memberships from db to add user to Groups
-    }
-
     private void AuthenticateConnection()
     {
-        var connectionCookies = Context.GetHttpContext().Request.Cookies;
+        var connectionCookies = Context.GetHttpContext()!.Request.Cookies!;
         if (!connectionCookies.ContainsKey(REALTIME_KEY_COOKIE_NAME))
         {
             throw new HubException("Connection refused");
@@ -70,10 +161,12 @@ public class SlackCloneHub : Hub
         var protector = DataProtectionProvider.CreateProtector(
             REALTIME_KEY_DATA_PROTECTION_PURPOSE
         );
-        string realtimeKey;
+        string? realtimeKey;
         try
         {
             realtimeKey = protector.Unprotect(encryptedRealtimeKeyCookie);
+            if (realtimeKey is null)
+                throw new InvalidOperationException("decryption failed");
             ValidateRealtimeKey(realtimeKey);
         }
         catch (Exception e)
@@ -83,7 +176,7 @@ public class SlackCloneHub : Hub
         }
     }
 
-    private void ValidateRealtimeKey(string key)
+    private void ValidateRealtimeKey(string? key)
     {
         var filePath =
             Directory.GetCurrentDirectory() + "/" + REALTIME_KEYS_FILE_PATH;
@@ -120,11 +213,9 @@ public class SlackCloneHub : Hub
                             "Expired realtime key"
                         );
                     }
-                    var hc = Context.GetHttpContext();
+                    var hc = Context.GetHttpContext()!;
                     var queryStringSub = hc.Request.Query["sub"];
                     var realtimeKeyAssociatedSub = line.Substring(j + 1);
-                    Console.WriteLine(queryStringSub);
-                    Console.WriteLine(realtimeKeyAssociatedSub);
                     if (queryStringSub != realtimeKeyAssociatedSub)
                     {
                         throw new InvalidOperationException(
@@ -140,7 +231,6 @@ public class SlackCloneHub : Hub
 
     private DateTimeOffset ParseHttpDateTimeString(string s)
     {
-        Console.WriteLine(s);
         DateTimeOffset parsed;
         if (
             DateTimeOffset.TryParseExact(
