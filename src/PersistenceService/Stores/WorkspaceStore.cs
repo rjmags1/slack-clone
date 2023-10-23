@@ -21,6 +21,22 @@ public class WorkspaceStore : Store
         WorkspaceProps = typeof(Workspace).GetProperties().Select(p => p.Name);
     }
 
+    public async Task<List<Guid>> LoadUserGroups(Guid userId, Guid workspaceId)
+    {
+        var channelIds = await _context.ChannelMembers
+            .Where(cm => cm.WorkspaceId == workspaceId)
+            .Where(cm => cm.UserId == userId)
+            .Select(cm => cm.ChannelId)
+            .ToListAsync();
+        var dmGroupIds = await _context.DirectMessageGroupMembers
+            .Where(dm => dm.WorkspaceId == workspaceId)
+            .Where(dm => dm.UserId == userId)
+            .Select(dm => dm.DirectMessageGroupId)
+            .ToListAsync();
+
+        return channelIds.Concat(dmGroupIds).ToList();
+    }
+
     public async Task<Workspace> CreateWorkspace(
         Workspace workspaceSkeleton,
         Guid creatorId,

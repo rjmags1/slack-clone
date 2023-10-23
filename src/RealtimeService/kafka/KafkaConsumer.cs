@@ -33,7 +33,7 @@ public class KafkaConsumer
     {
         Consumer.Subscribe(topics);
         var cancellationToken = (new CancellationTokenSource()).Token;
-        Task.Run(() =>
+        Task.Run(async () =>
         {
             while (!cancellationToken.IsCancellationRequested)
             {
@@ -46,14 +46,21 @@ public class KafkaConsumer
 
                     Console.WriteLine(
                         @$"Consumed event from topic {consumeResult.Topic}: 
-    key {consumeResult.Message.Key, -10} 
+    key {consumeResult.Message.Key} 
     value {consumeResult.Message.Value}
     at {consumeResult.Message.Timestamp}
 "
                     );
+                    var key = consumeResult.Message.Key;
+                    var message = consumeResult.Message.Value;
+                    var workspaceSigninId = message.Substring(10);
+                    await HubContext.Clients
+                        .Group(workspaceSigninId)
+                        .SendAsync("receiveMessage", key, message);
                 }
-                catch (OperationCanceledException)
+                catch (OperationCanceledException e)
                 {
+                    Console.WriteLine(e);
                     break;
                 }
                 catch (ConsumeException e)
@@ -62,11 +69,9 @@ public class KafkaConsumer
                         $"Error while consuming: {e.Error.Reason}"
                     );
                 }
-                finally
-                {
-                    Consumer.Close();
-                }
             }
+            Console.WriteLine("CLOSING KAFKA CONSUMER");
+            Consumer.Close();
         });
     }
 }
