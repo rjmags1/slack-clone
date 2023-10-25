@@ -53,10 +53,7 @@ public class KafkaConsumer
                     );
                     var key = consumeResult.Message.Key;
                     var message = consumeResult.Message.Value;
-                    var workspaceSigninId = message.Substring(10);
-                    await HubContext.Clients
-                        .Group(workspaceSigninId)
-                        .SendAsync("receiveMessage", key, message);
+                    await ProcessMessage(key, message);
                 }
                 catch (OperationCanceledException e)
                 {
@@ -73,5 +70,30 @@ public class KafkaConsumer
             Console.WriteLine("CLOSING KAFKA CONSUMER");
             Consumer.Close();
         });
+    }
+
+    public async Task ProcessMessage(string key, string value)
+    {
+        Console.WriteLine(key == "signin");
+        if (key == "signin")
+        {
+            var workspaceIdIdx = value.IndexOf("workspace:");
+            Console.WriteLine(workspaceIdIdx);
+            if (workspaceIdIdx < 0)
+            {
+                throw new InvalidOperationException("Bad message format");
+            }
+            var workspaceId = value[
+                (workspaceIdIdx + 10)..(value.IndexOf(',', workspaceIdIdx))
+            ];
+            Console.WriteLine(workspaceId);
+            Console.WriteLine(value);
+
+            await HubContext.Clients
+                .Group(workspaceId)
+                .SendAsync("receiveMessage", key, value);
+        }
+
+        throw new NotImplementedException();
     }
 }
