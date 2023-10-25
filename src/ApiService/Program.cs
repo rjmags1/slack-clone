@@ -24,7 +24,6 @@ builder.Services
     .AddJwtBearer(options =>
     {
         options.Authority = "https://localhost:5001";
-        options.Audience = "bff";
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuerSigningKey = true,
@@ -33,7 +32,8 @@ builder.Services
             ValidIssuer = "https://localhost:5001",
             ValidateAudience = true,
             ValidateLifetime = true,
-            ValidAlgorithms = new string[] { SecurityAlgorithms.RsaSha256 }
+            ValidAlgorithms = new string[] { SecurityAlgorithms.RsaSha256 },
+            ValidAudiences = new List<string> { "bff", "realtime" }
         };
         options.Events = new JwtBearerEvents
         {
@@ -56,6 +56,13 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy(
         "HasApiScopeClaim",
         policy => policy.Requirements.Add(new ScopeRequirement("api"))
+    );
+    options.AddPolicy(
+        "HasRealtimeScopeClaim",
+        policy =>
+        {
+            policy.RequireClaim("scope", "realtime");
+        }
     );
 });
 

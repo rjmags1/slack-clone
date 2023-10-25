@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.DataProtection;
 using WorkspaceStore = PersistenceService.Stores.WorkspaceStore;
+using RealtimeService.ApiServiceClient;
 
 namespace RealtimeService.Hubs;
 
@@ -8,6 +9,7 @@ public class SlackCloneHub : Hub
 {
     private IDataProtectionProvider DataProtectionProvider { get; set; }
     private IServiceProvider ServiceProvider { get; set; }
+    private ApiClient ApiClient { get; set; }
 
     static private readonly string REALTIME_KEY_COOKIE_NAME = "realtime-key";
     static private readonly string REALTIME_KEY_DATA_PROTECTION_PURPOSE =
@@ -17,76 +19,14 @@ public class SlackCloneHub : Hub
 
     public SlackCloneHub(
         IDataProtectionProvider dataProtectionProvider,
-        IServiceProvider serviceProvider
+        IServiceProvider serviceProvider,
+        ApiClient apiServiceClient
     )
     {
         DataProtectionProvider = dataProtectionProvider;
         ServiceProvider = serviceProvider;
+        ApiClient = apiServiceClient;
     }
-
-    private string? GetSubFromQueryString(HttpContext context)
-    {
-        return context.Request.Query["sub"];
-    }
-
-    private string? GetWorkspaceIdFromQueryString(HttpContext context)
-    {
-        return context.Request.Query["workspace"];
-    }
-
-    private async Task<List<Guid>> GetGroupIds(Guid userId, Guid workspaceId)
-    {
-        using var scope = ServiceProvider.CreateScope();
-        WorkspaceStore workspaceStore =
-            scope.ServiceProvider.GetRequiredService<WorkspaceStore>();
-        List<Guid> groupIds = await workspaceStore.LoadUserGroups(
-            userId,
-            workspaceId
-        );
-        groupIds.Add(workspaceId);
-
-        return groupIds;
-    }
-
-    private async Task AddToGroups(
-        Guid userId,
-        Guid workspaceId,
-        List<Guid> groupIds
-    )
-    {
-        foreach (Guid groupId in groupIds)
-        {
-            await AddToGroup(groupId);
-        }
-    }
-
-    private async Task RemoveFromGroups(
-        Guid userId,
-        Guid workspaceId,
-        List<Guid> groupIds
-    )
-    {
-        foreach (Guid groupId in groupIds)
-        {
-            await RemoveFromGroup(groupId);
-        }
-    }
-
-    private async Task AddToGroup(Guid groupId)
-    {
-        await Groups.AddToGroupAsync(Context.ConnectionId, groupId.ToString());
-    }
-
-    private async Task RemoveFromGroup(Guid groupId)
-    {
-        await Groups.RemoveFromGroupAsync(
-            Context.ConnectionId,
-            groupId.ToString()
-        );
-    }
-
-    public async Task NewMessage(Guid userId, string message) =>
-        await Clients.All.SendAsync("messageReceived", userId, message);
 
     public override async Task OnConnectedAsync()
     {
@@ -102,14 +42,12 @@ public class SlackCloneHub : Hub
                     ?? throw new InvalidOperationException()
             );
             var groupIds = await GetGroupIds(userId, workspaceId);
+
             AuthenticateConnection();
+            await ApiClient.WorkspaceSignIn(userId, workspaceId);
             await AddToGroups(userId, workspaceId, groupIds);
-
-            // TODO: update db online status
-
-            // TODO: send online notification
-
             Console.WriteLine($"authenticated and connected user {userId}!");
+
             await base.OnConnectedAsync();
         }
         catch (Exception e)
@@ -227,6 +165,67 @@ public class SlackCloneHub : Hub
             }
         }
         throw new InvalidOperationException("Invalid key");
+    }
+
+    private string? GetSubFromQueryString(HttpContext context)
+    {
+        return context.Request.Query["sub"];
+    }
+
+    private string? GetWorkspaceIdFromQueryString(HttpContext context)
+    {
+        return context.Request.Query["workspace"];
+    }
+
+    private async Task<List<Guid>> GetGroupIds(Guid userId, Guid workspaceId)
+    {
+        using var scope = ServiceProvider.CreateScope();
+        WorkspaceStore workspaceStore =
+            scope.ServiceProvider.GetRequiredService<WorkspaceStore>();
+        List<Guid> groupIds = await workspaceStore.LoadUserGroups(
+            userId,
+            workspaceId
+        );
+        groupIds.Add(workspaceId);
+
+        return groupIds;
+    }
+
+    private async Task AddToGroups(
+        Guid userId,
+        Guid workspaceId,
+        List<Guid> groupIds
+    )
+    {
+        foreach (Guid groupId in groupIds)
+        {
+            await AddToGroup(groupId);
+        }
+    }
+
+    private async Task RemoveFromGroups(
+        Guid userId,
+        Guid workspaceId,
+        List<Guid> groupIds
+    )
+    {
+        foreach (Guid groupId in groupIds)
+        {
+            await RemoveFromGroup(groupId);
+        }
+    }
+
+    private async Task AddToGroup(Guid groupId)
+    {
+        await Groups.AddToGroupAsync(Context.ConnectionId, groupId.ToString());
+    }
+
+    private async Task RemoveFromGroup(Guid groupId)
+    {
+        await Groups.RemoveFromGroupAsync(
+            Context.ConnectionId,
+            groupId.ToString()
+        );
     }
 
     private DateTimeOffset ParseHttpDateTimeString(string s)

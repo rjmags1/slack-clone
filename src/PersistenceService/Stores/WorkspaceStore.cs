@@ -467,6 +467,16 @@ public class WorkspaceStore : Store
         return (dynamicWorkspaceMembers, lastPage);
     }
 
+    public async Task<string> SignInUser(Guid userId, Guid workspaceId)
+    {
+        var member = await _context.WorkspaceMembers
+            .Where(wm => wm.UserId == userId && wm.WorkspaceId == workspaceId)
+            .FirstAsync();
+        member.OnlineStatus = "online";
+        await _context.SaveChangesAsync();
+        return "online";
+    }
+
     public async Task<Workspace> GetWorkspace(Guid workspaceId)
     {
         return await _context.Workspaces

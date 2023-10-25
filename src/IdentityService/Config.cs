@@ -13,12 +13,20 @@ public static class Config
         };
 
     public static IEnumerable<ApiScope> ApiScopes =>
-        new List<ApiScope> { new ApiScope("api", "API") };
+        new List<ApiScope>
+        {
+            new ApiScope("api", "API"),
+            new ApiScope("realtime", "Realtime")
+        };
 
     public static IEnumerable<ApiResource> ApiResources =>
         new List<ApiResource>
         {
-            new ApiResource("bff", "bff graphql api") { Scopes = { "api" } }
+            new ApiResource("bff", "bff graphql api") { Scopes = { "api" } },
+            new ApiResource("realtime", "realtime service internal api")
+            {
+                Scopes = { "realtime" }
+            }
         };
 
     public static IEnumerable<Client> Clients =>
@@ -42,6 +50,13 @@ public static class Config
                     IdentityServerConstants.StandardScopes.Profile,
                     "api"
                 }
+            },
+            new Client
+            {
+                ClientId = "realtime service",
+                AllowedGrantTypes = GrantTypes.ClientCredentials,
+                ClientSecrets = { new Secret("secret".Sha256()) },
+                AllowedScopes = { "realtime" },
             }
         };
 }

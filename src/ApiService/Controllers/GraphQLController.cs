@@ -80,15 +80,6 @@ public class ApiController : Controller
             result.EnrichWithApolloTracing(startTime);
         }
 
-        _ = Task.Run(() =>
-        {
-            Thread.Sleep(5000);
-            _kafkaProducer.ProduceMessageEvent(
-                "dev user",
-                $"signin to {request.Variables!["workspaceId"]}"
-            );
-        });
-
         return new ExecutionResultActionResult(result);
     }
 }
