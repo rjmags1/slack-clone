@@ -8,6 +8,7 @@ using PersistenceService.Stores;
 using Microsoft.EntityFrameworkCore;
 using Models = PersistenceService.Models;
 using Microsoft.AspNetCore.Identity;
+using RealtimeService.ApiServiceClient;
 
 const string DATA_PROTECTION_KEY_PATH = "../../keys/data_protection_keys";
 const string DATA_PROTECTION_APPLICATION_NAME = "slack-clone";
@@ -43,6 +44,9 @@ builder.Services.AddScoped<FileStore>();
 builder.Services.AddScoped<ThemeStore>();
 builder.Services.AddScoped<UserStore>();
 builder.Services.AddScoped<WorkspaceStore>();
+
+builder.Services.AddHttpClient();
+builder.Services.AddSingleton<ApiClient>();
 
 builder.Services.AddCors(options =>
 {
