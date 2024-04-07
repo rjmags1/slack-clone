@@ -14,6 +14,7 @@ using System.Text.Json;
 using ApiService.Auth;
 using Microsoft.AspNetCore.Authorization;
 using ApiService.Kafka.Producer;
+using Common.SlackCloneGraphQL;
 
 DotNetEnv.Env.Load();
 
@@ -84,6 +85,7 @@ builder.Services.AddScoped<FileStore>();
 builder.Services.AddScoped<ThemeStore>();
 builder.Services.AddScoped<UserStore>();
 builder.Services.AddScoped<WorkspaceStore>();
+builder.Services.AddScoped<ISlackCloneData, SlackCloneData>();
 
 builder.Services.Configure<GraphQLSettings>(options =>
 {

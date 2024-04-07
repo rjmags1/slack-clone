@@ -1,6 +1,6 @@
 using GraphQL;
 using GraphQL.Types;
-using SlackCloneGraphQL.Types;
+using Common.SlackCloneGraphQL.Types;
 
 namespace SlackCloneGraphQL;
 

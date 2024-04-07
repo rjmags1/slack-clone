@@ -14,4 +14,4 @@ obj/
 npm-debug.log*
 
 **/.mono
-**/.sln
+**/*.sln
