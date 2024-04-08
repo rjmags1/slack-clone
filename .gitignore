@@ -12,3 +12,6 @@ obj/
 **/__generated__
 
 npm-debug.log*
+
+**/.mono
+**/*.sln

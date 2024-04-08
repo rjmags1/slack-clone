@@ -1,8 +1,8 @@
 using ApiService.Utils;
 using GraphQL;
 using GraphQL.Types;
-using SlackCloneGraphQL.Types;
-using SlackCloneGraphQL.Types.Connections;
+using Common.SlackCloneGraphQL.Types;
+using Common.SlackCloneGraphQL.Types.Connections;
 
 namespace SlackCloneGraphQL;
 
