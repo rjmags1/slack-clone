@@ -8,7 +8,8 @@ using Microsoft.Extensions.Options;
 using SlackCloneGraphQL;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using AuthorizeAttribute = Microsoft.AspNetCore.Authorization.AuthorizeAttribute;
-using ApiService.Utils;
+using Common.Utils;
+using Common.SlackCloneGraphQL;
 using ApiService.Kafka.Producer;
 
 namespace ApiService.Controllers;

@@ -3,6 +3,7 @@ using GraphQL;
 using GraphQL.Types;
 using GraphQLParser.AST;
 using Common.SlackCloneGraphQL.Types.Connections;
+using Common.Utils;
 
 namespace Common.SlackCloneGraphQL.Types;
 
@@ -22,15 +23,12 @@ public class WorkspacesPageDataType : ObjectGraphType<WorkspacesPageData>
             .Argument<NonNullGraphType<IdGraphType>>("id")
             .ResolveAsync(async context =>
             {
-                throw new NotImplementedException();
-                //var userId = context.GetArgument<Guid>("id");
-                //return await data.GetUserById(
-                //userId,
-                //FieldAnalyzer.UserDbColumns(
-                //context.FieldAst,
-                //context.Document
-                //)
-                //);
+                var userId = context.GetArgument<Guid>("id");
+                var dbCols = FieldAnalyzer.UserDbColumns(
+                    context.FieldAst,
+                    context.Document
+                );
+                return await data.GetUserById(userId, dbCols);
             });
         Field<NonNullGraphType<WorkspacesConnectionType>>("workspaces")
             .Description("The current page of this workspaces connection")
@@ -39,44 +37,39 @@ public class WorkspacesPageDataType : ObjectGraphType<WorkspacesPageData>
             .Argument<IdGraphType>("after")
             .ResolveAsync(async context =>
             {
-                throw new NotImplementedException();
-                //var first = context.GetArgument<int>("first");
-                //var after = context.GetArgument<Guid?>("after");
-                //var workspacesFilter = context.GetArgument<WorkspacesFilter?>(
-                //"filter"
-                //);
-                //if (workspacesFilter is null)
-                //{
-                //var claims = AuthUtils.GetClaims(
-                //(context.UserContext as GraphQLUserContext)!
-                //)!;
-                //workspacesFilter = new WorkspacesFilter
-                //{
-                //UserId = Guid.Parse(
-                //AuthUtils
-                //.GetClaim(ClaimTypes.NameIdentifier, claims)!
-                //.Value
-                //)
-                //};
-                //}
-                //var fragments = (
-                //context.UserContext["fragments"]
-                //as Dictionary<string, string>
-                //)!;
-                //var query = GraphQLUtils.GetQuery(
-                //(context.UserContext as GraphQLUserContext)!
-                //)!;
-                //var workspacesFieldsInfo = FieldAnalyzer.Workspaces(
-                //query,
-                //fragments
-                //);
+                var first = context.GetArgument<int>("first");
+                var after = context.GetArgument<Guid?>("after");
+                var workspacesFilter = context.GetArgument<WorkspacesFilter?>(
+                    "filter"
+                );
+                if (workspacesFilter is null)
+                {
+                    var claims = AuthUtils.GetClaims(context.UserContext!);
+                    workspacesFilter = new WorkspacesFilter
+                    {
+                        UserId = Guid.Parse(
+                            AuthUtils
+                                .GetClaim(ClaimTypes.NameIdentifier, claims)!
+                                .Value
+                        )
+                    };
+                }
 
-                //return await data.GetWorkspaces(
-                //first,
-                //after,
-                //workspacesFilter,
-                //workspacesFieldsInfo
-                //);
+                var dbColumns = FieldAnalyzer.WorkspaceDbColumns(
+                    GraphQLUtils.GetNodeASTFromConnectionAST(
+                        context.FieldAst,
+                        context.Document,
+                        "WorkspacesConnection",
+                        "WorkspacesConnectionEdge"
+                    ),
+                    context.Document
+                );
+                return await data.GetWorkspaces(
+                    first,
+                    after,
+                    workspacesFilter,
+                    dbColumns
+                );
             });
     }
 }

@@ -31,6 +31,8 @@ public class Store : IDisposable, IStore
         return builder.ToString();
     }
 
+    public static string wdq(string s) => $"\"{s}\"";
+
     public void Dispose()
     {
         _context.Dispose();

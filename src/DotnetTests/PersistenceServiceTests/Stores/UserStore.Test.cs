@@ -54,38 +54,38 @@ public class UserStoreTests1
             "ThemeId",
             "Timezone"
         };
-        //var fetched = await _userStore.FindById(DevId, cols);
-        //Assert.Equal(DevId, fetched.Id);
-        //Assert.Equal(DevAvatarId, fetched.Avatar.Id);
-        //Assert.Equal(DevThemeId, fetched.PersonalInfo?.Theme.Id);
-        //var defaultDateTime = new DateTime();
-        //Assert.NotEqual(fetched.CreatedAt, defaultDateTime);
-        //Assert.NotNull(fetched.OnlineStatus);
-        //Assert.NotNull(fetched.Username);
-        //Assert.NotNull(fetched.PersonalInfo?.Email);
-        //Assert.False(fetched.PersonalInfo?.EmailConfirmed);
-        //Assert.NotNull(fetched.PersonalInfo?.FirstName);
-        //Assert.NotNull(fetched.PersonalInfo?.LastName);
-        //Assert.Equal(
-        //0,
-        //fetched.PersonalInfo?.UserNotificationsPreferences?.NotifSound
-        //);
-        //Assert.Null(
-        //fetched
-        //.PersonalInfo
-        //?.UserNotificationsPreferences
-        //?.AllowAlertsStartTimeUTC
-        //);
-        //Assert.Null(
-        //fetched
-        //.PersonalInfo
-        //?.UserNotificationsPreferences
-        //?.AllowAlertsEndTimeUTC
-        //);
-        //Assert.Null(
-        //fetched.PersonalInfo?.UserNotificationsPreferences?.PauseAlertsUntil
-        //);
-        //Assert.NotNull(fetched.PersonalInfo?.Timezone);
+        var fetched = await _userStore.FindById(DevId, cols);
+        Assert.Equal(DevId, fetched.Id);
+        Assert.Equal(DevAvatarId, fetched.Avatar.Id);
+        Assert.Equal(DevThemeId, fetched.PersonalInfo?.Theme.Id);
+        var defaultDateTime = new DateTime();
+        Assert.NotEqual(fetched.CreatedAt, defaultDateTime);
+        Assert.NotNull(fetched.OnlineStatus);
+        Assert.NotNull(fetched.Username);
+        Assert.NotNull(fetched.PersonalInfo?.Email);
+        Assert.False(fetched.PersonalInfo?.EmailConfirmed);
+        Assert.NotNull(fetched.PersonalInfo?.FirstName);
+        Assert.NotNull(fetched.PersonalInfo?.LastName);
+        Assert.Equal(
+            0,
+            fetched.PersonalInfo?.UserNotificationsPreferences?.NotifSound
+        );
+        Assert.Null(
+            fetched
+                .PersonalInfo
+                ?.UserNotificationsPreferences
+                ?.AllowAlertsStartTimeUTC
+        );
+        Assert.Null(
+            fetched
+                .PersonalInfo
+                ?.UserNotificationsPreferences
+                ?.AllowAlertsEndTimeUTC
+        );
+        Assert.Null(
+            fetched.PersonalInfo?.UserNotificationsPreferences?.PauseAlertsUntil
+        );
+        Assert.NotNull(fetched.PersonalInfo?.Timezone);
     }
 
     /**

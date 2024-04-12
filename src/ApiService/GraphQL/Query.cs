@@ -1,8 +1,9 @@
-using ApiService.Utils;
+using Common.Utils;
 using GraphQL;
 using GraphQL.Types;
 using Common.SlackCloneGraphQL.Types;
 using Common.SlackCloneGraphQL.Types.Connections;
+using Common.SlackCloneGraphQL;
 
 namespace SlackCloneGraphQL;
 
@@ -29,16 +30,7 @@ public class SlackCloneQuery : ObjectGraphType<object>
                 "equivalent-userId"
             )
             .Argument<NonNullGraphType<IdGraphType>>("userId")
-            .Resolve(context =>
-            {
-                string query = GraphQLUtils.GetQuery(
-                    (context.UserContext as GraphQLUserContext)!
-                )!;
-                var fragments = FieldAnalyzer.GetFragments(query);
-                context.UserContext.Add("fragments", fragments);
-
-                return new WorkspacesPageData { };
-            });
+            .Resolve(context => new WorkspacesPageData { });
         Field<WorkspacePageDataType>("workspacePageData")
             .Directive(
                 "requiresClaimMapping",

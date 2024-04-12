@@ -20,13 +20,10 @@ public class SlackCloneData : ISlackCloneData
 
     public async Task<User> GetUserById(Guid userId, IEnumerable<string> cols)
     {
-        //using var scope = Provider.CreateScope();
-        //UserStore userStore =
-        //scope.ServiceProvider.GetRequiredService<UserStore>();
-        //Models.User dbUser = await userStore.FindById(userId, cols);
-
-        //return ModelToObjectConverters.ConvertUser(dbUser, cols);
-        throw new NotImplementedException();
+        using var scope = Provider.CreateScope();
+        UserStore userStore =
+            scope.ServiceProvider.GetRequiredService<UserStore>();
+        return await userStore.FindById(userId, cols);
     }
 
     public async Task<Channel> GetChannel(Guid channelId)
@@ -205,41 +202,38 @@ public class SlackCloneData : ISlackCloneData
         IEnumerable<string> cols
     )
     {
-        //if (filter.NameQuery is not null)
-        //{
-        //throw new NotImplementedException();
-        //}
-        //if (fieldInfo.SubfieldNames.Contains(nameof(Workspace.Members)))
-        //{
-        //throw new InvalidOperationException(
-        //"Forbidden attempt to load a connection within a connection"
-        //);
-        //}
+        if (filter.NameQuery is not null)
+        {
+            throw new NotImplementedException();
+        }
+        if (cols.Contains("members"))
+        {
+            throw new InvalidOperationException(
+                "Forbidden attempt to load a connection within a connection"
+            );
+        }
 
-        //using var scope = Provider.CreateScope();
-        //WorkspaceStore workspaceStore =
-        //scope.ServiceProvider.GetRequiredService<WorkspaceStore>();
-        //(List<dynamic> dbWorkspaces, bool lastPage) =
-        //await workspaceStore.LoadWorkspaces(
-        //filter.UserId,
-        //first,
-        //fieldInfo.FieldTree,
-        //after
-        //);
+        using var scope = Provider.CreateScope();
+        WorkspaceStore workspaceStore =
+            scope.ServiceProvider.GetRequiredService<WorkspaceStore>();
+        (List<Workspace> workspaces, bool lastPage) =
+            await workspaceStore.LoadWorkspaces(
+                filter.UserId,
+                first,
+                cols,
+                after
+            );
 
-        //List<Workspace> workspaces = new();
-        //foreach (dynamic dbw in dbWorkspaces)
-        //{
-        //Workspace workspace = (Workspace)
-        //ModelToObjectConverters.ConvertDynamicWorkspace(dbw);
-        //workspaces.Add(workspace);
-        //}
+        return ToConnection(workspaces, after is null, lastPage);
+    }
 
-        //return ModelToObjectConverters.ToConnection<Workspace>(
-        //workspaces,
-        //after is null,
-        //lastPage
-        //);
+    private Connection<T> ToConnection<T>(
+        List<T> nodes,
+        bool firstPage,
+        bool lastPage
+    )
+        where T : INode
+    {
         throw new NotImplementedException();
     }
 
