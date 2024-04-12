@@ -1,9 +1,11 @@
+using Dapper;
 using Microsoft.EntityFrameworkCore;
 using PersistenceService.Data.ApplicationDb;
 using PersistenceService.Models;
 using PersistenceService.Utils;
 using PersistenceService.Utils.GraphQL;
 using System.Linq.Dynamic.Core;
+using GraphQLTypes = Common.SlackCloneGraphQL.Types;
 
 namespace PersistenceService.Stores;
 
@@ -383,44 +385,85 @@ public class WorkspaceStore : Store
     }
 
     public async Task<(
-        List<dynamic> dbWorkspaces,
+        List<GraphQLTypes.Workspace> workspaces,
         bool lastPage
     )> LoadWorkspaces(
         Guid userId,
         int first,
-        FieldTree connectionTree,
+        IEnumerable<string> cols,
         Guid? after = null
     )
     {
-        var memberships = _context.WorkspaceMembers
-            .OrderByDescending(wm => wm.JoinedAt)
-            .Where(wm => wm.UserId == userId);
-        if (!(after is null))
+        string wWorkspaces = Stores.Store.wdq("Workspaces");
+        string wWorkspaceMembers = Stores.Store.wdq("WorkspaceMembers");
+        string wUserId = Stores.Store.wdq("UserId");
+        string wId = Stores.Store.wdq("Id");
+        string wWorkspaceId = Stores.Store.wdq("WorkspaceId");
+        string wName = Stores.Store.wdq("Name");
+
+        var sqlBuilder = new List<string>();
+
+        sqlBuilder.Add("WITH workspaceMembers_ AS (");
+        sqlBuilder.Add("SELECT");
+        sqlBuilder.Add(wWorkspaceId);
+        sqlBuilder.Add("FROM");
+        sqlBuilder.Add($"{wWorkspaceMembers}");
+        sqlBuilder.Add("WHERE");
+        sqlBuilder.Add($"{wUserId} = @UserId");
+        sqlBuilder.Add(after is null ? ")\n" : "),");
+
+        if (after is not null)
         {
-            var afterJoinedAt = _context.WorkspaceMembers
-                .Where(wm => wm.UserId == userId && wm.WorkspaceId == after)
-                .Select(wm => wm.JoinedAt)
-                .First();
-            memberships = memberships.Where(
-                wm => wm.UserId == userId && wm.JoinedAt < afterJoinedAt
-            );
+            sqlBuilder.Add("after_ AS (");
+            sqlBuilder.Add("SELECT");
+            sqlBuilder.Add(wName);
+            sqlBuilder.Add("FROM");
+            sqlBuilder.Add(wWorkspaces);
+            sqlBuilder.Add("WHERE");
+            sqlBuilder.Add($"{wId} = @AfterId");
+            sqlBuilder.Add(")\n");
         }
-        IQueryable<Workspace> workspaces = memberships
-            .Take(first + 1)
-            .Select(wm => wm.Workspace);
 
-        var dynamicWorkspaces = await workspaces
-            .Select(
-                DynamicLinqUtils.NodeFieldToDynamicSelectString(connectionTree)
-            )
-            .ToDynamicListAsync();
+        sqlBuilder.Add("SELECT");
+        sqlBuilder.AddRange(
+            cols.Select(c => Stores.Store.wdq(c))
+                .Select(
+                    (c, i) =>
+                        $"{wWorkspaces}.{(i == cols.Count() - 1 ? $"{c}" : $"{c},")}"
+                )
+        );
+        sqlBuilder.Add($"FROM {wWorkspaces}\n");
+        sqlBuilder.Add(
+            $"INNER JOIN workspaceMembers_ ON {wWorkspaces}.{wId} = workspaceMembers_.{wWorkspaceId}"
+        );
+        if (after is not null)
+        {
+            sqlBuilder.Add("AND");
+            sqlBuilder.Add($"{wName} > (SELECT {wName} FROM after_)");
+        }
+        sqlBuilder.Add($"ORDER BY {wName}");
+        sqlBuilder.Add($"LIMIT @First;");
 
-        bool lastPage = dynamicWorkspaces.Count <= first;
+        var sql = string.Join("\n", sqlBuilder);
+        var conn = _context.GetConnection();
+        var parameters = new
+        {
+            UserId = userId,
+            AfterId = after,
+            First = first + 1
+        };
+        var workspaces = await conn.QueryAsync<GraphQLTypes.Workspace>(
+            sql,
+            parameters
+        );
+        List<GraphQLTypes.Workspace> res = workspaces.ToList();
+        var lastPage = res.Count <= first;
         if (!lastPage)
         {
-            dynamicWorkspaces.RemoveAt(dynamicWorkspaces.Count - 1);
+            res.RemoveAt(res.Count - 1);
         }
-        return (dynamicWorkspaces, lastPage);
+
+        return (res, lastPage);
     }
 
     public async Task<(

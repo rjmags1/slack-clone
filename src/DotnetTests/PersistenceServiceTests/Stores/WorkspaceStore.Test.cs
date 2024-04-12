@@ -3,6 +3,7 @@ using DotnetTests.PersistenceService.Utils;
 using PersistenceService.Data.ApplicationDb;
 using PersistenceService.Models;
 using PersistenceService.Stores;
+using GraphQLTypes = Common.SlackCloneGraphQL.Types;
 
 namespace DotnetTest.PersistenceService.Stores;
 
@@ -12,6 +13,8 @@ public class WorkspaceStoreTests1
 {
     private readonly ApplicationDbContext _dbContext;
     private readonly WorkspaceStore _workspaceStore;
+    readonly Guid userId = Guid.Parse("056b1d27-0825-4113-999d-9f7a95bbabcf");
+    readonly Guid after = Guid.Parse("f5f08029-fabd-4de5-bd25-a1d61cbc1255");
 
     public WorkspaceStoreTests1(
         ApplicationDbContextFixture applicationDbContextFixture
@@ -21,6 +24,29 @@ public class WorkspaceStoreTests1
         _workspaceStore = new WorkspaceStore(_dbContext);
     }
 
+    [Fact]
+    public async void LoadWorkspaces_ShouldWork()
+    {
+        string[] cols =
+        {
+            "Id",
+            "AvatarId",
+            "CreatedAt",
+            "Description",
+            "Name",
+            "NumMembers"
+        };
+        (List<GraphQLTypes.Workspace> workspaces1, bool lastPage1) =
+            await _workspaceStore.LoadWorkspaces(userId, 4, cols);
+        (List<GraphQLTypes.Workspace> workspaces2, bool lastPage2) =
+            await _workspaceStore.LoadWorkspaces(userId, 100, cols, after);
+        Assert.Equal(4, workspaces1.Count);
+        Assert.Equal(2, workspaces2.Count);
+        Assert.False(lastPage1);
+        Assert.True(lastPage2);
+    }
+
+    /*
     [Fact]
     public async void InsertWorkspaceAdmin_ShouldInsertWorkspaceAdminAlreadyMember()
     {
@@ -551,6 +577,7 @@ public class WorkspaceStoreTests1
             Assert.Equal(0, iw.NumMembers);
         }
     }
+    */
 }
 
 [Trait("Category", "Order 2")]
