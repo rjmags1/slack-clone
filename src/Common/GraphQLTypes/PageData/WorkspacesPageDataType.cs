@@ -22,15 +22,12 @@ public class WorkspacesPageDataType : ObjectGraphType<WorkspacesPageData>
             .Argument<NonNullGraphType<IdGraphType>>("id")
             .ResolveAsync(async context =>
             {
-                throw new NotImplementedException();
-                //var userId = context.GetArgument<Guid>("id");
-                //return await data.GetUserById(
-                //userId,
-                //FieldAnalyzer.UserDbColumns(
-                //context.FieldAst,
-                //context.Document
-                //)
-                //);
+                var userId = context.GetArgument<Guid>("id");
+                var dbCols = FieldAnalyzer.UserDbColumns(
+                    context.FieldAst,
+                    context.Document
+                );
+                return await data.GetUserById(userId, dbCols);
             });
         Field<NonNullGraphType<WorkspacesConnectionType>>("workspaces")
             .Description("The current page of this workspaces connection")

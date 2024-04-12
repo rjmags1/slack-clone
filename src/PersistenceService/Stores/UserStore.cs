@@ -1,4 +1,3 @@
-using System.Reflection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -7,6 +6,8 @@ using PersistenceService.Data.ApplicationDb;
 using PersistenceService.Models;
 using PersistenceService.Utils;
 using CustomBaseStore = PersistenceService.Stores.Store;
+using Dapper;
+using GraphQLTypes = Common.SlackCloneGraphQL.Types;
 
 namespace PersistenceService.Stores;
 
@@ -16,10 +17,6 @@ public class UserStore : UserManager<User>, IStore
         TimeZoneInfo.GetSystemTimeZones().ToList();
 
     public static string testPhoneNumber = "9-999-999-9999";
-
-    private const string AVATAR_NAV_PROP = "Avatar";
-
-    private const string THEME_NAV_PROP = "Theme";
 
     private ApplicationDbContext context { get; set; }
 
@@ -50,40 +47,86 @@ public class UserStore : UserManager<User>, IStore
         context = dbContext;
     }
 
-    public async Task<User> FindByIdAsyncWithEagerNavPropLoading(
+    public async Task<GraphQLTypes.User> FindById(
         Guid userId,
-        IEnumerable<string> fields
+        IEnumerable<string> cols
     )
     {
-        IEnumerable<string> uppercaseFields = fields.Select(
-            f => StringUtils.ToUpperFirstLetter(f)
+        var wId = Stores.Store.wdq("Id");
+        var wUser = Stores.Store.wdq("user_");
+        var wTheme = Stores.Store.wdq("Themes");
+        var wThemeId = Stores.Store.wdq("ThemeId");
+        var wFiles = Stores.Store.wdq("Files");
+        var wAvatarId = Stores.Store.wdq("AvatarId");
+
+        var sqlBuilder = new List<string>();
+        sqlBuilder.Add("WITH user_ AS (\n");
+        sqlBuilder.Add("SELECT\n");
+        sqlBuilder.AddRange(
+            cols.Select(c => Stores.Store.wdq(c))
+                .Select((c, i) => i == cols.Count() - 1 ? $"{c}\n" : $"{c},\n")
         );
-        IQueryable<User> query = context.Users.Where(u => u.Id == userId);
-
-        bool avatarRequested = false;
-        bool themeRequested = false;
-        foreach (string f in fields)
+        sqlBuilder.Add($"FROM {Stores.Store.wdq("AspNetUsers")}\n");
+        sqlBuilder.Add($"WHERE {wId} = @UserId\n");
+        sqlBuilder.Add(")\n\n");
+        sqlBuilder.Add($"SELECT * FROM {wUser}\n");
+        if (cols.Any(c => c == "ThemeId" || c == "AvatarId"))
         {
-            if (f == AVATAR_NAV_PROP)
-            {
-                avatarRequested = true;
-            }
-            if (f == THEME_NAV_PROP)
-            {
-                themeRequested = true;
-            }
+            sqlBuilder.Add(
+                $"LEFT JOIN {wTheme} ON {wTheme}.{wId} = {wUser}.{wThemeId}\n"
+            );
+            sqlBuilder.Add(
+                $"LEFT JOIN {wFiles} ON {wFiles}.{wId} = {wUser}.{wAvatarId}\n"
+            );
         }
+        sqlBuilder.Add(";");
 
-        if (avatarRequested)
-        {
-            query = query.Include(u => u.Avatar).Where(u => u.Id == userId);
-        }
-        if (themeRequested)
-        {
-            query = query.Include(u => u.Theme).Where(u => u.Id == userId);
-        }
-
-        return await query.FirstAsync();
+        var sql = string.Join("", sqlBuilder);
+        var conn = context.GetConnection();
+        var parameters = new { UserId = userId };
+        return (
+            await conn.QueryAsync<
+                Models.User,
+                GraphQLTypes.Theme?,
+                GraphQLTypes.File?,
+                GraphQLTypes.User
+            >(
+                sql: sql,
+                param: parameters,
+                map: (user, theme, avatar) =>
+                {
+                    return new GraphQLTypes.User
+                    {
+                        Id = user.Id,
+                        Avatar = avatar!,
+                        OnlineStatus = user.OnlineStatus ?? "offline",
+                        OnlineStatusUntil = user.OnlineStatusUntil,
+                        Username = user.UserName,
+                        CreatedAt = user.CreatedAt,
+                        PersonalInfo = new GraphQLTypes.UserInfo
+                        {
+                            Email = user.Email,
+                            EmailConfirmed = user.EmailConfirmed,
+                            FirstName = user.FirstName,
+                            LastName = user.LastName,
+                            Theme = theme!,
+                            Timezone = user.Timezone,
+                            UserNotificationsPreferences =
+                                new GraphQLTypes.UserNotificationsPreferences
+                                {
+                                    NotifSound = user.NotificationSound,
+                                    AllowAlertsStartTimeUTC =
+                                        user.NotificationsAllowStartTime,
+                                    AllowAlertsEndTimeUTC =
+                                        user.NotificationsAllowEndTime,
+                                    PauseAlertsUntil =
+                                        user.NotificationsPauseUntil
+                                }
+                        }
+                    };
+                }
+            )
+        ).First();
     }
 
     public async Task<List<User>> InsertUsers(

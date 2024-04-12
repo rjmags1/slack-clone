@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using PersistenceService.Models;
+using Npgsql;
 
 namespace PersistenceService.Data.ApplicationDb;
 
@@ -50,6 +51,12 @@ public class ApplicationDbContext
     }
 
     public ApplicationDbContext() { }
+
+    public NpgsqlConnection GetConnection()
+    {
+        NpgsqlConnection conn = (NpgsqlConnection)Database.GetDbConnection();
+        return conn;
+    }
 
     protected override void OnConfiguring(
         DbContextOptionsBuilder optionsBuilder

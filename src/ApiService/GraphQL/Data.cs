@@ -20,13 +20,10 @@ public class SlackCloneData : ISlackCloneData
 
     public async Task<User> GetUserById(Guid userId, IEnumerable<string> cols)
     {
-        //using var scope = Provider.CreateScope();
-        //UserStore userStore =
-        //scope.ServiceProvider.GetRequiredService<UserStore>();
-        //Models.User dbUser = await userStore.FindById(userId, cols);
-
-        //return ModelToObjectConverters.ConvertUser(dbUser, cols);
-        throw new NotImplementedException();
+        using var scope = Provider.CreateScope();
+        UserStore userStore =
+            scope.ServiceProvider.GetRequiredService<UserStore>();
+        return await userStore.FindById(userId, cols);
     }
 
     public async Task<Channel> GetChannel(Guid channelId)
