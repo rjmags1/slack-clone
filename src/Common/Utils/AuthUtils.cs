@@ -1,11 +1,10 @@
-using SlackCloneGraphQL;
 using System.Security.Claims;
 
-namespace ApiService.Utils;
+namespace Common.Utils;
 
 public static class AuthUtils
 {
-    public static ClaimsPrincipal GetClaims(GraphQLUserContext context)
+    public static ClaimsPrincipal GetClaims(IDictionary<string, object> context)
     {
         if (!context.ContainsKey("claims"))
         {

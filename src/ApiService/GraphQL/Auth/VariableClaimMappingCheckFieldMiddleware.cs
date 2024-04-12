@@ -1,5 +1,5 @@
 using System.Security.Claims;
-using ApiService.Utils;
+using Common.Utils;
 using GraphQL;
 using GraphQL.Instrumentation;
 

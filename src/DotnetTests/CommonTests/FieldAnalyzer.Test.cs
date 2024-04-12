@@ -1,3 +1,9 @@
+using System.Collections.Immutable;
+using Common.SlackCloneGraphQL;
+using Common.SlackCloneGraphQL.Types;
+using Common.Utils;
+using GraphQLParser;
+using GraphQLParser.AST;
 using PersistenceService.Utils.GraphQL;
 using SlackCloneGraphQL;
 
@@ -67,26 +73,190 @@ public class FieldAnalyzerTests
         @"
         query";
 
-    private readonly string _workspacesQuery =
+    private const string _workspacesQuery1 =
         @"
         query WorkspacesQuery {
-            workspaces(arg: 'testArg') {
+            workspaces(arg: testArg) {
                 pageInfo {
                     hasNextPage
                 }
                 edges {
                     node {
                         id
+                        createdAt
+                        description
+                        name
+                        avatar {
+                            id
+                            storeKey
+                        }
+                        numMembers
                     }
                 }
             }
         }
     ";
 
+    private const string _workspacesQuery2 =
+        @"
+        query WorkspacesQuery {
+            workspaces(arg: testArg) {
+                ...testFragment
+            }
+        }
+
+        fragment testFragment on WorkspacesConnection {
+            pageInfo {
+                hasNextPage
+            }
+            edges {
+                node {
+                    id
+                    createdAt
+                    description
+                    name
+                    avatar {
+                        id
+                        storeKey
+                    }
+                    numMembers
+                }
+            }
+        }
+    ";
+
+    private const string _workspacesQuery3 =
+        @"
+        query WorkspacesQuery {
+            workspaces(arg: testArg) {
+                pageInfo {
+                    hasNextPage
+                }
+                edges {
+                    ...testFragment
+                }
+            }
+        }
+
+        fragment testFragment on WorkspacesConnectionEdge {
+            node {
+                id
+                createdAt
+                description
+                name
+                avatar {
+                    id
+                    storeKey
+                }
+                numMembers
+            }
+        }
+    ";
+
+    private const string _workspacesQuery4 =
+        @"
+        query WorkspacesQuery {
+            workspaces(arg: testArg) {
+                pageInfo {
+                    hasNextPage
+                }
+                edges {
+                    node {
+                        ...testFragment
+                    }
+                }
+            }
+        }
+
+        fragment testFragment on Workspace {
+            id
+            createdAt
+            description
+            name
+            avatar {
+                id
+                storeKey
+            }
+            numMembers
+        }
+    ";
+
+    private const string _workspacesQuery5 =
+        @"
+        query WorkspacesQuery {
+            workspaces(arg: testArg) {
+                ...testFragment2
+            }
+        }
+
+        fragment testFragment2 on WorkspacesConnection {
+            pageInfo {
+                hasNextPage
+            }
+            edges {
+                node {
+                    ...testFragment
+                }
+            }
+        }
+
+        fragment testFragment on Workspace {
+            id
+            createdAt
+            description
+            name
+            avatar {
+                id
+                storeKey
+            }
+            numMembers
+        }
+    ";
+
+    private const string _workspacesQuery6 =
+        @"
+        query WorkspacesQuery {
+            workspaces(arg: testArg) {
+                ...testFragment2
+            }
+        }
+
+        fragment testFragment2 on WorkspacesConnection {
+            totalEdges
+            pageInfo {
+                ...testFragment2
+            }
+            edges {
+                node {
+                    ...testFragment
+                }
+            }
+        }
+
+        fragment testFragment2 on PageInfo {
+            hasNextPage
+            hasPreviousPage
+            startCursor
+            endCursor
+        }
+
+        fragment testFragment on Workspace {
+            id
+            createdAt
+            description
+            name
+            avatar {
+                id
+                storeKey
+            }
+            numMembers
+        }
+    ";
+
     private readonly string _workspacesQueryWithFragments =
         @"
         query WorkspacesQuery {
-            workspaces(arg: 'testArg') {
+            workspaces(arg: testArg) {
                 pageInfo {
                     hasNextPage
                 }
@@ -103,14 +273,141 @@ public class FieldAnalyzerTests
         }
     ";
 
-    private readonly string _userQuery =
+    private const string _userQuery =
         @"
         query UserQuery {
-            user(arg: 'testArg') {
+            user(arg: testArg) {
                 id
                 personalInfo {
                     email
                 }
+            }
+        }
+    ";
+
+    private const string _userQuery2 =
+        @"
+        query UserQuery {
+            user {
+                id
+                avatar {
+                    id
+                    storeKey
+                }
+                ...testFragment
+                username
+                personalInfo {
+                    email
+                    emailConfirmed
+                    firstName
+                    lastName
+                    userNotificationsPreferences {
+                        notifSound
+                        allowAlertsStartTimeUTC
+                        allowAlertsEndTimeUTC
+                        pauseAlertsUntil
+                    }
+                    theme {
+                        id
+                        name
+                    }
+                    timezone
+                }
+            }
+        }
+
+        fragment testFragment on User {
+            createdAt,
+            onlineStatus
+        }
+    ";
+
+    private const string _userQuery3 =
+        @"
+        query UserQuery {
+            user {
+                id
+                avatar {
+                    id
+                    storeKey
+                }
+                ...testFragment
+                username
+                ...testFragment2
+            }
+        }
+
+        fragment testFragment on User {
+            createdAt,
+            onlineStatus
+        }
+
+        fragment testFragment2 on User {
+            personalInfo {
+                email
+                emailConfirmed
+                firstName
+                lastName
+                userNotificationsPreferences {
+                    notifSound
+                    allowAlertsStartTimeUTC
+                    allowAlertsEndTimeUTC
+                    pauseAlertsUntil
+                }
+                theme {
+                    id
+                    name
+                }
+                timezone
+            }
+        }
+    ";
+
+    private const string _userQuery4 =
+        @"
+        query UserQuery {
+            user {
+                id
+                avatar {
+                    ...testFragment4
+                }
+                ...testFragment
+                username
+                ...testFragment2
+            }
+        }
+
+        fragment testFragment4 on File {
+            id
+            storeKey
+        }
+
+        fragment testFragment on User {
+            createdAt,
+            onlineStatus
+        }
+
+        fragment testFragment2 on User {
+            personalInfo {
+                email
+                emailConfirmed
+                firstName
+                lastName
+                ...testFragment3
+                theme {
+                    id
+                    name
+                }
+                timezone
+            }
+        }
+
+        fragment testFragment3 on UserInfo {
+            userNotificationsPreferences {
+                notifSound
+                allowAlertsStartTimeUTC
+                allowAlertsEndTimeUTC
+                pauseAlertsUntil
             }
         }
     ";
@@ -206,10 +503,18 @@ public class FieldAnalyzerTests
         }
     **/
 
-    [Fact]
-    public void UserDbColumns_ShouldGetUserDbColumns()
+    /**
+    [Theory]
+    [InlineData(_userQuery, new[] { "Email", "Id" })]
+    [InlineData(_userQuery2)]
+    [InlineData(_userQuery3)]
+    [InlineData(_userQuery4)]
+    public void UserDbColumns_ShouldGetUserDbColumns(
+        string query,
+        IEnumerable<string>? expectedCols = null
+    )
     {
-        var expectedCols = new List<string>
+        expectedCols ??= new List<string>
         {
             "Id",
             "AvatarId",
@@ -228,15 +533,54 @@ public class FieldAnalyzerTests
             "Timezone"
         };
 
-        //var docAst = Parser.Parse(_userQuery2);
-        //var opDef = docAst.Definitions.First() as GraphQLOperationDefinition;
-        //var rootFieldDef =
-        //opDef!.SelectionSet.Selections.First() as GraphQLField;
-        //var cols = FieldAnalyzer.UserDbColumns(rootFieldDef!, docAst!);
-        //cols.Sort();
-        //expectedCols.Sort();
-        //Assert.Equal(expectedCols, cols);
+        var docAst = Parser.Parse(query);
+        var opDef = docAst.Definitions.First() as GraphQLOperationDefinition;
+        var rootFieldDef =
+            opDef!.SelectionSet.Selections.First() as GraphQLField;
+        var cols = FieldAnalyzer.UserDbColumns(rootFieldDef!, docAst!);
+        cols.Sort();
+        var expected = expectedCols.ToList();
+        expected.Sort();
+        Assert.Equal(expected, cols);
     }
+    **/
+
+    [Theory]
+    [InlineData(_workspacesQuery1)]
+    [InlineData(_workspacesQuery2)]
+    [InlineData(_workspacesQuery3)]
+    [InlineData(_workspacesQuery4)]
+    [InlineData(_workspacesQuery5)]
+    [InlineData(_workspacesQuery6)]
+    public void WorkspaceDbColumns_ShouldGetWorkspacesDbColumns(string query)
+    {
+        List<string> expectedCols =
+            new()
+            {
+                "Id",
+                "AvatarId",
+                "CreatedAt",
+                "Description",
+                "Name",
+                "NumMembers"
+            };
+
+        var docAst = Parser.Parse(query);
+        var opDef = docAst.Definitions.First() as GraphQLOperationDefinition;
+        var workspacesFieldDef =
+            opDef!.SelectionSet.Selections.First() as GraphQLField;
+        var nodeAst = GraphQLUtils.GetNodeASTFromConnectionAST(
+            workspacesFieldDef!,
+            docAst,
+            "WorkspacesConnection",
+            "WorkspacesConnectionEdge"
+        );
+        var dbColumns = FieldAnalyzer.WorkspaceDbColumns(nodeAst, docAst);
+        dbColumns.Sort();
+        expectedCols.Sort();
+        Assert.Equal(expectedCols, dbColumns);
+    }
+
     /**
     
         [Fact]

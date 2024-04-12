@@ -1,7 +1,7 @@
 using System.Dynamic;
 using System.Text.Json;
 
-namespace ApiService.Utils;
+namespace Common.Utils;
 
 public static class DynamicUtils
 {

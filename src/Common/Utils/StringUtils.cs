@@ -1,4 +1,4 @@
-namespace ApiService.Utils;
+namespace Common.Utils;
 
 public class StringUtils
 {
