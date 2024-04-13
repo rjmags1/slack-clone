@@ -548,11 +548,74 @@ public class WorkspaceStore : Store
         return "online";
     }
 
-    public async Task<Workspace> GetWorkspace(Guid workspaceId)
+    public async Task<GraphQLTypes.Workspace> GetWorkspace(
+        Guid workspaceId,
+        List<string> dbCols
+    )
     {
-        return await _context.Workspaces
-            .Where(w => w.Id == workspaceId)
-            .FirstAsync();
+        if (dbCols.Contains("members"))
+        {
+            throw new NotImplementedException();
+        }
+
+        var wWorkspaces = wdq("Workspaces");
+        var wId = wdq("Id");
+        var wAvatarId = wdq("AvatarId");
+        var wFiles = wdq("Files");
+        var wName = wdq("Name");
+        var wStoreKey = wdq("StoreKey");
+
+        List<string> sqlBuilder = new();
+        sqlBuilder.Add("WITH workspace AS (");
+        sqlBuilder.Add($"SELECT * FROM {wWorkspaces}");
+        sqlBuilder.Add($"WHERE {wWorkspaces}.{wId} = @WorkspaceId");
+        sqlBuilder.Add(")");
+        sqlBuilder.Add("SELECT");
+        sqlBuilder.AddRange(
+            dbCols.Select(
+                (c, i) =>
+                    $"workspace.{(i < dbCols.Count - 1 ? wdq(c) + "," : wdq(c))}"
+            )
+        );
+        if (dbCols.Contains("AvatarId"))
+        {
+            sqlBuilder.Add(",");
+            sqlBuilder.Add(
+                $"{wFiles}.{wId}, {wFiles}.{wName}, {wFiles}.{wStoreKey}"
+            );
+        }
+        sqlBuilder.Add("FROM workspace");
+        if (dbCols.Contains("AvatarId"))
+        {
+            sqlBuilder.Add(
+                $"LEFT JOIN {wFiles} ON {wFiles}.{wId} = workspace.{wAvatarId}"
+            );
+        }
+        sqlBuilder.Add(";");
+
+        var sql = string.Join("\n", sqlBuilder);
+        Console.WriteLine(sql);
+        var param = new { WorkspaceId = workspaceId };
+        var conn = _context.GetConnection();
+        var workspace = (
+            !dbCols.Contains("AvatarId")
+                ? await conn.QueryAsync<GraphQLTypes.Workspace>(sql, param)
+                : await conn.QueryAsync<
+                    GraphQLTypes.Workspace,
+                    GraphQLTypes.File,
+                    GraphQLTypes.Workspace
+                >(
+                    sql: sql,
+                    param: param,
+                    map: (workspace, avatar) =>
+                    {
+                        workspace.Avatar = avatar;
+                        return workspace;
+                    }
+                )
+        ).First();
+
+        return workspace;
     }
 
     public struct StarredInfo

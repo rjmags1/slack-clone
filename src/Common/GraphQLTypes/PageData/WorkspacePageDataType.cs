@@ -37,7 +37,11 @@ public class WorkspacePageDataType : ObjectGraphType<WorkspacePageData>
             .ResolveAsync(async context =>
             {
                 var workspaceId = context.GetArgument<Guid>("id");
-                return await data.GetWorkspace(workspaceId);
+                var dbCols = FieldAnalyzer.WorkspaceDbColumns(
+                    context.FieldAst,
+                    context.Document
+                );
+                return await data.GetWorkspace(workspaceId, dbCols);
             });
         Field<NonNullGraphType<ChannelsConnectionType>>("channels")
             .Argument<NonNullGraphType<ChannelsFilterInputType>>("filter")

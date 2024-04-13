@@ -237,17 +237,15 @@ public class SlackCloneData : ISlackCloneData
         throw new NotImplementedException();
     }
 
-    public async Task<Workspace> GetWorkspace(Guid workspaceId)
+    public async Task<Workspace> GetWorkspace(
+        Guid workspaceId,
+        List<string> dbCols
+    )
     {
-        //using var scope = Provider.CreateScope();
-        //WorkspaceStore workspaceStore =
-        //scope.ServiceProvider.GetRequiredService<WorkspaceStore>();
-        //Models.Workspace dbWorkspace = await workspaceStore.GetWorkspace(
-        //workspaceId
-        //);
-
-        //return ModelToObjectConverters.ConvertWorkspace(dbWorkspace);
-        throw new NotImplementedException();
+        using var scope = Provider.CreateScope();
+        WorkspaceStore workspaceStore =
+            scope.ServiceProvider.GetRequiredService<WorkspaceStore>();
+        return await workspaceStore.GetWorkspace(workspaceId, dbCols);
     }
 
     public async Task<Workspace> CreateWorkspace(

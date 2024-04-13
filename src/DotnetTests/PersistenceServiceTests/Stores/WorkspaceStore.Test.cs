@@ -25,6 +25,35 @@ public class WorkspaceStoreTests1
     }
 
     [Fact]
+    public async void GetWorkspace_ShouldWork()
+    {
+        Guid workspaceId = Guid.Parse("f5f08029-fabd-4de5-bd25-a1d61cbc1255");
+        List<string> dbCols1 =
+            new() { "Id", "CreatedAt", "Description", "Name", "NumMembers" };
+        List<string> dbCols2 =
+            new()
+            {
+                "Id",
+                "AvatarId",
+                "CreatedAt",
+                "Description",
+                "Name",
+                "NumMembers"
+            };
+        var workspace1 = await _workspaceStore.GetWorkspace(
+            workspaceId,
+            dbCols1
+        );
+        var workspace2 = await _workspaceStore.GetWorkspace(
+            workspaceId,
+            dbCols2
+        );
+        Assert.Equal(workspaceId, workspace1.Id);
+        Assert.Equal(workspaceId, workspace2.Id);
+    }
+
+    /*
+    [Fact]
     public async void LoadWorkspaces_ShouldWork()
     {
         string[] cols =
@@ -46,7 +75,6 @@ public class WorkspaceStoreTests1
         Assert.True(lastPage2);
     }
 
-    /*
     [Fact]
     public async void InsertWorkspaceAdmin_ShouldInsertWorkspaceAdminAlreadyMember()
     {
