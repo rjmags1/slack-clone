@@ -58,7 +58,7 @@ public interface ISlackCloneData
         int first,
         Guid? after,
         ChannelsFilter filer,
-        IEnumerable<string> cols
+        List<string> cols
     );
 
     public Task<Connection<DirectMessageGroup>> GetDirectMessageGroups(
