@@ -13,66 +13,6 @@ namespace DotnetTest.ApiService.FieldAnalyzerTests;
 [Collection("Database collection 3")]
 public class FieldAnalyzerTests
 {
-    private readonly string _validBasicQuery =
-        @"
-        query BasicQuery {
-            testObj {
-                testField
-            }
-        }
-    ";
-
-    private readonly string _validBasicQueryWithFragments =
-        @"
-        query BasicQuery {
-            testObj {
-                testField
-                ...testFragment1
-            }
-            ...testFragment2
-        }
-
-        fragment testFragment1 on BasicQuery {
-            testField2
-        }
-
-        fragment testFragment2 on TestObj {
-            testField3
-        }
-    ";
-
-    private readonly string _testFragment1Contents =
-        @"{
-            testField2
-        }";
-
-    private readonly string _testFragment2Contents =
-        @"{
-            testField3
-        }";
-
-    private readonly string _invalidBasicQuery =
-        @"
-        badOp BasicQuery {
-            testObj {
-                testField
-            }
-        }
-    ";
-
-    private readonly string _validBasicQueryWithVars =
-        @"
-        query BasicQuery {
-            testObj(arg: 'testArg') {
-                testField
-            }
-        }
-    ";
-
-    private readonly string _emptyQuery =
-        @"
-        query";
-
     private const string _workspacesQuery1 =
         @"
         query WorkspacesQuery {
@@ -412,98 +352,167 @@ public class FieldAnalyzerTests
         }
     ";
 
-    private readonly string _userQueryWithFragments =
+    private const string _channelQuery1 =
         @"
-        query UserQuery {
-            user(arg: 'testArg') {
+        query ChannelQuery {
+            channel {
                 id
-                personalInfo {
-                    ...personalInfoFragment
+                allowThreads
+                allowedPostersMask
+                avatar {
+                    id
+                    storeKey
                 }
+                createdAtUTC
+                createdBy
+                description
+                name
+                numMembers
+                private
+                topic
+                workspace
             }
-        }
-
-        fragment personalInfoFragment on User {
-            email
         }
     ";
 
-    private readonly string _workspaceMembersQuery =
+    private const string _channelQuery2 =
         @"
-        query WorkspaceMembersQuery {
-            workspace {
-                members(arg: 'testArg') {
+        query ChannelQuery {
+            channel {
+                id
+                allowThreads
+                allowedPostersMask
+                avatar {
+                    id
+                    storeKey
+                }
+                createdAtUTC
+                createdBy
+                description
+                members
+                name
+                numMembers
+                private
+                topic
+                workspace
+            }
+        }
+    ";
+
+    private const string _channelQuery3 =
+        @"
+        query ChannelQuery {
+            channel {
+                id
+                allowThreads
+                allowedPostersMask
+                avatar {
+                    id
+                    storeKey
+                }
+                createdAtUTC
+                createdBy
+                description
+                messages
+                name
+                numMembers
+                private
+                topic
+                workspace
+            }
+        }
+    ";
+
+    private const string _channelQuery4 =
+        @"
+        query ChannelQuery {
+            channel {
+                id
+                allowThreads
+                ...testFragment
+                private
+                topic
+                workspace
+            }
+        }
+
+        fragment testFragment on Channel {
+            allowedPostersMask
+            avatar {
+                id
+                storeKey
+            }
+            createdAtUTC
+            createdBy
+            description
+            messages
+            name
+            numMembers
+        }
+    ";
+
+    private const string _channelQuery5 =
+        @"
+        query ChannelQuery {
+            channel {
+                id
+                allowThreads
+                ...testFragment
+                private
+                topic
+                workspace
+            }
+        }
+
+        fragment testFragment on Channel {
+            allowedPostersMask
+            avatar {
+                id
+                storeKey
+            }
+            createdAtUTC
+            createdBy
+            description
+            name
+            numMembers
+        }
+    ";
+
+    private const string _channelQuery6 =
+        @"
+        query ChannelsConnectionQuery {
+            channels {
+                edges {
                     pageInfo {
                         hasNextPage
                     }
-                    edges {
-                        node {
-                            id
-                        }
-                    } 
-                }
-            }
-        }
-    ";
-
-    private readonly string _workspaceMembersQueryWithFragments =
-        @"
-        query WorkspaceMembersQuery {
-            workspace {
-                members(arg: 'testArg') {
-                    pageInfo {
-                        hasNextPage
+                    node {
+                        id
+                        allowThreads
+                        ...testFragment
+                        private
+                        topic
+                        workspace
                     }
-                    edges {
-                        ...edgeFragment
-                    } 
                 }
             }
         }
 
-        fragment edgeFragment on WorkspacesEdge {
-            node {
+        fragment testFragment on Channel {
+            allowedPostersMask
+            avatar {
                 id
+                storeKey
             }
+            createdAtUTC
+            createdBy
+            description
+            name
+            numMembers
         }
     ";
 
-    private readonly string _edgeFragmentContents =
-        @"{
-            node {
-                id
-            }
-        }";
-
-    private readonly string _personalInfoFragmentContexts =
-        @"{
-            email
-        }";
-
-    /**
-    
-        [Fact]
-        public void GetQueryName_ShouldGetQueryName()
-        {
-            Assert.Null(FieldAnalyzer.GetQueryName(null));
-            Assert.Throws<InvalidOperationException>(
-                () => FieldAnalyzer.GetQueryName(_invalidBasicQuery)
-            );
-            Assert.ThrowsAny<Exception>(
-                () => FieldAnalyzer.GetQueryName(_emptyQuery)
-            );
-            Assert.Equal(
-                "BasicQuery",
-                FieldAnalyzer.GetQueryName(_validBasicQuery)
-            );
-            Assert.Equal(
-                "BasicQuery",
-                FieldAnalyzer.GetQueryName(_validBasicQueryWithVars)
-            );
-        }
-    **/
-
-    /**
+    /*
     [Theory]
     [InlineData(_userQuery, new[] { "Email", "Id" })]
     [InlineData(_userQuery2)]
@@ -543,7 +552,6 @@ public class FieldAnalyzerTests
         expected.Sort();
         Assert.Equal(expected, cols);
     }
-    **/
 
     [Theory]
     [InlineData(_workspacesQuery1)]
@@ -579,6 +587,69 @@ public class FieldAnalyzerTests
         dbColumns.Sort();
         expectedCols.Sort();
         Assert.Equal(expectedCols, dbColumns);
+    }
+    */
+
+    [Theory]
+    [InlineData(_channelQuery1)]
+    [InlineData(_channelQuery2)]
+    [InlineData(_channelQuery3)]
+    [InlineData(_channelQuery4)]
+    [InlineData(_channelQuery5)]
+    [InlineData(_channelQuery6)]
+    public void ChannelDbColumns_ShouldGetChannelsDbColumns(string query)
+    {
+        List<string> expectedCols =
+            new()
+            {
+                "Id",
+                "AllowThreads",
+                "AvatarId",
+                "AllowedPostersMask",
+                "CreatedAt",
+                "CreatedById",
+                "Description",
+                "Name",
+                "NumMembers",
+                "Private",
+                "Topic",
+                "WorkspaceId"
+            };
+        var docAst = Parser.Parse(query);
+        var opDef = docAst.Definitions.First() as GraphQLOperationDefinition;
+        if (query == _channelQuery6)
+        {
+            var channelsNodeAst = GraphQLUtils.GetNodeASTFromConnectionAST(
+                (opDef!.SelectionSet.Selections.First() as GraphQLField)!,
+                docAst,
+                "ChannelsConnection",
+                "ChannelsConnectionEdgeType"
+            );
+            var cols = FieldAnalyzer.ChannelDbColumns(channelsNodeAst!, docAst);
+            expectedCols.Sort();
+            cols.Sort();
+            Assert.Equal(expectedCols, cols);
+            return;
+        }
+
+        var channelsFieldDef =
+            opDef!.SelectionSet.Selections.First() as GraphQLField;
+        if (
+            query == _channelQuery2
+            || query == _channelQuery3
+            || query == _channelQuery4
+        )
+        {
+            Assert.Throws<InvalidOperationException>(
+                () => FieldAnalyzer.ChannelDbColumns(channelsFieldDef!, docAst)
+            );
+            return;
+        }
+
+        var dbCols = FieldAnalyzer.ChannelDbColumns(channelsFieldDef!, docAst);
+        expectedCols.Sort();
+        dbCols.Sort();
+        Assert.Equal(expectedCols, dbCols);
     }
 
     /**

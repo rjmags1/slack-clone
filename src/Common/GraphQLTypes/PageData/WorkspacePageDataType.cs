@@ -1,9 +1,14 @@
 using GraphQL;
 using GraphQL.Types;
 using Common.SlackCloneGraphQL.Types.Connections;
+using Common.Utils;
 
 namespace Common.SlackCloneGraphQL.Types;
 
+// TODO
+// implement AST traversal/field analysis/field to db col translation
+
+// implement avatar join for workspace fetching
 public class WorkspacePageDataType : ObjectGraphType<WorkspacePageData>
 {
     public WorkspacePageDataType(ISlackCloneData data)
@@ -20,20 +25,12 @@ public class WorkspacePageDataType : ObjectGraphType<WorkspacePageData>
             .Argument<NonNullGraphType<IdGraphType>>("id")
             .ResolveAsync(async context =>
             {
-                throw new NotImplementedException();
-                //var userId = context.GetArgument<Guid>("id");
-                //var fragments = (
-                //context.UserContext["fragments"]
-                //as Dictionary<string, string>
-                //)!;
-                //var query = GraphQLUtils.GetQuery(
-                //(context.UserContext as GraphQLUserContext)!
-                //)!;
-                //var userFieldsInfo = FieldAnalyzer.User(query, fragments);
-                //return await data.GetUserById(
-                //userId,
-                //userFieldsInfo.SubfieldNames
-                //);
+                var userId = context.GetArgument<Guid>("id");
+                var dbCols = FieldAnalyzer.UserDbColumns(
+                    context.FieldAst,
+                    context.Document
+                );
+                return await data.GetUserById(userId, dbCols);
             });
         Field<NonNullGraphType<WorkspaceType>>("workspace")
             .Argument<NonNullGraphType<IdGraphType>>("id")
@@ -48,29 +45,26 @@ public class WorkspacePageDataType : ObjectGraphType<WorkspacePageData>
             .Argument<IdGraphType>("after")
             .ResolveAsync(async context =>
             {
-                //var first = context.GetArgument<int>("first");
-                //var after = context.GetArgument<Guid?>("after");
-                //ChannelsFilter channelsFilter =
-                //context.GetArgument<ChannelsFilter>("filter");
-                //var fragments = (
-                //context.UserContext["fragments"]
-                //as Dictionary<string, string>
-                //)!;
-                //var query = GraphQLUtils.GetQuery(
-                //(context.UserContext as GraphQLUserContext)!
-                //)!;
-                //var channelsFieldInfo = FieldAnalyzer.Channels(
-                //query,
-                //fragments
-                //);
+                var first = context.GetArgument<int>("first");
+                var after = context.GetArgument<Guid?>("after");
+                ChannelsFilter channelsFilter =
+                    context.GetArgument<ChannelsFilter>("filter");
 
-                //return await data.GetChannels(
-                //first,
-                //after,
-                //channelsFilter,
-                //channelsFieldInfo
-                //);
-                throw new NotImplementedException();
+                var dbColumns = FieldAnalyzer.WorkspaceDbColumns(
+                    GraphQLUtils.GetNodeASTFromConnectionAST(
+                        context.FieldAst,
+                        context.Document,
+                        "ChannelsConnection",
+                        "ChannelsConnectionEdge"
+                    ),
+                    context.Document
+                );
+                return await data.GetChannels(
+                    first,
+                    after,
+                    channelsFilter,
+                    dbColumns
+                );
             });
         Field<NonNullGraphType<DirectMessageGroupsConnectionType>>(
                 "directMessageGroups"

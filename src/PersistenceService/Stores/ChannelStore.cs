@@ -5,7 +5,8 @@ using PersistenceService.Utils;
 using PersistenceService.Utils.GraphQL;
 using System.Linq.Dynamic.Core;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Query;
+using GraphQLTypes = Common.SlackCloneGraphQL.Types;
+using Dapper;
 
 namespace PersistenceService.Stores;
 
@@ -719,64 +720,142 @@ public class ChannelStore : Store
         return channels;
     }
 
-    public async Task<(List<dynamic> channels, bool lastPage)> LoadChannels(
+    public async Task<(
+        List<GraphQLTypes.Channel> channels,
+        bool lastPage
+    )> LoadChannels(
         Guid workspaceId,
         Guid userId,
         int first,
-        FieldTree connectionTree,
+        List<string> cols,
         Guid? after = null
     )
     {
-        IQueryable<ChannelMember> memberships = _context.ChannelMembers
-            .Where(cm => cm.WorkspaceId == workspaceId && cm.UserId == userId)
-            .OrderByDescending(cm => cm.LastViewedAt.HasValue)
-            .ThenByDescending(cm => cm.LastViewedAt)
-            .ThenByDescending(cm => cm.JoinedAt);
-        if (!(after is null))
+        var wId = wdq("Id");
+        var wChannelId = wdq("ChannelId");
+        var wMembers = wdq("ChannelMembers");
+        var wWorkspaceId = wdq("WorkspaceId");
+        var wUserId = wdq("UserId");
+        var wLastViewedAt = wdq("LastViewedAt");
+        var wJoinedAt = wdq("JoinedAt");
+        var wName = wdq("Name");
+        var wChannels = wdq("Channels");
+        var wFiles = wdq("Files");
+        var wUsers = wdq("AspNetUsers");
+        var wWorkspaces = wdq("Workspaces");
+        var wAvatarId = wdq("AvatarId");
+        var wCreatedById = wdq("CreatedById");
+
+        string[] joinCols = { "AvatarId", "CreatedById", "WorkspaceId" };
+        if (cols.Any(c => joinCols.Contains(c)))
         {
-            ChannelMember afterMembership = memberships
-                .Where(
-                    cm =>
-                        cm.WorkspaceId == workspaceId
-                        && cm.UserId == userId
-                        && cm.ChannelId == after
-                )
-                .First();
-            if (afterMembership.LastViewedAt is null)
+            foreach (var c in joinCols)
             {
-                memberships = memberships.Where(
-                    cm =>
-                        cm.LastViewedAt != null
-                        || cm.JoinedAt < afterMembership.JoinedAt
-                );
-            }
-            else
-            {
-                memberships = memberships.Where(
-                    cm =>
-                        cm.LastViewedAt != null
-                        && cm.LastViewedAt < afterMembership.LastViewedAt
-                );
+                cols.Remove(c);
+                cols.Add(c);
             }
         }
-        IQueryable<Channel> channels = memberships
-            .Take(first + 1)
-            .Select(cm => cm.Channel);
 
-        var dynamicChannels = await channels
-            .Select(
-                DynamicLinqUtils.NodeFieldToDynamicSelectString(
-                    connectionTree,
-                    skip: new List<string> { "members", "messages" }
-                )
+        List<string> sqlBuilder = new();
+        if (after is not null)
+        {
+            sqlBuilder.Add("WITH _after AS (");
+            sqlBuilder.Add($"SELECT {wName} FROM {wChannels}");
+            sqlBuilder.Add($"WHERE {wId} = @AfterId");
+            sqlBuilder.Add("),\n");
+        }
+        else
+        {
+            sqlBuilder.Add("WITH");
+        }
+        sqlBuilder.Add("_memberships AS (");
+        sqlBuilder.Add($"SELECT {wChannelId}, {wLastViewedAt}, {wJoinedAt}");
+        sqlBuilder.Add($"FROM {wMembers} WHERE");
+        sqlBuilder.Add($"{wWorkspaceId} = @WorkspaceId AND");
+        sqlBuilder.Add($"{wUserId} = @UserId");
+        sqlBuilder.Add("),\n");
+
+        sqlBuilder.Add("_channels AS (");
+        sqlBuilder.Add("SELECT");
+        sqlBuilder.AddRange(cols.Select(c => $"{wChannels}.{wdq(c)},"));
+        sqlBuilder.Add(
+            $"_memberships.{wLastViewedAt}, _memberships.{wJoinedAt}"
+        );
+        sqlBuilder.Add("FROM");
+        sqlBuilder.Add($"_memberships INNER JOIN {wChannels} ON");
+        sqlBuilder.Add($"{wChannels}.{wId} = _memberships.{wChannelId}");
+        if (after is not null)
+        {
+            sqlBuilder.Add(
+                $"WHERE {wChannels}.{wName} > (SELECT {wName} FROM _after)"
+            );
+        }
+        sqlBuilder.Add("LIMIT @First");
+        sqlBuilder.Add(")\n");
+
+        sqlBuilder.Add("SELECT * FROM _channels");
+        if (cols.Any(c => joinCols.Contains(c)))
+        {
+            sqlBuilder.Add(
+                $"LEFT JOIN {wFiles} ON {wFiles}.{wId} = _channels.{wAvatarId}"
+            );
+            sqlBuilder.Add(
+                $"LEFT JOIN {wUsers} ON {wUsers}.{wId} = _channels.{wCreatedById}"
+            );
+            sqlBuilder.Add(
+                $"LEFT JOIN {wWorkspaces} ON {wWorkspaces}.{wId} = _channels.{wWorkspaceId}"
+            );
+        }
+        sqlBuilder.Add($"ORDER BY");
+        sqlBuilder.Add($"CASE WHEN {wLastViewedAt} IS NULL THEN 0 ELSE 1 END,");
+        sqlBuilder.Add($"{wLastViewedAt},");
+        sqlBuilder.Add($"{wJoinedAt} DESC;");
+
+        var sql = string.Join("\n", sqlBuilder);
+        var conn = _context.GetConnection();
+        var parameters = new
+        {
+            UserId = userId,
+            AfterId = after,
+            WorkspaceId = workspaceId,
+            First = first + 1
+        };
+        var channels = (
+            await conn.QueryAsync<
+                Models.Channel,
+                GraphQLTypes.File,
+                GraphQLTypes.User,
+                GraphQLTypes.Workspace,
+                GraphQLTypes.Channel
+            >(
+                sql: sql,
+                param: parameters,
+                map: (channel, avatar, user, workspace) =>
+                {
+                    return new GraphQLTypes.Channel
+                    {
+                        Id = channel.Id,
+                        AllowThreads = channel.AllowThreads,
+                        AllowedPostersMask = channel.AllowedPostersMask,
+                        Avatar = avatar,
+                        CreatedAt = channel.CreatedAt,
+                        CreatedBy = user,
+                        Description = channel.Description,
+                        Name = channel.Name,
+                        NumMembers = channel.NumMembers,
+                        Private = channel.Private,
+                        Topic = channel.Topic,
+                        Workspace = workspace
+                    };
+                }
             )
-            .ToDynamicListAsync();
-
-        bool lastPage = dynamicChannels.Count <= first;
+        ).ToList();
+        var lastPage = channels.Count <= first;
         if (!lastPage)
         {
-            dynamicChannels.RemoveAt(dynamicChannels.Count - 1);
+            channels.RemoveAt(channels.Count - 1);
         }
-        return (dynamicChannels, lastPage);
+
+        return (channels, lastPage);
     }
 }
