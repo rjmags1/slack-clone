@@ -400,6 +400,9 @@ public class WorkspaceStore : Store
         string wId = Stores.Store.wdq("Id");
         string wWorkspaceId = Stores.Store.wdq("WorkspaceId");
         string wName = Stores.Store.wdq("Name");
+        string wAvatarId = Stores.Store.wdq("AvatarId");
+        string wFiles = Stores.Store.wdq("Files");
+        string wStoreKey = Stores.Store.wdq("StoreKey");
 
         var sqlBuilder = new List<string>();
 
@@ -429,22 +432,38 @@ public class WorkspaceStore : Store
             cols.Select(c => Stores.Store.wdq(c))
                 .Select(
                     (c, i) =>
-                        $"{wWorkspaces}.{(i == cols.Count() - 1 ? $"{c}" : $"{c},")}"
+                        $"{wWorkspaces}.{(i == cols.Count() - 1 && !cols.Contains("AvatarId") ? $"{c}" : $"{c},")}"
                 )
         );
+        if (cols.Contains("AvatarId"))
+        {
+            sqlBuilder.Add(
+                $"{wFiles}.{wId}, {wFiles}.{wName}, {wFiles}.{wStoreKey}"
+            );
+        }
+
         sqlBuilder.Add($"FROM {wWorkspaces}\n");
         sqlBuilder.Add(
             $"INNER JOIN workspaceMembers_ ON {wWorkspaces}.{wId} = workspaceMembers_.{wWorkspaceId}"
         );
+        if (cols.Contains("AvatarId"))
+        {
+            sqlBuilder.Add(
+                $"LEFT JOIN {wFiles} ON {wFiles}.{wId} = {wWorkspaces}.{wAvatarId}"
+            );
+        }
         if (after is not null)
         {
-            sqlBuilder.Add("AND");
-            sqlBuilder.Add($"{wName} > (SELECT {wName} FROM after_)");
+            sqlBuilder.Add("WHERE");
+            sqlBuilder.Add(
+                $"{wWorkspaces}.{wName} > (SELECT {wName} FROM after_)"
+            );
         }
-        sqlBuilder.Add($"ORDER BY {wName}");
+        sqlBuilder.Add($"ORDER BY {wWorkspaces}.{wName}");
         sqlBuilder.Add($"LIMIT @First;");
 
         var sql = string.Join("\n", sqlBuilder);
+        Console.WriteLine(sql);
         var conn = _context.GetConnection();
         var parameters = new
         {
@@ -452,9 +471,18 @@ public class WorkspaceStore : Store
             AfterId = after,
             First = first + 1
         };
-        var workspaces = await conn.QueryAsync<GraphQLTypes.Workspace>(
-            sql,
-            parameters
+        var workspaces = await conn.QueryAsync<
+            GraphQLTypes.Workspace,
+            GraphQLTypes.File,
+            GraphQLTypes.Workspace
+        >(
+            sql: sql,
+            param: parameters,
+            map: (workspace, avatar) =>
+            {
+                workspace.Avatar = avatar;
+                return workspace;
+            }
         );
         List<GraphQLTypes.Workspace> res = workspaces.ToList();
         var lastPage = res.Count <= first;
