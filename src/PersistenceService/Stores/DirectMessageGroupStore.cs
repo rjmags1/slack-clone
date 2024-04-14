@@ -5,6 +5,8 @@ using PersistenceService.Utils;
 using PersistenceService.Utils.GraphQL;
 using System.Linq.Dynamic.Core;
 using Microsoft.EntityFrameworkCore;
+using GraphQLTypes = Common.SlackCloneGraphQL.Types;
+using Dapper;
 
 namespace PersistenceService.Stores;
 
@@ -423,78 +425,160 @@ public class DirectMessageGroupStore : Store
     }
 
     public async Task<(
-        List<dynamic> dbDirectMessageGroups,
+        List<GraphQLTypes.DirectMessageGroup> dmgs,
         bool lastPage
     )> LoadDirectMessageGroups(
         Guid workspaceId,
         Guid userId,
         int first,
-        FieldTree connectionTree,
+        List<string> dbCols,
         Guid? after = null
     )
     {
-        IQueryable<DirectMessageGroupMember> memberships =
-            _context.DirectMessageGroupMembers
-                .Where(
-                    dmg =>
-                        dmg.WorkspaceId == workspaceId && dmg.UserId == userId
-                )
-                .OrderByDescending(dmg => dmg.LastViewedAt.HasValue)
-                .ThenByDescending(dmg => dmg.LastViewedAt)
-                .ThenByDescending(dmg => dmg.JoinedAt);
-        if (!(after is null))
+        var sqlBuilder = new List<string>();
+        if (after is not null)
         {
-            DirectMessageGroupMember afterMembership = memberships
-                .Where(
-                    dmg =>
-                        dmg.WorkspaceId == workspaceId
-                        && dmg.UserId == userId
-                        && dmg.DirectMessageGroupId == after
-                )
-                .First();
-            if (afterMembership.LastViewedAt is null)
-            {
-                memberships = memberships.Where(
-                    dmg =>
-                        dmg.LastViewedAt != null
-                        || dmg.JoinedAt < afterMembership.JoinedAt
-                );
-            }
-            else
-            {
-                memberships = memberships.Where(
-                    dmg =>
-                        dmg.LastViewedAt != null
-                        || dmg.LastViewedAt < afterMembership.LastViewedAt
-                );
-            }
-        }
-        var directMessageGroups = memberships
-            .Take(first + 1)
-            .Select(dmg => dmg.DirectMessageGroup);
-
-        var dynamicDirectMessageGroups = await directMessageGroups
-            .Select(
-                DynamicLinqUtils.NodeFieldToDynamicSelectString(
-                    connectionTree,
-                    forceInclude: new List<string> { "members" },
-                    skip: new List<string> { "name" },
-                    map: new Dictionary<string, string>
-                    {
-                        { "members", "directMessageGroupMembers" }
-                    }
-                )
-            )
-            .ToDynamicListAsync();
-
-        bool lastPage = dynamicDirectMessageGroups.Count <= first;
-        if (!lastPage)
-        {
-            dynamicDirectMessageGroups.RemoveAt(
-                dynamicDirectMessageGroups.Count - 1
+            sqlBuilder.Add("WITH after AS (");
+            sqlBuilder.Add($"SELECT");
+            sqlBuilder.Add(
+                $"CASE WHEN {wdq("LastViewedAt")} = NULL THEN 0 ELSE 1 END AS viewed,"
+            );
+            sqlBuilder.Add($"{wdq("LastViewedAt")},");
+            sqlBuilder.Add($"{wdq("JoinedAt")}");
+            sqlBuilder.Add($"FROM {wdq("DirectMessageGroupMembers")}");
+            sqlBuilder.Add(
+                $"WHERE {wdq("DirectMessageGroupId")} = @AfterId AND {wdq("UserId")} = @UserId),\n"
             );
         }
-        return (dynamicDirectMessageGroups, lastPage);
+        else
+        {
+            sqlBuilder.Add("WITH");
+        }
+
+        sqlBuilder.Add("members AS (");
+        sqlBuilder.Add($"SELECT {wdq("DirectMessageGroupId")}, {wdq("Id")}");
+        sqlBuilder.Add($"FROM {wdq("DirectMessageGroupMembers")} WHERE");
+        sqlBuilder.Add($"{wdq("WorkspaceId")} = @WorkspaceId AND");
+        sqlBuilder.Add($"{wdq("UserId")} = @UserId");
+        if (after is not null)
+        {
+            sqlBuilder.Add("AND");
+            sqlBuilder.Add(
+                $"({wdq("LastViewedAt")} > (SELECT {wdq("LastViewedAt")} FROM after)"
+            );
+            sqlBuilder.Add(
+                $"OR (CASE WHEN {wdq("LastViewedAt")} = NULL THEN 0 ELSE 1 END >= (SELECT viewed FROM after) AND {wdq("DirectMessageGroupId")} != @AfterId))"
+            );
+        }
+        sqlBuilder.Add(
+            $"ORDER BY CASE WHEN {wdq("LastViewedAt")} = NULL THEN 0 ELSE 1 END,"
+        );
+        sqlBuilder.Add($"{wdq("LastViewedAt")}, {wdq("JoinedAt")} DESC");
+        sqlBuilder.Add($"LIMIT @First),\n");
+
+        sqlBuilder.Add("members2 AS (");
+        sqlBuilder.Add(
+            $"SELECT members.{wdq("DirectMessageGroupId")}, {wdq("UserName")}"
+        );
+        sqlBuilder.Add(
+            $"FROM members INNER JOIN {wdq("DirectMessageGroupMembers")}"
+        );
+        sqlBuilder.Add(
+            $"ON members.{wdq("DirectMessageGroupId")} = {wdq("DirectMessageGroupMembers")}.{wdq("DirectMessageGroupId")}"
+        );
+        sqlBuilder.Add(
+            $"LEFT JOIN {wdq("AspNetUsers")} ON {wdq("AspNetUsers")}.{wdq("Id")} = {wdq("DirectMessageGroupMembers")}.{wdq("UserId")}"
+        );
+        sqlBuilder.Add(")\n");
+
+        sqlBuilder.Add("SELECT");
+        sqlBuilder.AddRange(
+            dbCols.Select((c, i) => $"{wdq("DirectMessageGroups")}.{wdq(c)},")
+        );
+        sqlBuilder.Add($"{wdq("UserName")}");
+        if (dbCols.Contains("WorkspaceId"))
+        {
+            sqlBuilder.Add($",{wdq("Workspaces")}.{wdq("Id")}");
+        }
+
+        sqlBuilder.Add($"FROM {wdq("DirectMessageGroups")} INNER JOIN");
+        sqlBuilder.Add(
+            $"members2 ON members2.{wdq("DirectMessageGroupId")} = {wdq("DirectMessageGroups")}.{wdq("Id")}"
+        );
+        if (dbCols.Contains("WorkspaceId"))
+        {
+            sqlBuilder.Add(
+                $"LEFT JOIN {wdq("Workspaces")} ON {wdq("Workspaces")}.{wdq("Id")} = {wdq("DirectMessageGroups")}.{wdq("Id")}"
+            );
+        }
+        sqlBuilder.Add(";");
+
+        var sql = string.Join("\n", sqlBuilder);
+        var param = new
+        {
+            WorkspaceId = workspaceId,
+            AfterId = after,
+            UserId = userId,
+            First = first + 1
+        };
+        var conn = _context.GetConnection();
+        List<GraphQLTypes.DirectMessageGroup> dmgs;
+        if (dbCols.Contains("WorkspaceId"))
+        {
+            dmgs = (
+                await conn.QueryAsync<
+                    GraphQLTypes.DirectMessageGroup,
+                    Models.User,
+                    GraphQLTypes.Workspace,
+                    GraphQLTypes.DirectMessageGroup
+                >(
+                    sql: sql,
+                    param: param,
+                    map: (dmg, user, workspace) =>
+                    {
+                        dmg.Name = user.UserName;
+                        dmg.Workspace = workspace;
+                        return dmg;
+                    },
+                    splitOn: "UserName, Id"
+                )
+            ).ToList();
+        }
+        else
+        {
+            dmgs = (
+                await conn.QueryAsync<
+                    GraphQLTypes.DirectMessageGroup,
+                    Models.User,
+                    GraphQLTypes.DirectMessageGroup
+                >(
+                    sql: sql,
+                    param: param,
+                    map: (dmg, user) =>
+                    {
+                        dmg.Name = user.UserName;
+                        return dmg;
+                    },
+                    splitOn: "UserName"
+                )
+            ).ToList();
+        }
+        dmgs = dmgs.GroupBy(d => d.Id)
+            .Select(g =>
+            {
+                var dmg = g.First();
+                var names = g.Select(d => d.Name).ToList();
+                dmg.Name = string.Join(",", names);
+                return dmg;
+            })
+            .ToList();
+
+        var lastPage = dmgs.Count <= first;
+        if (!lastPage)
+        {
+            dmgs.RemoveAt(dmgs.Count - 1);
+        }
+        return (dmgs, lastPage);
     }
 
     public async Task<(

@@ -171,6 +171,63 @@ public static class FieldAnalyzer
     }
 
     */
+    public static List<string> DirectMessageGroupDbColumns(
+        GraphQLField dmgFieldAst,
+        GraphQLDocument document
+    )
+    {
+        if (dmgFieldAst.SelectionSet is null)
+        {
+            throw new InvalidOperationException(
+                "null selection set on dmg ast node"
+            );
+        }
+
+        var subfields = dmgFieldAst.SelectionSet.Selections
+            .Where(s => s.Kind == ASTNodeKind.Field)
+            .Select(s => (s as GraphQLField)!.Name.StringValue)
+            .ToList();
+        var fragmentSpreads = dmgFieldAst.SelectionSet.Selections
+            .Where(s => s.Kind == ASTNodeKind.FragmentSpread)
+            .Select(
+                s => (s as GraphQLFragmentSpread)!.FragmentName.Name.StringValue
+            )
+            .ToList();
+        if (fragmentSpreads.Any())
+        {
+            var fragDefs = document.Definitions.Where(
+                d =>
+                    d.Kind == ASTNodeKind.FragmentDefinition
+                    && fragmentSpreads.Contains(
+                        (d as GraphQLFragmentDefinition)!
+                            .FragmentName
+                            .Name
+                            .StringValue
+                    )
+            );
+            subfields.AddRange(
+                fragDefs.SelectMany(
+                    f =>
+                        (
+                            f as GraphQLFragmentDefinition
+                        )!.SelectionSet.Selections
+                            .Where(s => s.Kind == ASTNodeKind.Field)
+                            .Select(s => (s as GraphQLField)!.Name.StringValue)
+                )
+            );
+        }
+
+        if (subfields.Contains("members") || subfields.Contains("messages"))
+        {
+            throw new NotImplementedException();
+        }
+        return subfields
+            .Where(s => s != "name")
+            .Select(s => s == "createdAtUTC" ? "createdAt" : s)
+            .Select(s => s == "workspace" ? "workspaceId" : s)
+            .Select(s => s[0].ToString().ToUpper() + s[1..])
+            .ToList();
+    }
 
     public static List<string> ChannelDbColumns(
         GraphQLField channelFieldAst,

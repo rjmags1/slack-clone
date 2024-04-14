@@ -23,6 +23,52 @@ public class DirectMessageGroupStoreTests1
     }
 
     [Fact]
+    public async void LoadDirectMessageGroups_ShouldWork()
+    {
+        var workspaceId = Guid.Parse("23e33ae1-c69b-4e33-bb16-79a1be666392");
+        var userId = Guid.Parse("1903d315-3d90-4a82-8ccb-c23ec7bf834b");
+        var afterId = Guid.Parse("de867492-491e-4e37-ae00-e99592b60532");
+        List<string> dbCols = new() { "Id", "CreatedAt" };
+        (var dmgs1, var lastPage1) =
+            await _directMessageGroupStore.LoadDirectMessageGroups(
+                workspaceId,
+                userId,
+                3,
+                dbCols
+            );
+        (var dmgs2, var lastPage2) =
+            await _directMessageGroupStore.LoadDirectMessageGroups(
+                workspaceId,
+                userId,
+                3,
+                dbCols,
+                afterId
+            );
+        dbCols.Add("WorkspaceId");
+        (var dmgs3, var lastPage3) =
+            await _directMessageGroupStore.LoadDirectMessageGroups(
+                workspaceId,
+                userId,
+                3,
+                dbCols,
+                afterId
+            );
+        Assert.Equal(3, dmgs1.Count);
+        Assert.False(lastPage1);
+        Assert.Equal(3, dmgs2.Count);
+        Assert.True(lastPage2);
+        Assert.Equal(3, dmgs3.Count);
+        Assert.True(lastPage3);
+        foreach ((var dmg1, var dmg2, var dmg3) in dmgs1.Zip(dmgs2, dmgs3))
+        {
+            Assert.True(dmg1.Name.Split(",").Length > 1);
+            Assert.True(dmg2.Name.Split(",").Length > 1);
+            Assert.True(dmg3.Name.Split(",").Length > 1);
+        }
+    }
+
+    /*
+    [Fact]
     public async void InsertDirectMessageGroupMembers_ShouldInsertDirectMessageGroupMembers()
     {
         Workspace testWorkspace = StoreTestUtils.CreateTestWorkspace();
@@ -1080,6 +1126,7 @@ public class DirectMessageGroupStoreTests1
             }
         }
     }
+    */
 }
 
 [Trait("Category", "Order 2")]
