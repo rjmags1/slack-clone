@@ -43,7 +43,7 @@ public interface ISlackCloneData
         IEnumerable<string> cols
     );
 
-    public Task<Workspace> GetWorkspace(Guid workspaceId);
+    public Task<Workspace> GetWorkspace(Guid workspaceId, List<string> dbCols);
 
     public Task<Workspace> CreateWorkspace(
         WorkspaceInput workspaceInfo,

@@ -5,10 +5,6 @@ using Common.Utils;
 
 namespace Common.SlackCloneGraphQL.Types;
 
-// TODO
-// implement AST traversal/field analysis/field to db col translation
-
-// implement avatar join for workspace fetching
 public class WorkspacePageDataType : ObjectGraphType<WorkspacePageData>
 {
     public WorkspacePageDataType(ISlackCloneData data)
@@ -37,7 +33,11 @@ public class WorkspacePageDataType : ObjectGraphType<WorkspacePageData>
             .ResolveAsync(async context =>
             {
                 var workspaceId = context.GetArgument<Guid>("id");
-                return await data.GetWorkspace(workspaceId);
+                var dbCols = FieldAnalyzer.WorkspaceDbColumns(
+                    context.FieldAst,
+                    context.Document
+                );
+                return await data.GetWorkspace(workspaceId, dbCols);
             });
         Field<NonNullGraphType<ChannelsConnectionType>>("channels")
             .Argument<NonNullGraphType<ChannelsFilterInputType>>("filter")
@@ -76,27 +76,31 @@ public class WorkspacePageDataType : ObjectGraphType<WorkspacePageData>
             .Argument<IdGraphType>("after")
             .ResolveAsync(async context =>
             {
-                //var first = context.GetArgument<int>("first");
-                //var after = context.GetArgument<Guid?>("after");
-                //DirectMessageGroupsFilter directMessageGroupsFilter =
-                //context.GetArgument<DirectMessageGroupsFilter>("filter");
-                //var fragments = (
-                //context.UserContext["fragments"]
-                //as Dictionary<string, string>
-                //)!;
-                //var query = GraphQLUtils.GetQuery(
-                //(context.UserContext as GraphQLUserContext)!
-                //)!;
-                //var directMessageGroupsFieldInfo =
-                //FieldAnalyzer.DirectMessageGroups(query, fragments);
+                var dbCols = FieldAnalyzer.DirectMessageGroupDbColumns(
+                    GraphQLUtils.GetNodeASTFromConnectionAST(
+                        context.FieldAst,
+                        context.Document,
+                        "DirectMessageGroupsConnection",
+                        "DirectMessageGroupsConnectionEdge"
+                    ),
+                    context.Document
+                );
 
-                //return await data.GetDirectMessageGroups(
-                //first,
-                //after,
-                //directMessageGroupsFilter,
-                //directMessageGroupsFieldInfo
-                //);
-                throw new NotImplementedException();
+                var first = context.GetArgument<int>("first");
+                var after = context.GetArgument<Guid?>("after");
+                DirectMessageGroupsFilter directMessageGroupsFilter =
+                    context.GetArgument<DirectMessageGroupsFilter>("filter");
+                var fragments = (
+                    context.UserContext["fragments"]
+                    as Dictionary<string, string>
+                )!;
+
+                return await data.GetDirectMessageGroups(
+                    first,
+                    after,
+                    directMessageGroupsFilter,
+                    dbCols
+                );
             });
         Field<NonNullGraphType<StarredConnectionType>>("starred")
             .Argument<NonNullGraphType<StarredFilterInputType>>("filter")

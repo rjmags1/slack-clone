@@ -237,17 +237,15 @@ public class SlackCloneData : ISlackCloneData
         throw new NotImplementedException();
     }
 
-    public async Task<Workspace> GetWorkspace(Guid workspaceId)
+    public async Task<Workspace> GetWorkspace(
+        Guid workspaceId,
+        List<string> dbCols
+    )
     {
-        //using var scope = Provider.CreateScope();
-        //WorkspaceStore workspaceStore =
-        //scope.ServiceProvider.GetRequiredService<WorkspaceStore>();
-        //Models.Workspace dbWorkspace = await workspaceStore.GetWorkspace(
-        //workspaceId
-        //);
-
-        //return ModelToObjectConverters.ConvertWorkspace(dbWorkspace);
-        throw new NotImplementedException();
+        using var scope = Provider.CreateScope();
+        WorkspaceStore workspaceStore =
+            scope.ServiceProvider.GetRequiredService<WorkspaceStore>();
+        return await workspaceStore.GetWorkspace(workspaceId, dbCols);
     }
 
     public async Task<Workspace> CreateWorkspace(
@@ -361,44 +359,30 @@ public class SlackCloneData : ISlackCloneData
         IEnumerable<string> cols
     )
     {
-        //if (filter.SortOrder is not null)
-        //{
-        //throw new NotImplementedException();
-        //}
-        //if (fieldInfo.SubfieldNames.Contains("messages"))
-        //{
-        //throw new InvalidOperationException(
-        //"Requested a connection within a connection"
-        //);
-        //}
+        if (filter.SortOrder is not null)
+        {
+            throw new NotImplementedException();
+        }
+        if (cols.Contains("messages") || cols.Contains("members"))
+        {
+            throw new InvalidOperationException(
+                "Requested a connection within a connection"
+            );
+        }
 
-        //using var scope = Provider.CreateScope();
-        //DirectMessageGroupStore directMessageGroupStore =
-        //scope.ServiceProvider.GetRequiredService<DirectMessageGroupStore>();
-        //(List<dynamic> dbDirectMessageGroups, bool lastPage) =
-        //await directMessageGroupStore.LoadDirectMessageGroups(
-        //filter.WorkspaceId,
-        //filter.UserId,
-        //first,
-        //fieldInfo.FieldTree,
-        //after
-        //);
+        using var scope = Provider.CreateScope();
+        DirectMessageGroupStore directMessageGroupStore =
+            scope.ServiceProvider.GetRequiredService<DirectMessageGroupStore>();
+        (List<DirectMessageGroup> dmgs, bool lastPage) =
+            await directMessageGroupStore.LoadDirectMessageGroups(
+                filter.WorkspaceId,
+                filter.UserId,
+                first,
+                cols.ToList(),
+                after
+            );
 
-        //List<DirectMessageGroup> groups = new();
-        //foreach (dynamic dbg in dbDirectMessageGroups)
-        //{
-        //DirectMessageGroup directMessageGroup = (DirectMessageGroup)
-        //ModelToObjectConverters.ConvertDynamicDirectMessageGroup(dbg);
-        //groups.Add(directMessageGroup);
-        //}
-
-        //return ModelToObjectConverters.ToConnection<DirectMessageGroup>(
-        //groups,
-        //after is null,
-        //lastPage
-        //);
-
-        throw new NotImplementedException();
+        return ToConnection<DirectMessageGroup>(dmgs, after is null, lastPage);
     }
 
     public async Task<Connection<IGroup>> GetStarred(

@@ -1,4 +1,3 @@
-using System.Collections.Immutable;
 using Common.SlackCloneGraphQL;
 using Common.SlackCloneGraphQL.Types;
 using Common.Utils;
@@ -512,6 +511,78 @@ public class FieldAnalyzerTests
         }
     ";
 
+    private const string dmgQuery1 =
+        @"
+            query DmgQuery {
+                directMessageGroup {
+                    id
+                    createdAtUTC
+                    name
+                    workspace
+                }
+            }
+        ";
+
+    private const string dmgQuery2 =
+        @"
+            query DmgQuery {
+                directMessageGroup {
+                    ...testFragment
+                }
+            }
+
+            fragment testFragment on DirectMessageGroup {
+                id
+                createdAtUTC
+                name
+                workspace
+            }
+        ";
+
+    private const string dmgQuery3 =
+        @"
+            query DmgConnectionQuery {
+                directMessageGroups {
+                    totalEdges
+                    pageInfo {
+                        hasNextPage
+                    }
+                    edges {
+                        node {
+                            id
+                            createdAtUTC
+                            name
+                            workspace
+                        }
+                    }
+                }
+            }
+        ";
+
+    private const string dmgQuery4 =
+        @"
+            query DmgConnectionQuery {
+                directMessageGroups {
+                    totalEdges
+                    pageInfo {
+                        hasNextPage
+                    }
+                    edges {
+                        node {
+                            id
+                            ...testFragment
+                        }
+                    }
+                }
+            }
+
+            fragment testFragment on DirectMessageGroup {
+                createdAtUTC
+                name
+                workspace
+            }
+        ";
+
     /*
     [Theory]
     [InlineData(_userQuery, new[] { "Email", "Id" })]
@@ -589,6 +660,46 @@ public class FieldAnalyzerTests
         Assert.Equal(expectedCols, dbColumns);
     }
     */
+
+    [Theory]
+    [InlineData(dmgQuery1)]
+    [InlineData(dmgQuery2)]
+    [InlineData(dmgQuery3)]
+    [InlineData(dmgQuery4)]
+    public void DirectMessageGroupDbColumns_ShouldGetDmgDbColumns(string query)
+    {
+        List<string> expectedCols = new() { "Id", "CreatedAt", "WorkspaceId" };
+        var docAst = Parser.Parse(query);
+        var opDef = docAst.Definitions.First() as GraphQLOperationDefinition;
+        if (query == dmgQuery3 || query == dmgQuery4)
+        {
+            var dmgsNodeAst = GraphQLUtils.GetNodeASTFromConnectionAST(
+                (opDef!.SelectionSet.Selections.First() as GraphQLField)!,
+                docAst,
+                "DirectMessageGroupsConnection",
+                "DirectMessageGroupsConnectionEdge"
+            );
+            var cols = FieldAnalyzer.DirectMessageGroupDbColumns(
+                dmgsNodeAst,
+                docAst
+            );
+            cols.Sort();
+            expectedCols.Sort();
+            Assert.Equal(expectedCols, cols);
+            return;
+        }
+
+        var dmgFieldAst = (
+            opDef!.SelectionSet.Selections.First() as GraphQLField
+        )!;
+        var dbCols = FieldAnalyzer.DirectMessageGroupDbColumns(
+            dmgFieldAst,
+            docAst
+        );
+        dbCols.Sort();
+        expectedCols.Sort();
+        Assert.Equal(expectedCols, dbCols);
+    }
 
     [Theory]
     [InlineData(_channelQuery1)]
