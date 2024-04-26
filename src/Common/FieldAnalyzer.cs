@@ -171,6 +171,61 @@ public static class FieldAnalyzer
     }
 
     */
+
+    public static List<string> GroupDbColumns(
+        GraphQLField groupFieldAst,
+        GraphQLDocument document
+    )
+    {
+        if (groupFieldAst.SelectionSet is null)
+        {
+            throw new InvalidOperationException(
+                "null selection set on group ast node"
+            );
+        }
+
+        var subfields = groupFieldAst.SelectionSet.Selections
+            .Where(s => s.Kind == ASTNodeKind.Field)
+            .Select(s => (s as GraphQLField)!.Name.StringValue)
+            .ToList();
+        var fragmentSpreads = groupFieldAst.SelectionSet.Selections
+            .Where(s => s.Kind == ASTNodeKind.FragmentSpread)
+            .Select(
+                s => (s as GraphQLFragmentSpread)!.FragmentName.Name.StringValue
+            )
+            .ToList();
+
+        if (fragmentSpreads.Any())
+        {
+            var fragDefs = document.Definitions.Where(
+                d =>
+                    d.Kind == ASTNodeKind.FragmentDefinition
+                    && fragmentSpreads.Contains(
+                        (d as GraphQLFragmentDefinition)!
+                            .FragmentName
+                            .Name
+                            .StringValue
+                    )
+            );
+            subfields.AddRange(
+                fragDefs.SelectMany(
+                    f =>
+                        (
+                            f as GraphQLFragmentDefinition
+                        )!.SelectionSet.Selections
+                            .Where(s => s.Kind == ASTNodeKind.Field)
+                            .Select(s => (s as GraphQLField)!.Name.StringValue)
+                )
+            );
+        }
+
+        return subfields
+            .Select(s => s == "createdAtUTC" ? "createdAt" : s)
+            .Select(s => s == "workspace" ? "workspaceId" : s)
+            .Select(s => s[0].ToString().ToUpper() + s[1..])
+            .ToList();
+    }
+
     public static List<string> DirectMessageGroupDbColumns(
         GraphQLField dmgFieldAst,
         GraphQLDocument document

@@ -25,6 +25,36 @@ public class WorkspaceStoreTests1
     }
 
     [Fact]
+    public async void LoadStarred_ShouldWork()
+    {
+        Guid workspaceId = Guid.Parse("23e33ae1-c69b-4e33-bb16-79a1be666392");
+        Guid userId = Guid.Parse("056b1d27-0825-4113-999d-9f7a95bbabcf");
+        Guid after = Guid.Parse("5fa56413-c60c-41e1-8e90-25719b7a247c");
+        List<string> dbCols =
+            new() { "Id", "CreatedAt", "WorkspaceId", "Name" };
+
+        (var groups1, var lastPage1) = await _workspaceStore.LoadStarred(
+            workspaceId,
+            userId,
+            2,
+            dbCols
+        );
+
+        (var groups2, var lastPage2) = await _workspaceStore.LoadStarred(
+            workspaceId,
+            userId,
+            2,
+            dbCols,
+            after
+        );
+
+        Assert.Equal(2, groups1.Count);
+        Assert.True(lastPage2);
+        Assert.NotEqual(after, groups2.First().Id);
+    }
+
+    /*
+    [Fact]
     public async void GetWorkspace_ShouldWork()
     {
         Guid workspaceId = Guid.Parse("f5f08029-fabd-4de5-bd25-a1d61cbc1255");
@@ -52,7 +82,6 @@ public class WorkspaceStoreTests1
         Assert.Equal(workspaceId, workspace2.Id);
     }
 
-    /*
     [Fact]
     public async void LoadWorkspaces_ShouldWork()
     {

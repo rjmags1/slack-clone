@@ -1,4 +1,5 @@
 using Dapper;
+using GraphQL.Validation;
 using Microsoft.EntityFrameworkCore;
 using PersistenceService.Data.ApplicationDb;
 using PersistenceService.Models;
@@ -618,80 +619,150 @@ public class WorkspaceStore : Store
         return workspace;
     }
 
-    public struct StarredInfo
-    {
-        public string Type { get; set; }
-        public dynamic Starred { get; set; }
-    }
-
-    public async Task<(List<StarredInfo>, bool lastPage)> LoadStarred(
+    public async Task<(List<GraphQLTypes.Group>, bool lastPage)> LoadStarred(
         Guid workspaceId,
         Guid userId,
         int first,
-        FieldTree connectionTree,
+        List<string> dbCols,
         Guid? after = null
     )
     {
-        IQueryable<Star> stars = _context.Stars
-            .Where(s => s.UserId == userId && s.WorkspaceId == workspaceId)
-            .OrderByDescending(s => s.CreatedAt);
-        if (!(after is null))
+        if (dbCols.Contains("Name"))
         {
-            DateTime afterStarredAt = stars
-                .Where(
-                    s => s.ChannelId == after || s.DirectMessageGroupId == after
-                )
-                .Select(s => s.CreatedAt)
-                .First();
-            stars = stars.Where(
-                s =>
-                    s.CreatedAt <= afterStarredAt
-                    && s.ChannelId != after
-                    && s.DirectMessageGroupId != after
+            dbCols.Remove("Name");
+            dbCols.Add("Name");
+        }
+
+        List<string> sqlBuilder = new();
+        if (after is not null)
+        {
+            sqlBuilder.Add("WITH after AS (");
+            sqlBuilder.Add($"SELECT {wdq("CreatedAt")}");
+            sqlBuilder.Add(
+                @$"FROM {wdq("Stars")} WHERE {wdq("DirectMessageGroupId")} = @AfterId 
+                    OR {wdq("ChannelId")} = @AfterId"
+            );
+            sqlBuilder.Add("),\n");
+        }
+        else
+        {
+            sqlBuilder.Add("WITH");
+        }
+
+        sqlBuilder.Add("stars AS (");
+        sqlBuilder.Add(
+            $"SELECT {wdq("Id")}, {wdq("CreatedAt")}, {wdq("ChannelId")}, {wdq("DirectMessageGroupId")}"
+        );
+        sqlBuilder.Add($"FROM {wdq("Stars")}");
+        sqlBuilder.Add(
+            $"WHERE {wdq("UserId")} = @UserId AND {wdq("WorkspaceId")} = @WorkspaceId"
+        );
+        if (after is not null)
+        {
+            sqlBuilder.Add(
+                $"AND {wdq("CreatedAt")} > (SELECT {wdq("CreatedAt")} FROM after)"
             );
         }
-        var starredRows = await stars
-            .Take(first + 1)
-            .Include(s => s.DirectMessageGroup)
-            .ThenInclude(dmg => dmg.DirectMessageGroupMembers)
-            .Select(
-                s =>
-                    new
-                    {
-                        s.Id,
-                        s.CreatedAt,
-                        s.Channel,
-                        s.DirectMessageGroup
-                    }
-            )
-            .ToListAsync();
+        sqlBuilder.Add("LIMIT @First");
+        sqlBuilder.Add("),\n");
 
-        List<StarredInfo> starred = new();
-        foreach (var row in starredRows)
+        sqlBuilder.Add("starred_channels AS (");
+        sqlBuilder.Add("SELECT");
+        sqlBuilder.AddRange(
+            dbCols.Select(c => $"{wdq("Channels")}.{wdq(c)}, ")
+        );
+        sqlBuilder.Add($"stars.{wdq("CreatedAt")} AS {wdq("StarredAt")},");
+        sqlBuilder.Add($"'Channel' AS {wdq("Type")},");
+        sqlBuilder.Add($"NULL AS {wdq("UserName")}");
+        sqlBuilder.Add($"FROM stars INNER JOIN {wdq("Channels")}");
+        sqlBuilder.Add(
+            $"ON stars.{wdq("ChannelId")} = {wdq("Channels")}.{wdq("Id")}"
+        );
+        sqlBuilder.Add("),\n");
+
+        sqlBuilder.Add("starred_dmgs AS (");
+        sqlBuilder.Add("SELECT");
+        sqlBuilder.AddRange(
+            dbCols
+                .Where(c => c != "Name")
+                .Select(c => $"{wdq("DirectMessageGroups")}.{wdq(c)}, ")
+        );
+        if (dbCols.Contains("Name"))
         {
-            if (row.Channel is not null)
-            {
-                starred.Add(
-                    new StarredInfo { Type = CHANNEL, Starred = row.Channel }
-                );
-            }
-            else
-            {
-                starred.Add(
-                    new StarredInfo
-                    {
-                        Type = DIRECT_MESSAGE_GROUP,
-                        Starred = row.DirectMessageGroup
-                    }
-                );
-            }
+            sqlBuilder.Add($"NULL AS {wdq("Name")},");
         }
+        sqlBuilder.Add($"stars.{wdq("CreatedAt")} AS {wdq("StarredAt")},");
+        sqlBuilder.Add($"'DirectMessageGroup' AS {wdq("Type")},");
+        sqlBuilder.Add($"{wdq("AspNetUsers")}.{wdq("UserName")}");
+        sqlBuilder.Add($"FROM stars INNER JOIN {wdq("DirectMessageGroups")}");
+        sqlBuilder.Add(
+            $"ON stars.{wdq("DirectMessageGroupId")} = {wdq("DirectMessageGroups")}.{wdq("Id")}"
+        );
+        sqlBuilder.Add(
+            $"INNER JOIN {wdq("DirectMessageGroupMembers")} ON {wdq("DirectMessageGroupMembers")}.{wdq("DirectMessageGroupId")} = {wdq("DirectMessageGroups")}.{wdq("Id")}"
+        );
+        sqlBuilder.Add(
+            $"INNER JOIN {wdq("AspNetUsers")} ON {wdq("AspNetUsers")}.{wdq("Id")} = {wdq("DirectMessageGroupMembers")}.{wdq("UserId")}"
+        );
+        sqlBuilder.Add(")\n");
 
-        bool lastPage = starred.Count <= first;
+        sqlBuilder.Add(
+            "SELECT * FROM starred_channels UNION SELECT * FROM starred_dmgs;"
+        );
+
+        var sql = string.Join("\n", sqlBuilder);
+
+        Console.WriteLine(sql);
+
+        var param = new
+        {
+            WorkspaceId = workspaceId,
+            AfterId = after,
+            UserId = userId,
+            First = first + 1
+        };
+        var conn = _context.GetConnection();
+        List<GraphQLTypes.Group> groups = (
+            await conn.QueryAsync<
+                GraphQLTypes.Group,
+                Models.User,
+                GraphQLTypes.Group
+            >(
+                sql,
+                param: param,
+                map: (group, user) =>
+                {
+                    if (group.Type == "DirectMessageGroup")
+                    {
+                        group.Name = user.UserName;
+                    }
+                    return group;
+                },
+                splitOn: "UserName"
+            )
+        ).ToList();
+
+        var channelGroups = groups.Where(g => g.Type == "Channel");
+        var dmgGroups = groups
+            .Where(g => g.Type == "DirectMessageGroup")
+            .GroupBy(g => g.Id)
+            .Select(g =>
+            {
+                var dmg = g.First();
+                var names = g.Select(g => g.Name).ToList();
+                dmg.Name = string.Join(", ", names);
+                return dmg;
+            });
+        groups = channelGroups
+            .Concat(dmgGroups)
+            .OrderByDescending(g => g.StarredAt)
+            .ToList();
+        var lastPage = groups.Count <= first;
         if (!lastPage)
         {
-            starred.RemoveAt(starred.Count - 1);
+            groups.RemoveAt(groups.Count - 1);
         }
-        return (starred, lastPage);
+
+        return (groups, lastPage);
     }
 }

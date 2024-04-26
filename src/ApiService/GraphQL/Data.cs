@@ -385,64 +385,32 @@ public class SlackCloneData : ISlackCloneData
         return ToConnection<DirectMessageGroup>(dmgs, after is null, lastPage);
     }
 
-    public async Task<Connection<IGroup>> GetStarred(
+    public async Task<Connection<Group>> GetStarred(
         int first,
         Guid? after,
         StarredFilter filter,
-        IEnumerable<string> cols
+        List<string> cols
     )
     {
-        //if (
-        //fieldInfo.SubfieldNames.Contains("members")
-        //|| fieldInfo.SubfieldNames.Contains("messages")
-        //)
-        //{
-        //throw new InvalidOperationException(
-        //"Requested a connection within a connection"
-        //);
-        //}
+        if (cols.Contains("Members") || cols.Contains("Messages"))
+        {
+            throw new InvalidOperationException(
+                "Requested a connection within a connection"
+            );
+        }
 
-        //using var scope = Provider.CreateScope();
-        //WorkspaceStore workspaceStore =
-        //scope.ServiceProvider.GetRequiredService<WorkspaceStore>();
-        //(List<WorkspaceStore.StarredInfo> dbStarred, bool lastPage) =
-        //await workspaceStore.LoadStarred(
-        //filter.WorkspaceId,
-        //filter.UserId,
-        //first,
-        //fieldInfo.FieldTree,
-        //after
-        //);
+        using var scope = Provider.CreateScope();
+        WorkspaceStore workspaceStore =
+            scope.ServiceProvider.GetRequiredService<WorkspaceStore>();
+        (List<Group> starred, bool lastPage) = await workspaceStore.LoadStarred(
+            filter.WorkspaceId,
+            filter.UserId,
+            first,
+            cols,
+            after
+        );
 
-        //List<IGroup> starred = new();
-        //foreach (WorkspaceStore.StarredInfo dbg in dbStarred)
-        //{
-        //if (dbg.Type == WorkspaceStore.CHANNEL)
-        //{
-        //Channel channel = (Channel)
-        //ModelToObjectConverters.ConvertDynamicChannel(dbg.Starred);
-        //starred.Add(channel);
-        //}
-        //else if (dbg.Type == WorkspaceStore.DIRECT_MESSAGE_GROUP)
-        //{
-        //DirectMessageGroup directMessageGroup = (DirectMessageGroup)
-        //ModelToObjectConverters.ConvertDynamicDirectMessageGroup(
-        //dbg.Starred
-        //);
-        //starred.Add(directMessageGroup);
-        //}
-        //else
-        //{
-        //throw new InvalidOperationException();
-        //}
-        //}
-
-        //return ModelToObjectConverters.ToConnection<IGroup>(
-        //starred,
-        //after is null,
-        //lastPage
-        //);
-        throw new NotImplementedException();
+        return ToConnection<Group>(starred, after is null, lastPage);
     }
 
     public async Task<Connection<Message>> GetDirectMessages(

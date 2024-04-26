@@ -583,6 +583,83 @@ public class FieldAnalyzerTests
             }
         ";
 
+    private const string groupsQuery1 =
+        @"
+            query GroupsConnectionQuery {
+                starred {
+                    totalEdges
+                    pageInfo {
+                        hasNextPage
+                    }
+                    edges {
+                        node {
+                            id
+                            createdAtUTC
+                            workspace
+                            name
+                        }
+                    }
+                }
+            }
+        ";
+
+    private const string groupsQuery2 =
+        @"
+            query GroupsConnectionQuery {
+                starred {
+                    ...testFragment
+                }
+            }
+
+            fragment testFragment on StarredConnection {
+                totalEdges
+                pageInfo {
+                    hasNextPage
+                }
+                edges {
+                    cursor
+                    ...testFragment2
+                }
+            }
+
+            fragment testFragment2 on StarredConnectionEdge {
+                node {
+                    ...testFragment3
+                }
+            }
+
+            fragment testFragment3 on Group {
+                id
+                createdAtUTC
+                workspace
+                name
+            }
+        ";
+
+    [Theory]
+    [InlineData(groupsQuery1)]
+    [InlineData(groupsQuery2)]
+    public void GroupsDbColumns_ShouldGetGroupDbColumns(string query)
+    {
+        List<string> expectedCols =
+            new() { "Id", "CreatedAt", "WorkspaceId", "Name" };
+
+        var docAst = Parser.Parse(query);
+        var opDef = docAst.Definitions.First() as GraphQLOperationDefinition;
+        var starredFieldDef =
+            opDef!.SelectionSet.Selections.First() as GraphQLField;
+        var nodeAst = GraphQLUtils.GetNodeASTFromConnectionAST(
+            starredFieldDef!,
+            docAst,
+            "StarredConnection",
+            "StarredConnectionEdge"
+        );
+        var cols = FieldAnalyzer.GroupDbColumns(nodeAst!, docAst!);
+        cols.Sort();
+        expectedCols.Sort();
+        Assert.Equal(expectedCols, cols);
+    }
+
     /*
     [Theory]
     [InlineData(_userQuery, new[] { "Email", "Id" })]
@@ -659,7 +736,6 @@ public class FieldAnalyzerTests
         expectedCols.Sort();
         Assert.Equal(expectedCols, dbColumns);
     }
-    */
 
     [Theory]
     [InlineData(dmgQuery1)]
@@ -762,6 +838,7 @@ public class FieldAnalyzerTests
         dbCols.Sort();
         Assert.Equal(expectedCols, dbCols);
     }
+    */
 
     /**
     

@@ -68,11 +68,11 @@ public interface ISlackCloneData
         IEnumerable<string> cols
     );
 
-    public Task<Connection<IGroup>> GetStarred(
+    public Task<Connection<Group>> GetStarred(
         int first,
         Guid? after,
         StarredFilter filter,
-        IEnumerable<string> cols
+        List<string> cols
     );
 
     public Task<Connection<Message>> GetDirectMessages(
