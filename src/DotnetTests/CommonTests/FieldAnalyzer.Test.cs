@@ -636,6 +636,114 @@ public class FieldAnalyzerTests
             }
         ";
 
+    private const string channelMembersQuery1 =
+        @"
+            query ChannelMembersConnectionQuery {
+                members {
+                    ...testFragment
+                }
+            }
+
+            fragment testFragment on ChannelMembersConnection {
+                totalEdges
+                pageInfo {
+                    hasNextPage
+                }
+                edges {
+                    ...testFragment2
+                }
+            }
+
+            fragment testFragment2 on ChannelMembersConnectionEdge {
+                cursor
+                node {
+                    ...testFragment3
+                }
+            }
+
+            fragment testFragment3 on ChannelMember {
+                id
+                admin
+                user {
+                    id
+                }
+                memberInfo {
+                    ...testFragment4
+                }
+            }
+
+            fragment testFragment4 on ChannelMemberInfo {
+                enableNotifications
+                lastViewedAt
+                starred
+                joinedAt
+            }
+        ";
+
+    private const string channelMembersQuery2 =
+        @"
+            query ChannelMembersConnectionQuery {
+                members {
+                    totalEdges
+                    pageInfo {
+                        hasNextPage
+                    }
+                    edges {
+                        cursor
+                        node {
+                            id
+                            admin
+                            user {
+                                id
+                            }
+                            memberInfo {
+                                enableNotifications
+                                lastViewedAt
+                                starred
+                                joinedAt
+                            }
+                        }
+                    }
+                }
+            }
+        ";
+
+    [Theory]
+    [InlineData(channelMembersQuery1)]
+    [InlineData(channelMembersQuery2)]
+    public void ChannelMemberColumns_ShouldGetChannelMemberDbColumns(
+        string query
+    )
+    {
+        List<string> expectedCols =
+            new()
+            {
+                "Id",
+                "Admin",
+                "EnableNotifications",
+                "JoinedAt",
+                "LastViewedAt",
+                "Starred",
+                "UserId"
+            };
+
+        var docAst = Parser.Parse(query);
+        var opDef = docAst.Definitions.First() as GraphQLOperationDefinition;
+        var membersFieldDef =
+            opDef!.SelectionSet.Selections.First() as GraphQLField;
+        var nodeAst = GraphQLUtils.GetNodeASTFromConnectionAST(
+            membersFieldDef!,
+            docAst,
+            "ChannelMembersConnection",
+            "ChannelMembersConnectionEdge"
+        );
+        var cols = FieldAnalyzer.ChannelMemberDbColumns(nodeAst!, docAst!);
+        cols.Sort();
+        expectedCols.Sort();
+        Assert.Equal(expectedCols, cols);
+    }
+
+    /*
     [Theory]
     [InlineData(groupsQuery1)]
     [InlineData(groupsQuery2)]
@@ -660,7 +768,6 @@ public class FieldAnalyzerTests
         Assert.Equal(expectedCols, cols);
     }
 
-    /*
     [Theory]
     [InlineData(_userQuery, new[] { "Email", "Id" })]
     [InlineData(_userQuery2)]

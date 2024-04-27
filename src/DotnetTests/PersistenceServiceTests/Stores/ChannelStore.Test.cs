@@ -25,6 +25,43 @@ public class ChannelStoreTests1
     }
 
     [Fact]
+    public async void LoadChannelMembers_ShouldWork()
+    {
+        List<string> cols =
+            new()
+            {
+                "Id",
+                "Admin",
+                "EnableNotifications",
+                "JoinedAt",
+                "LastViewedAt",
+                "Starred",
+                "UserId"
+            };
+
+        var channelId = Guid.Parse("f5ce3455-07e6-41f3-a588-c89bbe42292a");
+        var afterId = Guid.Parse("dd380ca2-53ff-4b0c-9bdf-189c8efca35b");
+
+        (var members1, var lastPage1) = await _channelStore.LoadChannelMembers(
+            3,
+            cols,
+            channelId
+        );
+        (var members2, var lastPage2) = await _channelStore.LoadChannelMembers(
+            3,
+            cols,
+            channelId,
+            afterId
+        );
+
+        Assert.False(lastPage1);
+        Assert.Contains(afterId, members1.Select(m => m.Id));
+        Assert.True(lastPage2);
+        Assert.DoesNotContain(afterId, members2.Select(m => m.Id));
+    }
+
+    /*
+    [Fact]
     public async void LoadChannels_ShouldWork()
     {
         List<string> cols =
@@ -65,7 +102,6 @@ public class ChannelStoreTests1
         Assert.True(lastPage2);
     }
 
-    /*
         [Fact]
         public async void InsertMessageReaction_ShouldInsertReaction()
         {

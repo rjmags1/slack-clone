@@ -1,7 +1,6 @@
 using System.Security.Claims;
 using GraphQL;
 using GraphQL.Types;
-using GraphQLParser.AST;
 using Common.SlackCloneGraphQL.Types.Connections;
 using Common.Utils;
 

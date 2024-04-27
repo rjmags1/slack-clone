@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using GraphQL.Types;
 using GraphQL.Validation;
 using GraphQLParser.AST;
 
@@ -171,6 +172,163 @@ public static class FieldAnalyzer
     }
 
     */
+
+    public static List<string> ChannelMemberDbColumns(
+        GraphQLField channelMemberFieldAst,
+        GraphQLDocument document
+    )
+    {
+        if (channelMemberFieldAst.SelectionSet is null)
+        {
+            throw new InvalidOperationException(
+                "null selection set on channel member"
+            );
+        }
+
+        GraphQLField? memberInfoFieldAst = (GraphQLField?)
+            channelMemberFieldAst.SelectionSet.Selections.FirstOrDefault(
+                s =>
+                    s.Kind == ASTNodeKind.Field
+                    && (s as GraphQLField)!.Name.StringValue == "memberInfo"
+            );
+
+        var subfields = channelMemberFieldAst.SelectionSet.Selections
+            .Where(s => s.Kind == ASTNodeKind.Field)
+            .Select(s => (s as GraphQLField)!.Name.StringValue)
+            .ToList();
+        var fragmentSpreads = channelMemberFieldAst.SelectionSet.Selections
+            .Where(s => s.Kind == ASTNodeKind.FragmentSpread)
+            .Select(
+                s => (s as GraphQLFragmentSpread)!.FragmentName.Name.StringValue
+            )
+            .ToList();
+
+        if (fragmentSpreads.Any())
+        {
+            var fragDefs = document.Definitions.Where(
+                d =>
+                    d.Kind == ASTNodeKind.FragmentDefinition
+                    && fragmentSpreads.Contains(
+                        (d as GraphQLFragmentDefinition)!
+                            .FragmentName
+                            .Name
+                            .StringValue
+                    )
+            );
+
+            if (memberInfoFieldAst is null)
+            {
+                memberInfoFieldAst = (GraphQLField?)(
+                    (
+                        (GraphQLFragmentDefinition?)
+                            fragDefs.FirstOrDefault(
+                                f =>
+                                    (
+                                        f as GraphQLFragmentDefinition
+                                    )!.SelectionSet.Selections.Any(
+                                        s =>
+                                            s.Kind == ASTNodeKind.Field
+                                            && (s as GraphQLField)!
+                                                .Name
+                                                .StringValue == "memberInfo"
+                                    )
+                            )
+                    )?.SelectionSet!.Selections.First(
+                        s =>
+                            s.Kind == ASTNodeKind.Field
+                            && (s as GraphQLField)!.Name.StringValue
+                                == "memberInfo"
+                    )
+                );
+            }
+
+            subfields.AddRange(
+                fragDefs.SelectMany(
+                    f =>
+                        (
+                            f as GraphQLFragmentDefinition
+                        )!.SelectionSet.Selections
+                            .Where(s => s.Kind == ASTNodeKind.Field)
+                            .Select(s => (s as GraphQLField)!.Name.StringValue)
+                )
+            );
+        }
+
+        if (subfields.Contains("memberInfo"))
+        {
+            if (memberInfoFieldAst is null)
+            {
+                throw new InvalidOperationException(
+                    "memberInfo subfield requested but didn't find its AST"
+                );
+            }
+
+            subfields.Remove("memberInfo");
+            subfields.AddRange(
+                ChannelMemberDbColumnsFromMemberInfo(
+                    memberInfoFieldAst,
+                    document
+                )
+            );
+        }
+
+        return subfields
+            .Select(s => s == "user" ? "UserId" : s)
+            .Select(s => s[0].ToString().ToUpper() + s[1..])
+            .ToList();
+    }
+
+    private static List<string> ChannelMemberDbColumnsFromMemberInfo(
+        GraphQLField memberInfoFieldAst,
+        GraphQLDocument document
+    )
+    {
+        if (memberInfoFieldAst.SelectionSet is null)
+        {
+            throw new InvalidOperationException(
+                "null selection set on group ast node"
+            );
+        }
+
+        var subfields = memberInfoFieldAst.SelectionSet.Selections
+            .Where(s => s.Kind == ASTNodeKind.Field)
+            .Select(s => (s as GraphQLField)!.Name.StringValue)
+            .ToList();
+        var fragmentSpreads = memberInfoFieldAst.SelectionSet.Selections
+            .Where(s => s.Kind == ASTNodeKind.FragmentSpread)
+            .Select(
+                s => (s as GraphQLFragmentSpread)!.FragmentName.Name.StringValue
+            )
+            .ToList();
+
+        if (fragmentSpreads.Any())
+        {
+            var fragDefs = document.Definitions.Where(
+                d =>
+                    d.Kind == ASTNodeKind.FragmentDefinition
+                    && fragmentSpreads.Contains(
+                        (d as GraphQLFragmentDefinition)!
+                            .FragmentName
+                            .Name
+                            .StringValue
+                    )
+            );
+            subfields.AddRange(
+                fragDefs.SelectMany(
+                    f =>
+                        (
+                            f as GraphQLFragmentDefinition
+                        )!.SelectionSet.Selections
+                            .Where(s => s.Kind == ASTNodeKind.Field)
+                            .Select(s => (s as GraphQLField)!.Name.StringValue)
+                )
+            );
+        }
+
+        return subfields
+            .Select(s => s[0].ToString().ToUpper() + s[1..])
+            .ToList();
+    }
 
     public static List<string> GroupDbColumns(
         GraphQLField groupFieldAst,

@@ -1,7 +1,4 @@
-using GraphQL;
 using GraphQLParser.AST;
-using Common.SlackCloneGraphQL.Types;
-using Common.SlackCloneGraphQL;
 
 namespace Common.Utils;
 

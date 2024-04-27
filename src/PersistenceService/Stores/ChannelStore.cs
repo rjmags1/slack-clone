@@ -125,50 +125,95 @@ public class ChannelStore : Store
     }
 
     public async Task<(
-        List<dynamic> dbMembers,
+        List<GraphQLTypes.ChannelMember> members,
         bool lastPage
     )> LoadChannelMembers(
-        Guid userId,
         int first,
-        FieldTree connectionTree,
+        List<string> dbCols,
         Guid channelId,
         Guid? after = null
     )
     {
-        IOrderedQueryable<ChannelMember> memberships = _context.ChannelMembers
-            .Where(cm => cm.ChannelId == channelId)
-            .Include(cm => cm.User)
-            .OrderBy(cm => cm.User.NormalizedUserName);
+        List<string> sqlBuilder = new();
         if (after is not null)
         {
-            string prevLast = memberships
-                .Where(cm => cm.Id == after)
-                .Select(cm => cm.User.NormalizedUserName)
-                .First();
-            memberships =
-                (IOrderedQueryable<ChannelMember>)(
-                    memberships.Where(
-                        wm => wm.User.NormalizedUserName.CompareTo(prevLast) > 0
-                    )
-                );
+            sqlBuilder.Add("WITH afterId AS (");
+            sqlBuilder.Add(
+                $"SELECT {wdq("UserId")} FROM {wdq("ChannelMembers")}"
+            );
+            sqlBuilder.Add($"WHERE {wdq("Id")} = @AfterId");
+            sqlBuilder.Add("),\n");
+
+            sqlBuilder.Add("afterName AS (");
+            sqlBuilder.Add(
+                $"SELECT {wdq("AspNetUsers")}.{wdq("NormalizedUserName")}"
+            );
+            sqlBuilder.Add($"FROM {wdq("AspNetUsers")}");
+            sqlBuilder.Add(
+                $"WHERE {wdq("Id")} = (SELECT {wdq("UserId")} FROM afterId)"
+            );
+            sqlBuilder.Add("),\n");
         }
+        else
+        {
+            sqlBuilder.Add("WITH");
+        }
+        sqlBuilder.Add($"members AS (");
+        sqlBuilder.Add(
+            $"SELECT * FROM {wdq("ChannelMembers")} WHERE {wdq("ChannelId")} = @ChannelId"
+        );
+        sqlBuilder.Add(")\n");
 
-        var memberships_ = memberships.Take(first + 1);
-        var dynamicChannelMembers = await memberships_
-            .Select(
-                DynamicLinqUtils.NodeFieldToDynamicSelectString(
-                    connectionTree,
-                    nonDbMapped: new List<string> { "memberInfo" }
-                )
+        sqlBuilder.Add("SELECT");
+        sqlBuilder.AddRange(dbCols.Select((c, i) => $"members.{wdq(c)},"));
+        sqlBuilder.Add(
+            $"{wdq("AspNetUsers")}.{wdq("Id")}, {wdq("AspNetUsers")}.{wdq("UserName")} AS {wdq("Username")}"
+        );
+        sqlBuilder.Add($"FROM members INNER JOIN {wdq("AspNetUsers")}");
+        sqlBuilder.Add(
+            $"ON members.{wdq("UserId")} = {wdq("AspNetUsers")}.{wdq("Id")}"
+        );
+        if (after is not null)
+        {
+            sqlBuilder.Add(
+                $"WHERE {wdq("AspNetUsers")}.{wdq("NormalizedUserName")} > (SELECT {wdq("NormalizedUserName")} FROM afterName)"
+            );
+        }
+        sqlBuilder.Add($"ORDER BY {wdq("Username")}");
+        sqlBuilder.Add("LIMIT @First;");
+
+        var sql = string.Join("\n", sqlBuilder);
+        var param = new
+        {
+            AfterId = after,
+            ChannelId = channelId,
+            First = first + 1
+        };
+        var conn = _context.GetConnection();
+
+        var members = (
+            await conn.QueryAsync<
+                GraphQLTypes.ChannelMember,
+                GraphQLTypes.User,
+                GraphQLTypes.ChannelMember
+            >(
+                sql: sql,
+                param: param,
+                map: (member, user) =>
+                {
+                    member.User = user;
+                    return member;
+                }
             )
-            .ToDynamicListAsync();
+        ).ToList();
 
-        bool lastPage = dynamicChannelMembers.Count <= first;
+        var lastPage = members.Count <= first;
         if (!lastPage)
         {
-            dynamicChannelMembers.RemoveAt(dynamicChannelMembers.Count - 1);
+            members.RemoveAt(members.Count - 1);
         }
-        return (dynamicChannelMembers, lastPage);
+
+        return (members, lastPage);
     }
 
     public async Task<ChannelMessageReaction> InsertMessageReaction(

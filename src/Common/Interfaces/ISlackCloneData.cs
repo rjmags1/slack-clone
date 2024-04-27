@@ -26,7 +26,7 @@ public interface ISlackCloneData
         UsersFilter filter,
         int first,
         Guid? after,
-        IEnumerable<string> cols
+        List<string> cols
     );
 
     public Task<Connection<WorkspaceMember>> GetWorkspaceMembers(

@@ -6,6 +6,7 @@ using PersistenceService.Utils.GraphQL;
 using File = Common.SlackCloneGraphQL.Types.File;
 using WorkspaceStore = PersistenceService.Stores.WorkspaceStore;
 using Common.SlackCloneGraphQL;
+using GraphQLParser.AST;
 
 namespace SlackCloneGraphQL;
 
@@ -116,38 +117,30 @@ public class SlackCloneData : ISlackCloneData
         UsersFilter filter,
         int first,
         Guid? after,
-        IEnumerable<string> cols
+        List<string> cols
     )
     {
-        //using var scope = Provider.CreateScope();
-        //ChannelStore channelStore =
-        //scope.ServiceProvider.GetRequiredService<ChannelStore>();
-        //(List<dynamic> dbMembers, bool lastPage) =
-        //await channelStore.LoadChannelMembers(
-        //filter.UserId,
-        //first,
-        //fieldInfo.FieldTree,
-        //channelId,
-        //after
-        //);
+        if (
+            filter.JoinedAfter is not null
+            || filter.JoinedBefore is not null
+            || filter.Query is not null
+        )
+        {
+            throw new NotImplementedException();
+        }
 
-        //List<ChannelMember> members = new();
-        //foreach (dynamic dbm in dbMembers)
-        //{
-        //ChannelMember member =
-        //ModelToObjectConverters.ConvertDynamicChannelMember(
-        //dbm,
-        //FieldAnalyzer.ExtractUserFields("user", fieldInfo.FieldTree)
-        //);
-        //members.Add(member);
-        //}
+        using var scope = Provider.CreateScope();
+        ChannelStore channelStore =
+            scope.ServiceProvider.GetRequiredService<ChannelStore>();
+        (List<ChannelMember> members, bool lastPage) =
+            await channelStore.LoadChannelMembers(
+                first,
+                cols,
+                channelId,
+                after
+            );
 
-        //return ModelToObjectConverters.ToConnection<ChannelMember>(
-        //members,
-        //after is null,
-        //lastPage
-        //);
-        throw new NotImplementedException();
+        return ToConnection(members, after is null, lastPage);
     }
 
     public async Task<Connection<WorkspaceMember>> GetWorkspaceMembers(

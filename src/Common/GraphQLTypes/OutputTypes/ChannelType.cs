@@ -1,6 +1,7 @@
 using GraphQL;
 using GraphQL.Types;
 using Common.SlackCloneGraphQL.Types.Connections;
+using Common.Utils;
 
 namespace Common.SlackCloneGraphQL.Types;
 
@@ -82,23 +83,23 @@ public class ChannelType : ObjectGraphType<Channel>, INodeGraphType<Channel>
                 {
                     throw new InvalidOperationException();
                 }
-                throw new NotImplementedException();
-                //string query = GraphQLUtils.GetQuery(
-                //(context.UserContext as GraphQLUserContext)!
-                //)!;
-                //var fragments = FieldAnalyzer.GetFragments(query);
-                //FieldInfo fieldInfo = FieldAnalyzer.ChannelMembers(
-                //query,
-                //fragments
-                //);
+                var dbCols = FieldAnalyzer.ChannelMemberDbColumns(
+                    GraphQLUtils.GetNodeASTFromConnectionAST(
+                        context.FieldAst,
+                        context.Document,
+                        "ChannelMembersConnection",
+                        "ChannelMembersConnectionEdge"
+                    ),
+                    context.Document
+                );
 
-                //return await data.GetChannelMembers(
-                //fieldInfo,
-                //context.Source.Id,
-                //usersFilter,
-                //first,
-                //after
-                //);
+                return await data.GetChannelMembers(
+                    context.Source.Id,
+                    usersFilter,
+                    first,
+                    after,
+                    dbCols
+                );
             });
         Field<NonNullGraphType<ChannelMessagesConnectionType>>("messages")
             .Argument<NonNullGraphType<IntGraphType>>("first")
