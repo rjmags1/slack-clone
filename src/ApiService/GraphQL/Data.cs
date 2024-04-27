@@ -220,14 +220,29 @@ public class SlackCloneData : ISlackCloneData
         return ToConnection(workspaces, after is null, lastPage);
     }
 
-    private Connection<T> ToConnection<T>(
+    private static Connection<T> ToConnection<T>(
         List<T> nodes,
         bool firstPage,
         bool lastPage
     )
         where T : INode
     {
-        throw new NotImplementedException();
+        var connection = new Connection<T>
+        {
+            TotalEdges = nodes.Count,
+            Edges = nodes.Select(
+                n => new ConnectionEdge<T> { Node = n, Cursor = n.Id }
+            ),
+            PageInfo = new PageInfo
+            {
+                StartCursor = nodes.FirstOrDefault()?.Id,
+                EndCursor = nodes.LastOrDefault()?.Id,
+                HasNextPage = !lastPage,
+                HasPreviousPage = !firstPage
+            }
+        };
+
+        return connection;
     }
 
     public async Task<Workspace> GetWorkspace(
@@ -342,7 +357,7 @@ public class SlackCloneData : ISlackCloneData
             first,
             cols
         );
-        return ToConnection<Channel>(channels, after is null, lastPage);
+        return ToConnection(channels, after is null, lastPage);
     }
 
     public async Task<Connection<DirectMessageGroup>> GetDirectMessageGroups(
@@ -375,7 +390,7 @@ public class SlackCloneData : ISlackCloneData
                 after
             );
 
-        return ToConnection<DirectMessageGroup>(dmgs, after is null, lastPage);
+        return ToConnection(dmgs, after is null, lastPage);
     }
 
     public async Task<Connection<Group>> GetStarred(
@@ -403,7 +418,7 @@ public class SlackCloneData : ISlackCloneData
             after
         );
 
-        return ToConnection<Group>(starred, after is null, lastPage);
+        return ToConnection(starred, after is null, lastPage);
     }
 
     public async Task<Connection<Message>> GetDirectMessages(
