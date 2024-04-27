@@ -71,7 +71,7 @@ public class ChannelType : ObjectGraphType<Channel>, INodeGraphType<Channel>
             )
             .Argument<NonNullGraphType<IntGraphType>>("first")
             .Argument<IdGraphType>("after")
-            .Argument<NonNullGraphType<UsersFilterInputType>>("filter")
+            .Argument<UsersFilterInputType>("filter")
             .ResolveAsync(async context =>
             {
                 var first = context.GetArgument<int>("first");
@@ -79,9 +79,9 @@ public class ChannelType : ObjectGraphType<Channel>, INodeGraphType<Channel>
                 UsersFilter usersFilter = context.GetArgument<UsersFilter>(
                     "filter"
                 );
-                if (usersFilter.Channels is not null)
+                if (usersFilter is not null)
                 {
-                    throw new InvalidOperationException();
+                    throw new NotImplementedException();
                 }
                 var dbCols = FieldAnalyzer.ChannelMemberDbColumns(
                     GraphQLUtils.GetNodeASTFromConnectionAST(

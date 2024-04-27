@@ -13,7 +13,6 @@ public interface ISlackCloneData
     public Task<DirectMessageGroup> GetDirectMessageGroup(Guid groupId);
 
     public Task<Connection<Message>> GetChannelMessages(
-        Guid userId,
         Guid channelId,
         MessagesFilter? filter,
         int first,
@@ -23,7 +22,7 @@ public interface ISlackCloneData
 
     public Task<Connection<ChannelMember>> GetChannelMembers(
         Guid channelId,
-        UsersFilter filter,
+        UsersFilter? filter,
         int first,
         Guid? after,
         List<string> cols
