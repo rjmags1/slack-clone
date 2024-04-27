@@ -173,6 +173,65 @@ public static class FieldAnalyzer
 
     */
 
+    public static List<string> ChannelMessageDbColumns(
+        GraphQLField channelMessageFieldAst,
+        GraphQLDocument document
+    )
+    {
+        if (channelMessageFieldAst.SelectionSet is null)
+        {
+            throw new InvalidOperationException(
+                "null selection set on channel message"
+            );
+        }
+
+        var subfields = channelMessageFieldAst.SelectionSet.Selections
+            .Where(s => s.Kind == ASTNodeKind.Field)
+            .Select(s => (s as GraphQLField)!.Name.StringValue)
+            .ToList();
+        var fragmentSpreads = channelMessageFieldAst.SelectionSet.Selections
+            .Where(s => s.Kind == ASTNodeKind.FragmentSpread)
+            .Select(
+                s => (s as GraphQLFragmentSpread)!.FragmentName.Name.StringValue
+            )
+            .ToList();
+
+        if (fragmentSpreads.Any())
+        {
+            var fragDefs = document.Definitions.Where(
+                d =>
+                    d.Kind == ASTNodeKind.FragmentDefinition
+                    && fragmentSpreads.Contains(
+                        (d as GraphQLFragmentDefinition)!
+                            .FragmentName
+                            .Name
+                            .StringValue
+                    )
+            );
+            subfields.AddRange(
+                fragDefs.SelectMany(
+                    f =>
+                        (
+                            f as GraphQLFragmentDefinition
+                        )!.SelectionSet.Selections
+                            .Where(s => s.Kind == ASTNodeKind.Field)
+                            .Select(s => (s as GraphQLField)!.Name.StringValue)
+                )
+            );
+        }
+
+        return subfields
+            .Select(s => s[0].ToString().ToUpper() + s[1..])
+            .Select(s => s == "User" ? "UserId" : s)
+            .Select(s => s == "CreatedAtUTC" ? "CreatedAt" : s)
+            .Select(s => s == "LastEditUTC" ? "LastEdit" : s)
+            .Select(s => s == "Group" ? "ChannelId" : s)
+            .Select(s => s == "LaterFlag" ? "LaterFlagId" : s)
+            .Select(s => s == "SentAtUTC" ? "SentAt" : s)
+            .Where(s => s != "Draft" && s != "Type")
+            .ToList();
+    }
+
     public static List<string> ChannelMemberDbColumns(
         GraphQLField channelMemberFieldAst,
         GraphQLDocument document

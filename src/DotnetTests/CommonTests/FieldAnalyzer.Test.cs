@@ -708,6 +708,96 @@ public class FieldAnalyzerTests
             }
         ";
 
+    private const string channelMessagesQuery1 =
+        @"
+            query ChannelMessagesConnectionQuery {
+                messages {
+                    totalEdges
+                    pageInfo {
+                        hasNextPage
+                    }
+                    edges {
+                        cursor
+                        node {
+                            id
+                            user {
+                                id
+                            }
+                            content
+                            createdAtUTC
+                            draft
+                            lastEditUTC
+                            files {
+                                id
+                                name
+                                storeKey
+                                uploadedAt
+                            }
+                            group {
+                                id
+                            }
+                            isReply
+                            laterFlag {
+                                id
+                            }
+                            mentions {
+                                id
+                            }
+                            reactions {
+                                id
+                            }
+                            replyToId
+                            sentAtUTC
+                            threadId
+                            type
+                        }
+                    }
+                }
+            }
+        ";
+
+    [Theory]
+    [InlineData(channelMessagesQuery1)]
+    public void ChannelMessageDbColumns_ShouldGetChannelMessageDbColumns(
+        string query
+    )
+    {
+        List<string> expectedCols =
+            new()
+            {
+                "Mentions",
+                "Reactions",
+                "Files",
+                "Id",
+                "UserId",
+                "Content",
+                "CreatedAt",
+                "LastEdit",
+                "ChannelId",
+                "IsReply",
+                "LaterFlagId",
+                "ReplyToId",
+                "SentAt",
+                "ThreadId",
+            };
+
+        var docAst = Parser.Parse(query);
+        var opDef = docAst.Definitions.First() as GraphQLOperationDefinition;
+        var messagesFieldDef =
+            opDef!.SelectionSet.Selections.First() as GraphQLField;
+        var nodeAst = GraphQLUtils.GetNodeASTFromConnectionAST(
+            messagesFieldDef!,
+            docAst,
+            "ChannelMessagesConnection",
+            "ChannelMessagesConnectionEdge"
+        );
+        var cols = FieldAnalyzer.ChannelMessageDbColumns(nodeAst!, docAst!);
+        cols.Sort();
+        expectedCols.Sort();
+        Assert.Equal(expectedCols, cols);
+    }
+
+    /*
     [Theory]
     [InlineData(channelMembersQuery1)]
     [InlineData(channelMembersQuery2)]
@@ -743,7 +833,6 @@ public class FieldAnalyzerTests
         Assert.Equal(expectedCols, cols);
     }
 
-    /*
     [Theory]
     [InlineData(groupsQuery1)]
     [InlineData(groupsQuery2)]

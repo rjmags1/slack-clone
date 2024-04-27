@@ -18,7 +18,7 @@ public interface ISlackCloneData
         MessagesFilter? filter,
         int first,
         Guid? after,
-        IEnumerable<string> cols
+        List<string> cols
     );
 
     public Task<Connection<ChannelMember>> GetChannelMembers(

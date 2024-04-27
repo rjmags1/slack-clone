@@ -114,31 +114,23 @@ public class ChannelType : ObjectGraphType<Channel>, INodeGraphType<Channel>
                 var after = context.GetArgument<Guid?>("after");
                 MessagesFilter? messagesFilter =
                     context.GetArgument<MessagesFilter>("filter");
-                //string query = GraphQLUtils.GetQuery(
-                //(context.UserContext as GraphQLUserContext)!
-                //)!;
-                //var fragments = FieldAnalyzer.GetFragments(query);
-                //var queryName = GraphQLUtils.GetQueryName(
-                //(context.UserContext as GraphQLUserContext)!
-                //);
-                //FieldInfo fieldInfo = FieldAnalyzer.ChannelMessages(
-                //query,
-                //fragments,
-                //queryName
-                //);
-                //Guid sub = GraphQLUtils.GetSubClaim(
-                //(context.UserContext as GraphQLUserContext)!
-                //);
+                var dbCols = FieldAnalyzer.ChannelMessageDbColumns(
+                    GraphQLUtils.GetNodeASTFromConnectionAST(
+                        context.FieldAst,
+                        context.Document,
+                        "ChannelMessagesConnection",
+                        "ChannelMessagesConnectionEdge"
+                    ),
+                    context.Document
+                );
 
-                //return await data.GetChannelMessages(
-                //sub,
-                //context.Source.Id,
-                //fieldInfo,
-                //messagesFilter,
-                //first,
-                //after
-                //);
-                throw new NotImplementedException();
+                return await data.GetChannelMessages(
+                    context.Source.Id,
+                    messagesFilter,
+                    first,
+                    after,
+                    dbCols
+                );
             });
         Field<NonNullGraphType<StringGraphType>>("name")
             .Description("The name of the channel.")

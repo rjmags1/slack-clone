@@ -57,73 +57,48 @@ public class SlackCloneData : ISlackCloneData
     }
 
     public async Task<Connection<Message>> GetChannelMessages(
-        Guid userId,
         Guid channelId,
         MessagesFilter? filter,
         int first,
         Guid? after,
-        IEnumerable<string> cols
+        List<string> cols
     )
     {
         //// TODO: add filtering capabilities
+        if (filter is not null)
+        {
+            throw new NotImplementedException();
+        }
 
-        //using var scope = Provider.CreateScope();
-        //ChannelStore channelStore =
-        //scope.ServiceProvider.GetRequiredService<ChannelStore>();
-        //(
-        //List<dynamic> dbMessages,
-        //List<ChannelMessageReactionCount> reactionCounts,
-        //bool lastPage
-        //) = await channelStore.LoadChannelMessages(
-        //userId,
-        //channelId,
-        //fieldInfo,
-        //first,
-        //after
-        //);
+        using var scope = Provider.CreateScope();
+        ChannelStore channelStore =
+            scope.ServiceProvider.GetRequiredService<ChannelStore>();
+        (List<Message> messages, bool lastPage) =
+            await channelStore.LoadChannelMessages(
+                channelId,
+                cols,
+                first,
+                after
+            );
 
-        //Dictionary<Guid, List<ChannelMessageReactionCount>?> countsDict = new();
-        //foreach (ChannelMessageReactionCount reactionCount in reactionCounts)
-        //{
-        //if (!countsDict.ContainsKey(reactionCount.ChannelMessageId))
-        //{
-        //countsDict[reactionCount.ChannelMessageId] =
-        //new List<ChannelMessageReactionCount>();
-        //}
-        //countsDict[reactionCount.ChannelMessageId]!.Add(reactionCount);
-        //}
-        //List<Message> messages = new();
-        //foreach (dynamic dbm in dbMessages)
-        //{
-        //Message message =
-        //ModelToObjectConverters.ConvertDynamicChannelMessage(
-        //dbm,
-        //countsDict.GetValueOrDefault((Guid)dbm.Id, null),
-        //FieldAnalyzer.ExtractUserFields("user", fieldInfo.FieldTree)
-        //);
-        //messages.Add(message);
-        //}
-
-        //return ModelToObjectConverters.ToConnection<Message>(
-        //messages,
-        //after is null,
-        //lastPage
-        //);
-        throw new NotImplementedException();
+        return ToConnection(messages, after is null, lastPage);
     }
 
     public async Task<Connection<ChannelMember>> GetChannelMembers(
         Guid channelId,
-        UsersFilter filter,
+        UsersFilter? filter,
         int first,
         Guid? after,
         List<string> cols
     )
     {
         if (
-            filter.JoinedAfter is not null
-            || filter.JoinedBefore is not null
-            || filter.Query is not null
+            filter is not null
+            && (
+                filter.JoinedAfter is not null
+                || filter.JoinedBefore is not null
+                || filter.Query is not null
+            )
         )
         {
             throw new NotImplementedException();

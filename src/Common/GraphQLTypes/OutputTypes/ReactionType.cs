@@ -1,6 +1,7 @@
 using GraphQL.Types;
 using Common.SlackCloneGraphQL.Types.Connections;
-using Common.SlackCloneGraphQL.Types;
+
+namespace Common.SlackCloneGraphQL.Types;
 
 public class ReactionType : ObjectGraphType<Reaction>, INodeGraphType<Reaction>
 {
