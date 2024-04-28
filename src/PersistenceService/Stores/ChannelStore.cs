@@ -2,7 +2,6 @@ using PersistenceService.Data.ApplicationDb;
 using PersistenceService.Models;
 using PersistenceService.Constants;
 using PersistenceService.Utils;
-using PersistenceService.Utils.GraphQL;
 using System.Linq.Dynamic.Core;
 using Microsoft.EntityFrameworkCore;
 using GraphQLTypes = Common.SlackCloneGraphQL.Types;
@@ -25,11 +24,56 @@ public class ChannelStore : Store
     public ChannelStore(ApplicationDbContext context)
         : base(context) { }
 
-    public async Task<Channel> LoadChannel(Guid channelId)
+    public async Task<GraphQLTypes.Channel> LoadChannel(Guid channelId)
     {
-        return await _context.Channels
-            .Where(c => c.Id == channelId)
-            .FirstAsync();
+        var sqlBuilder = new List<string>
+        {
+            $"WITH channel AS (",
+            $"SELECT * FROM {wdq("Channels")} WHERE {wdq("Id")} = @ChannelId",
+            ")",
+            $"SELECT * FROM",
+            $"channel LEFT JOIN {wdq("Files")} ON {wdq("Files")}.{wdq("Id")} = channel.{wdq("AvatarId")}",
+            $"LEFT JOIN {wdq("Workspaces")} ON {wdq("Workspaces")}.{wdq("Id")} = channels.{wdq("WorkspaceId")}",
+            $"LEFT JOIN {wdq("AspNetUsers")} ON",
+            $"{wdq("AspNetUsers")}.{wdq("Id")} = channel.{wdq("CreatedById")}"
+        };
+
+        var sql = string.Join("\n", sqlBuilder);
+        var param = new { ChannelId = channelId };
+        var conn = _context.GetConnection();
+
+        var channel = (
+            await conn.QueryAsync<
+                Models.Channel,
+                GraphQLTypes.File,
+                GraphQLTypes.Workspace,
+                GraphQLTypes.User,
+                GraphQLTypes.Channel
+            >(
+                sql: sql,
+                param: param,
+                map: (channel, avatar, workspace, user) =>
+                {
+                    return new GraphQLTypes.Channel
+                    {
+                        Id = channel.Id,
+                        AllowThreads = channel.AllowThreads,
+                        AllowedPostersMask = channel.AllowedPostersMask,
+                        Avatar = avatar,
+                        CreatedAt = channel.CreatedAt,
+                        CreatedBy = user,
+                        Description = channel.Description,
+                        Name = channel.Name,
+                        NumMembers = channel.NumMembers,
+                        Private = channel.Private,
+                        Topic = channel.Topic,
+                        Workspace = workspace
+                    };
+                }
+            )
+        ).First();
+
+        return channel;
     }
 
     public async Task<(
@@ -856,21 +900,6 @@ public class ChannelStore : Store
         Guid? after = null
     )
     {
-        var wId = wdq("Id");
-        var wChannelId = wdq("ChannelId");
-        var wMembers = wdq("ChannelMembers");
-        var wWorkspaceId = wdq("WorkspaceId");
-        var wUserId = wdq("UserId");
-        var wLastViewedAt = wdq("LastViewedAt");
-        var wJoinedAt = wdq("JoinedAt");
-        var wName = wdq("Name");
-        var wChannels = wdq("Channels");
-        var wFiles = wdq("Files");
-        var wUsers = wdq("AspNetUsers");
-        var wWorkspaces = wdq("Workspaces");
-        var wAvatarId = wdq("AvatarId");
-        var wCreatedById = wdq("CreatedById");
-
         string[] joinCols = { "AvatarId", "CreatedById", "WorkspaceId" };
         if (cols.Any(c => joinCols.Contains(c)))
         {
@@ -885,8 +914,8 @@ public class ChannelStore : Store
         if (after is not null)
         {
             sqlBuilder.Add("WITH _after AS (");
-            sqlBuilder.Add($"SELECT {wName} FROM {wChannels}");
-            sqlBuilder.Add($"WHERE {wId} = @AfterId");
+            sqlBuilder.Add($"SELECT {wdq("Name")} FROM {wdq("Channels")}");
+            sqlBuilder.Add($"WHERE {wdq("Id")} = @AfterId");
             sqlBuilder.Add("),\n");
         }
         else
@@ -894,25 +923,29 @@ public class ChannelStore : Store
             sqlBuilder.Add("WITH");
         }
         sqlBuilder.Add("_memberships AS (");
-        sqlBuilder.Add($"SELECT {wChannelId}, {wLastViewedAt}, {wJoinedAt}");
-        sqlBuilder.Add($"FROM {wMembers} WHERE");
-        sqlBuilder.Add($"{wWorkspaceId} = @WorkspaceId AND");
-        sqlBuilder.Add($"{wUserId} = @UserId");
+        sqlBuilder.Add(
+            $"SELECT {wdq("ChannelId")}, {wdq("LastViewedAt")}, {wdq("JoinedAt")}"
+        );
+        sqlBuilder.Add($"FROM {wdq("ChannelMembers")} WHERE");
+        sqlBuilder.Add($"{wdq("WorkspaceId")} = @WorkspaceId AND");
+        sqlBuilder.Add($"{wdq("UserId")} = @UserId");
         sqlBuilder.Add("),\n");
 
         sqlBuilder.Add("_channels AS (");
         sqlBuilder.Add("SELECT");
-        sqlBuilder.AddRange(cols.Select(c => $"{wChannels}.{wdq(c)},"));
+        sqlBuilder.AddRange(cols.Select(c => $"{wdq("Channels")}.{wdq(c)},"));
         sqlBuilder.Add(
-            $"_memberships.{wLastViewedAt}, _memberships.{wJoinedAt}"
+            $"_memberships.{wdq("LastViewedAt")}, _memberships.{wdq("JoinedAt")}"
         );
         sqlBuilder.Add("FROM");
-        sqlBuilder.Add($"_memberships INNER JOIN {wChannels} ON");
-        sqlBuilder.Add($"{wChannels}.{wId} = _memberships.{wChannelId}");
+        sqlBuilder.Add($"_memberships INNER JOIN {wdq("Channels")} ON");
+        sqlBuilder.Add(
+            $"{wdq("Channels")}.{wdq("Id")} = _memberships.{wdq("ChannelId")}"
+        );
         if (after is not null)
         {
             sqlBuilder.Add(
-                $"WHERE {wChannels}.{wName} > (SELECT {wName} FROM _after)"
+                $"WHERE {wdq("Channels")}.{wdq("Name")} > (SELECT {wdq("Name")} FROM _after)"
             );
         }
         sqlBuilder.Add("LIMIT @First");
@@ -922,19 +955,21 @@ public class ChannelStore : Store
         if (cols.Any(c => joinCols.Contains(c)))
         {
             sqlBuilder.Add(
-                $"LEFT JOIN {wFiles} ON {wFiles}.{wId} = _channels.{wAvatarId}"
+                $"LEFT JOIN {wdq("Files")} ON {wdq("Files")}.{wdq("Id")} = _channels.{wdq("AvatarId")}"
             );
             sqlBuilder.Add(
-                $"LEFT JOIN {wUsers} ON {wUsers}.{wId} = _channels.{wCreatedById}"
+                $"LEFT JOIN {wdq("AspNetUsers")} ON {wdq("AspNetUsers")}.{wdq("Id")} = _channels.{wdq("CreatedById")}"
             );
             sqlBuilder.Add(
-                $"LEFT JOIN {wWorkspaces} ON {wWorkspaces}.{wId} = _channels.{wWorkspaceId}"
+                $"LEFT JOIN {wdq("Workspaces")} ON {wdq("Workspaces")}.{wdq("Id")} = _channels.{wdq("WorkspaceId")}"
             );
         }
         sqlBuilder.Add($"ORDER BY");
-        sqlBuilder.Add($"CASE WHEN {wLastViewedAt} IS NULL THEN 0 ELSE 1 END,");
-        sqlBuilder.Add($"{wLastViewedAt},");
-        sqlBuilder.Add($"{wJoinedAt} DESC;");
+        sqlBuilder.Add(
+            $"CASE WHEN {wdq("LastViewedAt")} IS NULL THEN 0 ELSE 1 END,"
+        );
+        sqlBuilder.Add($"{wdq("LastViewedAt")},");
+        sqlBuilder.Add($"{wdq("JoinedAt")} DESC;");
 
         var sql = string.Join("\n", sqlBuilder);
         var conn = _context.GetConnection();
