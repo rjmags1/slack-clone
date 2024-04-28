@@ -17,9 +17,12 @@ public class ThemeStore : Store
 
     public async Task<List<Theme>> InsertShippedThemes()
     {
-        List<Theme> themes = new List<Theme>();
-        themes.Add(new Theme { Name = "Dark" });
-        themes.Add(new Theme { Name = "Normal" });
+        List<Theme> themes =
+            new()
+            {
+                new Theme { Name = "Dark" },
+                new Theme { Name = "Normal" }
+            };
 
         await InsertThemes(themes);
 

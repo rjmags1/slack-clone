@@ -1,10 +1,7 @@
 using Dapper;
-using GraphQL.Validation;
 using Microsoft.EntityFrameworkCore;
 using PersistenceService.Data.ApplicationDb;
 using PersistenceService.Models;
-using PersistenceService.Utils;
-using PersistenceService.Utils.GraphQL;
 using System.Linq.Dynamic.Core;
 using GraphQLTypes = Common.SlackCloneGraphQL.Types;
 
@@ -104,22 +101,24 @@ public class WorkspaceStore : Store
         int permissionsMask = 1
     )
     {
-        WorkspaceMember workspaceMembership = new WorkspaceMember
-        {
-            Admin = true,
-            Title = "Admin",
-            UserId = userId,
-            Workspace = workspace,
-        };
+        WorkspaceMember workspaceMembership =
+            new()
+            {
+                Admin = true,
+                Title = "Admin",
+                UserId = userId,
+                Workspace = workspace,
+            };
         _context.Add(workspaceMembership);
         workspace.NumMembers += 1;
 
-        WorkspaceAdminPermissions permissions = new WorkspaceAdminPermissions
-        {
-            AdminId = userId,
-            Workspace = workspace,
-            WorkspaceAdminPermissionsMask = permissionsMask
-        };
+        WorkspaceAdminPermissions permissions =
+            new()
+            {
+                AdminId = userId,
+                Workspace = workspace,
+                WorkspaceAdminPermissionsMask = permissionsMask
+            };
         _context.Add(permissions);
         workspaceMembership.WorkspaceAdminPermissions = permissions;
 
@@ -395,26 +394,27 @@ public class WorkspaceStore : Store
         Guid? after = null
     )
     {
-        string wWorkspaces = Stores.Store.wdq("Workspaces");
-        string wWorkspaceMembers = Stores.Store.wdq("WorkspaceMembers");
-        string wUserId = Stores.Store.wdq("UserId");
-        string wId = Stores.Store.wdq("Id");
-        string wWorkspaceId = Stores.Store.wdq("WorkspaceId");
-        string wName = Stores.Store.wdq("Name");
-        string wAvatarId = Stores.Store.wdq("AvatarId");
-        string wFiles = Stores.Store.wdq("Files");
-        string wStoreKey = Stores.Store.wdq("StoreKey");
+        string wWorkspaces = wdq("Workspaces");
+        string wWorkspaceMembers = wdq("WorkspaceMembers");
+        string wUserId = wdq("UserId");
+        string wId = wdq("Id");
+        string wWorkspaceId = wdq("WorkspaceId");
+        string wName = wdq("Name");
+        string wAvatarId = wdq("AvatarId");
+        string wFiles = wdq("Files");
+        string wStoreKey = wdq("StoreKey");
 
-        var sqlBuilder = new List<string>();
-
-        sqlBuilder.Add("WITH workspaceMembers_ AS (");
-        sqlBuilder.Add("SELECT");
-        sqlBuilder.Add(wWorkspaceId);
-        sqlBuilder.Add("FROM");
-        sqlBuilder.Add($"{wWorkspaceMembers}");
-        sqlBuilder.Add("WHERE");
-        sqlBuilder.Add($"{wUserId} = @UserId");
-        sqlBuilder.Add(after is null ? ")\n" : "),");
+        var sqlBuilder = new List<string>
+        {
+            "WITH workspaceMembers_ AS (",
+            "SELECT",
+            wWorkspaceId,
+            "FROM",
+            $"{wWorkspaceMembers}",
+            "WHERE",
+            $"{wUserId} = @UserId",
+            after is null ? ")\n" : "),"
+        };
 
         if (after is not null)
         {

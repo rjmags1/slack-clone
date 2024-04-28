@@ -2,11 +2,9 @@ using PersistenceService.Stores;
 using Models = PersistenceService.Models;
 using Common.SlackCloneGraphQL.Types;
 using Common.SlackCloneGraphQL.Types.Connections;
-using PersistenceService.Utils.GraphQL;
 using File = Common.SlackCloneGraphQL.Types.File;
 using WorkspaceStore = PersistenceService.Stores.WorkspaceStore;
 using Common.SlackCloneGraphQL;
-using GraphQLParser.AST;
 
 namespace SlackCloneGraphQL;
 
@@ -29,31 +27,18 @@ public class SlackCloneData : ISlackCloneData
 
     public async Task<Channel> GetChannel(Guid channelId)
     {
-        //using var scope = Provider.CreateScope();
-        //ChannelStore channelStore =
-        //scope.ServiceProvider.GetRequiredService<ChannelStore>();
-        //Models.Channel dbChannel = await channelStore.LoadChannel(channelId);
-
-        //return ModelToObjectConverters.ConvertChannel(
-        //dbChannel,
-        //skipWorkspace: true
-        //);
-        throw new NotImplementedException();
+        using var scope = Provider.CreateScope();
+        ChannelStore channelStore =
+            scope.ServiceProvider.GetRequiredService<ChannelStore>();
+        return await channelStore.LoadChannel(channelId);
     }
 
     public async Task<DirectMessageGroup> GetDirectMessageGroup(Guid groupId)
     {
-        //using var scope = Provider.CreateScope();
-        //DirectMessageGroupStore directMessageGroupStore =
-        //scope.ServiceProvider.GetRequiredService<DirectMessageGroupStore>();
-        //Models.DirectMessageGroup dbGroup =
-        //await directMessageGroupStore.LoadDirectMessageGroup(groupId);
-
-        //return ModelToObjectConverters.ConvertDirectMessageGroup(
-        //dbGroup,
-        //skipWorkspace: true
-        //);
-        throw new NotImplementedException();
+        using var scope = Provider.CreateScope();
+        DirectMessageGroupStore directMessageGroupStore =
+            scope.ServiceProvider.GetRequiredService<DirectMessageGroupStore>();
+        return await directMessageGroupStore.LoadDirectMessageGroup(groupId);
     }
 
     public async Task<Connection<Message>> GetChannelMessages(

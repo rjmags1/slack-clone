@@ -4,7 +4,6 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using PersistenceService.Data.ApplicationDb;
 using PersistenceService.Models;
-using PersistenceService.Utils;
 using CustomBaseStore = PersistenceService.Stores.Store;
 using Dapper;
 using GraphQLTypes = Common.SlackCloneGraphQL.Types;
