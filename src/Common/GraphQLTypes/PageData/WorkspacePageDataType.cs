@@ -108,26 +108,27 @@ public class WorkspacePageDataType : ObjectGraphType<WorkspacePageData>
             .Argument<IdGraphType>("after")
             .ResolveAsync(async context =>
             {
-                //var first = context.GetArgument<int>("first");
-                //var after = context.GetArgument<Guid?>("after");
-                //StarredFilter starredFilter =
-                //context.GetArgument<StarredFilter>("filter");
-                //var fragments = (
-                //context.UserContext["fragments"]
-                //as Dictionary<string, string>
-                //)!;
-                //var query = GraphQLUtils.GetQuery(
-                //(context.UserContext as GraphQLUserContext)!
-                //)!;
-                //var starredFieldInfo = FieldAnalyzer.Starred(query, fragments);
+                var dbCols = FieldAnalyzer.GroupDbColumns(
+                    GraphQLUtils.GetNodeASTFromConnectionAST(
+                        context.FieldAst,
+                        context.Document,
+                        "StarredConnection",
+                        "StarredConnectionEdge"
+                    ),
+                    context.Document
+                );
 
-                //return await data.GetStarred(
-                //first,
-                //after,
-                //starredFilter,
-                //starredFieldInfo
-                //);
-                throw new NotImplementedException();
+                var first = context.GetArgument<int>("first");
+                var after = context.GetArgument<Guid?>("after");
+                StarredFilter starredFilter =
+                    context.GetArgument<StarredFilter>("filter");
+
+                return await data.GetStarred(
+                    first,
+                    after,
+                    starredFilter,
+                    dbCols
+                );
             });
     }
 }

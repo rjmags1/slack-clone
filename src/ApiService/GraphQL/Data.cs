@@ -2,7 +2,6 @@ using PersistenceService.Stores;
 using Models = PersistenceService.Models;
 using Common.SlackCloneGraphQL.Types;
 using Common.SlackCloneGraphQL.Types.Connections;
-using PersistenceService.Utils.GraphQL;
 using File = Common.SlackCloneGraphQL.Types.File;
 using WorkspaceStore = PersistenceService.Stores.WorkspaceStore;
 using Common.SlackCloneGraphQL;
@@ -28,171 +27,107 @@ public class SlackCloneData : ISlackCloneData
 
     public async Task<Channel> GetChannel(Guid channelId)
     {
-        //using var scope = Provider.CreateScope();
-        //ChannelStore channelStore =
-        //scope.ServiceProvider.GetRequiredService<ChannelStore>();
-        //Models.Channel dbChannel = await channelStore.LoadChannel(channelId);
-
-        //return ModelToObjectConverters.ConvertChannel(
-        //dbChannel,
-        //skipWorkspace: true
-        //);
-        throw new NotImplementedException();
+        using var scope = Provider.CreateScope();
+        ChannelStore channelStore =
+            scope.ServiceProvider.GetRequiredService<ChannelStore>();
+        return await channelStore.LoadChannel(channelId);
     }
 
     public async Task<DirectMessageGroup> GetDirectMessageGroup(Guid groupId)
     {
-        //using var scope = Provider.CreateScope();
-        //DirectMessageGroupStore directMessageGroupStore =
-        //scope.ServiceProvider.GetRequiredService<DirectMessageGroupStore>();
-        //Models.DirectMessageGroup dbGroup =
-        //await directMessageGroupStore.LoadDirectMessageGroup(groupId);
-
-        //return ModelToObjectConverters.ConvertDirectMessageGroup(
-        //dbGroup,
-        //skipWorkspace: true
-        //);
-        throw new NotImplementedException();
+        using var scope = Provider.CreateScope();
+        DirectMessageGroupStore directMessageGroupStore =
+            scope.ServiceProvider.GetRequiredService<DirectMessageGroupStore>();
+        return await directMessageGroupStore.LoadDirectMessageGroup(groupId);
     }
 
     public async Task<Connection<Message>> GetChannelMessages(
-        Guid userId,
         Guid channelId,
         MessagesFilter? filter,
         int first,
         Guid? after,
-        IEnumerable<string> cols
+        List<string> cols
     )
     {
         //// TODO: add filtering capabilities
+        if (filter is not null)
+        {
+            throw new NotImplementedException();
+        }
 
-        //using var scope = Provider.CreateScope();
-        //ChannelStore channelStore =
-        //scope.ServiceProvider.GetRequiredService<ChannelStore>();
-        //(
-        //List<dynamic> dbMessages,
-        //List<ChannelMessageReactionCount> reactionCounts,
-        //bool lastPage
-        //) = await channelStore.LoadChannelMessages(
-        //userId,
-        //channelId,
-        //fieldInfo,
-        //first,
-        //after
-        //);
+        using var scope = Provider.CreateScope();
+        ChannelStore channelStore =
+            scope.ServiceProvider.GetRequiredService<ChannelStore>();
+        (List<Message> messages, bool lastPage) =
+            await channelStore.LoadChannelMessages(
+                channelId,
+                cols,
+                first,
+                after
+            );
 
-        //Dictionary<Guid, List<ChannelMessageReactionCount>?> countsDict = new();
-        //foreach (ChannelMessageReactionCount reactionCount in reactionCounts)
-        //{
-        //if (!countsDict.ContainsKey(reactionCount.ChannelMessageId))
-        //{
-        //countsDict[reactionCount.ChannelMessageId] =
-        //new List<ChannelMessageReactionCount>();
-        //}
-        //countsDict[reactionCount.ChannelMessageId]!.Add(reactionCount);
-        //}
-        //List<Message> messages = new();
-        //foreach (dynamic dbm in dbMessages)
-        //{
-        //Message message =
-        //ModelToObjectConverters.ConvertDynamicChannelMessage(
-        //dbm,
-        //countsDict.GetValueOrDefault((Guid)dbm.Id, null),
-        //FieldAnalyzer.ExtractUserFields("user", fieldInfo.FieldTree)
-        //);
-        //messages.Add(message);
-        //}
-
-        //return ModelToObjectConverters.ToConnection<Message>(
-        //messages,
-        //after is null,
-        //lastPage
-        //);
-        throw new NotImplementedException();
+        return ToConnection(messages, after is null, lastPage);
     }
 
     public async Task<Connection<ChannelMember>> GetChannelMembers(
         Guid channelId,
-        UsersFilter filter,
+        UsersFilter? filter,
         int first,
         Guid? after,
-        IEnumerable<string> cols
+        List<string> cols
     )
     {
-        //using var scope = Provider.CreateScope();
-        //ChannelStore channelStore =
-        //scope.ServiceProvider.GetRequiredService<ChannelStore>();
-        //(List<dynamic> dbMembers, bool lastPage) =
-        //await channelStore.LoadChannelMembers(
-        //filter.UserId,
-        //first,
-        //fieldInfo.FieldTree,
-        //channelId,
-        //after
-        //);
+        if (
+            filter is not null
+            && (
+                filter.JoinedAfter is not null
+                || filter.JoinedBefore is not null
+                || filter.Query is not null
+            )
+        )
+        {
+            throw new NotImplementedException();
+        }
 
-        //List<ChannelMember> members = new();
-        //foreach (dynamic dbm in dbMembers)
-        //{
-        //ChannelMember member =
-        //ModelToObjectConverters.ConvertDynamicChannelMember(
-        //dbm,
-        //FieldAnalyzer.ExtractUserFields("user", fieldInfo.FieldTree)
-        //);
-        //members.Add(member);
-        //}
+        using var scope = Provider.CreateScope();
+        ChannelStore channelStore =
+            scope.ServiceProvider.GetRequiredService<ChannelStore>();
+        (List<ChannelMember> members, bool lastPage) =
+            await channelStore.LoadChannelMembers(
+                first,
+                cols,
+                channelId,
+                after
+            );
 
-        //return ModelToObjectConverters.ToConnection<ChannelMember>(
-        //members,
-        //after is null,
-        //lastPage
-        //);
-        throw new NotImplementedException();
+        return ToConnection(members, after is null, lastPage);
     }
 
     public async Task<Connection<WorkspaceMember>> GetWorkspaceMembers(
-        UsersFilter filter,
+        Guid workspaceId,
+        UsersFilter? filter,
         int first,
         Guid? after,
-        IEnumerable<string> cols
+        List<string> cols
     )
     {
-        //using var scope = Provider.CreateScope();
-        //WorkspaceStore workspaceStore =
-        //scope.ServiceProvider.GetRequiredService<WorkspaceStore>();
-        //(List<dynamic> dbMembers, bool lastPage) =
-        //await workspaceStore.LoadWorkspaceMembers(
-        //filter.UserId,
-        //first,
-        //fieldInfo.FieldTree,
-        //filter.WorkspaceId,
-        //after
-        //);
+        if (filter is not null)
+        {
+            throw new NotImplementedException();
+        }
 
-        //List<WorkspaceMember> members = new();
-        //foreach (dynamic dbm in dbMembers)
-        //{
-        //WorkspaceMember member =
-        //ModelToObjectConverters.ConvertDynamicWorkspaceMember(
-        //dbm,
-        //FieldAnalyzer.ExtractUserFields(
-        //"user",
-        //fieldInfo.FieldTree
-        //),
-        //FieldAnalyzer.ExtractUserFields(
-        //"admin",
-        //fieldInfo.FieldTree
-        //)
-        //);
-        //members.Add(member);
-        //}
+        using var scope = Provider.CreateScope();
+        WorkspaceStore workspaceStore =
+            scope.ServiceProvider.GetRequiredService<WorkspaceStore>();
+        (List<WorkspaceMember> members, bool lastPage) =
+            await workspaceStore.LoadWorkspaceMembers(
+                first,
+                cols,
+                workspaceId,
+                after
+            );
 
-        //return ModelToObjectConverters.ToConnection<WorkspaceMember>(
-        //members,
-        //after is null,
-        //lastPage
-        //);
-        throw new NotImplementedException();
+        return ToConnection(members, after is null, lastPage);
     }
 
     public async Task<Connection<Workspace>> GetWorkspaces(
@@ -227,14 +162,29 @@ public class SlackCloneData : ISlackCloneData
         return ToConnection(workspaces, after is null, lastPage);
     }
 
-    private Connection<T> ToConnection<T>(
+    private static Connection<T> ToConnection<T>(
         List<T> nodes,
         bool firstPage,
         bool lastPage
     )
         where T : INode
     {
-        throw new NotImplementedException();
+        var connection = new Connection<T>
+        {
+            TotalEdges = nodes.Count,
+            Edges = nodes.Select(
+                n => new ConnectionEdge<T> { Node = n, Cursor = n.Id }
+            ),
+            PageInfo = new PageInfo
+            {
+                StartCursor = nodes.FirstOrDefault()?.Id,
+                EndCursor = nodes.LastOrDefault()?.Id,
+                HasNextPage = !lastPage,
+                HasPreviousPage = !firstPage
+            }
+        };
+
+        return connection;
     }
 
     public async Task<Workspace> GetWorkspace(
@@ -349,7 +299,7 @@ public class SlackCloneData : ISlackCloneData
             first,
             cols
         );
-        return ToConnection<Channel>(channels, after is null, lastPage);
+        return ToConnection(channels, after is null, lastPage);
     }
 
     public async Task<Connection<DirectMessageGroup>> GetDirectMessageGroups(
@@ -382,125 +332,61 @@ public class SlackCloneData : ISlackCloneData
                 after
             );
 
-        return ToConnection<DirectMessageGroup>(dmgs, after is null, lastPage);
+        return ToConnection(dmgs, after is null, lastPage);
     }
 
-    public async Task<Connection<IGroup>> GetStarred(
+    public async Task<Connection<Group>> GetStarred(
         int first,
         Guid? after,
         StarredFilter filter,
-        IEnumerable<string> cols
+        List<string> cols
     )
     {
-        //if (
-        //fieldInfo.SubfieldNames.Contains("members")
-        //|| fieldInfo.SubfieldNames.Contains("messages")
-        //)
-        //{
-        //throw new InvalidOperationException(
-        //"Requested a connection within a connection"
-        //);
-        //}
+        if (cols.Contains("Members") || cols.Contains("Messages"))
+        {
+            throw new InvalidOperationException(
+                "Requested a connection within a connection"
+            );
+        }
 
-        //using var scope = Provider.CreateScope();
-        //WorkspaceStore workspaceStore =
-        //scope.ServiceProvider.GetRequiredService<WorkspaceStore>();
-        //(List<WorkspaceStore.StarredInfo> dbStarred, bool lastPage) =
-        //await workspaceStore.LoadStarred(
-        //filter.WorkspaceId,
-        //filter.UserId,
-        //first,
-        //fieldInfo.FieldTree,
-        //after
-        //);
+        using var scope = Provider.CreateScope();
+        WorkspaceStore workspaceStore =
+            scope.ServiceProvider.GetRequiredService<WorkspaceStore>();
+        (List<Group> starred, bool lastPage) = await workspaceStore.LoadStarred(
+            filter.WorkspaceId,
+            filter.UserId,
+            first,
+            cols,
+            after
+        );
 
-        //List<IGroup> starred = new();
-        //foreach (WorkspaceStore.StarredInfo dbg in dbStarred)
-        //{
-        //if (dbg.Type == WorkspaceStore.CHANNEL)
-        //{
-        //Channel channel = (Channel)
-        //ModelToObjectConverters.ConvertDynamicChannel(dbg.Starred);
-        //starred.Add(channel);
-        //}
-        //else if (dbg.Type == WorkspaceStore.DIRECT_MESSAGE_GROUP)
-        //{
-        //DirectMessageGroup directMessageGroup = (DirectMessageGroup)
-        //ModelToObjectConverters.ConvertDynamicDirectMessageGroup(
-        //dbg.Starred
-        //);
-        //starred.Add(directMessageGroup);
-        //}
-        //else
-        //{
-        //throw new InvalidOperationException();
-        //}
-        //}
-
-        //return ModelToObjectConverters.ToConnection<IGroup>(
-        //starred,
-        //after is null,
-        //lastPage
-        //);
-        throw new NotImplementedException();
+        return ToConnection(starred, after is null, lastPage);
     }
 
     public async Task<Connection<Message>> GetDirectMessages(
-        Guid userId,
         Guid directMessageGroupId,
         MessagesFilter? filter,
         int first,
         Guid? after,
-        IEnumerable<string> cols
+        List<string> cols
     )
     {
-        //if (filter is not null)
-        //{
-        //throw new NotImplementedException();
-        //}
+        if (filter is not null)
+        {
+            throw new NotImplementedException();
+        }
 
-        //using var scope = Provider.CreateScope();
-        //DirectMessageGroupStore directMessageGroupStore =
-        //scope.ServiceProvider.GetRequiredService<DirectMessageGroupStore>();
-        //(
-        //List<dynamic> dbMessages,
-        //List<DirectMessageReactionCount> reactionCounts,
-        //bool lastPage
-        //) = await directMessageGroupStore.LoadDirectMessages(
-        //userId,
-        //directMessageGroupId,
-        //fieldInfo,
-        //first,
-        //after
-        //);
+        using var scope = Provider.CreateScope();
+        DirectMessageGroupStore directMessageGroupStore =
+            scope.ServiceProvider.GetRequiredService<DirectMessageGroupStore>();
+        (List<Message> messages, bool lastPage) =
+            await directMessageGroupStore.LoadDirectMessages(
+                directMessageGroupId,
+                cols,
+                first,
+                after
+            );
 
-        //Dictionary<Guid, List<DirectMessageReactionCount>?> countsDict = new();
-        //foreach (DirectMessageReactionCount reactionCount in reactionCounts)
-        //{
-        //if (!countsDict.ContainsKey(reactionCount.DirectMessageId))
-        //{
-        //countsDict[reactionCount.DirectMessageId] =
-        //new List<DirectMessageReactionCount>();
-        //}
-        //countsDict[reactionCount.DirectMessageId]!.Add(reactionCount);
-        //}
-        //List<Message> messages = new();
-        //foreach (dynamic dbm in dbMessages)
-        //{
-        //Message message =
-        //ModelToObjectConverters.ConvertDynamicDirectMessage(
-        //dbm,
-        //countsDict.GetValueOrDefault((Guid)dbm.Id, null),
-        //FieldAnalyzer.ExtractUserFields("user", fieldInfo.FieldTree)
-        //);
-        //messages.Add(message);
-        //}
-
-        //return ModelToObjectConverters.ToConnection<Message>(
-        //messages,
-        //after is null,
-        //lastPage
-        //);
-        throw new NotImplementedException();
+        return ToConnection(messages, after is null, lastPage);
     }
 }

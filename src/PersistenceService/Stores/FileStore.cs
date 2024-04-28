@@ -1,4 +1,6 @@
+using Dapper;
 using PersistenceService.Data.ApplicationDb;
+using GraphQLTypes = Common.SlackCloneGraphQL.Types;
 
 namespace PersistenceService.Stores;
 
@@ -14,9 +16,17 @@ public class FileStore : Store
         return files;
     }
 
-    public Models.File? GetFileById(Guid? id)
+    public async Task<GraphQLTypes.File?> GetFileById(Guid? id)
     {
-        return _context.Files.Where(f => f.Id == id).FirstOrDefault();
+        var sql = $"SELECT * FROM {wdq("Files")} WHERE {wdq("Id")} = @FileId";
+        var param = new { FileId = id };
+        var conn = _context.GetConnection();
+
+        var file = (
+            await conn.QueryAsync<GraphQLTypes.File>(sql, param)
+        ).FirstOrDefault();
+
+        return file;
     }
 
     private string GenerateTestFileName(int randsize) =>

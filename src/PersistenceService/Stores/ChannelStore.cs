@@ -2,7 +2,6 @@ using PersistenceService.Data.ApplicationDb;
 using PersistenceService.Models;
 using PersistenceService.Constants;
 using PersistenceService.Utils;
-using PersistenceService.Utils.GraphQL;
 using System.Linq.Dynamic.Core;
 using Microsoft.EntityFrameworkCore;
 using GraphQLTypes = Common.SlackCloneGraphQL.Types;
@@ -25,150 +24,320 @@ public class ChannelStore : Store
     public ChannelStore(ApplicationDbContext context)
         : base(context) { }
 
-    public async Task<Channel> LoadChannel(Guid channelId)
+    public async Task<GraphQLTypes.Channel> LoadChannel(Guid channelId)
     {
-        return await _context.Channels
-            .Where(c => c.Id == channelId)
-            .FirstAsync();
+        var sqlBuilder = new List<string>
+        {
+            $"WITH channel AS (",
+            $"SELECT * FROM {wdq("Channels")} WHERE {wdq("Id")} = @ChannelId",
+            ")",
+            $"SELECT * FROM",
+            $"channel LEFT JOIN {wdq("Files")} ON {wdq("Files")}.{wdq("Id")} = channel.{wdq("AvatarId")}",
+            $"LEFT JOIN {wdq("Workspaces")} ON {wdq("Workspaces")}.{wdq("Id")} = channels.{wdq("WorkspaceId")}",
+            $"LEFT JOIN {wdq("AspNetUsers")} ON",
+            $"{wdq("AspNetUsers")}.{wdq("Id")} = channel.{wdq("CreatedById")}"
+        };
+
+        var sql = string.Join("\n", sqlBuilder);
+        var param = new { ChannelId = channelId };
+        var conn = _context.GetConnection();
+
+        var channel = (
+            await conn.QueryAsync<
+                Models.Channel,
+                GraphQLTypes.File,
+                GraphQLTypes.Workspace,
+                GraphQLTypes.User,
+                GraphQLTypes.Channel
+            >(
+                sql: sql,
+                param: param,
+                map: (channel, avatar, workspace, user) =>
+                {
+                    return new GraphQLTypes.Channel
+                    {
+                        Id = channel.Id,
+                        AllowThreads = channel.AllowThreads,
+                        AllowedPostersMask = channel.AllowedPostersMask,
+                        Avatar = avatar,
+                        CreatedAt = channel.CreatedAt,
+                        CreatedBy = user,
+                        Description = channel.Description,
+                        Name = channel.Name,
+                        NumMembers = channel.NumMembers,
+                        Private = channel.Private,
+                        Topic = channel.Topic,
+                        Workspace = workspace
+                    };
+                }
+            )
+        ).First();
+
+        return channel;
     }
 
     public async Task<(
-        List<dynamic> dbMessages,
-        List<ChannelMessageReactionCount> reactionCounts,
+        List<GraphQLTypes.Message> messages,
         bool lastPage
     )> LoadChannelMessages(
-        Guid userId,
         Guid channelId,
-        FieldInfo fieldInfo,
+        List<string> dbCols,
         int first,
-        Guid? after
+        Guid? after = null
     )
     {
-        IQueryable<ChannelMessage> messages = _context.ChannelMessages
-            .Where(
-                cm =>
-                    cm.ChannelId == channelId
-                    && cm.SentAt != null
-                    && cm.IsReply == false
-            )
-            .OrderByDescending(cm => cm.SentAt);
+        var joinCols = new string[] { "Mentions", "Reactions", "Files" };
+        dbCols.RemoveAll(c => joinCols.Contains(c));
+        if (!dbCols.Contains("SentAt"))
+        {
+            dbCols.Add("SentAt");
+        }
+
+        List<string> sqlBuilder = new();
         if (after is not null)
         {
-            DateTime prevLastSentAt = (DateTime)
-                (
-                    _context.ChannelMessages
-                        .Where(cm => cm.Id == after)
-                        .Select(cm => cm.SentAt)
-                        .First()
-                )!;
-            messages = messages.Where(
-                cm => cm.SentAt <= prevLastSentAt && cm.Id != after
+            sqlBuilder.Add("WITH after AS (");
+            sqlBuilder.Add(
+                $"SELECT {wdq("SentAt")} FROM {wdq("ChannelMessages")}"
+            );
+            sqlBuilder.Add($"WHERE {wdq("Id")} = @AfterId");
+            sqlBuilder.Add("),\n");
+        }
+        else
+        {
+            sqlBuilder.Add("WITH");
+        }
+
+        sqlBuilder.Add("messages AS (");
+        sqlBuilder.Add("SELECT");
+        sqlBuilder.AddRange(
+            dbCols.Select(
+                (c, i) =>
+                    i == dbCols.Count - 1
+                        ? $"{wdq("ChannelMessages")}.{wdq(c)}"
+                        : $"{wdq("ChannelMessages")}.{wdq(c)},"
+            )
+        );
+        sqlBuilder.Add($"FROM {wdq("ChannelMessages")}");
+        sqlBuilder.Add(
+            $"WHERE {wdq("ChannelId")} = @ChannelId AND NOT {wdq("Deleted")} AND {wdq("SentAt")} IS NOT NULL"
+        );
+        if (after is not null)
+        {
+            sqlBuilder.Add(
+                $"AND {wdq("SentAt")} < (SELECT {wdq("SentAt")} FROM after)"
             );
         }
-        messages = messages.Take(first + 1);
+        sqlBuilder.Add($"ORDER BY {wdq("SentAt")} DESC");
+        sqlBuilder.Add("LIMIT @First");
+        sqlBuilder.Add(")\n");
 
-        List<dynamic> dynamicChannelMessages = await messages
-            .Select(
-                DynamicLinqUtils.NodeFieldToDynamicSelectString(
-                    fieldInfo.FieldTree,
-                    forceInclude: new List<string> { "id", "deleted" },
-                    skip: new List<string> { "reactions", "group", "type" }
-                )
-            )
-            .ToDynamicListAsync();
+        sqlBuilder.Add($"SELECT messages.*,");
+        sqlBuilder.Add(
+            @$"{wdq("ChannelMessageMentions")}.{wdq("Id")}, 
+                {wdq("ChannelMessageMentions")}.{wdq("MentionedId")},"
+        );
+        sqlBuilder.Add(
+            @$"{wdq("ChannelMessageReactions")}.{wdq("Id")}, 
+                {wdq("ChannelMessageReactions")}.{wdq("Emoji")}, 
+                {wdq("ChannelMessageReactions")}.{wdq("UserId")},"
+        );
+        sqlBuilder.Add(
+            @$"{wdq("Files")}.{wdq("Id")},
+                {wdq("Files")}.{wdq("Name")},
+                {wdq("Files")}.{wdq("StoreKey")}"
+        );
+        sqlBuilder.Add("FROM messages");
+        sqlBuilder.Add(
+            @$"LEFT JOIN {wdq("ChannelMessageMentions")} ON 
+                {wdq("ChannelMessageMentions")}.{wdq("ChannelMessageId")} = messages.{wdq("Id")}"
+        );
+        sqlBuilder.Add(
+            @$"LEFT JOIN {wdq("ChannelMessageReactions")} ON 
+                {wdq("ChannelMessageReactions")}.{wdq("ChannelMessageId")} = messages.{wdq("Id")}"
+        );
+        sqlBuilder.Add(
+            @$"LEFT JOIN {wdq("Files")} ON 
+                {wdq("Files")}.{wdq("ChannelMessageId")} = messages.{wdq("Id")}"
+        );
+        sqlBuilder.Add($"ORDER BY messages.{wdq("SentAt")} DESC");
 
-        List<ChannelMessageReactionCount> reactionCounts = new();
-        if (fieldInfo.SubfieldNames.Contains("reactions"))
+        var sql = string.Join("\n", sqlBuilder);
+        var param = new
         {
-            List<Guid> messageIds = new();
-            foreach (dynamic message in messages)
-            {
-                messageIds.Add((Guid)message.Id);
-            }
-            var reactions = _context.ChannelMessageReactions
-                .Where(cmr => messageIds.Contains(cmr.ChannelMessageId))
-                .GroupBy(cmr => new { cmr.ChannelMessageId, cmr.Emoji })
-                .Select(
-                    group =>
-                        new
-                        {
-                            ChannelMessageId = group.Key.ChannelMessageId,
-                            Emoji = group.Key.Emoji,
-                            Count_ = group.Count(),
-                            UserReaction = group
-                                .Where(cmr => cmr.UserId == userId)
-                                .FirstOrDefault()
-                        }
-                )
-                .ToList();
-
-            foreach (var reaction in reactions)
-            {
-                reactionCounts.Add(
-                    new ChannelMessageReactionCount
+            ChannelId = channelId,
+            First = first + 1,
+            AfterId = after
+        };
+        var conn = _context.GetConnection();
+        List<GraphQLTypes.Message> messages = (
+            await conn.QueryAsync<
+                Models.ChannelMessage,
+                GraphQLTypes.Mention,
+                GraphQLTypes.Reaction,
+                GraphQLTypes.File,
+                GraphQLTypes.Message
+            >(
+                sql: sql,
+                param: param,
+                map: (messageModel, mention, reaction, file) =>
+                {
+                    var message = new GraphQLTypes.Message
                     {
-                        ChannelMessageId = reaction.ChannelMessageId,
-                        Count = reaction.Count_,
-                        Emoji = reaction.Emoji,
-                        UserReaction = reaction.UserReaction
-                    }
-                );
-            }
-        }
+                        Id = messageModel.Id,
+                        User = new GraphQLTypes.User
+                        {
+                            Id = messageModel.UserId,
+                        },
+                        Content = messageModel.Content,
+                        CreatedAt = messageModel.CreatedAt,
+                        Draft = messageModel.SentAt is null,
+                        LastEdit = messageModel.LastEdit,
+                        Files = new() { file },
+                        Group = new GraphQLTypes.Group
+                        {
+                            Id = messageModel.ChannelId
+                        },
+                        IsReply = messageModel.IsReply,
+                        LaterFlag = messageModel.LaterFlagId is null
+                            ? null
+                            : new GraphQLTypes.LaterFlag
+                            {
+                                Id = (Guid)messageModel.LaterFlagId
+                            },
+                        Mentions = new() { mention },
+                        Reactions = new() { reaction },
+                        ReplyToId = messageModel.ReplyToId,
+                        SentAt = messageModel.SentAt,
+                        ThreadId = messageModel.ThreadId,
+                        Type = "ChannelMessage"
+                    };
 
-        bool lastPage = dynamicChannelMessages.Count <= first;
+                    return message;
+                }
+            )
+        ).ToList();
+
+        messages = messages
+            .GroupBy(m => m.Id)
+            .Select(g =>
+            {
+                var message = g.First();
+                var files = g.Select(g => g.Files?.First())
+                    .Where(f => f is not null)
+                    .ToList();
+                var mentions = g.Select(g => g.Mentions?.First())
+                    .Where(m => m is not null)
+                    .ToList();
+                var reactions = g.Select(g => g.Reactions?.First())
+                    .Where(r => r is not null)
+                    .ToList();
+                message.Files = files as List<GraphQLTypes.File>;
+                message.Mentions = mentions as List<GraphQLTypes.Mention>;
+                message.Reactions = reactions as List<GraphQLTypes.Reaction>;
+                return message;
+            })
+            .ToList();
+
+        var lastPage = messages.Count <= first;
         if (!lastPage)
         {
-            dynamicChannelMessages.RemoveAt(dynamicChannelMessages.Count - 1);
+            messages.RemoveAt(messages.Count - 1);
         }
-        return (dynamicChannelMessages, reactionCounts, lastPage);
+
+        return (messages, lastPage);
     }
 
     public async Task<(
-        List<dynamic> dbMembers,
+        List<GraphQLTypes.ChannelMember> members,
         bool lastPage
     )> LoadChannelMembers(
-        Guid userId,
         int first,
-        FieldTree connectionTree,
+        List<string> dbCols,
         Guid channelId,
         Guid? after = null
     )
     {
-        IOrderedQueryable<ChannelMember> memberships = _context.ChannelMembers
-            .Where(cm => cm.ChannelId == channelId)
-            .Include(cm => cm.User)
-            .OrderBy(cm => cm.User.NormalizedUserName);
+        List<string> sqlBuilder = new();
         if (after is not null)
         {
-            string prevLast = memberships
-                .Where(cm => cm.Id == after)
-                .Select(cm => cm.User.NormalizedUserName)
-                .First();
-            memberships =
-                (IOrderedQueryable<ChannelMember>)(
-                    memberships.Where(
-                        wm => wm.User.NormalizedUserName.CompareTo(prevLast) > 0
-                    )
-                );
+            sqlBuilder.Add("WITH afterId AS (");
+            sqlBuilder.Add(
+                $"SELECT {wdq("UserId")} FROM {wdq("ChannelMembers")}"
+            );
+            sqlBuilder.Add($"WHERE {wdq("Id")} = @AfterId");
+            sqlBuilder.Add("),\n");
+
+            sqlBuilder.Add("afterName AS (");
+            sqlBuilder.Add(
+                $"SELECT {wdq("AspNetUsers")}.{wdq("NormalizedUserName")}"
+            );
+            sqlBuilder.Add($"FROM {wdq("AspNetUsers")}");
+            sqlBuilder.Add(
+                $"WHERE {wdq("Id")} = (SELECT {wdq("UserId")} FROM afterId)"
+            );
+            sqlBuilder.Add("),\n");
         }
+        else
+        {
+            sqlBuilder.Add("WITH");
+        }
+        sqlBuilder.Add($"members AS (");
+        sqlBuilder.Add(
+            $"SELECT * FROM {wdq("ChannelMembers")} WHERE {wdq("ChannelId")} = @ChannelId"
+        );
+        sqlBuilder.Add(")\n");
 
-        var memberships_ = memberships.Take(first + 1);
-        var dynamicChannelMembers = await memberships_
-            .Select(
-                DynamicLinqUtils.NodeFieldToDynamicSelectString(
-                    connectionTree,
-                    nonDbMapped: new List<string> { "memberInfo" }
-                )
+        sqlBuilder.Add("SELECT");
+        sqlBuilder.AddRange(dbCols.Select((c, i) => $"members.{wdq(c)},"));
+        sqlBuilder.Add(
+            $"{wdq("AspNetUsers")}.{wdq("Id")}, {wdq("AspNetUsers")}.{wdq("UserName")} AS {wdq("Username")}"
+        );
+        sqlBuilder.Add($"FROM members INNER JOIN {wdq("AspNetUsers")}");
+        sqlBuilder.Add(
+            $"ON members.{wdq("UserId")} = {wdq("AspNetUsers")}.{wdq("Id")}"
+        );
+        if (after is not null)
+        {
+            sqlBuilder.Add(
+                $"WHERE {wdq("AspNetUsers")}.{wdq("NormalizedUserName")} > (SELECT {wdq("NormalizedUserName")} FROM afterName)"
+            );
+        }
+        sqlBuilder.Add($"ORDER BY {wdq("Username")}");
+        sqlBuilder.Add("LIMIT @First;");
+
+        var sql = string.Join("\n", sqlBuilder);
+        var param = new
+        {
+            AfterId = after,
+            ChannelId = channelId,
+            First = first + 1
+        };
+        var conn = _context.GetConnection();
+
+        var members = (
+            await conn.QueryAsync<
+                GraphQLTypes.ChannelMember,
+                GraphQLTypes.User,
+                GraphQLTypes.ChannelMember
+            >(
+                sql: sql,
+                param: param,
+                map: (member, user) =>
+                {
+                    member.User = user;
+                    return member;
+                }
             )
-            .ToDynamicListAsync();
+        ).ToList();
 
-        bool lastPage = dynamicChannelMembers.Count <= first;
+        var lastPage = members.Count <= first;
         if (!lastPage)
         {
-            dynamicChannelMembers.RemoveAt(dynamicChannelMembers.Count - 1);
+            members.RemoveAt(members.Count - 1);
         }
-        return (dynamicChannelMembers, lastPage);
+
+        return (members, lastPage);
     }
 
     public async Task<ChannelMessageReaction> InsertMessageReaction(
@@ -731,21 +900,6 @@ public class ChannelStore : Store
         Guid? after = null
     )
     {
-        var wId = wdq("Id");
-        var wChannelId = wdq("ChannelId");
-        var wMembers = wdq("ChannelMembers");
-        var wWorkspaceId = wdq("WorkspaceId");
-        var wUserId = wdq("UserId");
-        var wLastViewedAt = wdq("LastViewedAt");
-        var wJoinedAt = wdq("JoinedAt");
-        var wName = wdq("Name");
-        var wChannels = wdq("Channels");
-        var wFiles = wdq("Files");
-        var wUsers = wdq("AspNetUsers");
-        var wWorkspaces = wdq("Workspaces");
-        var wAvatarId = wdq("AvatarId");
-        var wCreatedById = wdq("CreatedById");
-
         string[] joinCols = { "AvatarId", "CreatedById", "WorkspaceId" };
         if (cols.Any(c => joinCols.Contains(c)))
         {
@@ -760,8 +914,8 @@ public class ChannelStore : Store
         if (after is not null)
         {
             sqlBuilder.Add("WITH _after AS (");
-            sqlBuilder.Add($"SELECT {wName} FROM {wChannels}");
-            sqlBuilder.Add($"WHERE {wId} = @AfterId");
+            sqlBuilder.Add($"SELECT {wdq("Name")} FROM {wdq("Channels")}");
+            sqlBuilder.Add($"WHERE {wdq("Id")} = @AfterId");
             sqlBuilder.Add("),\n");
         }
         else
@@ -769,25 +923,29 @@ public class ChannelStore : Store
             sqlBuilder.Add("WITH");
         }
         sqlBuilder.Add("_memberships AS (");
-        sqlBuilder.Add($"SELECT {wChannelId}, {wLastViewedAt}, {wJoinedAt}");
-        sqlBuilder.Add($"FROM {wMembers} WHERE");
-        sqlBuilder.Add($"{wWorkspaceId} = @WorkspaceId AND");
-        sqlBuilder.Add($"{wUserId} = @UserId");
+        sqlBuilder.Add(
+            $"SELECT {wdq("ChannelId")}, {wdq("LastViewedAt")}, {wdq("JoinedAt")}"
+        );
+        sqlBuilder.Add($"FROM {wdq("ChannelMembers")} WHERE");
+        sqlBuilder.Add($"{wdq("WorkspaceId")} = @WorkspaceId AND");
+        sqlBuilder.Add($"{wdq("UserId")} = @UserId");
         sqlBuilder.Add("),\n");
 
         sqlBuilder.Add("_channels AS (");
         sqlBuilder.Add("SELECT");
-        sqlBuilder.AddRange(cols.Select(c => $"{wChannels}.{wdq(c)},"));
+        sqlBuilder.AddRange(cols.Select(c => $"{wdq("Channels")}.{wdq(c)},"));
         sqlBuilder.Add(
-            $"_memberships.{wLastViewedAt}, _memberships.{wJoinedAt}"
+            $"_memberships.{wdq("LastViewedAt")}, _memberships.{wdq("JoinedAt")}"
         );
         sqlBuilder.Add("FROM");
-        sqlBuilder.Add($"_memberships INNER JOIN {wChannels} ON");
-        sqlBuilder.Add($"{wChannels}.{wId} = _memberships.{wChannelId}");
+        sqlBuilder.Add($"_memberships INNER JOIN {wdq("Channels")} ON");
+        sqlBuilder.Add(
+            $"{wdq("Channels")}.{wdq("Id")} = _memberships.{wdq("ChannelId")}"
+        );
         if (after is not null)
         {
             sqlBuilder.Add(
-                $"WHERE {wChannels}.{wName} > (SELECT {wName} FROM _after)"
+                $"WHERE {wdq("Channels")}.{wdq("Name")} > (SELECT {wdq("Name")} FROM _after)"
             );
         }
         sqlBuilder.Add("LIMIT @First");
@@ -797,19 +955,21 @@ public class ChannelStore : Store
         if (cols.Any(c => joinCols.Contains(c)))
         {
             sqlBuilder.Add(
-                $"LEFT JOIN {wFiles} ON {wFiles}.{wId} = _channels.{wAvatarId}"
+                $"LEFT JOIN {wdq("Files")} ON {wdq("Files")}.{wdq("Id")} = _channels.{wdq("AvatarId")}"
             );
             sqlBuilder.Add(
-                $"LEFT JOIN {wUsers} ON {wUsers}.{wId} = _channels.{wCreatedById}"
+                $"LEFT JOIN {wdq("AspNetUsers")} ON {wdq("AspNetUsers")}.{wdq("Id")} = _channels.{wdq("CreatedById")}"
             );
             sqlBuilder.Add(
-                $"LEFT JOIN {wWorkspaces} ON {wWorkspaces}.{wId} = _channels.{wWorkspaceId}"
+                $"LEFT JOIN {wdq("Workspaces")} ON {wdq("Workspaces")}.{wdq("Id")} = _channels.{wdq("WorkspaceId")}"
             );
         }
         sqlBuilder.Add($"ORDER BY");
-        sqlBuilder.Add($"CASE WHEN {wLastViewedAt} IS NULL THEN 0 ELSE 1 END,");
-        sqlBuilder.Add($"{wLastViewedAt},");
-        sqlBuilder.Add($"{wJoinedAt} DESC;");
+        sqlBuilder.Add(
+            $"CASE WHEN {wdq("LastViewedAt")} IS NULL THEN 0 ELSE 1 END,"
+        );
+        sqlBuilder.Add($"{wdq("LastViewedAt")},");
+        sqlBuilder.Add($"{wdq("JoinedAt")} DESC;");
 
         var sql = string.Join("\n", sqlBuilder);
         var conn = _context.GetConnection();

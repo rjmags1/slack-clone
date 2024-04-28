@@ -27,9 +27,7 @@ public class MessageType : ObjectGraphType<Message>, INodeGraphType<Message>
             .Description("When the message was last edited")
             .Resolve(context => context.Source.LastEdit);
         Field<ListGraphType<FileType>>("files")
-            .Description(
-                "Relay connection representing the collection of files associated with the message."
-            )
+            .Description("Collection of files associated with the message.")
             .Resolve(context => context.Source.Files);
         Field<NonNullGraphType<GroupInterfaceType>>("group")
             .Description(
@@ -46,12 +44,12 @@ public class MessageType : ObjectGraphType<Message>, INodeGraphType<Message>
             .Resolve(context => context.Source.LaterFlag);
         Field<ListGraphType<MentionType>>("mentions")
             .Description(
-                "Relay connection representing mentions of other workspace members contained in the sent message"
+                "Collection of mentions of other workspace members contained in the sent message"
             )
             .Resolve(context => context.Source.Mentions);
-        Field<ListGraphType<ReactionCountType>>("reactions")
+        Field<ListGraphType<ReactionType>>("reactions")
             .Description(
-                "Relay connection representing reactions to the message by other workspace members"
+                "Collection of reactions to the message by other workspace members"
             )
             .Resolve(context => context.Source.Reactions);
         Field<IdGraphType>("replyToId")
@@ -63,8 +61,8 @@ public class MessageType : ObjectGraphType<Message>, INodeGraphType<Message>
         Field<IdGraphType>("threadId")
             .Description("The thread associated with the message, if any.")
             .Resolve(context => context.Source.ThreadId);
-        Field<NonNullGraphType<IntGraphType>>("type")
-            .Description("Bitmask representing the message type")
+        Field<NonNullGraphType<StringGraphType>>("type")
+            .Description("The message type")
             .Resolve(context => context.Source.Type);
     }
 }
@@ -83,10 +81,10 @@ public class Message : INode
     public bool IsReply { get; set; }
     public LaterFlag? LaterFlag { get; set; }
     public List<Mention>? Mentions { get; set; }
-    public List<ReactionCount>? Reactions { get; set; }
+    public List<Reaction>? Reactions { get; set; }
     public Guid? ReplyToId { get; set; }
     public DateTime? SentAt { get; set; }
     public Guid? ThreadId { get; set; }
-    public int Type { get; set; }
+    public string Type { get; set; }
 #pragma warning restore CS8618
 }

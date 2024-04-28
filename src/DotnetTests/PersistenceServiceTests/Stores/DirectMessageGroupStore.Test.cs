@@ -23,6 +23,53 @@ public class DirectMessageGroupStoreTests1
     }
 
     [Fact]
+    public async void LoadDirectMessages_ShouldWork()
+    {
+        var dmgId = Guid.Parse("09ff2bb0-4285-4a9f-a6b7-4f935d3b3d3d");
+        var afterId = Guid.Parse("be905f54-957d-44d3-84c3-b60faae9f492"); // 3 after this
+        var dbCols = new List<string>()
+        {
+            "Id",
+            "Mentions",
+            "Reactions",
+            "Files",
+            "UserId",
+            "Content",
+            "CreatedAt",
+            "LastEdit",
+            "DirectMessageGroupId",
+            "IsReply",
+            "LaterFlagId",
+            "ReplyToId",
+            "SentAt",
+        };
+
+        (var messages1, var lastPage1) =
+            await _directMessageGroupStore.LoadDirectMessages(dmgId, dbCols, 3);
+        (var messages2, var lastPage2) =
+            await _directMessageGroupStore.LoadDirectMessages(
+                dmgId,
+                dbCols,
+                3,
+                afterId
+            );
+
+        Assert.False(lastPage1);
+        var sortedBySentDesc1 = messages1
+            .Select(m => m.SentAt)
+            .OrderByDescending(dt => dt);
+        Assert.Equal(sortedBySentDesc1, messages1.Select(m => m.SentAt));
+
+        Assert.True(lastPage2);
+        var sortedBySentDesc2 = messages2
+            .Select(m => m.SentAt)
+            .OrderByDescending(dt => dt);
+        Assert.Equal(sortedBySentDesc2, messages2.Select(m => m.SentAt));
+        Assert.DoesNotContain(afterId, messages2.Select(m => m.Id));
+    }
+
+    /*
+    [Fact]
     public async void LoadDirectMessageGroups_ShouldWork()
     {
         var workspaceId = Guid.Parse("23e33ae1-c69b-4e33-bb16-79a1be666392");
@@ -67,7 +114,6 @@ public class DirectMessageGroupStoreTests1
         }
     }
 
-    /*
     [Fact]
     public async void InsertDirectMessageGroupMembers_ShouldInsertDirectMessageGroupMembers()
     {

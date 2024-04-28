@@ -1,6 +1,7 @@
 using GraphQL.Types;
-using Common.SlackCloneGraphQL.Types;
 using Common.SlackCloneGraphQL.Types.Connections;
+
+namespace Common.SlackCloneGraphQL.Types;
 
 public class MentionType : ObjectGraphType<Mention>, INodeGraphType<Mention>
 {
@@ -16,12 +17,12 @@ public class MentionType : ObjectGraphType<Mention>, INodeGraphType<Mention>
         Field<NonNullGraphType<MessageType>>("message")
             .Description("The message containing the mention.")
             .Resolve(context => context.Source.Message);
-        Field<NonNullGraphType<UserType>>("mentioned")
+        Field<NonNullGraphType<UserType>>("mentionedId")
             .Description("The person mentioned.")
-            .Resolve(context => context.Source.Mentioned);
-        Field<NonNullGraphType<UserType>>("mentioner")
+            .Resolve(context => context.Source.MentionedId);
+        Field<NonNullGraphType<UserType>>("mentionerId")
             .Description("The person who created the mention.")
-            .Resolve(context => context.Source.Mentioner);
+            .Resolve(context => context.Source.MentionerId);
     }
 }
 
@@ -31,7 +32,7 @@ public class Mention : INode
     public DateTime CreatedAt { get; set; }
 #pragma warning disable CS8618
     public Message Message { get; set; }
-    public User Mentioned { get; set; }
-    public User Mentioner { get; set; }
+    public Guid MentionedId { get; set; }
+    public Guid MentionerId { get; set; }
 #pragma warning restore CS8618
 }

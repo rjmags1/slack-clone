@@ -21,3 +21,13 @@ public interface IGroup : INode
     public Workspace Workspace { get; set; }
     public string Name { get; set; }
 }
+
+public class Group : IGroup
+{
+    public Guid Id { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public Workspace Workspace { get; set; } = null!;
+    public string Name { get; set; } = null!;
+    public string Type { get; set; } = null!;
+    public DateTime StarredAt { get; set; }
+}

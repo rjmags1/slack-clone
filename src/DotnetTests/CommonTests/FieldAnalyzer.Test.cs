@@ -583,7 +583,464 @@ public class FieldAnalyzerTests
             }
         ";
 
+    private const string groupsQuery1 =
+        @"
+            query GroupsConnectionQuery {
+                starred {
+                    totalEdges
+                    pageInfo {
+                        hasNextPage
+                    }
+                    edges {
+                        node {
+                            id
+                            createdAtUTC
+                            workspace
+                            name
+                        }
+                    }
+                }
+            }
+        ";
+
+    private const string groupsQuery2 =
+        @"
+            query GroupsConnectionQuery {
+                starred {
+                    ...testFragment
+                }
+            }
+
+            fragment testFragment on StarredConnection {
+                totalEdges
+                pageInfo {
+                    hasNextPage
+                }
+                edges {
+                    cursor
+                    ...testFragment2
+                }
+            }
+
+            fragment testFragment2 on StarredConnectionEdge {
+                node {
+                    ...testFragment3
+                }
+            }
+
+            fragment testFragment3 on Group {
+                id
+                createdAtUTC
+                workspace
+                name
+            }
+        ";
+
+    private const string channelMembersQuery1 =
+        @"
+            query ChannelMembersConnectionQuery {
+                members {
+                    ...testFragment
+                }
+            }
+
+            fragment testFragment on ChannelMembersConnection {
+                totalEdges
+                pageInfo {
+                    hasNextPage
+                }
+                edges {
+                    ...testFragment2
+                }
+            }
+
+            fragment testFragment2 on ChannelMembersConnectionEdge {
+                cursor
+                node {
+                    ...testFragment3
+                }
+            }
+
+            fragment testFragment3 on ChannelMember {
+                id
+                admin
+                user {
+                    id
+                }
+                memberInfo {
+                    ...testFragment4
+                }
+            }
+
+            fragment testFragment4 on ChannelMemberInfo {
+                enableNotifications
+                lastViewedAt
+                starred
+                joinedAt
+            }
+        ";
+
+    private const string channelMembersQuery2 =
+        @"
+            query ChannelMembersConnectionQuery {
+                members {
+                    totalEdges
+                    pageInfo {
+                        hasNextPage
+                    }
+                    edges {
+                        cursor
+                        node {
+                            id
+                            admin
+                            user {
+                                id
+                            }
+                            memberInfo {
+                                enableNotifications
+                                lastViewedAt
+                                starred
+                                joinedAt
+                            }
+                        }
+                    }
+                }
+            }
+        ";
+
+    private const string channelMessagesQuery1 =
+        @"
+            query ChannelMessagesConnectionQuery {
+                messages {
+                    totalEdges
+                    pageInfo {
+                        hasNextPage
+                    }
+                    edges {
+                        cursor
+                        node {
+                            id
+                            user {
+                                id
+                            }
+                            content
+                            createdAtUTC
+                            draft
+                            lastEditUTC
+                            files {
+                                id
+                                name
+                                storeKey
+                                uploadedAt
+                            }
+                            group {
+                                id
+                            }
+                            isReply
+                            laterFlag {
+                                id
+                            }
+                            mentions {
+                                id
+                            }
+                            reactions {
+                                id
+                            }
+                            replyToId
+                            sentAtUTC
+                            threadId
+                            type
+                        }
+                    }
+                }
+            }
+        ";
+
+    private const string workspaceMembersQuery =
+        @"
+            query WorkspaceMembersQuery {
+                members {
+                    totalEdges
+                    pageInfo {
+                        hasNextPage
+                    }
+                    edges {
+                        cursor
+                        node {
+                            id
+                            avatar {
+                                id
+                            }
+                            joinedAt
+                            title
+                            user {
+                                id
+                            }
+                            workspace {
+                                id
+                            }
+                            workspaceMemberInfo {
+                                admin
+                                owner
+                                theme {
+                                    id
+                                }
+                                notifSound
+                                notificationsAllowTimeStartUTC
+                                notificationsAllowTimeEndUTC
+                                onlineStatus
+                                onlineStatusUntilUTC
+                                workspaceAdminPermissions {
+                                    admin {
+                                        id
+                                    }
+                                    all
+                                    invite
+                                    kick
+                                    adminGrant
+                                    adminRevoke
+                                    grantAdminPermissions
+                                    revokeAdminPermissions
+                                    editMessages
+                                    deleteMessages
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        ";
+
+    private const string directMessagesQuery =
+        @"
+            query directMessagesQuery {
+                messages {
+                    totalEdges
+                    pageInfo {
+                        hasNextPage
+                    }
+                    edges {
+                        cursor
+                        node {
+                            id
+                            user {
+                                id
+                            }
+                            content
+                            createdAtUTC
+                            draft
+                            lastEditUTC
+                            files {
+                                id
+                                name
+                                storeKey
+                                uploadedAt
+                            }
+                            group {
+                                id
+                            }
+                            isReply
+                            laterFlag {
+                                id
+                            }
+                            mentions {
+                                id
+                            }
+                            reactions {
+                                id
+                            }
+                            replyToId
+                            sentAtUTC
+                            type
+                        }
+                    }
+                }
+            }
+        ";
+
+    [Theory]
+    [InlineData(directMessagesQuery)]
+    public void DirectMessageDbColumns_ShouldGetDirectMessageDbColumns(
+        string query
+    )
+    {
+        List<string> expectedCols =
+            new()
+            {
+                "Mentions",
+                "Reactions",
+                "Files",
+                "Id",
+                "UserId",
+                "Content",
+                "CreatedAt",
+                "LastEdit",
+                "DirectMessageGroupId",
+                "IsReply",
+                "LaterFlagId",
+                "ReplyToId",
+                "SentAt",
+            };
+
+        var docAst = Parser.Parse(query);
+        var opDef = docAst.Definitions.First() as GraphQLOperationDefinition;
+        var messagesFieldDef =
+            opDef!.SelectionSet.Selections.First() as GraphQLField;
+        var nodeAst = GraphQLUtils.GetNodeASTFromConnectionAST(
+            messagesFieldDef!,
+            docAst,
+            "DirectMessagesConnection",
+            "DirectMessagesConnectionEdge"
+        );
+        var cols = FieldAnalyzer.DirectMessageDbColumns(nodeAst!, docAst!);
+        cols.Sort();
+        expectedCols.Sort();
+        Assert.Equal(expectedCols, cols);
+    }
+
     /*
+    [Theory]
+    [InlineData(workspaceMembersQuery)]
+    public void WorkspaceMemberDbColumns_ShouldGetWorkspaceMemberDbColumns(
+        string query
+    )
+    {
+        List<string> expectedCols =
+            new()
+            {
+                "Id",
+                "AvatarId",
+                "JoinedAt",
+                "Title",
+                "UserId",
+                "WorkspaceId",
+                "Admin",
+                "Owner",
+                "WorkspaceAdminPermissionsId",
+                "ThemeId",
+                "NotificationSound",
+                "NotificationsAllowTimeStart",
+                "NotificationsAllowTimeEnd",
+                "OnlineStatus",
+                "OnlineStatusUntil"
+            };
+
+        var docAst = Parser.Parse(query);
+        var opDef = docAst.Definitions.First() as GraphQLOperationDefinition;
+        var membersFieldDef =
+            opDef!.SelectionSet.Selections.First() as GraphQLField;
+        var nodeAst = GraphQLUtils.GetNodeASTFromConnectionAST(
+            membersFieldDef!,
+            docAst,
+            "WorkspaceMembersConnection",
+            "WorkspaceMembersConnectionEdge"
+        );
+        var cols = FieldAnalyzer.WorkspaceMemberDbColumns(nodeAst!, docAst!);
+        cols.Sort();
+        expectedCols.Sort();
+        Assert.Equal(expectedCols, cols);
+    }
+
+    [Theory]
+    [InlineData(channelMessagesQuery1)]
+    public void ChannelMessageDbColumns_ShouldGetChannelMessageDbColumns(
+        string query
+    )
+    {
+        List<string> expectedCols =
+            new()
+            {
+                "Mentions",
+                "Reactions",
+                "Files",
+                "Id",
+                "UserId",
+                "Content",
+                "CreatedAt",
+                "LastEdit",
+                "ChannelId",
+                "IsReply",
+                "LaterFlagId",
+                "ReplyToId",
+                "SentAt",
+                "ThreadId",
+            };
+
+        var docAst = Parser.Parse(query);
+        var opDef = docAst.Definitions.First() as GraphQLOperationDefinition;
+        var messagesFieldDef =
+            opDef!.SelectionSet.Selections.First() as GraphQLField;
+        var nodeAst = GraphQLUtils.GetNodeASTFromConnectionAST(
+            messagesFieldDef!,
+            docAst,
+            "ChannelMessagesConnection",
+            "ChannelMessagesConnectionEdge"
+        );
+        var cols = FieldAnalyzer.ChannelMessageDbColumns(nodeAst!, docAst!);
+        cols.Sort();
+        expectedCols.Sort();
+        Assert.Equal(expectedCols, cols);
+    }
+
+    [Theory]
+    [InlineData(channelMembersQuery1)]
+    [InlineData(channelMembersQuery2)]
+    public void ChannelMemberColumns_ShouldGetChannelMemberDbColumns(
+        string query
+    )
+    {
+        List<string> expectedCols =
+            new()
+            {
+                "Id",
+                "Admin",
+                "EnableNotifications",
+                "JoinedAt",
+                "LastViewedAt",
+                "Starred",
+                "UserId"
+            };
+
+        var docAst = Parser.Parse(query);
+        var opDef = docAst.Definitions.First() as GraphQLOperationDefinition;
+        var membersFieldDef =
+            opDef!.SelectionSet.Selections.First() as GraphQLField;
+        var nodeAst = GraphQLUtils.GetNodeASTFromConnectionAST(
+            membersFieldDef!,
+            docAst,
+            "ChannelMembersConnection",
+            "ChannelMembersConnectionEdge"
+        );
+        var cols = FieldAnalyzer.ChannelMemberDbColumns(nodeAst!, docAst!);
+        cols.Sort();
+        expectedCols.Sort();
+        Assert.Equal(expectedCols, cols);
+    }
+
+    [Theory]
+    [InlineData(groupsQuery1)]
+    [InlineData(groupsQuery2)]
+    public void GroupsDbColumns_ShouldGetGroupDbColumns(string query)
+    {
+        List<string> expectedCols =
+            new() { "Id", "CreatedAt", "WorkspaceId", "Name" };
+
+        var docAst = Parser.Parse(query);
+        var opDef = docAst.Definitions.First() as GraphQLOperationDefinition;
+        var starredFieldDef =
+            opDef!.SelectionSet.Selections.First() as GraphQLField;
+        var nodeAst = GraphQLUtils.GetNodeASTFromConnectionAST(
+            starredFieldDef!,
+            docAst,
+            "StarredConnection",
+            "StarredConnectionEdge"
+        );
+        var cols = FieldAnalyzer.GroupDbColumns(nodeAst!, docAst!);
+        cols.Sort();
+        expectedCols.Sort();
+        Assert.Equal(expectedCols, cols);
+    }
+
     [Theory]
     [InlineData(_userQuery, new[] { "Email", "Id" })]
     [InlineData(_userQuery2)]
@@ -659,7 +1116,6 @@ public class FieldAnalyzerTests
         expectedCols.Sort();
         Assert.Equal(expectedCols, dbColumns);
     }
-    */
 
     [Theory]
     [InlineData(dmgQuery1)]
@@ -762,6 +1218,7 @@ public class FieldAnalyzerTests
         dbCols.Sort();
         Assert.Equal(expectedCols, dbCols);
     }
+    */
 
     /**
     

@@ -25,6 +25,90 @@ public class ChannelStoreTests1
     }
 
     [Fact]
+    public async void LoadChannelMessages_ShouldWork()
+    {
+        var channelId = Guid.Parse("0d98a355-8ded-4e6b-b5c8-e3800311dcd3");
+        var afterId = Guid.Parse("7650ac97-2a1e-427c-938b-53fc82d921c7"); // 5 after this
+        var dbCols = new List<string>()
+        {
+            "Id",
+            "Mentions",
+            "Reactions",
+            "Files",
+            "UserId",
+            "Content",
+            "CreatedAt",
+            "LastEdit",
+            "ChannelId",
+            "IsReply",
+            "LaterFlagId",
+            "ReplyToId",
+            "SentAt",
+            "ThreadId",
+        };
+
+        (var messages1, var lastPage1) =
+            await _channelStore.LoadChannelMessages(channelId, dbCols, 5);
+        (var messages2, var lastPage2) =
+            await _channelStore.LoadChannelMessages(
+                channelId,
+                dbCols,
+                5,
+                afterId
+            );
+
+        Assert.False(lastPage1);
+        var sortedBySentDesc1 = messages1
+            .Select(m => m.SentAt)
+            .OrderByDescending(dt => dt);
+        Assert.Equal(sortedBySentDesc1, messages1.Select(m => m.SentAt));
+
+        Assert.True(lastPage2);
+        var sortedBySentDesc2 = messages2
+            .Select(m => m.SentAt)
+            .OrderByDescending(dt => dt);
+        Assert.Equal(sortedBySentDesc2, messages2.Select(m => m.SentAt));
+        Assert.DoesNotContain(afterId, messages2.Select(m => m.Id));
+    }
+
+    /*
+    [Fact]
+    public async void LoadChannelMembers_ShouldWork()
+    {
+        List<string> cols =
+            new()
+            {
+                "Id",
+                "Admin",
+                "EnableNotifications",
+                "JoinedAt",
+                "LastViewedAt",
+                "Starred",
+                "UserId"
+            };
+
+        var channelId = Guid.Parse("f5ce3455-07e6-41f3-a588-c89bbe42292a");
+        var afterId = Guid.Parse("dd380ca2-53ff-4b0c-9bdf-189c8efca35b");
+
+        (var members1, var lastPage1) = await _channelStore.LoadChannelMembers(
+            3,
+            cols,
+            channelId
+        );
+        (var members2, var lastPage2) = await _channelStore.LoadChannelMembers(
+            3,
+            cols,
+            channelId,
+            afterId
+        );
+
+        Assert.False(lastPage1);
+        Assert.Contains(afterId, members1.Select(m => m.Id));
+        Assert.True(lastPage2);
+        Assert.DoesNotContain(afterId, members2.Select(m => m.Id));
+    }
+
+    [Fact]
     public async void LoadChannels_ShouldWork()
     {
         List<string> cols =
@@ -65,7 +149,6 @@ public class ChannelStoreTests1
         Assert.True(lastPage2);
     }
 
-    /*
         [Fact]
         public async void InsertMessageReaction_ShouldInsertReaction()
         {

@@ -1,6 +1,7 @@
 using GraphQL;
 using GraphQL.Types;
 using Common.SlackCloneGraphQL.Types.Connections;
+using Common.Utils;
 
 namespace Common.SlackCloneGraphQL.Types;
 
@@ -70,7 +71,7 @@ public class ChannelType : ObjectGraphType<Channel>, INodeGraphType<Channel>
             )
             .Argument<NonNullGraphType<IntGraphType>>("first")
             .Argument<IdGraphType>("after")
-            .Argument<NonNullGraphType<UsersFilterInputType>>("filter")
+            .Argument<UsersFilterInputType>("filter")
             .ResolveAsync(async context =>
             {
                 var first = context.GetArgument<int>("first");
@@ -78,27 +79,27 @@ public class ChannelType : ObjectGraphType<Channel>, INodeGraphType<Channel>
                 UsersFilter usersFilter = context.GetArgument<UsersFilter>(
                     "filter"
                 );
-                if (usersFilter.Channels is not null)
+                if (usersFilter is not null)
                 {
-                    throw new InvalidOperationException();
+                    throw new NotImplementedException();
                 }
-                throw new NotImplementedException();
-                //string query = GraphQLUtils.GetQuery(
-                //(context.UserContext as GraphQLUserContext)!
-                //)!;
-                //var fragments = FieldAnalyzer.GetFragments(query);
-                //FieldInfo fieldInfo = FieldAnalyzer.ChannelMembers(
-                //query,
-                //fragments
-                //);
+                var dbCols = FieldAnalyzer.ChannelMemberDbColumns(
+                    GraphQLUtils.GetNodeASTFromConnectionAST(
+                        context.FieldAst,
+                        context.Document,
+                        "ChannelMembersConnection",
+                        "ChannelMembersConnectionEdge"
+                    ),
+                    context.Document
+                );
 
-                //return await data.GetChannelMembers(
-                //fieldInfo,
-                //context.Source.Id,
-                //usersFilter,
-                //first,
-                //after
-                //);
+                return await data.GetChannelMembers(
+                    context.Source.Id,
+                    usersFilter,
+                    first,
+                    after,
+                    dbCols
+                );
             });
         Field<NonNullGraphType<ChannelMessagesConnectionType>>("messages")
             .Argument<NonNullGraphType<IntGraphType>>("first")
@@ -113,31 +114,23 @@ public class ChannelType : ObjectGraphType<Channel>, INodeGraphType<Channel>
                 var after = context.GetArgument<Guid?>("after");
                 MessagesFilter? messagesFilter =
                     context.GetArgument<MessagesFilter>("filter");
-                //string query = GraphQLUtils.GetQuery(
-                //(context.UserContext as GraphQLUserContext)!
-                //)!;
-                //var fragments = FieldAnalyzer.GetFragments(query);
-                //var queryName = GraphQLUtils.GetQueryName(
-                //(context.UserContext as GraphQLUserContext)!
-                //);
-                //FieldInfo fieldInfo = FieldAnalyzer.ChannelMessages(
-                //query,
-                //fragments,
-                //queryName
-                //);
-                //Guid sub = GraphQLUtils.GetSubClaim(
-                //(context.UserContext as GraphQLUserContext)!
-                //);
+                var dbCols = FieldAnalyzer.ChannelMessageDbColumns(
+                    GraphQLUtils.GetNodeASTFromConnectionAST(
+                        context.FieldAst,
+                        context.Document,
+                        "ChannelMessagesConnection",
+                        "ChannelMessagesConnectionEdge"
+                    ),
+                    context.Document
+                );
 
-                //return await data.GetChannelMessages(
-                //sub,
-                //context.Source.Id,
-                //fieldInfo,
-                //messagesFilter,
-                //first,
-                //after
-                //);
-                throw new NotImplementedException();
+                return await data.GetChannelMessages(
+                    context.Source.Id,
+                    messagesFilter,
+                    first,
+                    after,
+                    dbCols
+                );
             });
         Field<NonNullGraphType<StringGraphType>>("name")
             .Description("The name of the channel.")

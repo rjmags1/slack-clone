@@ -1,6 +1,7 @@
 using GraphQL;
 using GraphQL.Types;
 using Common.SlackCloneGraphQL.Types.Connections;
+using Common.Utils;
 
 namespace Common.SlackCloneGraphQL.Types;
 
@@ -36,29 +37,29 @@ public class WorkspaceType
             )
             .ResolveAsync(async context =>
             {
-                //var first = context.GetArgument<int>("first");
-                //var after = context.GetArgument<Guid?>("after");
-                //UsersFilter? usersFilter =
-                //context.GetArgument<UsersFilter>("filter")
-                //?? throw new ArgumentNullException(
-                //"usersFilter required for workspace members field"
-                //);
-                //string query = GraphQLUtils.GetQuery(
-                //(context.UserContext as GraphQLUserContext)!
-                //)!;
-                //var fragments = FieldAnalyzer.GetFragments(query);
-                //FieldInfo fieldInfo = FieldAnalyzer.WorkspaceMembers(
-                //query,
-                //fragments
-                //);
+                var first = context.GetArgument<int>("first");
+                var after = context.GetArgument<Guid?>("after");
+                UsersFilter? usersFilter = context.GetArgument<UsersFilter>(
+                    "filter"
+                );
 
-                //return await data.GetWorkspaceMembers(
-                //fieldInfo,
-                //usersFilter,
-                //first,
-                //after
-                //);
-                throw new NotImplementedException();
+                var dbCols = FieldAnalyzer.ChannelMemberDbColumns(
+                    GraphQLUtils.GetNodeASTFromConnectionAST(
+                        context.FieldAst,
+                        context.Document,
+                        "WorkspaceMembersConnection",
+                        "WorkspaceMembersConnectionEdge"
+                    ),
+                    context.Document
+                );
+
+                return await data.GetWorkspaceMembers(
+                    context.Source.Id,
+                    usersFilter,
+                    first,
+                    after,
+                    dbCols
+                );
             });
         Field<NonNullGraphType<IntGraphType>>("numMembers")
             .Description("Members in the workspace")
