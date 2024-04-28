@@ -496,47 +496,147 @@ public class WorkspaceStore : Store
     }
 
     public async Task<(
-        List<dynamic> dbMembers,
+        List<GraphQLTypes.WorkspaceMember> dbMembers,
         bool lastPage
     )> LoadWorkspaceMembers(
-        Guid userId,
         int first,
-        FieldTree connectionTree,
+        List<string> dbCols,
         Guid workspaceId,
         Guid? after = null
     )
     {
-        IQueryable<WorkspaceMember> memberships = _context.WorkspaceMembers
-            .Where(wm => wm.WorkspaceId == workspaceId)
-            .Include(wm => wm.User);
-        if (!(after is null))
+        var throwOn = new string[]
         {
-            string prevLast = await memberships
-                .Where(wm => wm.Id == after)
-                .Select(wm => wm.User.NormalizedUserName)
-                .FirstAsync();
-            memberships = memberships.Where(
-                wm => wm.User.NormalizedUserName.CompareTo(prevLast) > 0
+            "WorkspaceAdminPermissionsId",
+            "NotificationsAllowTimeStart",
+            "NotificationsAllowTimeEnd",
+            "NotificationSound",
+            "ThemeId"
+        };
+        if (dbCols.Any(c => throwOn.Contains(c)))
+        {
+            throw new InvalidOperationException(
+                "attempted to load private member information"
             );
         }
-        memberships = memberships
-            .OrderBy(wm => wm.User.NormalizedUserName)
-            .Take(first + 1);
-        var dynamicWorkspaceMembers = await memberships
-            .Select(
-                DynamicLinqUtils.NodeFieldToDynamicSelectString(
-                    connectionTree,
-                    nonDbMapped: new List<string> { "workspaceMemberInfo" }
-                )
-            )
-            .ToDynamicListAsync();
+        dbCols.Remove("Id");
+        dbCols.Insert(0, "Id");
+        dbCols.Remove("AvatarId");
+        dbCols.Add("AvatarId");
 
-        bool lastPage = dynamicWorkspaceMembers.Count <= first;
+        List<string> sqlBuilder = new();
+        if (after is not null)
+        {
+            sqlBuilder.Add("WITH after AS (");
+            sqlBuilder.Add(
+                $"SELECT {wdq("UserId")} FROM {wdq("WorkspaceMembers")}"
+            );
+            sqlBuilder.Add($"WHERE {wdq("Id")} = @AfterId");
+            sqlBuilder.Add("),\n");
+
+            sqlBuilder.Add("afterName AS (");
+            sqlBuilder.Add(
+                $"SELECT {wdq("UserName")} FROM {wdq("AspNetUsers")}"
+            );
+            sqlBuilder.Add(
+                $"WHERE {wdq("AspNetUsers")}.{wdq("Id")} = (SELECT {wdq("UserId")} FROM after)"
+            );
+            sqlBuilder.Add("),\n");
+        }
+        else
+        {
+            sqlBuilder.Add("WITH");
+        }
+
+        sqlBuilder.Add("members AS (");
+        sqlBuilder.Add("SELECT");
+        sqlBuilder.AddRange(
+            dbCols.Select(
+                (c, i) => i == dbCols.Count - 1 ? $"{wdq(c)}" : $"{wdq(c)},"
+            )
+        );
+        sqlBuilder.Add(
+            $"FROM {wdq("WorkspaceMembers")} WHERE {wdq("WorkspaceId")} = @WorkspaceId"
+        );
+        sqlBuilder.Add(")\n");
+
+        sqlBuilder.Add(
+            $"SELECT members.*, {wdq("AspNetUsers")}.{wdq("Id")}, {wdq("AspNetUsers")}.{wdq("UserName")} AS {wdq("Username")},"
+        );
+        sqlBuilder.Add(
+            $"{wdq("Files")}.{wdq("Id")}, {wdq("Files")}.{wdq("StoreKey")}, {wdq("Files")}.{wdq("Name")}"
+        );
+        sqlBuilder.Add($"FROM members INNER JOIN {wdq("AspNetUsers")} ON");
+        sqlBuilder.Add(
+            $"{wdq("AspNetUsers")}.{wdq("Id")} = members.{wdq("UserId")}"
+        );
+        sqlBuilder.Add(
+            $"LEFT JOIN {wdq("Files")} ON {wdq("Files")}.{wdq("Id")} = members.{wdq("AvatarId")}"
+        );
+        if (after is not null)
+        {
+            sqlBuilder.Add(
+                $"WHERE {wdq("AspNetUsers")}.{wdq("UserName")} > (SELECT {wdq("UserName")} FROM afterName)"
+            );
+        }
+        sqlBuilder.Add($"ORDER BY {wdq("AspNetUsers")}.{wdq("UserName")}");
+        sqlBuilder.Add("LIMIT @First");
+
+        var sql = string.Join("\n", sqlBuilder);
+        Console.WriteLine(sql);
+        var param = new
+        {
+            AfterId = after,
+            WorkspaceId = workspaceId,
+            First = first + 1
+        };
+        var conn = _context.GetConnection();
+
+        List<GraphQLTypes.WorkspaceMember> members = (
+            await conn.QueryAsync<
+                Models.WorkspaceMember,
+                GraphQLTypes.User,
+                GraphQLTypes.File,
+                GraphQLTypes.WorkspaceMember
+            >(
+                sql: sql,
+                param: param,
+                map: (modelMember, user, avatar) =>
+                {
+                    var member = new GraphQLTypes.WorkspaceMember
+                    {
+                        Id = modelMember.Id,
+                        Avatar = avatar,
+                        JoinedAt = modelMember.JoinedAt,
+                        Title = modelMember.Title,
+                        User = user,
+                        Workspace = new GraphQLTypes.Workspace
+                        {
+                            Id = modelMember.WorkspaceId
+                        },
+                        WorkspaceMemberInfo =
+                            new GraphQLTypes.WorkspaceMemberInfo
+                            {
+                                Admin = modelMember.Admin,
+                                Owner = modelMember.Owner,
+                                OnlineStatus = modelMember.OnlineStatus,
+                                OnlineStatusUntil =
+                                    modelMember.OnlineStatusUntil
+                            }
+                    };
+
+                    return member;
+                }
+            )
+        ).ToList();
+
+        var lastPage = members.Count <= first;
         if (!lastPage)
         {
-            dynamicWorkspaceMembers.RemoveAt(dynamicWorkspaceMembers.Count - 1);
+            members.RemoveAt(members.Count - 1);
         }
-        return (dynamicWorkspaceMembers, lastPage);
+
+        return (members, lastPage);
     }
 
     public async Task<string> SignInUser(Guid userId, Guid workspaceId)

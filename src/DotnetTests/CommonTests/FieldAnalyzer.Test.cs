@@ -756,6 +756,104 @@ public class FieldAnalyzerTests
             }
         ";
 
+    private const string workspaceMembersQuery =
+        @"
+            query WorkspaceMembersQuery {
+                members {
+                    totalEdges
+                    pageInfo {
+                        hasNextPage
+                    }
+                    edges {
+                        cursor
+                        node {
+                            id
+                            avatar {
+                                id
+                            }
+                            joinedAt
+                            title
+                            user {
+                                id
+                            }
+                            workspace {
+                                id
+                            }
+                            workspaceMemberInfo {
+                                admin
+                                owner
+                                theme {
+                                    id
+                                }
+                                notifSound
+                                notificationsAllowTimeStartUTC
+                                notificationsAllowTimeEndUTC
+                                onlineStatus
+                                onlineStatusUntilUTC
+                                workspaceAdminPermissions {
+                                    admin {
+                                        id
+                                    }
+                                    all
+                                    invite
+                                    kick
+                                    adminGrant
+                                    adminRevoke
+                                    grantAdminPermissions
+                                    revokeAdminPermissions
+                                    editMessages
+                                    deleteMessages
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        ";
+
+    [Theory]
+    [InlineData(workspaceMembersQuery)]
+    public void WorkspaceMemberDbColumns_ShouldGetWorkspaceMemberDbColumns(
+        string query
+    )
+    {
+        List<string> expectedCols =
+            new()
+            {
+                "Id",
+                "AvatarId",
+                "JoinedAt",
+                "Title",
+                "UserId",
+                "WorkspaceId",
+                "Admin",
+                "Owner",
+                "WorkspaceAdminPermissionsId",
+                "ThemeId",
+                "NotificationSound",
+                "NotificationsAllowTimeStart",
+                "NotificationsAllowTimeEnd",
+                "OnlineStatus",
+                "OnlineStatusUntil"
+            };
+
+        var docAst = Parser.Parse(query);
+        var opDef = docAst.Definitions.First() as GraphQLOperationDefinition;
+        var membersFieldDef =
+            opDef!.SelectionSet.Selections.First() as GraphQLField;
+        var nodeAst = GraphQLUtils.GetNodeASTFromConnectionAST(
+            membersFieldDef!,
+            docAst,
+            "WorkspaceMembersConnection",
+            "WorkspaceMembersConnectionEdge"
+        );
+        var cols = FieldAnalyzer.WorkspaceMemberDbColumns(nodeAst!, docAst!);
+        cols.Sort();
+        expectedCols.Sort();
+        Assert.Equal(expectedCols, cols);
+    }
+
+    /*
     [Theory]
     [InlineData(channelMessagesQuery1)]
     public void ChannelMessageDbColumns_ShouldGetChannelMessageDbColumns(
@@ -797,7 +895,6 @@ public class FieldAnalyzerTests
         Assert.Equal(expectedCols, cols);
     }
 
-    /*
     [Theory]
     [InlineData(channelMembersQuery1)]
     [InlineData(channelMembersQuery2)]

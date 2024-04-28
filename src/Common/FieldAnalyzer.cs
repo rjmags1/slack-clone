@@ -173,6 +173,188 @@ public static class FieldAnalyzer
 
     */
 
+    public static List<string> WorkspaceMemberDbColumns(
+        GraphQLField workspaceMemberFieldAst,
+        GraphQLDocument document
+    )
+    {
+        if (workspaceMemberFieldAst.SelectionSet is null)
+        {
+            throw new InvalidOperationException(
+                "null selection set on workspace member"
+            );
+        }
+
+        var subfields = workspaceMemberFieldAst.SelectionSet.Selections
+            .Where(s => s.Kind == ASTNodeKind.Field)
+            .Select(s => (s as GraphQLField)!.Name.StringValue)
+            .ToList();
+        var fragmentSpreads = workspaceMemberFieldAst.SelectionSet.Selections
+            .Where(s => s.Kind == ASTNodeKind.FragmentSpread)
+            .Select(
+                s => (s as GraphQLFragmentSpread)!.FragmentName.Name.StringValue
+            )
+            .ToList();
+
+        GraphQLField? memberInfoFieldAst = (GraphQLField?)
+            workspaceMemberFieldAst.SelectionSet.Selections.FirstOrDefault(
+                s =>
+                    s.Kind == ASTNodeKind.Field
+                    && (s as GraphQLField)!.Name.StringValue
+                        == "workspaceMemberInfo"
+            );
+
+        if (fragmentSpreads.Any())
+        {
+            var fragDefs = document.Definitions.Where(
+                d =>
+                    d.Kind == ASTNodeKind.FragmentDefinition
+                    && fragmentSpreads.Contains(
+                        (d as GraphQLFragmentDefinition)!
+                            .FragmentName
+                            .Name
+                            .StringValue
+                    )
+            );
+            subfields.AddRange(
+                fragDefs.SelectMany(
+                    f =>
+                        (
+                            f as GraphQLFragmentDefinition
+                        )!.SelectionSet.Selections
+                            .Where(s => s.Kind == ASTNodeKind.Field)
+                            .Select(s => (s as GraphQLField)!.Name.StringValue)
+                )
+            );
+
+            if (memberInfoFieldAst is null)
+            {
+                memberInfoFieldAst = (GraphQLField?)(
+                    (
+                        (GraphQLFragmentDefinition?)
+                            fragDefs.FirstOrDefault(
+                                f =>
+                                    (
+                                        f as GraphQLFragmentDefinition
+                                    )!.SelectionSet.Selections.Any(
+                                        s =>
+                                            s.Kind == ASTNodeKind.Field
+                                            && (s as GraphQLField)!
+                                                .Name
+                                                .StringValue
+                                                == "workspaceMemberInfo"
+                                    )
+                            )
+                    )?.SelectionSet!.Selections.First(
+                        s =>
+                            s.Kind == ASTNodeKind.Field
+                            && (s as GraphQLField)!.Name.StringValue
+                                == "workspaceMemberInfo"
+                    )
+                );
+            }
+        }
+
+        if (subfields.Contains("workspaceMemberInfo"))
+        {
+            if (memberInfoFieldAst is null)
+            {
+                throw new InvalidOperationException(
+                    "workspaceMemberInfo subfield requested but didn't find its AST"
+                );
+            }
+
+            subfields.Remove("workspaceMemberInfo");
+            subfields.AddRange(
+                WorkspaceMemberDbColumnsFromMemberInfo(
+                    memberInfoFieldAst,
+                    document
+                )
+            );
+        }
+
+        return subfields
+            .Select(s => s[0].ToString().ToUpper() + s[1..])
+            .Select(s => s == "Avatar" ? "AvatarId" : s)
+            .Select(s => s == "User" ? "UserId" : s)
+            .Select(s => s == "Workspace" ? "WorkspaceId" : s)
+            .Where(s => s != "WorkspaceMemberInfo")
+            .ToList();
+    }
+
+    private static List<string> WorkspaceMemberDbColumnsFromMemberInfo(
+        GraphQLField memberInfoFieldAst,
+        GraphQLDocument document
+    )
+    {
+        if (memberInfoFieldAst.SelectionSet is null)
+        {
+            throw new InvalidOperationException(
+                "null selection set on group ast node"
+            );
+        }
+
+        var subfields = memberInfoFieldAst.SelectionSet.Selections
+            .Where(s => s.Kind == ASTNodeKind.Field)
+            .Select(s => (s as GraphQLField)!.Name.StringValue)
+            .ToList();
+        var fragmentSpreads = memberInfoFieldAst.SelectionSet.Selections
+            .Where(s => s.Kind == ASTNodeKind.FragmentSpread)
+            .Select(
+                s => (s as GraphQLFragmentSpread)!.FragmentName.Name.StringValue
+            )
+            .ToList();
+
+        if (fragmentSpreads.Any())
+        {
+            var fragDefs = document.Definitions.Where(
+                d =>
+                    d.Kind == ASTNodeKind.FragmentDefinition
+                    && fragmentSpreads.Contains(
+                        (d as GraphQLFragmentDefinition)!
+                            .FragmentName
+                            .Name
+                            .StringValue
+                    )
+            );
+            subfields.AddRange(
+                fragDefs.SelectMany(
+                    f =>
+                        (
+                            f as GraphQLFragmentDefinition
+                        )!.SelectionSet.Selections
+                            .Where(s => s.Kind == ASTNodeKind.Field)
+                            .Select(s => (s as GraphQLField)!.Name.StringValue)
+                )
+            );
+        }
+
+        return subfields
+            .Select(s => s[0].ToString().ToUpper() + s[1..])
+            .Select(
+                s =>
+                    s == "WorkspaceAdminPermissions"
+                        ? "WorkspaceAdminPermissionsId"
+                        : s
+            )
+            .Select(s => s == "Theme" ? "ThemeId" : s)
+            .Select(s => s == "NotifSound" ? "NotificationSound" : s)
+            .Select(
+                s =>
+                    s == "NotificationsAllowTimeStartUTC"
+                        ? "NotificationsAllowTimeStart"
+                        : s
+            )
+            .Select(
+                s =>
+                    s == "NotificationsAllowTimeEndUTC"
+                        ? "NotificationsAllowTimeEnd"
+                        : s
+            )
+            .Select(s => s == "OnlineStatusUntilUTC" ? "OnlineStatusUntil" : s)
+            .ToList();
+    }
+
     public static List<string> ChannelMessageDbColumns(
         GraphQLField channelMessageFieldAst,
         GraphQLDocument document

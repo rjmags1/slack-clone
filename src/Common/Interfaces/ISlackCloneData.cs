@@ -29,10 +29,11 @@ public interface ISlackCloneData
     );
 
     public Task<Connection<WorkspaceMember>> GetWorkspaceMembers(
-        UsersFilter filter,
+        Guid workspaceId,
+        UsersFilter? filter,
         int first,
         Guid? after,
-        IEnumerable<string> cols
+        List<string> cols
     );
 
     public Task<Connection<Workspace>> GetWorkspaces(

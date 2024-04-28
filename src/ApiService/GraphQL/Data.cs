@@ -119,48 +119,30 @@ public class SlackCloneData : ISlackCloneData
     }
 
     public async Task<Connection<WorkspaceMember>> GetWorkspaceMembers(
-        UsersFilter filter,
+        Guid workspaceId,
+        UsersFilter? filter,
         int first,
         Guid? after,
-        IEnumerable<string> cols
+        List<string> cols
     )
     {
-        //using var scope = Provider.CreateScope();
-        //WorkspaceStore workspaceStore =
-        //scope.ServiceProvider.GetRequiredService<WorkspaceStore>();
-        //(List<dynamic> dbMembers, bool lastPage) =
-        //await workspaceStore.LoadWorkspaceMembers(
-        //filter.UserId,
-        //first,
-        //fieldInfo.FieldTree,
-        //filter.WorkspaceId,
-        //after
-        //);
+        if (filter is not null)
+        {
+            throw new NotImplementedException();
+        }
 
-        //List<WorkspaceMember> members = new();
-        //foreach (dynamic dbm in dbMembers)
-        //{
-        //WorkspaceMember member =
-        //ModelToObjectConverters.ConvertDynamicWorkspaceMember(
-        //dbm,
-        //FieldAnalyzer.ExtractUserFields(
-        //"user",
-        //fieldInfo.FieldTree
-        //),
-        //FieldAnalyzer.ExtractUserFields(
-        //"admin",
-        //fieldInfo.FieldTree
-        //)
-        //);
-        //members.Add(member);
-        //}
+        using var scope = Provider.CreateScope();
+        WorkspaceStore workspaceStore =
+            scope.ServiceProvider.GetRequiredService<WorkspaceStore>();
+        (List<WorkspaceMember> members, bool lastPage) =
+            await workspaceStore.LoadWorkspaceMembers(
+                first,
+                cols,
+                workspaceId,
+                after
+            );
 
-        //return ModelToObjectConverters.ToConnection<WorkspaceMember>(
-        //members,
-        //after is null,
-        //lastPage
-        //);
-        throw new NotImplementedException();
+        return ToConnection(members, after is null, lastPage);
     }
 
     public async Task<Connection<Workspace>> GetWorkspaces(

@@ -25,6 +25,79 @@ public class WorkspaceStoreTests1
     }
 
     [Fact]
+    public async void LoadWorkspaceMembers_ShouldWork()
+    {
+        List<string> dbCols =
+            new()
+            {
+                "Id",
+                "AvatarId",
+                "JoinedAt",
+                "Title",
+                "UserId",
+                "WorkspaceId",
+                "Admin",
+                "Owner",
+                "OnlineStatus",
+                "OnlineStatusUntil",
+                "WorkspaceAdminPermissionsId",
+                "ThemeId",
+                "NotificationSound",
+                "NotificationsAllowTimeStart",
+                "NotificationsAllowTimeEnd"
+            };
+        List<string> throw1 = dbCols
+            .Where(c => c != "WorkspaceAdminPermissionsId")
+            .ToList();
+        List<string> throw2 = dbCols.Where(c => c != "ThemeId").ToList();
+        List<string> throw3 = dbCols
+            .Where(c => c != "NotificationsAllowTimeStart")
+            .ToList();
+        List<string> throw4 = dbCols
+            .Where(c => c != "NotificationsAllowTimeEnd")
+            .ToList();
+        List<string> throw5 = dbCols
+            .Where(c => c != "NotificationSound")
+            .ToList();
+        List<List<string>> throws =
+            new() { throw1, throw2, throw3, throw4, throw5 };
+
+        var workspaceId = Guid.Parse("23e33ae1-c69b-4e33-bb16-79a1be666392");
+        var afterId = Guid.Parse("cc7118a3-e399-488e-b009-8b84602af89a"); // 5 after
+        List<string> noThrow = dbCols.GetRange(0, dbCols.Count - 5);
+
+        throws.ForEach(
+            async t =>
+                await Assert.ThrowsAsync<InvalidOperationException>(
+                    async () =>
+                        await _workspaceStore.LoadWorkspaceMembers(
+                            5,
+                            throw1,
+                            workspaceId
+                        )
+                )
+        );
+
+        (var members1, var lastPage1) =
+            await _workspaceStore.LoadWorkspaceMembers(5, noThrow, workspaceId);
+        (var members2, var lastPage2) =
+            await _workspaceStore.LoadWorkspaceMembers(
+                5,
+                noThrow,
+                workspaceId,
+                afterId
+            );
+
+        Assert.False(lastPage1);
+        Assert.Equal(
+            members1.Select(m => m.User.Username).OrderBy(un => un),
+            members1.Select(m => m.User.Username)
+        );
+        Assert.True(lastPage2);
+    }
+
+    /*
+    [Fact]
     public async void LoadStarred_ShouldWork()
     {
         Guid workspaceId = Guid.Parse("23e33ae1-c69b-4e33-bb16-79a1be666392");
@@ -53,7 +126,6 @@ public class WorkspaceStoreTests1
         Assert.NotEqual(after, groups2.First().Id);
     }
 
-    /*
     [Fact]
     public async void GetWorkspace_ShouldWork()
     {
