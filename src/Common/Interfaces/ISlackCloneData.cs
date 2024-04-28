@@ -76,11 +76,10 @@ public interface ISlackCloneData
     );
 
     public Task<Connection<Message>> GetDirectMessages(
-        Guid userId,
         Guid directMessageGroupId,
         MessagesFilter? filter,
         int first,
         Guid? after,
-        IEnumerable<string> cols
+        List<string> cols
     );
 }

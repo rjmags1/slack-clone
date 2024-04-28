@@ -582,91 +582,173 @@ public class DirectMessageGroupStore : Store
     }
 
     public async Task<(
-        List<dynamic> dbMessages,
-        List<DirectMessageReactionCount> reactionCounts,
+        List<GraphQLTypes.Message> dbMessages,
         bool lastPage
     )> LoadDirectMessages(
-        Guid userId,
-        Guid groupId,
-        FieldInfo fieldInfo,
+        Guid directMessageGroupId,
+        List<string> dbCols,
         int first,
-        Guid? after
+        Guid? after = null
     )
     {
-        IQueryable<DirectMessage> messages = _context.DirectMessages
-            .Where(
-                dm => dm.DirectMessageGroupId == groupId && dm.SentAt != null
-            )
-            .OrderByDescending(dm => dm.SentAt);
+        var joinCols = new string[] { "Mentions", "Reactions", "Files" };
+        dbCols.RemoveAll(c => joinCols.Contains(c));
+        if (!dbCols.Contains("SentAt"))
+        {
+            dbCols.Add("SentAt");
+        }
+
+        List<string> sqlBuilder = new();
         if (after is not null)
         {
-            DateTime prevLastSentAt = (DateTime)
-                (
-                    _context.DirectMessages
-                        .Where(dm => dm.Id == after)
-                        .Select(dm => dm.SentAt)
-                        .First()
-                )!;
-            messages = messages.Where(
-                dm => dm.SentAt <= prevLastSentAt && dm.Id != after
+            sqlBuilder.Add("WITH after AS (");
+            sqlBuilder.Add(
+                $"SELECT {wdq("SentAt")} FROM {wdq("DirectMessages")}"
+            );
+            sqlBuilder.Add($"WHERE {wdq("Id")} = @AfterId");
+            sqlBuilder.Add("),\n");
+        }
+        else
+        {
+            sqlBuilder.Add("WITH");
+        }
+
+        sqlBuilder.Add("messages AS (");
+        sqlBuilder.Add("SELECT");
+        sqlBuilder.AddRange(
+            dbCols.Select(
+                (c, i) =>
+                    i == dbCols.Count - 1
+                        ? $"{wdq("DirectMessages")}.{wdq(c)}"
+                        : $"{wdq("DirectMessages")}.{wdq(c)},"
+            )
+        );
+        sqlBuilder.Add($"FROM {wdq("DirectMessages")}");
+        sqlBuilder.Add(
+            $"WHERE {wdq("DirectMessageGroupId")} = @DirectMessageGroupId AND NOT {wdq("Deleted")} AND {wdq("SentAt")} IS NOT NULL"
+        );
+        if (after is not null)
+        {
+            sqlBuilder.Add(
+                $"AND {wdq("SentAt")} < (SELECT {wdq("SentAt")} FROM after)"
             );
         }
-        messages = messages.Take(first + 1);
+        sqlBuilder.Add($"ORDER BY {wdq("SentAt")} DESC");
+        sqlBuilder.Add("LIMIT @First");
+        sqlBuilder.Add(")\n");
 
-        List<dynamic> dynamicDirectMessages = await messages
-            .Select(
-                DynamicLinqUtils.NodeFieldToDynamicSelectString(
-                    fieldInfo.FieldTree,
-                    forceInclude: new List<string> { "id", "deleted" },
-                    skip: new List<string> { "reactions", "group", "type" }
-                )
-            )
-            .ToDynamicListAsync();
+        sqlBuilder.Add($"SELECT messages.*,");
+        sqlBuilder.Add(
+            @$"{wdq("DirectMessageMentions")}.{wdq("Id")}, 
+                {wdq("DirectMessageMentions")}.{wdq("MentionedId")},"
+        );
+        sqlBuilder.Add(
+            @$"{wdq("DirectMessageReactions")}.{wdq("Id")}, 
+                {wdq("DirectMessageReactions")}.{wdq("Emoji")}, 
+                {wdq("DirectMessageReactions")}.{wdq("UserId")},"
+        );
+        sqlBuilder.Add(
+            @$"{wdq("Files")}.{wdq("Id")},
+                {wdq("Files")}.{wdq("Name")},
+                {wdq("Files")}.{wdq("StoreKey")}"
+        );
+        sqlBuilder.Add("FROM messages");
+        sqlBuilder.Add(
+            @$"LEFT JOIN {wdq("DirectMessageMentions")} ON 
+                {wdq("DirectMessageMentions")}.{wdq("DirectMessageId")} = messages.{wdq("Id")}"
+        );
+        sqlBuilder.Add(
+            @$"LEFT JOIN {wdq("DirectMessageReactions")} ON 
+                {wdq("DirectMessageReactions")}.{wdq("DirectMessageId")} = messages.{wdq("Id")}"
+        );
+        sqlBuilder.Add(
+            @$"LEFT JOIN {wdq("Files")} ON 
+                {wdq("Files")}.{wdq("DirectMessageId")} = messages.{wdq("Id")}"
+        );
+        sqlBuilder.Add($"ORDER BY messages.{wdq("SentAt")} DESC");
 
-        List<DirectMessageReactionCount> reactionCounts = new();
-        if (fieldInfo.SubfieldNames.Contains("reactions"))
+        var sql = string.Join("\n", sqlBuilder);
+        var param = new
         {
-            List<Guid> messageIds = new();
-            foreach (dynamic message in messages)
-            {
-                messageIds.Add((Guid)message.Id);
-            }
-            var reactions = _context.DirectMessageReactions
-                .Where(dmr => messageIds.Contains(dmr.DirectMessageId))
-                .GroupBy(dmr => new { dmr.DirectMessageId, dmr.Emoji })
-                .Select(
-                    group =>
-                        new
-                        {
-                            DirectMessageId = group.Key.DirectMessageId,
-                            Emoji = group.Key.Emoji,
-                            Count_ = group.Count(),
-                            UserReaction = group
-                                .Where(dmr => dmr.UserId == userId)
-                                .FirstOrDefault()
-                        }
-                )
-                .ToList();
-
-            foreach (var reaction in reactions)
-            {
-                reactionCounts.Add(
-                    new DirectMessageReactionCount
+            DirectMessageGroupId = directMessageGroupId,
+            First = first + 1,
+            AfterId = after
+        };
+        var conn = _context.GetConnection();
+        List<GraphQLTypes.Message> messages = (
+            await conn.QueryAsync<
+                Models.DirectMessage,
+                GraphQLTypes.Mention,
+                GraphQLTypes.Reaction,
+                GraphQLTypes.File,
+                GraphQLTypes.Message
+            >(
+                sql: sql,
+                param: param,
+                map: (messageModel, mention, reaction, file) =>
+                {
+                    var message = new GraphQLTypes.Message
                     {
-                        DirectMessageId = reaction.DirectMessageId,
-                        Count = reaction.Count_,
-                        Emoji = reaction.Emoji,
-                        UserReaction = reaction.UserReaction
-                    }
-                );
-            }
-        }
+                        Id = messageModel.Id,
+                        User = new GraphQLTypes.User
+                        {
+                            Id = messageModel.UserId,
+                        },
+                        Content = messageModel.Content,
+                        CreatedAt = messageModel.CreatedAt,
+                        Draft = messageModel.SentAt is null,
+                        LastEdit = messageModel.LastEdit,
+                        Files = new() { file },
+                        Group = new GraphQLTypes.Group
+                        {
+                            Id = messageModel.DirectMessageGroupId
+                        },
+                        IsReply = messageModel.IsReply,
+                        LaterFlag = messageModel.LaterFlagId is null
+                            ? null
+                            : new GraphQLTypes.LaterFlag
+                            {
+                                Id = (Guid)messageModel.LaterFlagId
+                            },
+                        Mentions = new() { mention },
+                        Reactions = new() { reaction },
+                        ReplyToId = messageModel.ReplyToId,
+                        SentAt = messageModel.SentAt,
+                        Type = "DirectMessage"
+                    };
 
-        bool lastPage = dynamicDirectMessages.Count <= first;
+                    return message;
+                }
+            )
+        ).ToList();
+
+        messages = messages
+            .GroupBy(m => m.Id)
+            .Select(g =>
+            {
+                var message = g.First();
+                var files = g.Select(g => g.Files?.First())
+                    .Where(f => f is not null)
+                    .ToList();
+                var mentions = g.Select(g => g.Mentions?.First())
+                    .Where(m => m is not null)
+                    .ToList();
+                var reactions = g.Select(g => g.Reactions?.First())
+                    .Where(r => r is not null)
+                    .ToList();
+                message.Files = files as List<GraphQLTypes.File>;
+                message.Mentions = mentions as List<GraphQLTypes.Mention>;
+                message.Reactions = reactions as List<GraphQLTypes.Reaction>;
+                return message;
+            })
+            .ToList();
+
+        var lastPage = messages.Count <= first;
         if (!lastPage)
         {
-            dynamicDirectMessages.RemoveAt(dynamicDirectMessages.Count - 1);
+            messages.RemoveAt(messages.Count - 1);
         }
-        return (dynamicDirectMessages, reactionCounts, lastPage);
+
+        return (messages, lastPage);
     }
 }

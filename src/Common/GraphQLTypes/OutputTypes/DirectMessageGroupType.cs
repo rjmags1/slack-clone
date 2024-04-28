@@ -1,6 +1,7 @@
 using GraphQL;
 using GraphQL.Types;
 using Common.SlackCloneGraphQL.Types.Connections;
+using Common.Utils;
 
 namespace Common.SlackCloneGraphQL.Types;
 
@@ -49,27 +50,23 @@ public class DirectMessageGroupType
                 var after = context.GetArgument<Guid?>("after");
                 MessagesFilter? messagesFilter =
                     context.GetArgument<MessagesFilter>("filter");
-                throw new NotImplementedException();
-                //string query = GraphQLUtils.GetQuery(
-                //(context.UserContext as GraphQLUserContext)!
-                //)!;
-                //var fragments = FieldAnalyzer.GetFragments(query);
-                //FieldInfo fieldInfo = FieldAnalyzer.DirectMessages(
-                //query,
-                //fragments
-                //);
-                //Guid sub = GraphQLUtils.GetSubClaim(
-                //(context.UserContext as GraphQLUserContext)!
-                //);
+                var dbCols = FieldAnalyzer.DirectMessageDbColumns(
+                    GraphQLUtils.GetNodeASTFromConnectionAST(
+                        context.FieldAst,
+                        context.Document,
+                        "DirectMessagesConnection",
+                        "DirectMessagesConnectionEdge"
+                    ),
+                    context.Document
+                );
 
-                //return await data.GetDirectMessages(
-                //sub,
-                //context.Source.Id,
-                //fieldInfo,
-                //messagesFilter,
-                //first,
-                //after
-                //);
+                return await data.GetDirectMessages(
+                    context.Source.Id,
+                    messagesFilter,
+                    first,
+                    after,
+                    dbCols
+                );
             });
         Field<NonNullGraphType<StringGraphType>>("name")
             .Description("The name of the group")

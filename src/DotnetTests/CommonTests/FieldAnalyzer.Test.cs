@@ -811,6 +811,94 @@ public class FieldAnalyzerTests
             }
         ";
 
+    private const string directMessagesQuery =
+        @"
+            query directMessagesQuery {
+                messages {
+                    totalEdges
+                    pageInfo {
+                        hasNextPage
+                    }
+                    edges {
+                        cursor
+                        node {
+                            id
+                            user {
+                                id
+                            }
+                            content
+                            createdAtUTC
+                            draft
+                            lastEditUTC
+                            files {
+                                id
+                                name
+                                storeKey
+                                uploadedAt
+                            }
+                            group {
+                                id
+                            }
+                            isReply
+                            laterFlag {
+                                id
+                            }
+                            mentions {
+                                id
+                            }
+                            reactions {
+                                id
+                            }
+                            replyToId
+                            sentAtUTC
+                            type
+                        }
+                    }
+                }
+            }
+        ";
+
+    [Theory]
+    [InlineData(directMessagesQuery)]
+    public void DirectMessageDbColumns_ShouldGetDirectMessageDbColumns(
+        string query
+    )
+    {
+        List<string> expectedCols =
+            new()
+            {
+                "Mentions",
+                "Reactions",
+                "Files",
+                "Id",
+                "UserId",
+                "Content",
+                "CreatedAt",
+                "LastEdit",
+                "DirectMessageGroupId",
+                "IsReply",
+                "LaterFlagId",
+                "ReplyToId",
+                "SentAt",
+            };
+
+        var docAst = Parser.Parse(query);
+        var opDef = docAst.Definitions.First() as GraphQLOperationDefinition;
+        var messagesFieldDef =
+            opDef!.SelectionSet.Selections.First() as GraphQLField;
+        var nodeAst = GraphQLUtils.GetNodeASTFromConnectionAST(
+            messagesFieldDef!,
+            docAst,
+            "DirectMessagesConnection",
+            "DirectMessagesConnectionEdge"
+        );
+        var cols = FieldAnalyzer.DirectMessageDbColumns(nodeAst!, docAst!);
+        cols.Sort();
+        expectedCols.Sort();
+        Assert.Equal(expectedCols, cols);
+    }
+
+    /*
     [Theory]
     [InlineData(workspaceMembersQuery)]
     public void WorkspaceMemberDbColumns_ShouldGetWorkspaceMemberDbColumns(
@@ -853,7 +941,6 @@ public class FieldAnalyzerTests
         Assert.Equal(expectedCols, cols);
     }
 
-    /*
     [Theory]
     [InlineData(channelMessagesQuery1)]
     public void ChannelMessageDbColumns_ShouldGetChannelMessageDbColumns(

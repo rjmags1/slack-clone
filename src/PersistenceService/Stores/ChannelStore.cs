@@ -119,7 +119,6 @@ public class ChannelStore : Store
         sqlBuilder.Add($"ORDER BY messages.{wdq("SentAt")} DESC");
 
         var sql = string.Join("\n", sqlBuilder);
-        Console.WriteLine(sql);
         var param = new
         {
             ChannelId = channelId,
