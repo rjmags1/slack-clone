@@ -2,7 +2,6 @@ using PersistenceService.Constants;
 using PersistenceService.Data.ApplicationDb;
 using PersistenceService.Models;
 using PersistenceService.Utils;
-using PersistenceService.Utils.GraphQL;
 using System.Linq.Dynamic.Core;
 using Microsoft.EntityFrameworkCore;
 using GraphQLTypes = Common.SlackCloneGraphQL.Types;
@@ -25,30 +24,51 @@ public class DirectMessageGroupStore : Store
     public DirectMessageGroupStore(ApplicationDbContext context)
         : base(context) { }
 
-    public async Task<DirectMessageGroup> LoadDirectMessageGroup(Guid groupId)
+    public async Task<GraphQLTypes.DirectMessageGroup> LoadDirectMessageGroup(
+        Guid groupId
+    )
     {
-        var query =
-            from g in _context
-                .Set<DirectMessageGroup>()
-                .Where(g => g.Id == groupId)
-            from m in _context
-                .Set<DirectMessageGroupMember>()
-                .Where(m => m.DirectMessageGroupId == g.Id)
-            from u in _context.Set<User>().Where(u => u.Id == m.UserId)
-            select new
-            {
-                g,
-                m,
-                u
-            };
-        var queryResult = await query.ToListAsync();
-        var group = queryResult.First().g;
-        foreach (var row in queryResult)
+        var sqlBuilder = new List<string>
         {
-            row.m.User = row.u;
-        }
+            "WITH group AS (",
+            $"SELECT * FROM {wdq("DirectMessageGroups")}",
+            $"WHERE {wdq("Id")} = @DirectMessageGroupId",
+            ")",
+            $"SELECT * FROM group",
+            $"INNER JOIN {wdq("DirectMessageGroupMembers")}",
+            $"ON {wdq("DirectMessageGroups")}.{wdq("Id")} = {wdq("DirectMessageGroupMembers")}.{wdq("DirectMessageGroupId")}",
+            $"LEFT JOIN {wdq("Workspaces")} ON",
+            $"{wdq("Workspaces")}.{wdq("Id")} = group.{wdq("WorkspaceId")};"
+        };
 
-        return group;
+        var sql = string.Join("\n", sqlBuilder);
+        var param = new { DirectMessageGroupId = groupId };
+        var conn = _context.GetConnection();
+        var rows = (
+            await conn.QueryAsync<
+                GraphQLTypes.DirectMessageGroup,
+                GraphQLTypes.DirectMessageGroupMember,
+                GraphQLTypes.Workspace,
+                GraphQLTypes.DirectMessageGroup
+            >(
+                sql: sql,
+                param: param,
+                map: (dmg, member, workspace) =>
+                {
+                    dmg.Workspace = workspace;
+                    dmg.Members = new() { member };
+                    return dmg;
+                }
+            )
+        ).ToList();
+        ;
+
+        var dmg = rows.First();
+        for (int i = 1; i < rows.Count; i++)
+        {
+            dmg.Members.Add(rows[i].Members.First());
+        }
+        return dmg;
     }
 
     public async Task<
