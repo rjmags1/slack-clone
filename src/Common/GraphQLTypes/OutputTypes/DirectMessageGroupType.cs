@@ -72,28 +72,25 @@ public class DirectMessageGroupType
             .Description("The name of the group")
             .ResolveAsync(async context =>
             {
-                //Guid sub = GraphQLUtils.GetSubClaim(
-                //(context.UserContext as GraphQLUserContext)!
-                //);
-                //if (context.Source.Members is null)
-                //{
-                //return "DEFER_TO_CLIENT";
-                //}
-                //List<Guid> memberIds = context.Source.Members
-                //.Where(member => member.UserId != sub)
-                //.Select(member => member.UserId)
-                //.ToList();
-                //List<string> memberNames = new();
-                //foreach (Guid memberId in memberIds)
-                //{
-                //var user = await data.GetUserById(
-                //memberId,
-                //new List<string> { "username" }
-                //);
-                //memberNames.Add(user.Username);
-                //}
-                //return string.Join(", ", memberNames);
-                throw new NotImplementedException();
+                Guid sub = GraphQLUtils.GetSubClaim(context.UserContext!);
+                if (context.Source.Members is null)
+                {
+                    return "DEFER_TO_CLIENT";
+                }
+                List<Guid> memberIds = context.Source.Members
+                    .Where(member => member.UserId != sub)
+                    .Select(member => member.UserId)
+                    .ToList();
+                List<string> memberNames = new();
+                foreach (Guid memberId in memberIds)
+                {
+                    var user = await data.GetUserById(
+                        memberId,
+                        new List<string> { "username" }
+                    );
+                    memberNames.Add(user.Username);
+                }
+                return string.Join(", ", memberNames);
             });
         Field<NonNullGraphType<WorkspaceType>>("workspace")
             .Description(
