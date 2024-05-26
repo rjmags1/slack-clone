@@ -56,19 +56,25 @@ public class TestSeeder
         int messagesInSmallThreads = size == Large ? 5 : 3;
         int messagesPerDmGroup = size == Large ? 20 : 5;
 
+        // pre-shipped themes
         List<Theme> shippedThemes = await _themeStore.InsertShippedThemes();
 
+        // inserts user, including a special 'dev' user
         List<User> testUsers = await InsertTestUsers(numUsers);
 
         User devUser = testUsers.First();
 
+        // inserts test workspaces
         List<Workspace> testWorkspaces = await InsertTestWorkspaces(
             numWorkspaces
         );
 
+        // enrolls testUsers equally into workspaces. devUser is a member
+        //      of all of them, and an admin of one of the test workspaces
         List<List<WorkspaceMember>> testWorkspaceMembers =
             await EnrollIntoWorkspaces(devUser, testUsers, testWorkspaces);
 
+        // creates channels and makes workspace members creators of channels evenly
         List<List<Channel>> testChannels = await InsertTestChannels(
             testWorkspaceMembers,
             testWorkspaces,
@@ -76,8 +82,13 @@ public class TestSeeder
             maxChannelsPerWorkspace
         );
 
+        // make ~10% of channels private; one of them is always private
         await MakeSomeChannelsPrivate(testChannels);
 
+        // insert all workspace members into first channel, randomly into the
+        //      rest of the channels
+        // star every other channel membership for devUser
+        // all private channels have a channel admin
         List<List<List<ChannelMember>>> channelMembers =
             await EnrollChannelMembers(
                 devUser,
@@ -86,6 +97,7 @@ public class TestSeeder
                 minMembersPerChannel
             );
 
+        // insert distinct pairs of workspace members into direct message groups
         (
             List<List<DirectMessageGroup>> testDirectMessageGroups,
             List<List<List<Guid>>> testDirectMessageGroupMembers // Guids are user ids
@@ -95,6 +107,9 @@ public class TestSeeder
             dmGroupsPerWorkspace
         );
 
+        // insert messages into channels, taking into account the number
+        //      of messages that need to be in threads.
+        // makes the last non-thread message a draft
         (
             List<List<List<ChannelMessage>>> testChannelMessages,
             List<List<List<Thread>>> testChannelThreads
@@ -107,6 +122,7 @@ public class TestSeeder
             messagesInSmallThreads
         );
 
+        // insert direct messages, amkes last message a draft
         List<List<List<DirectMessage>>> testDirectMessages =
             await InsertTestDirectMessages(
                 testDirectMessageGroups,
@@ -310,7 +326,7 @@ public class TestSeeder
         int topLevelNonThreadMessages =
             numMessagesPerChannel
             - messagesInLongThread
-            - ((threadsPerChannel - 1) * messagesInShortThreads);
+            - (Math.Max(threadsPerChannel - 1, 0) * messagesInShortThreads);
         if (topLevelNonThreadMessages < 0)
         {
             throw new ArgumentException("Too many thread messages");
@@ -388,7 +404,7 @@ public class TestSeeder
         Channel testChannel,
         List<ChannelMember> testMembers,
         int numMessages,
-        bool watchThreads = true,
+        bool watchThreads = true, // TODO
         bool addMentions = true
     )
     {
@@ -546,7 +562,7 @@ public class TestSeeder
             testWorkspaces.Add(CreateTestWorkspace());
         }
 
-        return await _workspaceStore.InsertWorkspaces(testWorkspaces);
+        return await _workspaceStore.InsertWorkspaces(testWorkspaces, true);
     }
 
     private async Task<List<List<WorkspaceMember>>> EnrollIntoWorkspaces(
@@ -575,7 +591,8 @@ public class TestSeeder
                         usersCurrentWorkspace == 1 ? "Owner" : "Admin";
                 }
             }
-            if (i > usersPerWorkspace)
+
+            if (!userIds.Contains(devUser.Id))
             {
                 userIds.Add(devUser.Id);
                 titles.Add("Member");
