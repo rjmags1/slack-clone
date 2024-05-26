@@ -269,9 +269,7 @@ public class ChannelStore : Store
             sqlBuilder.Add("),\n");
 
             sqlBuilder.Add("afterName AS (");
-            sqlBuilder.Add(
-                $"SELECT {wdq("AspNetUsers")}.{wdq("NormalizedUserName")}"
-            );
+            sqlBuilder.Add($"SELECT {wdq("AspNetUsers")}.{wdq("UserName")}");
             sqlBuilder.Add($"FROM {wdq("AspNetUsers")}");
             sqlBuilder.Add(
                 $"WHERE {wdq("Id")} = (SELECT {wdq("UserId")} FROM afterId)"
@@ -300,7 +298,7 @@ public class ChannelStore : Store
         if (after is not null)
         {
             sqlBuilder.Add(
-                $"WHERE {wdq("AspNetUsers")}.{wdq("NormalizedUserName")} > (SELECT {wdq("NormalizedUserName")} FROM afterName)"
+                $"WHERE {wdq("AspNetUsers")}.{wdq("UserName")} > (SELECT {wdq("UserName")} FROM afterName)"
             );
         }
         sqlBuilder.Add($"ORDER BY {wdq("Username")}");
@@ -964,12 +962,7 @@ public class ChannelStore : Store
                 $"LEFT JOIN {wdq("Workspaces")} ON {wdq("Workspaces")}.{wdq("Id")} = _channels.{wdq("WorkspaceId")}"
             );
         }
-        sqlBuilder.Add($"ORDER BY");
-        sqlBuilder.Add(
-            $"CASE WHEN {wdq("LastViewedAt")} IS NULL THEN 0 ELSE 1 END,"
-        );
-        sqlBuilder.Add($"{wdq("LastViewedAt")},");
-        sqlBuilder.Add($"{wdq("JoinedAt")} DESC;");
+        sqlBuilder.Add($"ORDER BY _channels.{wdq("Name")};");
 
         var sql = string.Join("\n", sqlBuilder);
         var conn = _context.GetConnection();
