@@ -23,6 +23,13 @@ public class FilledApplicationDbContextFixture : IAsyncLifetime
         SetupUtils.LoadEnvironmentVariables("/../../../.env");
 
         _doSeed = Environment.GetEnvironmentVariable("SEED") == "true";
+        Console.WriteLine("############");
+        Console.WriteLine("############");
+        Console.WriteLine("############");
+        Console.WriteLine(_doSeed);
+        Console.WriteLine("############");
+        Console.WriteLine("############");
+        Console.WriteLine("############");
         _preserveSeededData =
             Environment.GetEnvironmentVariable("PRESERVE_SEEDED_DATA")
             == "true";
@@ -49,6 +56,13 @@ public class FilledApplicationDbContextFixture : IAsyncLifetime
     {
         if (_doSeed)
         {
+            Console.WriteLine("############");
+            Console.WriteLine("############");
+            Console.WriteLine("############");
+            Console.WriteLine("SEEDING");
+            Console.WriteLine("############");
+            Console.WriteLine("############");
+            Console.WriteLine("############");
             string seedSize = Environment.GetEnvironmentVariable(
                 "LARGE_SEED_SIZE"
             )
