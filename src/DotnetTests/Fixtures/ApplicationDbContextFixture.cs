@@ -12,10 +12,12 @@ public class ApplicationDbContextFixture : IDisposable
     {
         SetupUtils.LoadEnvironmentVariables("/../../../.env");
 
+        bool dev = Environment.GetEnvironmentVariable("ENV") == "dev";
+        string connectionString = dev
+            ? "LOCAL_DB_CONNECTION_STRING"
+            : "TEST_DB_CONNECTION_STRING";
         var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-            .UseNpgsql(
-                Environment.GetEnvironmentVariable("TEST_DB_CONNECTION_STRING")
-            )
+            .UseNpgsql(Environment.GetEnvironmentVariable(connectionString))
             //.EnableSensitiveDataLogging()
             //.LogTo(Console.WriteLine)
             .Options;
@@ -32,6 +34,6 @@ public class ApplicationDbContextFixture : IDisposable
     }
 }
 
-[CollectionDefinition("Database collection 1")]
+[CollectionDefinition("Empty Database Test Collection")]
 public class DatabaseCollection1
     : ICollectionFixture<ApplicationDbContextFixture> { }

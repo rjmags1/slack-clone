@@ -9,16 +9,6 @@ using Dapper;
 
 namespace PersistenceService.Stores;
 
-public class DirectMessageReactionCount
-{
-#pragma warning disable CS8618
-    public Guid DirectMessageId { get; set; }
-    public int Count { get; set; }
-    public string Emoji { get; set; }
-#pragma warning restore CS8618
-    public DirectMessageReaction? UserReaction { get; set; }
-}
-
 public class DirectMessageGroupStore : Store
 {
     public DirectMessageGroupStore(ApplicationDbContext context)

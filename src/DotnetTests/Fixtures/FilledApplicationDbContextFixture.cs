@@ -16,10 +16,13 @@ public class FilledApplicationDbContextFixture : IAsyncLifetime
 
     private readonly bool _envIsDev;
 
+    private readonly bool _doSeed;
+
     public FilledApplicationDbContextFixture()
     {
         SetupUtils.LoadEnvironmentVariables("/../../../.env");
 
+        _doSeed = Environment.GetEnvironmentVariable("SEED") == "true";
         _preserveSeededData =
             Environment.GetEnvironmentVariable("PRESERVE_SEEDED_DATA")
             == "true";
@@ -44,11 +47,16 @@ public class FilledApplicationDbContextFixture : IAsyncLifetime
 
     public async Task InitializeAsync()
     {
-        string seedSize = Environment.GetEnvironmentVariable("LARGE_SEED_SIZE")
-            is null
-            ? TestSeeder.Small
-            : TestSeeder.Large;
-        await _testSeeder.Seed(seedSize);
+        if (_doSeed)
+        {
+            string seedSize = Environment.GetEnvironmentVariable(
+                "LARGE_SEED_SIZE"
+            )
+                is null
+                ? TestSeeder.Small
+                : TestSeeder.Large;
+            await _testSeeder.Seed(seedSize);
+        }
     }
 
     public async Task DisposeAsync()
@@ -61,6 +69,6 @@ public class FilledApplicationDbContextFixture : IAsyncLifetime
     }
 }
 
-[CollectionDefinition("Database collection 2")]
+[CollectionDefinition("Filled Database Test Collection")]
 public class DatabaseCollection2
     : ICollectionFixture<FilledApplicationDbContextFixture> { }
