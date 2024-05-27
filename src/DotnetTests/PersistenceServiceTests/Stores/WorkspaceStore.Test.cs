@@ -1,5 +1,7 @@
 using DotnetTests.Fixtures;
+using DotnetTests.PersistenceService.Stores;
 using DotnetTests.PersistenceService.Utils;
+using Microsoft.AspNetCore.Mvc.ApiExplorer;
 using PersistenceService.Data.ApplicationDb;
 using PersistenceService.Models;
 using PersistenceService.Stores;
@@ -8,13 +10,11 @@ using GraphQLTypes = Common.SlackCloneGraphQL.Types;
 namespace DotnetTest.PersistenceService.Stores;
 
 [Trait("Category", "Order 0")]
-[Collection("Database collection 1")]
+[Collection("Empty Database Test Collection")]
 public class WorkspaceStoreTests1
 {
     private readonly ApplicationDbContext _dbContext;
     private readonly WorkspaceStore _workspaceStore;
-    readonly Guid userId = Guid.Parse("056b1d27-0825-4113-999d-9f7a95bbabcf");
-    readonly Guid after = Guid.Parse("f5f08029-fabd-4de5-bd25-a1d61cbc1255");
 
     public WorkspaceStoreTests1(
         ApplicationDbContextFixture applicationDbContextFixture
@@ -22,158 +22,6 @@ public class WorkspaceStoreTests1
     {
         _dbContext = applicationDbContextFixture.Context;
         _workspaceStore = new WorkspaceStore(_dbContext);
-    }
-
-    [Fact]
-    public async void LoadWorkspaceMembers_ShouldWork()
-    {
-        List<string> dbCols =
-            new()
-            {
-                "Id",
-                "AvatarId",
-                "JoinedAt",
-                "Title",
-                "UserId",
-                "WorkspaceId",
-                "Admin",
-                "Owner",
-                "OnlineStatus",
-                "OnlineStatusUntil",
-                "WorkspaceAdminPermissionsId",
-                "ThemeId",
-                "NotificationSound",
-                "NotificationsAllowTimeStart",
-                "NotificationsAllowTimeEnd"
-            };
-        List<string> throw1 = dbCols
-            .Where(c => c != "WorkspaceAdminPermissionsId")
-            .ToList();
-        List<string> throw2 = dbCols.Where(c => c != "ThemeId").ToList();
-        List<string> throw3 = dbCols
-            .Where(c => c != "NotificationsAllowTimeStart")
-            .ToList();
-        List<string> throw4 = dbCols
-            .Where(c => c != "NotificationsAllowTimeEnd")
-            .ToList();
-        List<string> throw5 = dbCols
-            .Where(c => c != "NotificationSound")
-            .ToList();
-        List<List<string>> throws =
-            new() { throw1, throw2, throw3, throw4, throw5 };
-
-        var workspaceId = Guid.Parse("23e33ae1-c69b-4e33-bb16-79a1be666392");
-        var afterId = Guid.Parse("cc7118a3-e399-488e-b009-8b84602af89a"); // 5 after
-        List<string> noThrow = dbCols.GetRange(0, dbCols.Count - 5);
-
-        throws.ForEach(
-            async t =>
-                await Assert.ThrowsAsync<InvalidOperationException>(
-                    async () =>
-                        await _workspaceStore.LoadWorkspaceMembers(
-                            5,
-                            throw1,
-                            workspaceId
-                        )
-                )
-        );
-
-        (var members1, var lastPage1) =
-            await _workspaceStore.LoadWorkspaceMembers(5, noThrow, workspaceId);
-        (var members2, var lastPage2) =
-            await _workspaceStore.LoadWorkspaceMembers(
-                5,
-                noThrow,
-                workspaceId,
-                afterId
-            );
-
-        Assert.False(lastPage1);
-        Assert.Equal(
-            members1.Select(m => m.User.Username).OrderBy(un => un),
-            members1.Select(m => m.User.Username)
-        );
-        Assert.True(lastPage2);
-    }
-
-    /*
-    [Fact]
-    public async void LoadStarred_ShouldWork()
-    {
-        Guid workspaceId = Guid.Parse("23e33ae1-c69b-4e33-bb16-79a1be666392");
-        Guid userId = Guid.Parse("056b1d27-0825-4113-999d-9f7a95bbabcf");
-        Guid after = Guid.Parse("5fa56413-c60c-41e1-8e90-25719b7a247c");
-        List<string> dbCols =
-            new() { "Id", "CreatedAt", "WorkspaceId", "Name" };
-
-        (var groups1, var lastPage1) = await _workspaceStore.LoadStarred(
-            workspaceId,
-            userId,
-            2,
-            dbCols
-        );
-
-        (var groups2, var lastPage2) = await _workspaceStore.LoadStarred(
-            workspaceId,
-            userId,
-            2,
-            dbCols,
-            after
-        );
-
-        Assert.Equal(2, groups1.Count);
-        Assert.True(lastPage2);
-        Assert.NotEqual(after, groups2.First().Id);
-    }
-
-    [Fact]
-    public async void GetWorkspace_ShouldWork()
-    {
-        Guid workspaceId = Guid.Parse("f5f08029-fabd-4de5-bd25-a1d61cbc1255");
-        List<string> dbCols1 =
-            new() { "Id", "CreatedAt", "Description", "Name", "NumMembers" };
-        List<string> dbCols2 =
-            new()
-            {
-                "Id",
-                "AvatarId",
-                "CreatedAt",
-                "Description",
-                "Name",
-                "NumMembers"
-            };
-        var workspace1 = await _workspaceStore.GetWorkspace(
-            workspaceId,
-            dbCols1
-        );
-        var workspace2 = await _workspaceStore.GetWorkspace(
-            workspaceId,
-            dbCols2
-        );
-        Assert.Equal(workspaceId, workspace1.Id);
-        Assert.Equal(workspaceId, workspace2.Id);
-    }
-
-    [Fact]
-    public async void LoadWorkspaces_ShouldWork()
-    {
-        string[] cols =
-        {
-            "Id",
-            "AvatarId",
-            "CreatedAt",
-            "Description",
-            "Name",
-            "NumMembers"
-        };
-        (List<GraphQLTypes.Workspace> workspaces1, bool lastPage1) =
-            await _workspaceStore.LoadWorkspaces(userId, 4, cols);
-        (List<GraphQLTypes.Workspace> workspaces2, bool lastPage2) =
-            await _workspaceStore.LoadWorkspaces(userId, 100, cols, after);
-        Assert.Equal(4, workspaces1.Count);
-        Assert.Equal(2, workspaces2.Count);
-        Assert.False(lastPage1);
-        Assert.True(lastPage2);
     }
 
     [Fact]
@@ -706,29 +554,198 @@ public class WorkspaceStoreTests1
             Assert.Equal(0, iw.NumMembers);
         }
     }
-    */
 }
 
 [Trait("Category", "Order 2")]
-[Collection("Database collection 2")]
-public class WorkspaceStoreTests2
+[Collection("Filled Database Test Collection")]
+public class WorkspaceStoreTests2 : StoreTest
 {
     private readonly WorkspaceStore _workspaceStore;
 
-    private readonly ApplicationDbContext _dbContext;
+    private readonly Guid _userId;
 
     public WorkspaceStoreTests2(
         FilledApplicationDbContextFixture filledApplicationDbContextFixture
     )
     {
-        _dbContext = filledApplicationDbContextFixture.Context;
-        _workspaceStore = new WorkspaceStore(_dbContext);
+        DbContext = filledApplicationDbContextFixture.Context;
+        _workspaceStore = new WorkspaceStore(DbContext);
+        _userId = GetUserId();
     }
 
     [Fact]
     public void SeedHappened()
     {
-        Assert.True(_dbContext.Workspaces.Count() > 0);
-        Assert.True(_dbContext.WorkspaceMembers.Count() > 0);
+        Assert.True(DbContext.Workspaces.Count() > 0);
+        Assert.True(DbContext.WorkspaceMembers.Count() > 0);
+    }
+
+    [Fact]
+    public async void LoadWorkspaceMembers_ShouldWork()
+    {
+        List<string> dbCols =
+            new()
+            {
+                "Id",
+                "AvatarId",
+                "JoinedAt",
+                "Title",
+                "UserId",
+                "WorkspaceId",
+                "Admin",
+                "Owner",
+                "OnlineStatus",
+                "OnlineStatusUntil",
+                "WorkspaceAdminPermissionsId",
+                "ThemeId",
+                "NotificationSound",
+                "NotificationsAllowTimeStart",
+                "NotificationsAllowTimeEnd"
+            };
+        List<string> throw1 = dbCols
+            .Where(c => c != "WorkspaceAdminPermissionsId")
+            .ToList();
+        List<string> throw2 = dbCols.Where(c => c != "ThemeId").ToList();
+        List<string> throw3 = dbCols
+            .Where(c => c != "NotificationsAllowTimeStart")
+            .ToList();
+        List<string> throw4 = dbCols
+            .Where(c => c != "NotificationsAllowTimeEnd")
+            .ToList();
+        List<string> throw5 = dbCols
+            .Where(c => c != "NotificationSound")
+            .ToList();
+        List<List<string>> throws =
+            new() { throw1, throw2, throw3, throw4, throw5 };
+
+        List<string> noThrow = dbCols.GetRange(0, dbCols.Count - 5);
+
+        Guid workspaceId = GetWorkspaceIdContainingUser(_userId);
+        (var afterId, var totalMembers) =
+            GetFirstAlphaWorkspaceMemberTotalWorkspaceMembers(workspaceId);
+
+        int first = totalMembers - 1;
+        throws.ForEach(
+            async t =>
+                await Assert.ThrowsAsync<InvalidOperationException>(
+                    async () =>
+                        await _workspaceStore.LoadWorkspaceMembers(
+                            first,
+                            throw1,
+                            workspaceId
+                        )
+                )
+        );
+
+        (var members1, var lastPage1) =
+            await _workspaceStore.LoadWorkspaceMembers(
+                first,
+                noThrow,
+                workspaceId
+            );
+        (var members2, var lastPage2) =
+            await _workspaceStore.LoadWorkspaceMembers(
+                first,
+                noThrow,
+                workspaceId,
+                afterId
+            );
+
+        Assert.False(lastPage1);
+        Assert.Equal(
+            members1.Select(m => m.User.Username).OrderBy(un => un),
+            members1.Select(m => m.User.Username)
+        );
+        Assert.True(lastPage2);
+    }
+
+    [Fact]
+    public async void LoadStarred_ShouldWork()
+    {
+        List<string> dbCols =
+            new() { "Id", "CreatedAt", "WorkspaceId", "Name" };
+
+        Guid workspaceId = GetWorkspaceIdContainingUser(_userId);
+        (var afterId, var totalStars) = GetMostRecentStarredTotalStarred(
+            workspaceId,
+            _userId
+        );
+
+        int first = totalStars - 1;
+        (var groups1, var lastPage1) = await _workspaceStore.LoadStarred(
+            workspaceId,
+            _userId,
+            first,
+            dbCols
+        );
+
+        (var groups2, var lastPage2) = await _workspaceStore.LoadStarred(
+            workspaceId,
+            _userId,
+            first,
+            dbCols,
+            afterId
+        );
+
+        Assert.False(lastPage1);
+        Assert.Equal(first, groups1.Count);
+        Assert.True(lastPage2);
+        if (first > 0)
+        {
+            Assert.NotEqual(afterId, groups2.First().Id);
+        }
+    }
+
+    [Fact]
+    public async void GetWorkspace_ShouldWork()
+    {
+        Guid workspaceId = GetWorkspaceIdContainingUser(_userId);
+        List<string> dbCols1 =
+            new() { "Id", "CreatedAt", "Description", "Name", "NumMembers" };
+        List<string> dbCols2 =
+            new()
+            {
+                "Id",
+                "AvatarId",
+                "CreatedAt",
+                "Description",
+                "Name",
+                "NumMembers"
+            };
+        var workspace1 = await _workspaceStore.GetWorkspace(
+            workspaceId,
+            dbCols1
+        );
+        var workspace2 = await _workspaceStore.GetWorkspace(
+            workspaceId,
+            dbCols2
+        );
+        Assert.Equal(workspaceId, workspace1.Id);
+        Assert.Equal(workspaceId, workspace2.Id);
+    }
+
+    [Fact]
+    public async void LoadWorkspaces_ShouldWork()
+    {
+        string[] cols =
+        {
+            "Id",
+            "AvatarId",
+            "CreatedAt",
+            "Description",
+            "Name",
+            "NumMembers"
+        };
+
+        (var afterId, var totalWorkspaces) =
+            GetFirstAlphaWorkspaceTotalWorkspaces(_userId);
+
+        int first = totalWorkspaces - 1;
+        (List<GraphQLTypes.Workspace> workspaces1, bool lastPage1) =
+            await _workspaceStore.LoadWorkspaces(_userId, first, cols);
+        (List<GraphQLTypes.Workspace> workspaces2, bool lastPage2) =
+            await _workspaceStore.LoadWorkspaces(_userId, first, cols, afterId);
+        Assert.False(lastPage1);
+        Assert.True(lastPage2);
     }
 }

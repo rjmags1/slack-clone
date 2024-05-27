@@ -464,7 +464,6 @@ public class WorkspaceStore : Store
         sqlBuilder.Add($"LIMIT @First;");
 
         var sql = string.Join("\n", sqlBuilder);
-        Console.WriteLine(sql);
         var conn = _context.GetConnection();
         var parameters = new
         {
@@ -583,7 +582,6 @@ public class WorkspaceStore : Store
         sqlBuilder.Add("LIMIT @First");
 
         var sql = string.Join("\n", sqlBuilder);
-        Console.WriteLine(sql);
         var param = new
         {
             AfterId = after,
@@ -695,7 +693,6 @@ public class WorkspaceStore : Store
         sqlBuilder.Add(";");
 
         var sql = string.Join("\n", sqlBuilder);
-        Console.WriteLine(sql);
         var param = new { WorkspaceId = workspaceId };
         var conn = _context.GetConnection();
         var workspace = (
@@ -811,8 +808,6 @@ public class WorkspaceStore : Store
         );
 
         var sql = string.Join("\n", sqlBuilder);
-
-        Console.WriteLine(sql);
 
         var param = new
         {

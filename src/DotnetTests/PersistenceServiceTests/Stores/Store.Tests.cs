@@ -55,6 +55,16 @@ public abstract class StoreTest
             .First();
     }
 
+    protected (Guid, int) GetFirstAlphaWorkspaceTotalWorkspaces(Guid userId)
+    {
+        var wq = DbContext.WorkspaceMembers
+            .Where(wm => wm.UserId == userId)
+            .Select(wm => wm.Workspace)
+            .OrderBy(w => w.Name);
+
+        return (wq.First().Id, wq.Count());
+    }
+
     protected Guid GetWorkspaceIdContainingUser(Guid userId)
     {
         return DbContext.WorkspaceMembers
@@ -99,6 +109,18 @@ public abstract class StoreTest
         return (mq.First().Id, mq.Count());
     }
 
+    protected (Guid, int) GetMostRecentStarredTotalStarred(
+        Guid workspaceId,
+        Guid userId
+    )
+    {
+        var sq = DbContext.Stars.Where(
+            s => s.UserId == userId && s.WorkspaceId == workspaceId
+        );
+
+        return (sq.First().Id, sq.Count());
+    }
+
     protected (Guid, int) GetFirstAlphaChannelMemberTotalChannelMembers(
         Guid channelId
     )
@@ -106,6 +128,17 @@ public abstract class StoreTest
         var mq = DbContext.ChannelMembers
             .Where(cm => cm.ChannelId == channelId)
             .OrderBy(cm => cm.User.UserName);
+
+        return (mq.First().Id, mq.Count());
+    }
+
+    protected (Guid, int) GetFirstAlphaWorkspaceMemberTotalWorkspaceMembers(
+        Guid workspaceId
+    )
+    {
+        var mq = DbContext.WorkspaceMembers
+            .Where(wm => wm.WorkspaceId == workspaceId)
+            .OrderBy(wm => wm.User.UserName);
 
         return (mq.First().Id, mq.Count());
     }
