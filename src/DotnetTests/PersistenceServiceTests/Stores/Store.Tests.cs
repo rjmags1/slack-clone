@@ -11,6 +11,17 @@ public abstract class StoreTest
         return DbContext.Users.First(u => u.UserName == "dev").Id;
     }
 
+    protected Guid GetWorkspaceIdWithUserDmgs(Guid userId)
+    {
+        return DbContext.DirectMessageGroupMembers
+            .Where(dmgm => dmgm.UserId == userId)
+            .GroupBy(dmgm => dmgm.WorkspaceId)
+            .Select(g => new { WorkspaceId = g.Key, Count = g.Count() })
+            .OrderByDescending(gc => gc.Count)
+            .Select(gc => gc.WorkspaceId)
+            .First();
+    }
+
     protected Guid GetWorkspaceIdContainingUser(Guid userId)
     {
         return DbContext.WorkspaceMembers
@@ -64,5 +75,58 @@ public abstract class StoreTest
             .OrderBy(cm => cm.User.UserName);
 
         return (mq.First().Id, mq.Count());
+    }
+
+    protected Guid GetDmgIdContainingUser(Guid userId)
+    {
+        return DbContext.DirectMessageGroupMembers
+            .Where(dmgm => dmgm.UserId == userId)
+            .Select(dmgm => dmgm.DirectMessageGroup)
+            .OrderByDescending(dmg => dmg.DirectMessages.Count())
+            .First()
+            .Id;
+    }
+
+    protected (Guid, int) GetMostRecentDirectMessageTotalDirectMessages(
+        Guid dmgId
+    )
+    {
+        var mq = DbContext.DirectMessages
+            .Where(
+                dm =>
+                    dm.DirectMessageGroupId == dmgId
+                    && dm.SentAt != null
+                    && !dm.Deleted
+            )
+            .OrderByDescending(dm => dm.SentAt);
+
+        return (mq.First().Id, mq.Count());
+    }
+
+    protected (Guid, int) GetMostRecentDmgTotalDmgs(
+        Guid workspaceId,
+        Guid userId
+    )
+    {
+        var dq = DbContext.DirectMessageGroupMembers
+            .Where(
+                dmgm => dmgm.WorkspaceId == workspaceId && dmgm.UserId == userId
+            )
+            .ToList()
+            .OrderByDescending(
+                dmgm =>
+                    (
+                        dmgm.LastViewedAt != null ? 1 : 0,
+                        dmgm.LastViewedAt,
+                        dmgm.JoinedAt
+                    )
+            );
+
+        var dmg = dq.FirstOrDefault();
+
+        return (
+            dmg == null ? Guid.Empty : dmg.DirectMessageGroupId,
+            dmg == null ? 0 : dq.Count()
+        );
     }
 }

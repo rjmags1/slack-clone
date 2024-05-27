@@ -7,7 +7,7 @@ using PersistenceService.Stores;
 namespace DotnetTests.PersistenceService.Stores;
 
 [Trait("Category", "Order 1")]
-[Collection("Database collection 1")]
+[Collection("Empty Database Test Collection")]
 public class DirectMessageGroupStoreTests1
 {
     private readonly ApplicationDbContext _dbContext;
@@ -20,98 +20,6 @@ public class DirectMessageGroupStoreTests1
     {
         _dbContext = applicationDbContextFixture.Context;
         _directMessageGroupStore = new DirectMessageGroupStore(_dbContext);
-    }
-
-    [Fact]
-    public async void LoadDirectMessages_ShouldWork()
-    {
-        var dmgId = Guid.Parse("09ff2bb0-4285-4a9f-a6b7-4f935d3b3d3d");
-        var afterId = Guid.Parse("be905f54-957d-44d3-84c3-b60faae9f492"); // 3 after this
-        var dbCols = new List<string>()
-        {
-            "Id",
-            "Mentions",
-            "Reactions",
-            "Files",
-            "UserId",
-            "Content",
-            "CreatedAt",
-            "LastEdit",
-            "DirectMessageGroupId",
-            "IsReply",
-            "LaterFlagId",
-            "ReplyToId",
-            "SentAt",
-        };
-
-        (var messages1, var lastPage1) =
-            await _directMessageGroupStore.LoadDirectMessages(dmgId, dbCols, 3);
-        (var messages2, var lastPage2) =
-            await _directMessageGroupStore.LoadDirectMessages(
-                dmgId,
-                dbCols,
-                3,
-                afterId
-            );
-
-        Assert.False(lastPage1);
-        var sortedBySentDesc1 = messages1
-            .Select(m => m.SentAt)
-            .OrderByDescending(dt => dt);
-        Assert.Equal(sortedBySentDesc1, messages1.Select(m => m.SentAt));
-
-        Assert.True(lastPage2);
-        var sortedBySentDesc2 = messages2
-            .Select(m => m.SentAt)
-            .OrderByDescending(dt => dt);
-        Assert.Equal(sortedBySentDesc2, messages2.Select(m => m.SentAt));
-        Assert.DoesNotContain(afterId, messages2.Select(m => m.Id));
-    }
-
-    /*
-    [Fact]
-    public async void LoadDirectMessageGroups_ShouldWork()
-    {
-        var workspaceId = Guid.Parse("23e33ae1-c69b-4e33-bb16-79a1be666392");
-        var userId = Guid.Parse("1903d315-3d90-4a82-8ccb-c23ec7bf834b");
-        var afterId = Guid.Parse("de867492-491e-4e37-ae00-e99592b60532");
-        List<string> dbCols = new() { "Id", "CreatedAt" };
-        (var dmgs1, var lastPage1) =
-            await _directMessageGroupStore.LoadDirectMessageGroups(
-                workspaceId,
-                userId,
-                3,
-                dbCols
-            );
-        (var dmgs2, var lastPage2) =
-            await _directMessageGroupStore.LoadDirectMessageGroups(
-                workspaceId,
-                userId,
-                3,
-                dbCols,
-                afterId
-            );
-        dbCols.Add("WorkspaceId");
-        (var dmgs3, var lastPage3) =
-            await _directMessageGroupStore.LoadDirectMessageGroups(
-                workspaceId,
-                userId,
-                3,
-                dbCols,
-                afterId
-            );
-        Assert.Equal(3, dmgs1.Count);
-        Assert.False(lastPage1);
-        Assert.Equal(3, dmgs2.Count);
-        Assert.True(lastPage2);
-        Assert.Equal(3, dmgs3.Count);
-        Assert.True(lastPage3);
-        foreach ((var dmg1, var dmg2, var dmg3) in dmgs1.Zip(dmgs2, dmgs3))
-        {
-            Assert.True(dmg1.Name.Split(",").Length > 1);
-            Assert.True(dmg2.Name.Split(",").Length > 1);
-            Assert.True(dmg3.Name.Split(",").Length > 1);
-        }
     }
 
     [Fact]
@@ -1172,31 +1080,130 @@ public class DirectMessageGroupStoreTests1
             }
         }
     }
-    */
 }
 
 [Trait("Category", "Order 2")]
-[Collection("Database collection 2")]
-public class DirectMessageGroupStoreTests2
+[Collection("Filled Database Test Collection")]
+public class DirectMessageGroupStoreTests2 : StoreTest
 {
     private readonly DirectMessageGroupStore _directMessageGroupStore;
-
-    private readonly ApplicationDbContext _dbContext;
+    private readonly Guid _userId;
 
     public DirectMessageGroupStoreTests2(
         FilledApplicationDbContextFixture filledApplicationDbContextFixture
     )
     {
-        _dbContext = filledApplicationDbContextFixture.Context;
-        _directMessageGroupStore = new DirectMessageGroupStore(_dbContext);
+        DbContext = filledApplicationDbContextFixture.Context;
+        _directMessageGroupStore = new DirectMessageGroupStore(DbContext);
+        _userId = GetUserId();
     }
 
     [Fact]
     public void SeedHappened()
     {
-        Assert.True(_dbContext.DirectMessageGroups.Count() > 0);
-        Assert.True(_dbContext.DirectMessages.Count() > 0);
-        Assert.True(_dbContext.DirectMessageLaterFlags.Count() > 0);
-        Assert.True(_dbContext.DirectMessageReactions.Count() > 0);
+        Assert.True(DbContext.DirectMessageGroups.Count() > 0);
+        Assert.True(DbContext.DirectMessages.Count() > 0);
+        Assert.True(DbContext.DirectMessageLaterFlags.Count() > 0);
+        Assert.True(DbContext.DirectMessageReactions.Count() > 0);
+    }
+
+    [Fact]
+    public async void LoadDirectMessages_ShouldWork()
+    {
+        var dmgId = GetDmgIdContainingUser(_userId);
+        (var afterId, var totalMessages) =
+            GetMostRecentDirectMessageTotalDirectMessages(dmgId);
+
+        var dbCols = new List<string>()
+        {
+            "Id",
+            "Mentions",
+            "Reactions",
+            "Files",
+            "UserId",
+            "Content",
+            "CreatedAt",
+            "LastEdit",
+            "DirectMessageGroupId",
+            "IsReply",
+            "LaterFlagId",
+            "ReplyToId",
+            "SentAt",
+        };
+
+        int first = totalMessages - 1;
+        (var messages1, var lastPage1) =
+            await _directMessageGroupStore.LoadDirectMessages(
+                dmgId,
+                dbCols,
+                first
+            );
+        (var messages2, var lastPage2) =
+            await _directMessageGroupStore.LoadDirectMessages(
+                dmgId,
+                dbCols,
+                first,
+                afterId
+            );
+
+        Assert.False(lastPage1);
+        var sortedBySentDesc1 = messages1
+            .Select(m => m.SentAt)
+            .OrderByDescending(dt => dt);
+        Assert.Equal(sortedBySentDesc1, messages1.Select(m => m.SentAt));
+
+        Assert.True(lastPage2);
+        var sortedBySentDesc2 = messages2
+            .Select(m => m.SentAt)
+            .OrderByDescending(dt => dt);
+        Assert.Equal(sortedBySentDesc2, messages2.Select(m => m.SentAt));
+        Assert.DoesNotContain(afterId, messages2.Select(m => m.Id));
+    }
+
+    [Fact]
+    public async void LoadDirectMessageGroups_ShouldWork()
+    {
+        var workspaceId = GetWorkspaceIdWithUserDmgs(_userId);
+        (var afterId, var totalDmgs) = GetMostRecentDmgTotalDmgs(
+            workspaceId,
+            _userId
+        );
+
+        int first = totalDmgs - 1;
+        List<string> dbCols = new() { "Id", "CreatedAt" };
+        (var dmgs1, var lastPage1) =
+            await _directMessageGroupStore.LoadDirectMessageGroups(
+                workspaceId,
+                _userId,
+                first,
+                dbCols
+            );
+        (var dmgs2, var lastPage2) =
+            await _directMessageGroupStore.LoadDirectMessageGroups(
+                workspaceId,
+                _userId,
+                first,
+                dbCols,
+                afterId
+            );
+        dbCols.Add("WorkspaceId");
+        (var dmgs3, var lastPage3) =
+            await _directMessageGroupStore.LoadDirectMessageGroups(
+                workspaceId,
+                _userId,
+                first,
+                dbCols,
+                afterId
+            );
+
+        Assert.False(lastPage1);
+        Assert.True(lastPage2);
+        Assert.True(lastPage3);
+        foreach ((var dmg1, var dmg2, var dmg3) in dmgs1.Zip(dmgs2, dmgs3))
+        {
+            Assert.True(dmg1.Name.Split(",").Length > 1);
+            Assert.True(dmg2.Name.Split(",").Length > 1);
+            Assert.True(dmg3.Name.Split(",").Length > 1);
+        }
     }
 }
