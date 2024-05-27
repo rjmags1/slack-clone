@@ -1,4 +1,6 @@
 using PersistenceService.Data.ApplicationDb;
+using PersistenceService.Stores;
+using File = PersistenceService.Models.File;
 
 namespace DotnetTests.PersistenceService.Stores;
 
@@ -9,6 +11,37 @@ public abstract class StoreTest
     protected Guid GetUserId()
     {
         return DbContext.Users.First(u => u.UserName == "dev").Id;
+    }
+
+    protected void SetUserAvatarIdThemeId(ref Guid avatarId, ref Guid themeId)
+    {
+        if (!DbContext.Files.Any())
+        {
+            var file = new File
+            {
+                Name = "test file",
+                StoreKey = "test store key"
+            };
+            DbContext.Files.Add(file);
+            DbContext.SaveChanges();
+        }
+
+        avatarId = DbContext.Files.First().Id;
+        themeId = DbContext.Themes.First().Id;
+        var user = DbContext.Users.First(u => u.UserName == "dev");
+        user.AvatarId = avatarId;
+        user.ThemeId = themeId;
+        DbContext.SaveChanges();
+    }
+
+    protected Guid? GetUserAvatarId()
+    {
+        return DbContext.Users.First(u => u.UserName == "dev").AvatarId;
+    }
+
+    protected Guid? GetUserThemeId()
+    {
+        return DbContext.Users.First(u => u.UserName == "dev").ThemeId;
     }
 
     protected Guid GetWorkspaceIdWithUserDmgs(Guid userId)
