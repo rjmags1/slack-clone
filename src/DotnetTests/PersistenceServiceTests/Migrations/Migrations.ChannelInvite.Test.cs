@@ -5,7 +5,7 @@ using PersistenceService.Data.ApplicationDb;
 using PersistenceService.Models;
 
 [Trait("Category", "Order 1")]
-[Collection("Database collection 1")]
+[Collection("Empty Database Test Collection")]
 public class ChannelInviteMigrationsTests
 {
     private readonly ApplicationDbContext _dbContext;

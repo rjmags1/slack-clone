@@ -9,7 +9,7 @@ using PersistenceService.Stores;
 namespace DotnetTests.PersistenceService.Stores;
 
 [Trait("Category", "Order 1")]
-[Collection("Database collection 1")]
+[Collection("Empty Database Test Collection")]
 public class ThemeStoreTests1
 {
     private readonly ApplicationDbContext _dbContext;
@@ -93,7 +93,7 @@ public class ThemeStoreTests1
 }
 
 [Trait("Category", "Order 2")]
-[Collection("Database collection 2")]
+[Collection("Filled Database Test Collection")]
 public class ThemeStoreTests2
 {
     private readonly ApplicationDbContext _dbContext;
