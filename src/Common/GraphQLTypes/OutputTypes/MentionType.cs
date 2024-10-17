@@ -17,10 +17,10 @@ public class MentionType : ObjectGraphType<Mention>, INodeGraphType<Mention>
         Field<NonNullGraphType<MessageType>>("message")
             .Description("The message containing the mention.")
             .Resolve(context => context.Source.Message);
-        Field<NonNullGraphType<UserType>>("mentionedId")
+        Field<NonNullGraphType<IdGraphType>>("mentionedId")
             .Description("The person mentioned.")
             .Resolve(context => context.Source.MentionedId);
-        Field<NonNullGraphType<UserType>>("mentionerId")
+        Field<NonNullGraphType<IdGraphType>>("mentionerId")
             .Description("The person who created the mention.")
             .Resolve(context => context.Source.MentionerId);
     }

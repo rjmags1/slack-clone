@@ -60,34 +60,30 @@ public class UserStore : UserManager<User>, IStore
 
         var sqlBuilder = new List<string>();
         sqlBuilder.Add("WITH user_ AS (\n");
-        sqlBuilder.Add("SELECT\n");
-        sqlBuilder.AddRange(
-            cols.Select(c => Stores.Store.wdq(c))
-                .Select((c, i) => i == cols.Count() - 1 ? $"{c}\n" : $"{c},\n")
-        );
+        sqlBuilder.Add("SELECT * ");
         sqlBuilder.Add($"FROM {Stores.Store.wdq("AspNetUsers")}\n");
         sqlBuilder.Add($"WHERE {wId} = @UserId\n");
         sqlBuilder.Add(")\n\n");
-        sqlBuilder.Add($"SELECT * FROM {wUser}\n");
-        if (cols.Any(c => c == "ThemeId" || c == "AvatarId"))
-        {
-            sqlBuilder.Add(
-                $"LEFT JOIN {wTheme} ON {wTheme}.{wId} = {wUser}.{wThemeId}\n"
-            );
-            sqlBuilder.Add(
-                $"LEFT JOIN {wFiles} ON {wFiles}.{wId} = {wUser}.{wAvatarId}\n"
-            );
-        }
+        sqlBuilder.Add(
+            $"SELECT {wUser}.*, {wTheme}.*, {wFiles}.* FROM {wUser}\n"
+        );
+        sqlBuilder.Add(
+            $"LEFT JOIN {wTheme} ON {wTheme}.{wId} = {wUser}.{wThemeId}\n"
+        );
+        sqlBuilder.Add(
+            $"LEFT JOIN {wFiles} ON {wFiles}.{wId} = {wUser}.{wAvatarId}\n"
+        );
         sqlBuilder.Add(";");
 
         var sql = string.Join("", sqlBuilder);
+
         var conn = context.GetConnection();
         var parameters = new { UserId = userId };
         return (
             await conn.QueryAsync<
                 Models.User,
-                GraphQLTypes.Theme?,
-                GraphQLTypes.File?,
+                GraphQLTypes.Theme,
+                GraphQLTypes.File,
                 GraphQLTypes.User
             >(
                 sql: sql,
