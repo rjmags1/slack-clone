@@ -15,6 +15,7 @@ using ApiService.Auth;
 using Microsoft.AspNetCore.Authorization;
 using ApiService.Kafka.Producer;
 using Common.SlackCloneGraphQL;
+using Common.SlackCloneGraphQL.Types;
 
 DotNetEnv.Env.Load();
 
@@ -85,7 +86,7 @@ builder.Services.AddScoped<FileStore>();
 builder.Services.AddScoped<ThemeStore>();
 builder.Services.AddScoped<UserStore>();
 builder.Services.AddScoped<WorkspaceStore>();
-builder.Services.AddScoped<ISlackCloneData, SlackCloneData>();
+builder.Services.AddTransient<ISlackCloneData, SlackCloneData>();
 
 builder.Services.Configure<GraphQLSettings>(options =>
 {
@@ -96,6 +97,7 @@ builder.Services.AddGraphQL(
         b.AddSchema<SlackCloneSchema>()
             .AddSystemTextJson()
             .AddGraphTypes(typeof(SlackCloneSchema).Assembly)
+            .AddGraphTypes(typeof(ValidationResultType).Assembly)
             .UseMemoryCache()
             .UseApolloTracing(
                 options =>

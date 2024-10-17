@@ -68,7 +68,7 @@ public interface ISlackCloneData
         IEnumerable<string> cols
     );
 
-    public Task<Connection<Group>> GetStarred(
+    public Task<Connection<IGroup>> GetStarred(
         int first,
         Guid? after,
         StarredFilter filter,

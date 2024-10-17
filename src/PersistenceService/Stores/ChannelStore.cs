@@ -9,16 +9,6 @@ using Dapper;
 
 namespace PersistenceService.Stores;
 
-public class ChannelMessageReactionCount
-{
-#pragma warning disable CS8618
-    public Guid ChannelMessageId { get; set; }
-    public int Count { get; set; }
-    public string Emoji { get; set; }
-#pragma warning restore CS8618
-    public ChannelMessageReaction? UserReaction { get; set; }
-}
-
 public class ChannelStore : Store
 {
     public ChannelStore(ApplicationDbContext context)
@@ -930,8 +920,7 @@ public class ChannelStore : Store
         sqlBuilder.Add("),\n");
 
         sqlBuilder.Add("_channels AS (");
-        sqlBuilder.Add("SELECT");
-        sqlBuilder.AddRange(cols.Select(c => $"{wdq("Channels")}.{wdq(c)},"));
+        sqlBuilder.Add($"SELECT {wdq("Channels")}.*, ");
         sqlBuilder.Add(
             $"_memberships.{wdq("LastViewedAt")}, _memberships.{wdq("JoinedAt")}"
         );
@@ -949,22 +938,22 @@ public class ChannelStore : Store
         sqlBuilder.Add("LIMIT @First");
         sqlBuilder.Add(")\n");
 
-        sqlBuilder.Add("SELECT * FROM _channels");
-        if (cols.Any(c => joinCols.Contains(c)))
-        {
-            sqlBuilder.Add(
-                $"LEFT JOIN {wdq("Files")} ON {wdq("Files")}.{wdq("Id")} = _channels.{wdq("AvatarId")}"
-            );
-            sqlBuilder.Add(
-                $"LEFT JOIN {wdq("AspNetUsers")} ON {wdq("AspNetUsers")}.{wdq("Id")} = _channels.{wdq("CreatedById")}"
-            );
-            sqlBuilder.Add(
-                $"LEFT JOIN {wdq("Workspaces")} ON {wdq("Workspaces")}.{wdq("Id")} = _channels.{wdq("WorkspaceId")}"
-            );
-        }
+        sqlBuilder.Add(
+            $"SELECT _channels.*, {wdq("Files")}.*, {wdq("AspNetUsers")}.*, {wdq("Workspaces")}.* FROM _channels"
+        );
+        sqlBuilder.Add(
+            $"LEFT JOIN {wdq("Files")} ON {wdq("Files")}.{wdq("Id")} = _channels.{wdq("AvatarId")}"
+        );
+        sqlBuilder.Add(
+            $"LEFT JOIN {wdq("AspNetUsers")} ON {wdq("AspNetUsers")}.{wdq("Id")} = _channels.{wdq("CreatedById")}"
+        );
+        sqlBuilder.Add(
+            $"LEFT JOIN {wdq("Workspaces")} ON {wdq("Workspaces")}.{wdq("Id")} = _channels.{wdq("WorkspaceId")}"
+        );
         sqlBuilder.Add($"ORDER BY _channels.{wdq("Name")};");
 
         var sql = string.Join("\n", sqlBuilder);
+
         var conn = _context.GetConnection();
         var parameters = new
         {

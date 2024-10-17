@@ -84,7 +84,7 @@ public class KafkaConsumer
                 throw new InvalidOperationException("Bad message format");
             }
             var workspaceId = value[
-                (workspaceIdIdx + 10)..(value.IndexOf(',', workspaceIdIdx))
+                (workspaceIdIdx + 10)..value.IndexOf(',', workspaceIdIdx)
             ];
             Console.WriteLine(workspaceId);
             Console.WriteLine(value);

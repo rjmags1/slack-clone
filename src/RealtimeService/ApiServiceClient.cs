@@ -20,7 +20,7 @@ public class ApiClient
 
     public async Task WorkspaceSignIn(Guid UserId, Guid WorkspaceId)
     {
-        if (!(await CheckToken()))
+        if (!await CheckToken())
         {
             throw new InvalidOperationException(
                 "Could not obtain access token"
@@ -75,7 +75,7 @@ public class ApiClient
             retries += 1;
         }
 
-        return retries < 5;
+        return retries < 3;
     }
 
     private async Task FetchToken()

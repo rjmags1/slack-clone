@@ -464,6 +464,7 @@ public class WorkspaceStore : Store
         sqlBuilder.Add($"LIMIT @First;");
 
         var sql = string.Join("\n", sqlBuilder);
+
         var conn = _context.GetConnection();
         var parameters = new
         {
@@ -716,7 +717,7 @@ public class WorkspaceStore : Store
         return workspace;
     }
 
-    public async Task<(List<GraphQLTypes.Group>, bool lastPage)> LoadStarred(
+    public async Task<(List<GraphQLTypes.IGroup>, bool lastPage)> LoadStarred(
         Guid workspaceId,
         Guid userId,
         int first,
@@ -724,12 +725,6 @@ public class WorkspaceStore : Store
         Guid? after = null
     )
     {
-        if (dbCols.Contains("Name"))
-        {
-            dbCols.Remove("Name");
-            dbCols.Add("Name");
-        }
-
         List<string> sqlBuilder = new();
         if (after is not null)
         {
@@ -748,7 +743,7 @@ public class WorkspaceStore : Store
 
         sqlBuilder.Add("stars AS (");
         sqlBuilder.Add(
-            $"SELECT {wdq("Id")}, {wdq("CreatedAt")}, {wdq("ChannelId")}, {wdq("DirectMessageGroupId")}"
+            $"SELECT {wdq("Id")}, {wdq("CreatedAt")} AS {wdq("StarredAt")}, {wdq("ChannelId")}, {wdq("DirectMessageGroupId")}"
         );
         sqlBuilder.Add($"FROM {wdq("Stars")}");
         sqlBuilder.Add(
@@ -761,35 +756,24 @@ public class WorkspaceStore : Store
             );
         }
         sqlBuilder.Add("LIMIT @First");
-        sqlBuilder.Add("),\n");
+        sqlBuilder.Add(")\n");
+        var starsCTE = string.Join("\n", sqlBuilder);
 
-        sqlBuilder.Add("starred_channels AS (");
-        sqlBuilder.Add("SELECT");
-        sqlBuilder.AddRange(
-            dbCols.Select(c => $"{wdq("Channels")}.{wdq(c)}, ")
-        );
-        sqlBuilder.Add($"stars.{wdq("CreatedAt")} AS {wdq("StarredAt")},");
-        sqlBuilder.Add($"'Channel' AS {wdq("Type")},");
-        sqlBuilder.Add($"NULL AS {wdq("UserName")}");
+        sqlBuilder = new List<string>();
+        sqlBuilder.Add(starsCTE);
+        sqlBuilder.Add($"SELECT {wdq("Channels")}.*, {wdq("StarredAt")} ");
         sqlBuilder.Add($"FROM stars INNER JOIN {wdq("Channels")}");
         sqlBuilder.Add(
             $"ON stars.{wdq("ChannelId")} = {wdq("Channels")}.{wdq("Id")}"
         );
-        sqlBuilder.Add("),\n");
+        sqlBuilder.Add(";\n");
+        var starredChannelsQuery = string.Join("\n", sqlBuilder);
 
-        sqlBuilder.Add("starred_dmgs AS (");
-        sqlBuilder.Add("SELECT");
-        sqlBuilder.AddRange(
-            dbCols
-                .Where(c => c != "Name")
-                .Select(c => $"{wdq("DirectMessageGroups")}.{wdq(c)}, ")
+        sqlBuilder = new List<string>();
+        sqlBuilder.Add(starsCTE);
+        sqlBuilder.Add(
+            $"SELECT {wdq("DirectMessageGroups")}.*, {wdq("StarredAt")}, "
         );
-        if (dbCols.Contains("Name"))
-        {
-            sqlBuilder.Add($"NULL AS {wdq("Name")},");
-        }
-        sqlBuilder.Add($"stars.{wdq("CreatedAt")} AS {wdq("StarredAt")},");
-        sqlBuilder.Add($"'DirectMessageGroup' AS {wdq("Type")},");
         sqlBuilder.Add($"{wdq("AspNetUsers")}.{wdq("UserName")}");
         sqlBuilder.Add($"FROM stars INNER JOIN {wdq("DirectMessageGroups")}");
         sqlBuilder.Add(
@@ -801,13 +785,8 @@ public class WorkspaceStore : Store
         sqlBuilder.Add(
             $"INNER JOIN {wdq("AspNetUsers")} ON {wdq("AspNetUsers")}.{wdq("Id")} = {wdq("DirectMessageGroupMembers")}.{wdq("UserId")}"
         );
-        sqlBuilder.Add(")\n");
-
-        sqlBuilder.Add(
-            "SELECT * FROM starred_channels UNION SELECT * FROM starred_dmgs;"
-        );
-
-        var sql = string.Join("\n", sqlBuilder);
+        sqlBuilder.Add(";\n");
+        var starredDmgsQuery = string.Join("\n", sqlBuilder);
 
         var param = new
         {
@@ -817,47 +796,65 @@ public class WorkspaceStore : Store
             First = first + 1
         };
         var conn = _context.GetConnection();
-        List<GraphQLTypes.Group> groups = (
+        IEnumerable<(GraphQLTypes.Channel, Starred)> starredChannels =
             await conn.QueryAsync<
-                GraphQLTypes.Group,
-                Models.User,
-                GraphQLTypes.Group
+                GraphQLTypes.Channel,
+                Starred,
+                (GraphQLTypes.Channel, Starred)
             >(
-                sql,
+                sql: starredChannelsQuery,
                 param: param,
-                map: (group, user) =>
+                map: (channel, starredAt) =>
                 {
-                    if (group.Type == "DirectMessageGroup")
-                    {
-                        group.Name = user.UserName;
-                    }
-                    return group;
+                    return (channel, starredAt);
                 },
-                splitOn: "UserName"
-            )
-        ).ToList();
+                splitOn: "StarredAt"
+            );
 
-        var channelGroups = groups.Where(g => g.Type == "Channel");
-        var dmgGroups = groups
-            .Where(g => g.Type == "DirectMessageGroup")
-            .GroupBy(g => g.Id)
+        IEnumerable<(GraphQLTypes.DirectMessageGroup, Starred)> starredDmgs =
+            await conn.QueryAsync<
+                GraphQLTypes.DirectMessageGroup,
+                Starred,
+                Models.User,
+                (GraphQLTypes.DirectMessageGroup, Starred)
+            >(
+                sql: starredDmgsQuery,
+                param: param,
+                splitOn: "StarredAt, UserName",
+                map: (dmg, starredAt, user) =>
+                {
+                    dmg.Name = user.UserName;
+                    return (dmg, starredAt);
+                }
+            );
+
+        var namedDmgs = starredDmgs
+            .GroupBy(dmg => dmg.Item1.Id)
             .Select(g =>
             {
-                var dmg = g.First();
-                var names = g.Select(g => g.Name).ToList();
+                var dmg = g.First().Item1;
+                var names = g.Select(g => g.Item1.Name).ToList();
                 dmg.Name = string.Join(", ", names);
-                return dmg;
+                return (dmg, g.First().Item2);
             });
-        groups = channelGroups
-            .Concat(dmgGroups)
-            .OrderByDescending(g => g.StarredAt)
-            .ToList();
-        var lastPage = groups.Count <= first;
-        if (!lastPage)
-        {
-            groups.RemoveAt(groups.Count - 1);
-        }
 
-        return (groups, lastPage);
+        List<(GraphQLTypes.IGroup, Starred)> groups = new();
+        foreach (var group in namedDmgs)
+            groups.Add(group);
+        foreach (var group in starredChannels)
+            groups.Add(group);
+        var orderedGroups = groups
+            .OrderBy(g => g.Item2.StarredAt)
+            .Select(g => g.Item1)
+            .ToList();
+
+        var lastPage = orderedGroups.Count() <= first;
+
+        return (orderedGroups, lastPage);
     }
+}
+
+public struct Starred
+{
+    public DateTime StarredAt { get; set; }
 }

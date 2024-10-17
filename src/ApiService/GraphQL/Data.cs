@@ -203,53 +203,66 @@ public class SlackCloneData : ISlackCloneData
         Guid creatorId
     )
     {
-        //using var scope = Provider.CreateScope();
-        //WorkspaceStore workspaceStore =
-        //scope.ServiceProvider.GetRequiredService<WorkspaceStore>();
+        using var scope = Provider.CreateScope();
+        WorkspaceStore workspaceStore =
+            scope.ServiceProvider.GetRequiredService<WorkspaceStore>();
 
-        //Models.Workspace dbWorkspaceSkeleton =
-        //new()
-        //{
-        //Description = workspaceInfo.Description ?? "",
-        //Name = workspaceInfo.Name,
-        //};
+        Models.Workspace dbWorkspaceSkeleton =
+            new()
+            {
+                Description = workspaceInfo.Description ?? "",
+                Name = workspaceInfo.Name,
+            };
 
-        //if (workspaceInfo.AvatarId is not null)
-        //{
-        //FileStore fileStore =
-        //scope.ServiceProvider.GetRequiredService<FileStore>();
-        //dbWorkspaceSkeleton.Avatar = fileStore.GetFileById(
-        //workspaceInfo.AvatarId
-        //);
-        //}
+        Models.Workspace dbWorkspace = await workspaceStore.CreateWorkspace(
+            dbWorkspaceSkeleton,
+            creatorId,
+            workspaceInfo.InvitedUserEmails
+        );
 
-        //Models.Workspace dbWorkspace = await workspaceStore.CreateWorkspace(
-        //dbWorkspaceSkeleton,
-        //creatorId,
-        //workspaceInfo.InvitedUserEmails
-        //);
+        var workspace = new Workspace
+        {
+            Id = dbWorkspace.Id,
+            CreatedAt = dbWorkspace.CreatedAt,
+            Description = dbWorkspace.Description,
+            Name = dbWorkspace.Name,
+            NumMembers = dbWorkspace.NumMembers,
+        };
 
-        //return ModelToObjectConverters.ConvertWorkspace(dbWorkspace);
-        throw new NotImplementedException();
+        if (workspaceInfo.AvatarId is not null)
+        {
+            FileStore fileStore =
+                scope.ServiceProvider.GetRequiredService<FileStore>();
+            workspace.Avatar = (
+                await fileStore.GetFileById(workspaceInfo.AvatarId)
+            )!;
+        }
+
+        return workspace;
     }
 
     public async Task<File> CreateAvatar(FileInput fileinfo)
     {
-        //using var scope = Provider.CreateScope();
-        //FileStore fileStore =
-        //scope.ServiceProvider.GetRequiredService<FileStore>();
+        using var scope = Provider.CreateScope();
+        FileStore fileStore =
+            scope.ServiceProvider.GetRequiredService<FileStore>();
 
-        //Models.File dbAvatarSkeleton =
-        //new() { Name = fileinfo.Name, StoreKey = fileinfo.StoreKey };
+        Models.File dbAvatarSkeleton =
+            new() { Name = fileinfo.Name, StoreKey = fileinfo.StoreKey };
 
-        //Models.File dbAvatar = (
-        //await fileStore.InsertFiles(
-        //new List<Models.File> { dbAvatarSkeleton }
-        //)
-        //).First();
+        Models.File dbAvatar = (
+            await fileStore.InsertFiles(
+                new List<Models.File> { dbAvatarSkeleton }
+            )
+        ).First();
 
-        //return ModelToObjectConverters.ConvertFile(dbAvatar);
-        throw new NotImplementedException();
+        return new File
+        {
+            Id = dbAvatar.Id,
+            Name = dbAvatar.Name,
+            StoreKey = dbAvatar.StoreKey,
+            UploadedAt = dbAvatar.UploadedAt
+        };
     }
 
     public async Task<bool> ValidUserEmail(string email)
@@ -335,7 +348,7 @@ public class SlackCloneData : ISlackCloneData
         return ToConnection(dmgs, after is null, lastPage);
     }
 
-    public async Task<Connection<Group>> GetStarred(
+    public async Task<Connection<IGroup>> GetStarred(
         int first,
         Guid? after,
         StarredFilter filter,
@@ -352,15 +365,16 @@ public class SlackCloneData : ISlackCloneData
         using var scope = Provider.CreateScope();
         WorkspaceStore workspaceStore =
             scope.ServiceProvider.GetRequiredService<WorkspaceStore>();
-        (List<Group> starred, bool lastPage) = await workspaceStore.LoadStarred(
-            filter.WorkspaceId,
-            filter.UserId,
-            first,
-            cols,
-            after
-        );
+        (List<IGroup> starred, bool lastPage) =
+            await workspaceStore.LoadStarred(
+                filter.WorkspaceId,
+                filter.UserId,
+                first,
+                cols,
+                after
+            );
 
-        return ToConnection(starred, after is null, lastPage);
+        return ToConnection(new List<IGroup>(), after is null, true);
     }
 
     public async Task<Connection<Message>> GetDirectMessages(
