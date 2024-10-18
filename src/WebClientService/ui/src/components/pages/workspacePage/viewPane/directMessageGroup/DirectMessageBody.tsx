@@ -1,7 +1,7 @@
 type DirectMessageBodyProps = {
     content: string
     files: Readonly<{ id: string; storeKey: string }[]> | null
-    mentions: Readonly<{ mentioned: { id: string } }[]> | null
+    mentions: Readonly<{ mentionedId: string }[]> | null
 }
 
 function DirectMessageBody({
