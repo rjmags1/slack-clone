@@ -50,10 +50,12 @@ public class SlackCloneData : ISlackCloneData
     )
     {
         //// TODO: add filtering capabilities
+        /*
         if (filter is not null)
         {
             throw new NotImplementedException();
         }
+        */
 
         using var scope = Provider.CreateScope();
         ChannelStore channelStore =
