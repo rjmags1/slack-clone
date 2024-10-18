@@ -6,6 +6,7 @@ using System.Linq.Dynamic.Core;
 using Microsoft.EntityFrameworkCore;
 using GraphQLTypes = Common.SlackCloneGraphQL.Types;
 using Dapper;
+using GraphQLParser.AST;
 
 namespace PersistenceService.Stores;
 
@@ -23,7 +24,7 @@ public class ChannelStore : Store
             ")",
             $"SELECT * FROM",
             $"channel LEFT JOIN {wdq("Files")} ON {wdq("Files")}.{wdq("Id")} = channel.{wdq("AvatarId")}",
-            $"LEFT JOIN {wdq("Workspaces")} ON {wdq("Workspaces")}.{wdq("Id")} = channels.{wdq("WorkspaceId")}",
+            $"LEFT JOIN {wdq("Workspaces")} ON {wdq("Workspaces")}.{wdq("Id")} = channel.{wdq("WorkspaceId")}",
             $"LEFT JOIN {wdq("AspNetUsers")} ON",
             $"{wdq("AspNetUsers")}.{wdq("Id")} = channel.{wdq("CreatedById")}"
         };
@@ -101,16 +102,20 @@ public class ChannelStore : Store
         sqlBuilder.Add("messages AS (");
         sqlBuilder.Add("SELECT");
         sqlBuilder.AddRange(
-            dbCols.Select(
-                (c, i) =>
-                    i == dbCols.Count - 1
-                        ? $"{wdq("ChannelMessages")}.{wdq(c)}"
-                        : $"{wdq("ChannelMessages")}.{wdq(c)},"
-            )
+            dbCols.Select(c => $"{wdq("ChannelMessages")}.{wdq(c)},")
+        );
+        sqlBuilder.Add(
+            $"{wdq("AspNetUsers")}.{wdq("UserName")}, {wdq("AspNetUsers")}.{wdq("AvatarId")}, {wdq("Files")}.{wdq("StoreKey")}"
         );
         sqlBuilder.Add($"FROM {wdq("ChannelMessages")}");
         sqlBuilder.Add(
-            $"WHERE {wdq("ChannelId")} = @ChannelId AND NOT {wdq("Deleted")} AND {wdq("SentAt")} IS NOT NULL"
+            $"LEFT JOIN {wdq("AspNetUsers")} ON {wdq("AspNetUsers")}.{wdq("Id")} = {wdq("ChannelMessages")}.{wdq("UserId")}"
+        );
+        sqlBuilder.Add(
+            $"LEFT JOIN {wdq("Files")} ON {wdq("Files")}.{wdq("Id")} = {wdq("AspNetUsers")}.{wdq("AvatarId")}"
+        );
+        sqlBuilder.Add(
+            $"WHERE {wdq("ChannelMessages")}.{wdq("ChannelId")} = @ChannelId AND NOT {wdq("ChannelMessages")}.{wdq("Deleted")} AND {wdq("ChannelMessages")}.{wdq("SentAt")} IS NOT NULL"
         );
         if (after is not null)
         {
@@ -163,14 +168,17 @@ public class ChannelStore : Store
         List<GraphQLTypes.Message> messages = (
             await conn.QueryAsync<
                 Models.ChannelMessage,
+                Models.User,
+                Models.File,
                 GraphQLTypes.Mention,
-                GraphQLTypes.Reaction,
+                ChannelMessageReaction,
                 GraphQLTypes.File,
                 GraphQLTypes.Message
             >(
                 sql: sql,
                 param: param,
-                map: (messageModel, mention, reaction, file) =>
+                splitOn: "UserName, StoreKey, Id, Id, Id",
+                map: (messageModel, user, avatar, mention, reaction, file) =>
                 {
                     var message = new GraphQLTypes.Message
                     {
@@ -178,6 +186,12 @@ public class ChannelStore : Store
                         User = new GraphQLTypes.User
                         {
                             Id = messageModel.UserId,
+                            Username = user.UserName,
+                            Avatar = new GraphQLTypes.File
+                            {
+                                Id = (Guid)user.AvatarId,
+                                StoreKey = avatar.StoreKey
+                            }
                         },
                         Content = messageModel.Content,
                         CreatedAt = messageModel.CreatedAt,
@@ -195,13 +209,29 @@ public class ChannelStore : Store
                             {
                                 Id = (Guid)messageModel.LaterFlagId
                             },
-                        Mentions = new() { mention },
-                        Reactions = new() { reaction },
                         ReplyToId = messageModel.ReplyToId,
                         SentAt = messageModel.SentAt,
                         ThreadId = messageModel.ThreadId,
                         Type = "ChannelMessage"
                     };
+
+                    if (reaction != null)
+                    {
+                        var r = new GraphQLTypes.Reaction
+                        {
+                            Id = reaction.Id,
+                            Emoji = reaction.Emoji,
+                            User = new GraphQLTypes.User
+                            {
+                                Id = reaction.UserId
+                            }
+                        };
+                        message.Reactions = new() { r };
+                    }
+                    if (mention != null)
+                    {
+                        message.Mentions = new() { mention };
+                    }
 
                     return message;
                 }

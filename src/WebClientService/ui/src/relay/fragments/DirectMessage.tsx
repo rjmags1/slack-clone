@@ -21,15 +21,14 @@ const DirectMessageFragment = graphql`
             id
         }
         mentions {
-            mentioned {
-                id
-            }
+            mentionedId
         }
         reactions {
             id
-            count
             emoji
-            userReactionId
+            user {
+                id
+            }
         }
         replyToId
     }

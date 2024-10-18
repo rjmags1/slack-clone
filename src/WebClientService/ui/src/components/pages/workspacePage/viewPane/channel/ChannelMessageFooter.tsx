@@ -7,10 +7,11 @@ type ChannelMessageFooterProps = {
     laterFlag: { id: string } | null
     reactions: Readonly<
         {
-            count: number
             emoji: string
             id: string
-            userReactionId: string | null
+            user: {
+                readonly id: string
+            }
         }[]
     > | null
     threadId: string | null

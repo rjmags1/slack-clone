@@ -30,7 +30,7 @@ public class WorkspaceMember
 
     public TimeOnly? NotificationsAllowTimeStart { get; set; }
 
-    public TimeOnly? NotificationsAllTimeEnd { get; set; }
+    public TimeOnly? NotificationsAllowTimeEnd { get; set; }
 
     public int NotificationSound { get; set; } = 0;
 
