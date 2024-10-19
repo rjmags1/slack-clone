@@ -70,6 +70,10 @@ public class ApiController : Controller
 
         if (result.Errors?.Count > 0)
         {
+            Console.WriteLine("\n");
+            Console.WriteLine(request.Query);
+            Console.WriteLine("\n");
+
             foreach (var error in result.Errors)
             {
                 Console.WriteLine(error);
