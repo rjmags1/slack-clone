@@ -20,15 +20,17 @@ public class DirectMessageGroupStore : Store
     {
         var sqlBuilder = new List<string>
         {
-            "WITH group AS (",
+            "WITH dmg AS (",
             $"SELECT * FROM {wdq("DirectMessageGroups")}",
             $"WHERE {wdq("Id")} = @DirectMessageGroupId",
             ")",
-            $"SELECT * FROM group",
+            $"SELECT * FROM dmg",
             $"INNER JOIN {wdq("DirectMessageGroupMembers")}",
-            $"ON {wdq("DirectMessageGroups")}.{wdq("Id")} = {wdq("DirectMessageGroupMembers")}.{wdq("DirectMessageGroupId")}",
+            $"ON dmg.{wdq("Id")} = {wdq("DirectMessageGroupMembers")}.{wdq("DirectMessageGroupId")}",
+            $"LEFT JOIN {wdq("AspNetUsers")} ON",
+            $"{wdq("AspNetUsers")}.{wdq("Id")} = {wdq("DirectMessageGroupMembers")}.{wdq("UserId")}",
             $"LEFT JOIN {wdq("Workspaces")} ON",
-            $"{wdq("Workspaces")}.{wdq("Id")} = group.{wdq("WorkspaceId")};"
+            $"{wdq("Workspaces")}.{wdq("Id")} = dmg.{wdq("WorkspaceId")};"
         };
 
         var sql = string.Join("\n", sqlBuilder);
@@ -37,16 +39,28 @@ public class DirectMessageGroupStore : Store
         var rows = (
             await conn.QueryAsync<
                 GraphQLTypes.DirectMessageGroup,
-                GraphQLTypes.DirectMessageGroupMember,
+                Models.DirectMessageGroupMember,
+                Models.User,
                 GraphQLTypes.Workspace,
                 GraphQLTypes.DirectMessageGroup
             >(
                 sql: sql,
                 param: param,
-                map: (dmg, member, workspace) =>
+                map: (dmg, member, memberUser, workspace) =>
                 {
                     dmg.Workspace = workspace;
-                    dmg.Members = new() { member };
+                    dmg.Members = new()
+                    {
+                        new GraphQLTypes.DirectMessageGroupMember
+                        {
+                            Id = member.Id,
+                            User = new GraphQLTypes.User
+                            {
+                                Id = member.UserId,
+                                Username = memberUser.UserName
+                            }
+                        }
+                    };
                     return dmg;
                 }
             )
@@ -624,18 +638,19 @@ public class DirectMessageGroupStore : Store
         }
 
         sqlBuilder.Add("messages AS (");
-        sqlBuilder.Add("SELECT");
-        sqlBuilder.AddRange(
-            dbCols.Select(
-                (c, i) =>
-                    i == dbCols.Count - 1
-                        ? $"{wdq("DirectMessages")}.{wdq(c)}"
-                        : $"{wdq("DirectMessages")}.{wdq(c)},"
-            )
+        sqlBuilder.Add($"SELECT {wdq("DirectMessages")}.*,");
+        sqlBuilder.Add(
+            $"{wdq("AspNetUsers")}.{wdq("UserName")}, {wdq("AspNetUsers")}.{wdq("AvatarId")}, {wdq("Files")}.{wdq("StoreKey")}"
         );
         sqlBuilder.Add($"FROM {wdq("DirectMessages")}");
         sqlBuilder.Add(
-            $"WHERE {wdq("DirectMessageGroupId")} = @DirectMessageGroupId AND NOT {wdq("Deleted")} AND {wdq("SentAt")} IS NOT NULL"
+            $"LEFT JOIN {wdq("AspNetUsers")} ON {wdq("AspNetUsers")}.{wdq("Id")} = {wdq("DirectMessages")}.{wdq("UserId")}"
+        );
+        sqlBuilder.Add(
+            $"LEFT JOIN {wdq("Files")} ON {wdq("Files")}.{wdq("Id")} = {wdq("AspNetUsers")}.{wdq("AvatarId")}"
+        );
+        sqlBuilder.Add(
+            $"WHERE {wdq("DirectMessages")}.{wdq("DirectMessageGroupId")} = @DirectMessageGroupId AND NOT {wdq("DirectMessages")}.{wdq("Deleted")} AND {wdq("SentAt")} IS NOT NULL"
         );
         if (after is not null)
         {
@@ -688,14 +703,17 @@ public class DirectMessageGroupStore : Store
         List<GraphQLTypes.Message> messages = (
             await conn.QueryAsync<
                 Models.DirectMessage,
+                Models.User,
+                GraphQLTypes.File,
                 GraphQLTypes.Mention,
-                GraphQLTypes.Reaction,
+                Models.DirectMessageReaction,
                 GraphQLTypes.File,
                 GraphQLTypes.Message
             >(
                 sql: sql,
                 param: param,
-                map: (messageModel, mention, reaction, file) =>
+                splitOn: "UserName, StoreKey, Id, Id, Id",
+                map: (messageModel, author, avatar, mention, reaction, file) =>
                 {
                     var message = new GraphQLTypes.Message
                     {
@@ -703,6 +721,12 @@ public class DirectMessageGroupStore : Store
                         User = new GraphQLTypes.User
                         {
                             Id = messageModel.UserId,
+                            Username = author.UserName,
+                            Avatar = new GraphQLTypes.File
+                            {
+                                Id = (Guid)author.AvatarId!,
+                                StoreKey = avatar.StoreKey
+                            }
                         },
                         Content = messageModel.Content,
                         CreatedAt = messageModel.CreatedAt,
@@ -721,11 +745,26 @@ public class DirectMessageGroupStore : Store
                                 Id = (Guid)messageModel.LaterFlagId
                             },
                         Mentions = new() { mention },
-                        Reactions = new() { reaction },
+                        Reactions = new() { },
                         ReplyToId = messageModel.ReplyToId,
                         SentAt = messageModel.SentAt,
                         Type = "DirectMessage"
                     };
+
+                    if (reaction != null)
+                    {
+                        message.Reactions.Add(
+                            new GraphQLTypes.Reaction
+                            {
+                                Id = reaction.Id,
+                                Emoji = reaction.Emoji,
+                                User = new GraphQLTypes.User
+                                {
+                                    Id = reaction.UserId
+                                }
+                            }
+                        );
+                    }
 
                     return message;
                 }

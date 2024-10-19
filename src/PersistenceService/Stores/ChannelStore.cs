@@ -189,7 +189,7 @@ public class ChannelStore : Store
                             Username = user.UserName,
                             Avatar = new GraphQLTypes.File
                             {
-                                Id = (Guid)user.AvatarId,
+                                Id = (Guid)user.AvatarId!,
                                 StoreKey = avatar.StoreKey
                             }
                         },
